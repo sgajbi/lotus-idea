@@ -766,115 +766,20 @@ Persistence adapter validation:
    on lotus-report main `f8d220d74dd21d0c51cc310c117264c96b879d62`
    with Main Releasability run `30898036781` and current-main focused QA.
 
-   Slice 18 issue-posture reconciliation also records the current #340 and
-   #380 truth. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
-   `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability
-   `30326431318` and CodeQL `30326422515` passed. Final QA closed #340 on
-   2026-07-29 after Idea-side attestation/governance/lineage/API proof and
-   producer-side `lotus-ai` workflow-run attestation proof passed against
-   current mainline evidence. PR #746 corrected stale ready
-   posture for #380 and reconciled it to `open_blocked` at
-   `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
-   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 54
-   tracked issues, 29 closed complete, 25 open, no
-   `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-   14 `open_blocked`, and
-   no ready issues. #379 is `open_blocked`, not QA-pending because
-   Idea now consumes the `sgajbi/lotus-manage#620` temporal receipt identity
-   fields through closed v3 Manage mandate runtime evidence, while
-   production/certification evidence remains open through
-   `sgajbi/lotus-manage#624` and `sgajbi/lotus-archive#55`. #685 is
-   `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench startup
-   attempt via `npm run live:stack:up` restored core portfolio readiness for
-   `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
-   positions/cash data quality reached `COMPLETE`, and analytics/return-path
-   dates reached `2026-04-10`. The run then failed in the DPM command-center
-   action-register seed because the Manage rebalance simulation endpoint
-   returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is
-   tracked in `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench
-   queue/detail runtime evidence remains required before #685 can move to
-   merged-main QA.
-   Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
-   authorization failure; #686 is blocked, not QA-pending, until
-   `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
-   live browser action-control proof can be rerun. #340 is closed for the signed
-   attestation trust boundary without claiming supported-feature promotion,
-   client-ready publication, Workbench proof, autonomous advice, prompt/RAG
-   infrastructure, model training, or broader production rollout. #380 remains blocked for
-   production principal/session, authenticated Workbench BFF, core-owned
-   canonical runtime, mesh onboarding, entitlement-denied, and supported-feature
-   promotion evidence, and #693 is blocked rather than QA-pending until
-   protected capacity-production-like runner/environment, protected attestations,
-   and matching FinOps evidence exist. #690 is now closed complete after
-   PR #774 merged to main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`,
-   PR #775 synchronized source truth to main at
-   `800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability
-   `30430120214` and CodeQL `30430108647` passed, wiki publication completed at
-   `lotus-idea.wiki` commit `3ebd0f0` with strict `DiffCount 0`, branch cleanup
-   completed, and final QA passed `make report-intake-runtime-execution-proof-gate`
-   plus `make implementation-proof-readiness-check`. The bounded Report intake
-   runtime proof clears only `lotus_report_live_intake_route_proof_missing`
-   after aggregate-current validation; client publication, production identity,
-   supported-feature promotion, report rendering authority, Archive production
-   trust, legal/privacy approval, and final Slice 13 certification remain
-   unclaimed. PR #776 then synchronized that final QA closure truth to exact
-   main `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability
-   `30432065538` and CodeQL `30432058627` passed, wiki publication completed at
-   `lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
-   completed. PR #777 then synchronized #681 evidence after #690 QA closure to
-   exact main `39d51c5cb63df360f1e97e6e9e862784a9ad9178`; Main Releasability
-   `30434057675`, CodeQL `30434051218`, wiki publication commit `d0a1fa1`,
-   strict `DiffCount 0`, and branch cleanup passed. PR #787 corrected the live
-   cross-repo posture command on exact main
-   `39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability
-   `30451401411`, Push on main `30451387946`, wiki publication commit
-   `d06f46b`, strict `DiffCount 0`, and branch cleanup passed. PR #789 then
-   classified blocked issue actionability on exact main
-   `01ae36ba89f975508bde47b4361190ef5c083597`; Main Releasability
-   `30456433618`, Main CodeQL/Push run `30456425304`, wiki publication commit
-   `c926899`, strict `DiffCount 0`, and branch cleanup passed. PR #790 then
-   synchronized that evidence into source-controlled execution truth on exact
-   main `f23c72d7d95d1676b8f673f538a9336e4b704fbc`; Main Releasability
-   `30458163573`, Main CodeQL/Push run `30458146092`, wiki publication commit
-   `bbd9e2f`, strict `DiffCount 0`, and branch cleanup passed. PR #791 then
-   synchronized PR #790 evidence into source-controlled execution truth on exact
-   main `65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability
-   `30460122600`, Main CodeQL `30460101418`, wiki publication commit
-   `2453c3006722ee40e48762d884581fb6b3893bbe`, strict `DiffCount 0`, and branch
-   cleanup passed. Workbench PR #505 narrowed the BFF principal-boundary blocker
-   on Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request
-   Merge Gate `30464152669`, branch head
-   `c4add59871bc3f0e78dc6602c8857c5e141e6367`, Main Releasability
-   `30465110912`, Workbench wiki publication `3b4f78f`, strict `DiffCount 0`,
-   and branch cleanup passed. Platform PR #639 hardened stale PR-text payload
-   guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3` with
-   Main Releasability `30475978275` passing. PR #801 then synchronized the final
-   #797/#681 evidence on Idea main
-   `95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
-   `30487277416` passed. PR #802 then synchronized current RFC-0002 posture
-   truth on Idea main `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main
-   Main Releasability `30488990343` passed and wiki publication reached
-   `ec05a36` with strict `DiffCount 0`. PR #803 then synchronized PR #802
-   evidence truth on Idea main `31e5157de796e0accd0f23d3a80102ecd0871c71`;
-   exact-main Main Releasability `30490458612` passed and wiki publication
-   reached `3743f01` with strict `DiffCount 0`. PR #804 then synchronized PR #803
-   evidence truth on Idea main `615e3ba848af551801c897dd9b0a52f964801da0`;
-   exact-main Main Releasability `30491918891` passed and wiki publication
-   reached `05026e8` with strict `DiffCount 0`. At that synchronized snapshot,
-   the then-current cross-repo RFC-0002 posture checked the governed
-   13-repository owner/dependency set: 93 label-backed tracked issues, 56
-   complete, and 37 open, split into 27 blocked, 2 in-progress, and
-   8 tracker issues. The blocked subset has 0 app-actionable
-   blocked issues, 4 Core dependencies, and 23 external/protected-evidence
-   blockers after fresh canonical validation reopened `sgajbi/lotus-core#836`
-   as `status/in-progress`. #683 and #684 remain
-   prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
-   than QA-pending because their merged implementation tranches preserve only
-   bounded Render/Archive, mesh-readiness, and proof-control evidence;
-   lifecycle-safe publication authority, production identity, Archive production
-   trust/legal evidence, platform mesh certification, Gateway/Workbench
-   discovery proof, supported-feature promotion, and final live-journey evidence
-   remain open.
+Issue and PR status is **not recorded here**. It lived on this page as several hundred lines of
+"issue #X is closed after PR #Y" entries, every one of which is superseded the moment GitHub's own
+state changes — and GitHub is the system of record for it, not a wiki page.
+
+Two commands render the current posture on demand, which is what to use instead:
+
+| command | renders |
+|---|---|
+| `make rfc0002-cross-repo-issue-posture` | cross-repo blocker actionability from live issue state |
+| `make rfc0002-github-issue-execution-summary` | the RFC-0002 execution summary |
+
+The execution ledger holds the closure history, and the ledger gate protects its lifecycle truth.
+What belongs on this page is what the gates *are* and what they prove — everything above — not a
+transcription of which issues were open on the day someone last edited it.
 
    Slice 15 operations blockers have explicit no-claim boundaries. #343 remains
    blocked, not QA-pending: logical restore/resume validation and DR runbooks
@@ -1099,103 +1004,9 @@ separately from ready, blocked, active, QA-pending, and tracker issues so
 status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
 bucket.
 
-Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
-ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
-#779, #785, #787, #789, #790, and #791 historical evidence chain through exact
-main `65e11890aaddb70fea4cf9d80e836ce1625a6c44`, Main Releasability
-`30460122600`, Main CodeQL `30460101418`, wiki commit
-`2453c3006722ee40e48762d884581fb6b3893bbe`, strict wiki parity, then-current
-Idea RFC-0002 ledger posture of 42 tracked issues, 24 open, and 18 closed,
-then-current cross-repo RFC-0002 posture of 77 tracked issues, 40 complete, and
-37 open across 13 repositories, and a classified blocked posture of 26 blocked
-issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. PR #803 later synchronized that posture to
-43 tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
-RFC-0002 posture of 80 tracked issues, 43 complete, and 37 open across 13
-repositories. PR #809 synchronized #807 final QA closure truth on Idea main
-`c340daa01b41097410bbc8a802d9a8d1f9f24135`; exact-main Main Releasability
-`30499444726` passed with lint/typecheck/security, unit, integration, e2e,
-PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke, image
-scan, release identity/license evidence binding, and CI signal evidence.
-PR #810 synchronized PR #809 main evidence and Core/Workbench handoff posture
-on Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`; exact-main Main
-Releasability `30500588217` passed with workflow lint, lint/typecheck/security,
-unit, integration, e2e, PostgreSQL runtime proof, combined coverage,
-Docker/release validation, image scan, commit-tagged image publish and digest
-proof, published-digest runtime proof, image signing, provenance/SBOM
-attestations, release metadata, release identity/license evidence binding, and
-CI signal evidence. Repo-authored wiki publication reached `lotus-idea.wiki`
-commit `f0f9293` with strict `DiffCount 0`. Current source truth after the
-#814 Core-blocker sync records 54 tracked Idea RFC-0002 issues, 25 open, and
-29 closed, with live cross-repo RFC-0002 posture of 93 label-backed tracked issues, 56
-complete, and 37 open across 13 repositories after
-`sgajbi/lotus-manage#626` closed with
-`status/merged-main`. That dependency handoff was anchored on
-`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed
-with `status/merged-main` after Workbench PR #501 and Idea PR #837; current
-active blockers are anchored by `sgajbi/lotus-core#882`,
-`sgajbi/lotus-core#885`, #814, #685, and #686, while
-`sgajbi/lotus-manage#626` records the closed Manage PR #627 tax-lot identity fix on
-main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
-`30536615979` passing and branch cleanup complete.
-Workbench PR #505 additionally records
-merged BFF principal-boundary hardening while preserving production
-IdP/session/token-claims and canonical browser proof blockers. #814 is now
-blocked by reopened Core #836 after Idea PR #815, Workbench PR #515, and
-Workbench PR #516 merged; the original authorization and Workbench validator
-defects are no longer the active failure path. The latest canonical rerun
-drained valuation and aggregation queues and reached current Core/Gateway dates,
-but Core positions data quality remained `UNKNOWN`. It remains open until Core
-readiness converges and fresh full canonical validation produces mainline
-capacity-seed evidence.
-PR #819 then reached Idea main
-`3b2cc0bb4472a158cb4617b277276244c0e4a22b` with the then-current #380
-Core-blocker reference synchronized to `sgajbi/lotus-core#856`. Main Releasability
-`30555536256` and CodeQL `30555528134` passed for that exact SHA; wiki source
-did not change in that tranche and strict parity stayed `DiffCount 0`. Current
-governed posture remains 54 tracked Idea RFC-0002 issues, 25 open, and 29
-closed; cross-repo RFC-0002 posture remains 93 label-backed issues, 37 open,
-and 56 closed, split into 27 blocked, 2 in-progress, and 8 tracker issues. The
-blocked subset remains 27 blocked issues, 0 app-actionable blocked issues, 4
-Core dependencies, and 23 external/protected-evidence blockers after fresh
-canonical validation reopened `sgajbi/lotus-core#836` as the active Core
-positions data-quality metadata blocker.
 
-PR #824 then synchronized the Core #836 canonical QA-failure posture to Idea
-main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
-Releasability `30620242970` and CodeQL `30620237795` passed for that SHA,
-including release-image build/smoke/scan, image push, digest inspection,
-signing, provenance/SBOM attestations, release manifest, and release evidence
-upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
-`5e63705` with strict `DiffCount 0`, and local/remote branch cleanup completed
-with no unmerged remote branches. This is Slice 18 source-truth synchronization
-only; #681 and the remaining blocker issues stay open.
 
-PR #825 then synchronized PR #824 merged-main evidence to Idea main
-`8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate `30621485539`,
-post-merge Main Releasability `30621899968`, and post-merge CodeQL
-`30621893764` passed. Repo-authored wiki source was published to
-`lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
-branch was deleted, the local feature branch was deleted after exact
-tree-equivalence verification, the local branch list contained only `main`, and
-no unmerged remote branches remained. This is Slice 18 source-truth
-synchronization only; #681 remains open and no Core readiness, canonical browser
-proof, production identity/session-token authority, supported-feature
-promotion, client-publication, or final RFC-0002 closure is claimed.
 
-PR #826 then synchronized PR #825 source truth to Idea main
-`6fd8159495ca3a7294ade2d819c80ea6aaa350fd`. PR Merge Gate `30623781720`,
-Feature Lane `30623778382`, CodeQL `30624121200`, and exact-main Main
-Releasability `30624125739` passed. Repo-authored wiki source was published to
-`lotus-idea.wiki` commit `272f7cf` with strict `DiffCount 0`; remote branch
-cleanup completed, the local feature branch was absent after fetch/prune, the
-local branch list contained only `main`, and no unmerged remote branches
-remained. #681 returned to `open_in_progress` because Slice 18 remains a
-continuing synchronization issue. This is merged-main evidence synchronization
-only; no Core readiness, canonical browser proof, production identity/session
-authority, supported-feature promotion, client-publication, or final RFC-0002
-closure is claimed.
 
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform
@@ -1214,37 +1025,6 @@ support, context, and supported-feature truth is complete;
 boundary, and production vulnerability
 posture remains uncertified until release evidence exists.
 
-`make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
-`contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-It also lists every blocked issue with the GitHub URL, actionability, blocker
-class, and remaining authority so the Core-vs-protected/external split is
-auditable without chat memory or one-off GitHub queries.
-Current live posture is 234 label-backed RFC-0002 issues across 13
-repositories: 197 closed and 37 open. The open split is 25 `status/blocked`,
-0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
-`sgajbi/lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
-`#1131` are closed after Slice 17 release-governance hardening. `sgajbi/lotus-idea#1110`
-is closed after PR #1116 synchronized final QA closure source truth;
-`sgajbi/lotus-idea#1109` is closed after signal API contract-gate hardening;
-`sgajbi/lotus-idea#1104` is closed after supported-feature gate fixture
-hardening. `sgajbi/lotus-idea#1101`, `sgajbi/lotus-idea#1098`,
-`sgajbi/lotus-idea#1094`, `sgajbi/lotus-idea#1091`,
-`sgajbi/lotus-idea#1088`, and `sgajbi/lotus-idea#1084` are the latest
-QA-closed Idea maintainability hardening issues after local, PR, or
-exact-main validation, wiki publication where required, and branch cleanup
-where applicable.
-`sgajbi/lotus-idea#681` remains the Slice 18 synchronization issue and has PR
-#1097 open; older QA-closed hardening issues remain in the
-execution ledger and are not repeated here as current work.
-Blocked actionability remains 0 app-actionable blocked issues, with 25
-external/protected/canonical-proof evidence blockers. Counts are label-backed
-by `rfc/RFC-0002`; title-only references are reported separately and excluded
-from governed counts unless deliberately labeled and ledgered. This
-keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
-deployment evidence, provider/bank/legal approval, or certification proof. If a
-writable non-Core app-code gap appears, it should not remain blocked; it should
-move to ready or in-progress and receive implementation/PR evidence.
 
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
@@ -1609,8 +1389,8 @@ The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progre
 and 0 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
-closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate fixture hardening;
-#1101 is closed after AI workflow evaluator hardening; #1098 is the
+closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate
+fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues, while #681 remains open
 after PR #1097 merged.
@@ -1633,8 +1413,8 @@ branch cleanup.
 Idea PR #844 synchronized PR #843 evidence to main
 `c21deeb55dcb1d46395c02c95053ab6149ef6ad6`, passed exact-main Main
 Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
-`lotus-idea.wiki` commit `b47cbcb` with strict DiffCount 0, recorded final
-#681 GitHub evidence in the
+`lotus-idea.wiki` commit `b47cbcb` with strict DiffCount 0, recorded final #681 GitHub evidence in
+the
 [#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
 and completed branch cleanup.
 
