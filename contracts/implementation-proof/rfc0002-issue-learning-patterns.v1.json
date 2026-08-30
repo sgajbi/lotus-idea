@@ -91,7 +91,7 @@
     {
       "patternId": "workbench_gateway_surface_proof_boundary",
       "title": "Workbench and Gateway product-surface proof must be backed by route, panel, action, feedback, conversion-intent, and identity evidence.",
-      "currentLedgerIssueNumbers": [674, 685, 686, 687, 1150],
+      "currentLedgerIssueNumbers": [674, 685, 686, 687],
       "relatedIssueNumbers": [449, 897, 905, 988],
       "rfcSlices": ["slice-08", "slice-10", "slice-11", "slice-15"],
       "durableControls": [

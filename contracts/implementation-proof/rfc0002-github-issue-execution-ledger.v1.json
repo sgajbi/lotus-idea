@@ -1420,10 +1420,10 @@
       "issueNumber": 1150,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1150",
       "rfcSlices": ["slice-08"],
-      "githubState": "open",
-      "executionStatus": "open_in_progress",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1150 open and status/in-progress for Slice 08 review-decision correctness hardening. Canonicalize the action-owned review reason exactly once and reuse the same stable source-first sequence for mutation identity, persistence, replay, API response, audit, outbox, and owner evidence. Tests must cover caller omission, single inclusion, and repeated inclusion while proving that changed raw content remains a transport conflict. Add no Gateway/Workbench rewriting, compatibility alias, speculative abstraction, supported-feature promotion, production identity claim, or final RFC-0002 closure claim."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1150 after QA passed for RFC-0002 Slice 08 review-decision reason ownership. PR #1152 rebase-merged branch head 8169e03d92c78675f0411e895b1d7122876934ab to Idea main 782f8596ed56efc42cb5b901e94c42d25f9c7c3c. Exact-head focused proof passed 110 tests plus Ruff and MyPy; the preceding full repository check passed 5,585 unit tests, and PR checks passed Feature Lane, PR Merge Gate workflow/static/security/unit/integration/E2E/PostgreSQL/coverage/Docker/CI-signal lanes and CodeQL. Exact-main Main Releasability run 33295063677, Push-on-main CodeQL run 33295060112, and RFC posture audit run 33295060269 passed. Release image ghcr.io/sgajbi/lotus-idea@sha256:e010376b8a257522ea83c3ca4a25ae0dafec7d4d0e33b8dbacac9319fc1500e4 was published-digest validated, scanned, signed, SBOM/provenance attested, and release/license identity bound. Wiki publication bd8e41e reached strict DiffCount 0. The implementation records the action-owned review reason first and exactly once across business-resource identity, persistence, replay, API projection, audit, and source-safe outbox evidence while preserving non-owner reason order and multiplicity and raw same-key transport idempotency conflict behavior. No assertion or failure was weakened, no Gateway/Workbench rewrite or compatibility layer was added, no speculative abstraction was introduced, no supported feature was promoted, and no final RFC-0002 closure is claimed. Final branch cleanup removed the remote and local implementation branches, retained one clean Idea worktree on main, and found no unmerged remote branch."
     }
   ]
 }
