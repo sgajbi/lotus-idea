@@ -158,13 +158,16 @@ class PostgresIdeaRepository(
         evaluated_at_utc: datetime,
         max_opportunities: int,
     ) -> OpportunityEffectivenessRepositorySummary:
-        return load_opportunity_effectiveness_summary(
-            self._connection,
-            tenant_id=tenant_id,
-            window_start_utc=window_start_utc,
-            window_end_utc=window_end_utc,
-            evaluated_at_utc=evaluated_at_utc,
-            max_opportunities=max_opportunities,
+        return execute_observed_postgres_call(
+            "projection_read",
+            lambda: load_opportunity_effectiveness_summary(
+                self._connection,
+                tenant_id=tenant_id,
+                window_start_utc=window_start_utc,
+                window_end_utc=window_end_utc,
+                evaluated_at_utc=evaluated_at_utc,
+                max_opportunities=max_opportunities,
+            ),
         )
 
     def execute_data_lifecycle(
