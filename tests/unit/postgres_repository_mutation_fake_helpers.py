@@ -21,8 +21,35 @@ def _candidate_record_row(values: Sequence[Any]) -> dict[str, Any]:
             "evidence_packet_id",
             "evidence_hash",
             "candidate_json",
+            "business_identity_id",
+            "identity_policy_version",
+            "material_fingerprint",
+            "material_version",
+            "evidence_version",
+            "change_reason",
+            "supersedes_material_version",
             "persisted_at_utc",
             "updated_at_utc",
+        ),
+        values,
+    )
+
+
+def _candidate_version_history_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
+            "candidate_version_history_id",
+            "candidate_id",
+            "business_identity_id",
+            "material_fingerprint",
+            "material_version",
+            "evidence_version",
+            "change_reason",
+            "source_lifecycle_status",
+            "resulting_lifecycle_status",
+            "supersedes_material_version",
+            "evidence_hash",
+            "recorded_at_utc",
         ),
         values,
     )
@@ -241,6 +268,7 @@ def _row_from_columns(
 
 _ROW_BUILDERS: dict[str, RowBuilder] = {
     "idea_candidate_record": _candidate_record_row,
+    "idea_candidate_version_history": _candidate_version_history_row,
     "idea_idempotency_record": _idempotency_record_row,
     "idea_lifecycle_history": _lifecycle_history_row,
     "idea_audit_event": _audit_event_row,
@@ -266,6 +294,13 @@ def update_candidate_record_row(
         evidence_packet_id,
         evidence_hash,
         candidate_json,
+        business_identity_id,
+        identity_policy_version,
+        material_fingerprint,
+        material_version,
+        evidence_version,
+        change_reason,
+        supersedes_material_version,
         updated_at_utc,
         candidate_id,
         expected_updated_at_utc,
@@ -281,6 +316,13 @@ def update_candidate_record_row(
         row["evidence_packet_id"] = evidence_packet_id
         row["evidence_hash"] = evidence_hash
         row["candidate_json"] = candidate_json
+        row["business_identity_id"] = business_identity_id
+        row["identity_policy_version"] = identity_policy_version
+        row["material_fingerprint"] = material_fingerprint
+        row["material_version"] = material_version
+        row["evidence_version"] = evidence_version
+        row["change_reason"] = change_reason
+        row["supersedes_material_version"] = supersedes_material_version
         row["updated_at_utc"] = updated_at_utc
         return [dict(row)]
     return []

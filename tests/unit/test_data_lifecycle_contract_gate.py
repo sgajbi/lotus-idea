@@ -84,8 +84,9 @@ def test_data_lifecycle_contract_requires_field_classification_and_residency(
 ) -> None:
     module = load_gate()
     payload = load_contract(module)
-    payload["record_inventory"][0]["field_classification_profile_ref"] = "missing:v1"
-    payload["record_inventory"][1]["residency_policy_ref"] = "unapproved-region:v1"
+    records_by_table = {record["table"]: record for record in payload["record_inventory"]}
+    records_by_table["idea_candidate_record"]["field_classification_profile_ref"] = "missing:v1"
+    records_by_table["idea_idempotency_record"]["residency_policy_ref"] = "unapproved-region:v1"
     payload["field_classification_profiles"]["regulated_payload:v1"]["rules"] = {}
     payload["residency_policies"] = {}
 

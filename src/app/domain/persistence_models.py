@@ -12,15 +12,23 @@ from app.domain.conversion_governance import GovernedConversionIntent, GovernedC
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.outbox.events import OutboxEventRecord
 from app.domain.idempotency import IdempotencyRecord
-from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus
+from app.domain.ideas import (
+    CandidateChangeReason,
+    IdeaCandidate,
+    IdeaLifecycleStatus,
+)
 from app.domain.report_evidence import GovernedReportEvidencePack
 from app.domain.review_governance import GovernedFeedbackEvent, GovernedReviewDecision
 
 
 class CandidatePersistenceDecision(StrEnum):
     ACCEPTED = "accepted"
+    EVIDENCE_REFRESHED = "evidence_refreshed"
+    MATERIAL_VERSION_CREATED = "material_version_created"
+    RECURRENT_CONDITION_REOPENED = "recurrent_condition_reopened"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    IDENTITY_CONFLICT = "identity_conflict"
     DUPLICATE_CANDIDATE = "duplicate_candidate"
 
 
@@ -77,10 +85,46 @@ class LifecycleHistoryEntry:
 
 
 @dataclass(frozen=True)
+class CandidateVersionHistoryEntry:
+    candidate_id: str
+    business_identity_id: str
+    material_fingerprint: str
+    material_version: int
+    evidence_version: int
+    change_reason: CandidateChangeReason
+    source_lifecycle_status: IdeaLifecycleStatus | None
+    resulting_lifecycle_status: IdeaLifecycleStatus
+    supersedes_material_version: int | None
+    evidence_hash: str
+    recorded_at_utc: datetime
+
+    def __post_init__(self) -> None:
+        _require_text(self.candidate_id, "candidate_id")
+        _require_text(self.business_identity_id, "business_identity_id")
+        _require_text(self.material_fingerprint, "material_fingerprint")
+        _require_text(self.evidence_hash, "evidence_hash")
+        if not self.material_fingerprint.startswith("sha256:"):
+            raise ValueError("material_fingerprint must use sha256")
+        if not self.evidence_hash.startswith("sha256:"):
+            raise ValueError("evidence_hash must use sha256")
+        if self.material_version < 1:
+            raise ValueError("material_version must be positive")
+        if self.evidence_version < 1:
+            raise ValueError("evidence_version must be positive")
+        if self.supersedes_material_version is not None:
+            if self.supersedes_material_version < 1:
+                raise ValueError("supersedes_material_version must be positive")
+            if self.supersedes_material_version >= self.material_version:
+                raise ValueError("supersedes_material_version must precede material_version")
+        _require_aware_utc(self.recorded_at_utc, "recorded_at_utc")
+
+
+@dataclass(frozen=True)
 class CandidatePersistenceRecord:
     candidate: IdeaCandidate
     evidence_hash: str
     persisted_at_utc: datetime
+    version_history: tuple[CandidateVersionHistoryEntry, ...] = ()
     lifecycle_history: tuple[LifecycleHistoryEntry, ...] = ()
     audit_events: tuple[AuditEvent, ...] = ()
     review_decisions: tuple[GovernedReviewDecision, ...] = ()
@@ -93,6 +137,7 @@ class CandidatePersistenceRecord:
     def __post_init__(self) -> None:
         _require_text(self.evidence_hash, "evidence_hash")
         _require_aware_utc(self.persisted_at_utc, "persisted_at_utc")
+        object.__setattr__(self, "version_history", tuple(self.version_history))
         object.__setattr__(self, "lifecycle_history", tuple(self.lifecycle_history))
         object.__setattr__(self, "audit_events", tuple(self.audit_events))
         object.__setattr__(self, "review_decisions", tuple(self.review_decisions))

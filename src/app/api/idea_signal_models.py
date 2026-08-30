@@ -7,6 +7,7 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.signal_models import (
+    CandidateIdentityResponse,
     ReviewAccessScopeRequest,
     SignalEvaluationResponse,
     SourceRefRequest,
@@ -336,6 +337,7 @@ class CandidatePersistenceSummaryResponse(CamelModel):
     evidence_hash: str | None = Field(default=None, alias="evidenceHash")
     persisted_at_utc: datetime | None = Field(default=None, alias="persistedAtUtc")
     audit_event_type: str | None = Field(default=None, alias="auditEventType")
+    identity: CandidateIdentityResponse | None = None
 
     @classmethod
     def from_record(
@@ -353,6 +355,11 @@ class CandidatePersistenceSummaryResponse(CamelModel):
             evidenceHash=record.evidence_hash if record is not None else None,
             persistedAtUtc=record.persisted_at_utc if record is not None else None,
             auditEventType=audit_event.event_type if audit_event is not None else None,
+            identity=(
+                CandidateIdentityResponse.from_domain(record.candidate.identity)
+                if record is not None
+                else None
+            ),
         )
 
 

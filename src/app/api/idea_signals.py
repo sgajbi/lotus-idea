@@ -429,7 +429,12 @@ def _operation_outcome_from_candidate_persistence(
 ) -> OperationOutcome:
     if persistence_decision is None:
         return operation_outcome_from_signal_evaluation(evaluation)
-    if persistence_decision is CandidatePersistenceDecision.ACCEPTED:
+    if persistence_decision in {
+        CandidatePersistenceDecision.ACCEPTED,
+        CandidatePersistenceDecision.EVIDENCE_REFRESHED,
+        CandidatePersistenceDecision.MATERIAL_VERSION_CREATED,
+        CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED,
+    }:
         return OperationOutcome.ACCEPTED
     if persistence_decision is CandidatePersistenceDecision.REPLAYED:
         return OperationOutcome.REPLAYED

@@ -20,6 +20,7 @@ from app.domain.outbox.delivery import OutboxDeliveryResult
 from app.domain.persistence import (
     CandidatePersistenceRecord,
     CandidatePersistenceResult,
+    CandidateVersionHistoryEntry,
     ConversionPersistenceResult,
     EvidencePackPersistenceResult,
     IdeaRepositorySnapshot,
@@ -92,7 +93,10 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
 )
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
-from app.infrastructure.postgres_candidate_detail import PostgresCandidateDetailRepositoryMixin
+from app.infrastructure.postgres_candidate_detail import (
+    PostgresCandidateDetailRepositoryMixin,
+    candidate_version_history_from_row,
+)
 from app.infrastructure.postgres_snapshot_writes import PostgresSnapshotWriteRepositoryMixin
 from app.infrastructure.persistence.postgres_mutation import (
     PostgresBoundedMutationRepositoryMixin,
@@ -473,6 +477,7 @@ class PostgresIdeaRepository(
         with self._connection.cursor() as cursor:
             candidate_records = self._load_candidate_records(cursor)
             idempotency_records, idempotency_candidates = self._load_idempotency(cursor)
+            self._attach_version_history(cursor, candidate_records)
             self._attach_lifecycle_history(cursor, candidate_records)
             self._attach_audit_events(cursor, candidate_records)
             outbox_events = self._load_outbox_events(cursor)
@@ -519,6 +524,7 @@ class PostgresIdeaRepository(
                     "idea_outbox_event",
                     "idea_audit_event",
                     "idea_lifecycle_history",
+                    "idea_candidate_version_history",
                     "idea_idempotency_record",
                     "idea_candidate_record",
                 ):
@@ -564,6 +570,32 @@ class PostgresIdeaRepository(
             candidate_id = read_row_value(row, "candidate_id")
             records[candidate_id] = candidate_record_from_row(row)
         return records
+
+    def _attach_version_history(
+        self,
+        cursor: PostgresCursor,
+        records: dict[str, CandidatePersistenceRecord],
+    ) -> None:
+        cursor.execute(
+            """
+            SELECT candidate_id, business_identity_id, material_fingerprint,
+                   material_version, evidence_version, change_reason,
+                   source_lifecycle_status, resulting_lifecycle_status,
+                   supersedes_material_version, evidence_hash, recorded_at_utc
+            FROM idea_candidate_version_history
+            ORDER BY material_version, evidence_version, candidate_version_history_id
+            """
+        )
+        for row in cursor.fetchall():
+            candidate_id = read_row_value(row, "candidate_id")
+            record = records.get(candidate_id)
+            if record is None:
+                continue
+            entry: CandidateVersionHistoryEntry = candidate_version_history_from_row(row)
+            records[candidate_id] = replace(
+                record,
+                version_history=(*record.version_history, entry),
+            )
 
     def _load_idempotency(
         self,

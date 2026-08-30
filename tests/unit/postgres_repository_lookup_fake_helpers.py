@@ -92,6 +92,7 @@ def idempotency_lookup_rows(
 
 def _table_from_select(query: str) -> str:
     for table_name in (
+        "idea_candidate_version_history",
         "idea_candidate_record",
         "idea_idempotency_record",
         "idea_lifecycle_history",

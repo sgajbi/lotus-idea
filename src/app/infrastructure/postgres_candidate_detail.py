@@ -4,8 +4,12 @@ from dataclasses import replace
 from typing import Any
 
 from app.domain.audit import AuditEvent
-from app.domain.ideas import IdeaLifecycleStatus
-from app.domain.persistence import CandidatePersistenceRecord, LifecycleHistoryEntry
+from app.domain.ideas import CandidateChangeReason, IdeaLifecycleStatus
+from app.domain.persistence import (
+    CandidatePersistenceRecord,
+    CandidateVersionHistoryEntry,
+    LifecycleHistoryEntry,
+)
 from app.infrastructure.postgres_ai_lineage_reads import ai_explanation_lineage_from_row
 from app.infrastructure.postgres_codecs import (
     conversion_intent_from_json,
@@ -52,6 +56,7 @@ def _attach_candidate_details(
 ) -> CandidatePersistenceRecord | None:
     if record is None:
         return None
+    record = _attach_version_history(cursor, record)
     record = _attach_lifecycle_history(cursor, record)
     record = _attach_audit_events(cursor, record)
     record = _attach_review_decisions(cursor, record)
@@ -60,6 +65,52 @@ def _attach_candidate_details(
     record = _attach_conversion_outcomes(cursor, record)
     record = _attach_report_evidence_packs(cursor, record)
     return _attach_ai_explanation_lineage_records(cursor, record)
+
+
+def _attach_version_history(
+    cursor: PostgresCursor,
+    record: CandidatePersistenceRecord,
+) -> CandidatePersistenceRecord:
+    cursor.execute(
+        """
+        /* lotus-idea candidate-detail-version-history */
+        SELECT candidate_id, business_identity_id, material_fingerprint,
+               material_version, evidence_version, change_reason,
+               source_lifecycle_status, resulting_lifecycle_status,
+               supersedes_material_version, evidence_hash, recorded_at_utc
+        FROM idea_candidate_version_history
+        WHERE candidate_id = %s
+        ORDER BY material_version, evidence_version
+        """,
+        (record.candidate.candidate_id,),
+    )
+    return replace(
+        record,
+        version_history=tuple(candidate_version_history_from_row(row) for row in cursor.fetchall()),
+    )
+
+
+def candidate_version_history_from_row(row: Any) -> CandidateVersionHistoryEntry:
+    source_lifecycle_status = read_row_value(row, "source_lifecycle_status")
+    return CandidateVersionHistoryEntry(
+        candidate_id=read_row_value(row, "candidate_id"),
+        business_identity_id=read_row_value(row, "business_identity_id"),
+        material_fingerprint=read_row_value(row, "material_fingerprint"),
+        material_version=int(read_row_value(row, "material_version")),
+        evidence_version=int(read_row_value(row, "evidence_version")),
+        change_reason=CandidateChangeReason(read_row_value(row, "change_reason")),
+        source_lifecycle_status=(
+            IdeaLifecycleStatus(source_lifecycle_status)
+            if source_lifecycle_status is not None
+            else None
+        ),
+        resulting_lifecycle_status=IdeaLifecycleStatus(
+            read_row_value(row, "resulting_lifecycle_status")
+        ),
+        supersedes_material_version=read_row_value(row, "supersedes_material_version"),
+        evidence_hash=read_row_value(row, "evidence_hash"),
+        recorded_at_utc=read_row_value(row, "recorded_at_utc"),
+    )
 
 
 def _load_base_candidate_record(

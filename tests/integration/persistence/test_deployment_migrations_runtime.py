@@ -76,9 +76,9 @@ def test_existing_schema_requires_validated_adoption_and_rejects_drift(
         )
         replay = executor.execute(_command(DeploymentMigrationOperation.APPLY, run_id="123457"))
 
-    assert adoption.adopted_versions == tuple(f"{index:03d}" for index in range(1, 16))
+    assert adoption.adopted_versions == tuple(f"{index:03d}" for index in range(1, 17))
     assert replay.applied_versions == ()
-    assert replay.current_version == "015"
+    assert replay.current_version == "016"
 
 
 def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
@@ -95,18 +95,18 @@ def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT operation, migration_version FROM lotus_idea_schema_migration_event "
-                "WHERE migration_version = '015' ORDER BY migration_event_id"
+                "WHERE migration_version = '016' ORDER BY migration_event_id"
             )
             events = cursor.fetchall()
 
-    assert applied.applied_versions == tuple(f"{index:03d}" for index in range(1, 16))
-    assert rolled_back.rolled_back_versions == ("015",)
-    assert rolled_back.current_version == "014"
-    assert reapplied.applied_versions == ("015",)
+    assert applied.applied_versions == tuple(f"{index:03d}" for index in range(1, 17))
+    assert rolled_back.rolled_back_versions == ("016",)
+    assert rolled_back.current_version == "015"
+    assert reapplied.applied_versions == ("016",)
     assert [tuple(row) for row in events] == [
-        ("apply", "015"),
-        ("rollback", "015"),
-        ("apply", "015"),
+        ("apply", "016"),
+        ("rollback", "016"),
+        ("apply", "016"),
     ]
 
 
@@ -161,15 +161,15 @@ def test_concurrent_fresh_deploys_are_serialized(postgres_database_url: str) -> 
     with ThreadPoolExecutor(max_workers=2) as pool:
         outcomes = tuple(pool.map(execute, ("123456", "123457")))
 
-    assert sorted(len(outcome) for outcome in outcomes) == [0, 15]
+    assert sorted(len(outcome) for outcome in outcomes) == [0, 16]
     with psycopg.connect(postgres_database_url) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM lotus_idea_schema_migration")
-            assert cursor.fetchone() == (15,)
+            assert cursor.fetchone() == (16,)
             cursor.execute(
                 "SELECT count(*) FROM lotus_idea_schema_migration_event WHERE operation = 'apply'"
             )
-            assert cursor.fetchone() == (15,)
+            assert cursor.fetchone() == (16,)
 
 
 def test_applied_content_drift_fails_before_schema_mutation(
@@ -203,7 +203,7 @@ def test_applied_content_drift_fails_before_schema_mutation(
             )
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM lotus_idea_schema_migration_event")
-            assert cursor.fetchone() == (15,)
+            assert cursor.fetchone() == (16,)
 
 
 def test_exact_cli_persists_release_lineage_and_emits_validated_evidence(
@@ -253,7 +253,7 @@ def test_exact_cli_persists_release_lineage_and_emits_validated_evidence(
                 "count(*) FROM lotus_idea_schema_migration "
                 "GROUP BY environment_class, change_reference, deployment_actor"
             )
-            assert cursor.fetchone() == ("staging", "CHG-123456", "lotus-release", 15)
+            assert cursor.fetchone() == ("staging", "CHG-123456", "lotus-release", 16)
 
 
 @pytest.mark.parametrize("statement", ["UPDATE", "DELETE"])

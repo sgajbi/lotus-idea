@@ -34,8 +34,12 @@ class SourceIngestionBatchLimitExceeded(ValueError):
 
 class HighCashSourceIngestionDecision(StrEnum):
     ACCEPTED = "accepted"
+    EVIDENCE_REFRESHED = "evidence_refreshed"
+    MATERIAL_VERSION_CREATED = "material_version_created"
+    RECURRENT_CONDITION_REOPENED = "recurrent_condition_reopened"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    IDENTITY_CONFLICT = "identity_conflict"
     DUPLICATE_CANDIDATE = "duplicate_candidate"
     SKIPPED_NOT_ELIGIBLE = "skipped_not_eligible"
     BLOCKED = "blocked"
@@ -247,13 +251,7 @@ def _source_ingestion_decision(
 def _persistence_decision(
     decision: CandidatePersistenceDecision,
 ) -> HighCashSourceIngestionDecision:
-    if decision is CandidatePersistenceDecision.ACCEPTED:
-        return HighCashSourceIngestionDecision.ACCEPTED
-    if decision is CandidatePersistenceDecision.REPLAYED:
-        return HighCashSourceIngestionDecision.REPLAYED
-    if decision is CandidatePersistenceDecision.CONFLICT:
-        return HighCashSourceIngestionDecision.CONFLICT
-    return HighCashSourceIngestionDecision.DUPLICATE_CANDIDATE
+    return HighCashSourceIngestionDecision(decision.value)
 
 
 def _require_text(value: str, field_name: str) -> None:

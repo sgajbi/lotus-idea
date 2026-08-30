@@ -5,8 +5,10 @@ from datetime import date, datetime
 from pydantic import Field
 
 from app.api.base_model import CamelModel
+from app.api.signal_models import CandidateIdentityResponse
 from app.domain import (
     CandidatePersistenceRecord,
+    CandidateVersionHistoryEntry,
     GovernedConversionIntent,
     GovernedConversionOutcome,
     GovernedFeedbackEvent,
@@ -20,6 +22,7 @@ from app.domain import (
 
 class CandidateDetailCandidateResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
+    identity: CandidateIdentityResponse
     family: str
     lifecycle_status: str = Field(..., alias="lifecycleStatus")
     review_posture: str = Field(..., alias="reviewPosture")
@@ -40,6 +43,7 @@ class CandidateDetailCandidateResponse(CamelModel):
         score = candidate.score
         return cls(
             candidateId=candidate.candidate_id,
+            identity=CandidateIdentityResponse.from_domain(candidate.identity),
             family=candidate.family.value,
             lifecycleStatus=candidate.lifecycle_status.value,
             reviewPosture=candidate.review_posture.value,
@@ -59,6 +63,38 @@ class CandidateDetailCandidateResponse(CamelModel):
             ),
             createdAtUtc=candidate.created_at_utc,
             updatedAtUtc=candidate.updated_at_utc,
+        )
+
+
+class CandidateVersionHistoryResponse(CamelModel):
+    material_version: int = Field(..., alias="materialVersion")
+    evidence_version: int = Field(..., alias="evidenceVersion")
+    change_reason: str = Field(..., alias="changeReason")
+    source_lifecycle_status: str | None = Field(default=None, alias="sourceLifecycleStatus")
+    resulting_lifecycle_status: str = Field(..., alias="resultingLifecycleStatus")
+    supersedes_material_version: int | None = Field(
+        default=None,
+        alias="supersedesMaterialVersion",
+    )
+    recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
+
+    @classmethod
+    def from_domain(
+        cls,
+        entry: CandidateVersionHistoryEntry,
+    ) -> "CandidateVersionHistoryResponse":
+        return cls(
+            materialVersion=entry.material_version,
+            evidenceVersion=entry.evidence_version,
+            changeReason=entry.change_reason.value,
+            sourceLifecycleStatus=(
+                entry.source_lifecycle_status.value
+                if entry.source_lifecycle_status is not None
+                else None
+            ),
+            resultingLifecycleStatus=entry.resulting_lifecycle_status.value,
+            supersedesMaterialVersion=entry.supersedes_material_version,
+            recordedAtUtc=entry.recorded_at_utc,
         )
 
 
@@ -286,6 +322,10 @@ class AuditSummaryResponse(CamelModel):
 
 class CandidateDetailResponse(CamelModel):
     candidate: CandidateDetailCandidateResponse
+    version_history: tuple[CandidateVersionHistoryResponse, ...] = Field(
+        ...,
+        alias="versionHistory",
+    )
     evidence: CandidateEvidenceResponse
     lifecycle_history: tuple[LifecycleHistoryResponse, ...] = Field(..., alias="lifecycleHistory")
     review_decisions: tuple[ReviewDecisionSummaryResponse, ...] = Field(
@@ -318,6 +358,10 @@ class CandidateDetailResponse(CamelModel):
     ) -> "CandidateDetailResponse":
         return cls(
             candidate=CandidateDetailCandidateResponse.from_record(record),
+            versionHistory=tuple(
+                CandidateVersionHistoryResponse.from_domain(entry)
+                for entry in record.version_history
+            ),
             evidence=CandidateEvidenceResponse.from_record(record),
             lifecycleHistory=tuple(
                 LifecycleHistoryResponse.from_record_entry(history_entry)

@@ -34,6 +34,9 @@ OUTBOX_EVENT_SCHEMA_VERSION = "v1"
 OUTBOX_EVENT_AGGREGATE_TYPE = "idea_candidate"
 SUPPORTED_OUTBOX_EVENT_TYPES = (
     "idea.candidate.persisted.v1",
+    "idea.candidate.evidence_refreshed.v1",
+    "idea.candidate.material_version_created.v1",
+    "idea.candidate.recurrent_condition_reopened.v1",
     "idea.lifecycle.transitioned.v1",
     "idea.review.decision_recorded.v1",
     "idea.feedback.recorded.v1",

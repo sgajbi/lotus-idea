@@ -12,6 +12,7 @@ from app.application.source_safe_cross_repo_proof import (
     required_make_target_evidence_present,
 )
 from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
+from app.domain.outbox.events import SUPPORTED_OUTBOX_EVENT_TYPES
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _load_json_object = load_json_object
@@ -57,15 +58,7 @@ REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS = (
     "POST /api/v1/outbox-delivery/run-once",
 )
 
-REQUIRED_OUTBOX_EVENT_TYPES = (
-    "idea.candidate.persisted.v1",
-    "idea.lifecycle.transitioned.v1",
-    "idea.review.decision_recorded.v1",
-    "idea.feedback.recorded.v1",
-    "idea.conversion.intent_requested.v1",
-    "idea.conversion.outcome_recorded.v1",
-    "idea.report_evidence_pack.requested.v1",
-)
+REQUIRED_OUTBOX_EVENT_TYPES = SUPPORTED_OUTBOX_EVENT_TYPES
 
 REQUIRED_PLATFORM_PRODUCT_IDS = (
     "lotus-idea:AdvisorOpportunityQueue:v1",
