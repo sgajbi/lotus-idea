@@ -324,7 +324,7 @@ def test_run_outbox_delivery_once_retries_then_dead_letters_failed_events() -> N
 
 
 def test_run_outbox_delivery_once_maps_exceptions_to_bounded_failure_reason() -> None:
-    event = outbox_event("idea.feedback.recorded.v1")
+    event = outbox_event("idea.feedback.recorded.v2")
     repository = repository_with_events(event)
 
     summary = run_outbox_delivery_once(

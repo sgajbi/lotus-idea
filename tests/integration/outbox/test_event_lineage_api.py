@@ -82,7 +82,7 @@ def test_review_and_feedback_apis_persist_distinct_request_lineage() -> None:
     )
 
     assert feedback.status_code == 200
-    feedback_event = _latest_event("idea.feedback.recorded.v1")
+    feedback_event = _latest_event("idea.feedback.recorded.v2")
     assert feedback_event.correlation_id == "corr-feedback-api"
     assert feedback_event.trace_id == "trace-feedback-api"
 

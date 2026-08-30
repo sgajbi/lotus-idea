@@ -71,7 +71,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
         repository=repository_with_events(
             pending_event("idea.candidate.persisted.v1"),
             failed_event("idea.lifecycle.transitioned.v1"),
-            deferred_failed_event("idea.feedback.recorded.v1"),
+            deferred_failed_event("idea.feedback.recorded.v2"),
         )
     )
     client = managed_test_client(app)

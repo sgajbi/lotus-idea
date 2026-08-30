@@ -10,6 +10,7 @@ from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.integration.postgres_runtime_support import (
     POSTGRES_REQUIRED_ENV,
     POSTGRES_URL_ENV,
+    clear_disposable_database_rows,
     execute_migrations,
 )
 from tests.support.http import managed_test_client_scope
@@ -29,6 +30,7 @@ def postgres_database_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
             pytest.fail(f"{POSTGRES_URL_ENV} is required for PostgreSQL integration proof")
         pytest.skip(f"{POSTGRES_URL_ENV} is not configured")
 
+    clear_disposable_database_rows(database_url)
     execute_migrations(database_url, MigrationDirection.ROLLBACK)
     execute_migrations(database_url, MigrationDirection.APPLY)
     monkeypatch.setenv("LOTUS_IDEA_DATABASE_URL", database_url)
@@ -37,4 +39,5 @@ def postgres_database_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
         yield database_url
     finally:
         reset_idea_repository_for_tests()
+        clear_disposable_database_rows(database_url)
         execute_migrations(database_url, MigrationDirection.ROLLBACK)

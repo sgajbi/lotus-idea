@@ -380,7 +380,7 @@ def _assert_mutating_workflow_snapshot(
         "idea.candidate.persisted.v1",
         "idea.lifecycle.transitioned.v1",
         "idea.review.decision_recorded.v1",
-        "idea.feedback.recorded.v1",
+        "idea.feedback.recorded.v2",
         "idea.conversion.intent_requested.v1",
         "idea.conversion.outcome_recorded.v1",
         "idea.report_evidence_pack.requested.v1",

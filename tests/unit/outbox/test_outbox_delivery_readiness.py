@@ -40,7 +40,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
         leased_event("idea.lifecycle.transitioned.v1"),
         expired_lease_event("idea.conversion.intent_requested.v1"),
         failed_event("idea.conversion.outcome_recorded.v1"),
-        deferred_failed_event("idea.feedback.recorded.v1"),
+        deferred_failed_event("idea.feedback.recorded.v2"),
         published_event("idea.review.decision_recorded.v1"),
         dead_letter_event("idea.report_evidence_pack.requested.v1"),
     )

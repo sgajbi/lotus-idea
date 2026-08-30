@@ -76,19 +76,23 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
                 "decidedAtUtc": REQUESTED_AT,
             }
         ),
-        lambda: FeedbackRequest.model_validate(
-            {
-                "feedbackId": "feedback-useful-001",
-                "outcome": FeedbackOutcome.USEFUL,
-                "reasonCodes": [],
-                "recordedAtUtc": REQUESTED_AT,
-            }
-        ),
     )
 
     for build_request in invalid_requests:
         with pytest.raises(ValidationError, match="reasonCodes is required"):
             build_request()
+
+
+def test_feedback_request_requires_the_explicit_taxonomy_contract() -> None:
+    with pytest.raises(ValidationError, match="taxonomyVersion"):
+        FeedbackRequest.model_validate(
+            {
+                "feedbackId": "feedback-useful-001",
+                "outcome": FeedbackOutcome.USEFUL,
+                "reason": "relevant",
+                "recordedAtUtc": REQUESTED_AT,
+            }
+        )
 
 
 def _access_scope_payload() -> dict[str, str]:

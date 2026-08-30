@@ -2,26 +2,37 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 
-from app.domain.audit import AuditEvent
 from app.domain.access_scope import ReviewAccessScope
+from app.domain.audit import AuditEvent
 from app.domain.candidate_state import (
     CANDIDATE_STATE_POLICY_VERSION,
     REVIEWABLE_LIFECYCLE_STATUSES,
 )
+from app.domain.feedback_taxonomy import (
+    FeedbackOutcome,
+    FeedbackReason,
+    validate_feedback_taxonomy,
+)
 from app.domain.ideas import (
     EvidenceSupportability,
-    FeedbackOutcome,
     IdeaCandidate,
     IdeaFeedback,
     IdeaLifecycleStatus,
+    OpportunityFamily,
     ReasonCode,
     ReviewPosture,
     SuppressionReason,
     transition_candidate,
 )
-from app.domain.review_queue import QueueSnooze
+from app.domain.review_queue import (
+    DEFAULT_REVIEW_QUEUE_POLICY,
+    QueuePriorityBucket,
+    QueueSnooze,
+    priority_bucket_for_score,
+)
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -98,6 +109,8 @@ class ReviewMutationIdentity:
     suppression_reason: SuppressionReason | None = None
     snoozed_until_utc: datetime | None = None
     source_signal_ids: tuple[str, ...] = ()
+    feedback_taxonomy_version: str | None = None
+    feedback_reason: FeedbackReason | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -116,6 +129,12 @@ class ReviewMutationIdentity:
             _require_aware_utc(self.snoozed_until_utc, "snoozed_until_utc")
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
+        feedback_fields = (self.feedback_taxonomy_version, self.feedback_reason)
+        if self.mutation_type is ReviewMutationType.FEEDBACK_EVENT:
+            if any(value is None for value in feedback_fields):
+                raise ValueError("feedback mutation identity requires taxonomy version and reason")
+        elif any(value is not None for value in feedback_fields):
+            raise ValueError("review decision identity cannot carry feedback taxonomy fields")
 
 
 @dataclass(frozen=True)
@@ -254,15 +273,19 @@ class FeedbackCommand:
     feedback_id: str
     actor: ReviewActorContext
     outcome: FeedbackOutcome
-    reason_codes: tuple[ReasonCode, ...]
+    reason: FeedbackReason
+    taxonomy_version: str
     recorded_at_utc: datetime
 
     def __post_init__(self) -> None:
         _require_text(self.feedback_id, "feedback_id")
+        _require_text(self.taxonomy_version, "taxonomy_version")
         _require_aware_utc(self.recorded_at_utc, "recorded_at_utc")
-        if not self.reason_codes:
-            raise ValueError("reason_codes is required")
-        object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
+        validate_feedback_taxonomy(
+            taxonomy_version=self.taxonomy_version,
+            outcome=self.outcome,
+            reason=self.reason,
+        )
 
 
 @dataclass(frozen=True)
@@ -274,12 +297,28 @@ class GovernedFeedbackEvent:
     source_signal_ids: tuple[str, ...]
     actor_subject: str
     actor_role: ReviewActorRole
+    candidate_family: OpportunityFamily
+    candidate_identity_policy_version: str
+    score_policy_version: str | None
+    score: Decimal | None
+    evidence_supportability: EvidenceSupportability
+    ranking_policy_version: str
+    queue_priority_bucket: QueuePriorityBucket | None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_text(self.evidence_content_hash, "evidence_content_hash")
         _require_text(self.actor_subject, "actor_subject")
+        _require_text(
+            self.candidate_identity_policy_version,
+            "candidate_identity_policy_version",
+        )
+        _require_text(self.ranking_policy_version, "ranking_policy_version")
+        if self.score_policy_version is not None:
+            _require_text(self.score_policy_version, "score_policy_version")
+        if (self.score is None) != (self.score_policy_version is None):
+            raise ValueError("score and score_policy_version must be provided together")
         if not self.source_signal_ids:
             raise ValueError("source_signal_ids is required")
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
@@ -407,12 +446,11 @@ def feedback_mutation_identity_from_command(
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
         event_name=command.outcome.value,
-        reason_codes=_canonical_owned_reason_codes(
-            owner_reason=ReasonCode.FEEDBACK_RECORDED,
-            caller_reason_codes=command.reason_codes,
-        ),
+        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
         occurred_at_utc=command.recorded_at_utc,
         source_signal_ids=candidate.source_signal_ids,
+        feedback_taxonomy_version=command.taxonomy_version,
+        feedback_reason=command.reason,
     )
 
 
@@ -428,9 +466,11 @@ def feedback_mutation_identity_from_event(
         actor_subject=event.actor_subject,
         actor_role=event.actor_role,
         event_name=event.feedback.outcome.value,
-        reason_codes=event.feedback.reason_codes,
+        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
         occurred_at_utc=event.feedback.recorded_at_utc,
         source_signal_ids=event.source_signal_ids,
+        feedback_taxonomy_version=event.feedback.taxonomy_version,
+        feedback_reason=event.feedback.reason,
     )
 
 
@@ -498,11 +538,9 @@ def record_feedback(
     feedback = IdeaFeedback(
         feedback_id=command.feedback_id,
         outcome=command.outcome,
+        reason=command.reason,
+        taxonomy_version=command.taxonomy_version,
         actor_role=command.actor.role.value,
-        reason_codes=_canonical_owned_reason_codes(
-            owner_reason=ReasonCode.FEEDBACK_RECORDED,
-            caller_reason_codes=command.reason_codes,
-        ),
         recorded_at_utc=command.recorded_at_utc,
     )
     feedback_event = GovernedFeedbackEvent(
@@ -513,6 +551,20 @@ def record_feedback(
         source_signal_ids=candidate.source_signal_ids,
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
+        candidate_family=candidate.family,
+        candidate_identity_policy_version=candidate.identity.policy_version,
+        score_policy_version=(
+            candidate.score.policy_version if candidate.score is not None else None
+        ),
+        score=(candidate.score.score if candidate.score is not None else None),
+        evidence_supportability=candidate.evidence_packet.supportability,
+        ranking_policy_version=DEFAULT_REVIEW_QUEUE_POLICY.policy_version,
+        queue_priority_bucket=(
+            priority_bucket_for_score(candidate.score.score)
+            if candidate.score is not None
+            and DEFAULT_REVIEW_QUEUE_POLICY.accepts_score_policy(candidate.score.policy_version)
+            else None
+        ),
     )
     audit_event = AuditEvent(
         event_type="idea.feedback.recorded",
@@ -524,6 +576,8 @@ def record_feedback(
             "candidate_family": candidate.family.value,
             "evidence_packet_id": candidate.evidence_packet.evidence_packet_id,
             "feedback_outcome": command.outcome.value,
+            "feedback_reason": command.reason.value,
+            "feedback_taxonomy_version": command.taxonomy_version,
         },
     )
     return FeedbackResult(feedback_event=feedback_event, audit_event=audit_event)

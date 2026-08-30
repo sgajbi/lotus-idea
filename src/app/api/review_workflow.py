@@ -45,6 +45,7 @@ from app.application.review_workflow import (
 )
 from app.domain import (
     InvalidCandidateState,
+    InvalidFeedbackTaxonomyCombination,
     InvalidReviewAction,
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
@@ -343,6 +344,8 @@ async def record_feedback(
         return _feedback_permission_problem(
             "The caller is not permitted to record feedback for this idea candidate."
         )
+    except InvalidFeedbackTaxonomyCombination:
+        return _feedback_taxonomy_problem()
     except ValueError:
         return _feedback_invalid_request_problem()
 
@@ -419,6 +422,21 @@ def _feedback_invalid_request_problem() -> JSONResponse:
         code="invalid_request",
         title="Invalid request",
         detail="Correct the feedback request and retry.",
+    )
+
+
+def _feedback_taxonomy_problem() -> JSONResponse:
+    code = InvalidFeedbackTaxonomyCombination.code
+    _emit_review_operation_event(
+        IdeaOperation.FEEDBACK_RECORD,
+        OperationOutcome.INVALID_REQUEST,
+        code,
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code=code,
+        title="Invalid feedback taxonomy combination",
+        detail="Use an allowed outcome and reason from the declared feedback taxonomy version.",
     )
 
 

@@ -25,7 +25,9 @@ from app.domain import (
     EvidenceReplayStatus,
     EventLineageContext,
     FeedbackCommand,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
@@ -199,7 +201,8 @@ def feedback_command(
         feedback_id=feedback_id,
         actor=advisor_actor_context(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=recorded_at_utc,
     )
 

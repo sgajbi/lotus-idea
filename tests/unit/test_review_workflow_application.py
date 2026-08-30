@@ -20,7 +20,9 @@ from app.domain import (
     EvidenceFreshness,
     EvidenceSupportability,
     FeedbackCommand,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
@@ -158,7 +160,8 @@ def feedback_command() -> FeedbackCommand:
         feedback_id="feedback-review-workflow-001",
         actor=advisor_context(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=DECIDED_AT,
     )
 
@@ -179,7 +182,8 @@ def mismatched_actor_scope_feedback_command() -> FeedbackCommand:
         feedback_id="feedback-self-asserted-scope",
         actor=alternate_scope_advisor_context(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=DECIDED_AT,
     )
 
@@ -540,7 +544,8 @@ def test_feedback_resource_identity_replays_or_conflicts_independently_of_transp
         feedback_id=first_command.feedback.feedback_id,
         actor=first_command.feedback.actor,
         outcome=FeedbackOutcome.NOT_USEFUL,
-        reason_codes=first_command.feedback.reason_codes,
+        reason=FeedbackReason.NOT_RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=first_command.feedback.recorded_at_utc,
     )
     conflict = record_feedback_to_repository(
@@ -561,7 +566,7 @@ def test_feedback_resource_identity_replays_or_conflicts_independently_of_transp
     assert repository.snapshot().outbox_events == before_retry.outbox_events
 
 
-def test_feedback_resource_identity_treats_the_source_reason_as_canonical() -> None:
+def test_feedback_persistence_publishes_the_canonical_taxonomy() -> None:
     repository = repository_with_candidate()
     first_feedback = feedback_command()
     first = record_feedback_to_repository(
@@ -572,43 +577,23 @@ def test_feedback_resource_identity_treats_the_source_reason_as_canonical() -> N
         ),
         repository=repository,
     )
-    caller_supplied_source_reason = FeedbackCommand(
-        feedback_id=first_feedback.feedback_id,
-        actor=first_feedback.actor,
-        outcome=first_feedback.outcome,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED, *first_feedback.reason_codes),
-        recorded_at_utc=first_feedback.recorded_at_utc,
-    )
-
-    same_transport_key_conflict = record_feedback_to_repository(
-        RecordFeedbackToRepositoryCommand(
-            candidate_id="idea-review-001",
-            feedback=caller_supplied_source_reason,
-            idempotency_key="review-feedback:canonical:first",
-        ),
-        repository=repository,
-    )
-    replayed = record_feedback_to_repository(
-        RecordFeedbackToRepositoryCommand(
-            candidate_id="idea-review-001",
-            feedback=caller_supplied_source_reason,
-            idempotency_key="review-feedback:canonical:replay",
-        ),
-        repository=repository,
-    )
 
     assert first.feedback_result is not None
-    assert first.feedback_result.feedback_event.feedback.reason_codes == (
-        ReasonCode.FEEDBACK_RECORDED,
-        ReasonCode.REVIEW_REQUIRED,
+    assert first.feedback_result.feedback_event.feedback.reason is FeedbackReason.RELEVANT
+    assert (
+        first.feedback_result.feedback_event.feedback.taxonomy_version == FEEDBACK_TAXONOMY_VERSION
     )
-    assert same_transport_key_conflict.feedback_result is None
-    assert same_transport_key_conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
-    assert replayed.feedback_result is None
-    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
-    assert replayed.persistence.record == first.persistence.record
-    assert replayed.persistence.record is not None
-    assert len(replayed.persistence.record.feedback_events) == 1
+    feedback_outbox_event = next(
+        event
+        for event in repository.snapshot().outbox_events.values()
+        if event.event_type == "idea.feedback.recorded.v2"
+    )
+    assert dict(feedback_outbox_event.payload) == {
+        "feedback_outcome": "useful",
+        "feedback_reason": "relevant",
+        "feedback_taxonomy_version": FEEDBACK_TAXONOMY_VERSION,
+        "actor_role": "advisor",
+    }
 
 
 def test_record_feedback_to_repository_returns_not_found_for_missing_candidate() -> None:

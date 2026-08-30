@@ -74,9 +74,10 @@ def build_feedback_response_examples() -> dict[str, dict[str, Any]]:
                     "feedbackId": "feedback-useful-001",
                     "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                     "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                    "taxonomyVersion": "idea-feedback-taxonomy-v1",
                     "outcome": "useful",
+                    "reason": "relevant",
                     "actorRole": "advisor",
-                    "reasonCodes": ["feedback_recorded", "review_required"],
                     "recordedAtUtc": "2026-06-21T10:06:00Z",
                 },
                 "persistence": {

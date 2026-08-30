@@ -54,6 +54,7 @@ from app.domain.review_governance import (
     ReviewAction,
     ReviewActorRole,
 )
+from app.domain.review_queue import QueuePriorityBucket
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
 
 __all__ = (
@@ -300,9 +301,10 @@ def _feedback_event_to_json(feedback: GovernedFeedbackEvent) -> dict[str, Any]:
     return {
         "feedback": {
             "feedback_id": feedback.feedback.feedback_id,
+            "taxonomy_version": feedback.feedback.taxonomy_version,
             "outcome": feedback.feedback.outcome.value,
+            "reason": feedback.feedback.reason.value,
             "actor_role": feedback.feedback.actor_role,
-            "reason_codes": [reason.value for reason in feedback.feedback.reason_codes],
             "recorded_at_utc": feedback.feedback.recorded_at_utc.isoformat(),
         },
         "candidate_id": feedback.candidate_id,
@@ -311,19 +313,35 @@ def _feedback_event_to_json(feedback: GovernedFeedbackEvent) -> dict[str, Any]:
         "source_signal_ids": list(feedback.source_signal_ids),
         "actor_subject": feedback.actor_subject,
         "actor_role": feedback.actor_role.value,
+        "evaluation_context": {
+            "candidate_family": feedback.candidate_family.value,
+            "candidate_identity_policy_version": (feedback.candidate_identity_policy_version),
+            "score_policy_version": feedback.score_policy_version,
+            "score": str(feedback.score) if feedback.score is not None else None,
+            "evidence_supportability": feedback.evidence_supportability.value,
+            "ranking_policy_version": feedback.ranking_policy_version,
+            "queue_priority_bucket": (
+                feedback.queue_priority_bucket.value
+                if feedback.queue_priority_bucket is not None
+                else None
+            ),
+        },
     }
 
 
 def _feedback_event_from_json(payload: Mapping[str, Any]) -> GovernedFeedbackEvent:
-    from app.domain.ideas import FeedbackOutcome, IdeaFeedback
+    from app.domain.feedback_taxonomy import FeedbackOutcome, FeedbackReason
+    from app.domain.ideas import IdeaFeedback
 
     feedback = payload["feedback"]
+    evaluation_context = payload["evaluation_context"]
     return GovernedFeedbackEvent(
         feedback=IdeaFeedback(
             feedback_id=str(feedback["feedback_id"]),
+            taxonomy_version=str(feedback["taxonomy_version"]),
             outcome=FeedbackOutcome(feedback["outcome"]),
+            reason=FeedbackReason(feedback["reason"]),
             actor_role=str(feedback["actor_role"]),
-            reason_codes=tuple(ReasonCode(value) for value in feedback["reason_codes"]),
             recorded_at_utc=_datetime(feedback["recorded_at_utc"]),
         ),
         candidate_id=str(payload["candidate_id"]),
@@ -332,6 +350,29 @@ def _feedback_event_from_json(payload: Mapping[str, Any]) -> GovernedFeedbackEve
         source_signal_ids=tuple(payload["source_signal_ids"]),
         actor_subject=str(payload["actor_subject"]),
         actor_role=ReviewActorRole(payload["actor_role"]),
+        candidate_family=OpportunityFamily(evaluation_context["candidate_family"]),
+        candidate_identity_policy_version=str(
+            evaluation_context["candidate_identity_policy_version"]
+        ),
+        score_policy_version=(
+            str(evaluation_context["score_policy_version"])
+            if evaluation_context.get("score_policy_version") is not None
+            else None
+        ),
+        score=(
+            Decimal(str(evaluation_context["score"]))
+            if evaluation_context.get("score") is not None
+            else None
+        ),
+        evidence_supportability=EvidenceSupportability(
+            evaluation_context["evidence_supportability"]
+        ),
+        ranking_policy_version=str(evaluation_context["ranking_policy_version"]),
+        queue_priority_bucket=(
+            QueuePriorityBucket(evaluation_context["queue_priority_bucket"])
+            if evaluation_context.get("queue_priority_bucket") is not None
+            else None
+        ),
     )
 
 

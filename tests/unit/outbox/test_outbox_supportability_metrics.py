@@ -31,7 +31,7 @@ def test_outbox_supportability_collector_exposes_bounded_runtime_posture(
     repository = repository_with_events(
         pending_event("idea.candidate.persisted.v1"),
         expired_lease_event("idea.lifecycle.transitioned.v1"),
-        failed_event("idea.feedback.recorded.v1"),
+        failed_event("idea.feedback.recorded.v2"),
         deferred_failed_event("idea.review.decision_recorded.v1"),
         published_event("idea.conversion.intent_requested.v1"),
         dead_letter_event("idea.report_evidence_pack.requested.v1"),

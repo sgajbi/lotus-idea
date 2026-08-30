@@ -47,16 +47,19 @@ def test_feedback_success_examples_match_ledger_and_openapi() -> None:
     assert all(FeedbackResponse.model_validate(value) for value in expected.values())
 
     assert expected["accepted"]["feedbackEvent"] is not None
-    assert expected["accepted"]["feedbackEvent"]["reasonCodes"].count("feedback_recorded") == 1
+    assert expected["accepted"]["feedbackEvent"]["taxonomyVersion"] == ("idea-feedback-taxonomy-v1")
+    assert expected["accepted"]["feedbackEvent"]["outcome"] == "useful"
+    assert expected["accepted"]["feedbackEvent"]["reason"] == "relevant"
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
     assert expected["replayed"]["feedbackEvent"] is None
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
 
     request_schema = app.openapi()["components"]["schemas"]["FeedbackRequest"]
-    reason_code_description = request_schema["properties"]["reasonCodes"]["description"]
-    assert (
-        "records the source-owned feedback_recorded reason exactly once" in reason_code_description
+    reason_description = request_schema["properties"]["reason"]["description"]
+    assert "combination is validated by Lotus Idea" in reason_description
+    assert request_schema["properties"]["taxonomyVersion"]["description"].endswith(
+        "idea-feedback-taxonomy-v1."
     )
 
 

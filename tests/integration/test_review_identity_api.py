@@ -72,7 +72,11 @@ def test_feedback_api_governs_resource_identity_across_transport_keys() -> None:
     )
     conflict = client.post(
         route,
-        json=feedback_payload(feedback_id=resource_id, outcome="not_useful"),
+        json=feedback_payload(
+            feedback_id=resource_id,
+            outcome="not_useful",
+            reason="not_relevant",
+        ),
         headers=feedback_headers("feedback-resource-identity-api-changed"),
     )
     after_retry = get_idea_repository().snapshot()
