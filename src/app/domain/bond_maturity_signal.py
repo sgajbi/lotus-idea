@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-import hashlib
-import json
 
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import (
@@ -22,6 +20,7 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
+from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -150,19 +149,19 @@ def _candidate_created_result(
 ) -> SignalEvaluationResult:
     identity = _stable_bond_maturity_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
-        signal_id=f"signal_bond_maturity_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.BOND_MATURITY,
         source_refs=source_refs,
         reason_codes=(ReasonCode.MATURITY_WINDOW,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:bond-maturity:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
     evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_bond_maturity_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -170,7 +169,7 @@ def _candidate_created_result(
         created_at_utc=source_input.evaluated_at_utc,
     )
     candidate = IdeaCandidate(
-        candidate_id=f"idea_bond_maturity_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.BOND_MATURITY,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -248,31 +247,24 @@ def _stable_bond_maturity_identity(
     source_input: BondMaturitySignalInput,
     policy: BondMaturitySignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "family": OpportunityFamily.BOND_MATURITY.value,
-        "maturity_window_days": policy.maturity_window_days,
-        "policy_version": policy.policy_version,
-        "source_reported_maturing_position_count": (
-            source_input.source_reported_maturing_position_count
-        ),
-        "source_reported_next_maturity_date": (
-            source_input.source_reported_next_maturity_date.isoformat()
-            if source_input.source_reported_next_maturity_date is not None
-            else None
-        ),
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.BOND_MATURITY,
+        opportunity_kind="bond_maturity",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "maturity_window_days": policy.maturity_window_days,
+            "policy_version": policy.policy_version,
+            "source_reported_maturing_position_count": (
+                source_input.source_reported_maturing_position_count
+            ),
+            "source_reported_next_maturity_date": (
+                source_input.source_reported_next_maturity_date.isoformat()
+                if source_input.source_reported_next_maturity_date is not None
+                else None
+            ),
+        },
+        source_refs=source_refs,
+    )
