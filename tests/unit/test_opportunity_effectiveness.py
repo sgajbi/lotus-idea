@@ -203,7 +203,7 @@ def test_effectiveness_snapshot_produces_reproducible_source_safe_funnel_math() 
     assert first.detection_to_review.p95_seconds == Decimal("14400")
     assert first.approval_to_conversion.p50_seconds == Decimal("3600")
     assert first.presentation_measurement_status is (
-        PresentationMeasurementStatus.UNAVAILABLE_NO_GOVERNED_PRESENTATION_RECEIPTS
+        PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
     )
     assert first.presented_opportunity_count is None
     assert first.top_ranked_accepted_opportunity_count is None

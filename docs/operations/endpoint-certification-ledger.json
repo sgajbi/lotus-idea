@@ -1910,7 +1910,7 @@
       "path": "/api/v1/operations/opportunity-effectiveness",
       "certification_status": "implemented_not_certified",
       "certification_blockers": [
-        "governed_presentation_receipts_missing",
+        "governed_presentation_receipt_consumer_proof_missing",
         "gateway_workbench_end_to_end_proof_missing"
       ],
       "owner": "lotus-idea owners",
@@ -1921,7 +1921,7 @@
         "GET /api/v1/operations/opportunity-effectiveness?tenantId=tenant-a&windowStartUtc=2026-06-21T00:00:00Z&windowEndUtc=2026-06-22T00:00:00Z&evaluatedAtUtc=2026-06-23T00:00:00Z&maxOpportunities=1000 with operator role, idea.opportunity-effectiveness.read capability, and X-Caller-Tenant-Ids: tenant-a"
       ],
       "response_examples": [
-        "{\"schemaVersion\":\"lotus-idea.opportunity-effectiveness.v1\",\"methodologyPolicyVersion\":\"idea-opportunity-effectiveness-v1\",\"certificationStatus\":\"not_certified\",\"certificationBlockers\":[\"governed_presentation_receipts_missing\",\"gateway_workbench_end_to_end_proof_missing\"],\"supportedFeaturePromoted\":false,\"presentation\":{\"measurementStatus\":\"unavailable_no_governed_presentation_receipts\",\"presentedOpportunityCount\":null,\"topRankedAcceptedOpportunityCount\":null},\"privacyBoundary\":{\"scope\":\"single_tenant\",\"containsRawTenantIdentifier\":false,\"containsRawClientIdentifier\":false,\"containsRawPortfolioIdentifier\":false,\"containsRawCandidateIdentifier\":false,\"containsBusinessIdentityIdentifier\":false,\"containsActorSubject\":false,\"containsCorrelationOrTraceIdentifier\":false,\"containsFreeText\":false}}"
+        "{\"schemaVersion\":\"lotus-idea.opportunity-effectiveness.v1\",\"methodologyPolicyVersion\":\"idea-opportunity-effectiveness-v1\",\"certificationStatus\":\"not_certified\",\"certificationBlockers\":[\"governed_presentation_receipt_consumer_proof_missing\",\"gateway_workbench_end_to_end_proof_missing\"],\"supportedFeaturePromoted\":false,\"presentation\":{\"measurementStatus\":\"unavailable_consumer_certification_pending\",\"presentedOpportunityCount\":null,\"topRankedAcceptedOpportunityCount\":null},\"privacyBoundary\":{\"scope\":\"single_tenant\",\"containsRawTenantIdentifier\":false,\"containsRawClientIdentifier\":false,\"containsRawPortfolioIdentifier\":false,\"containsRawCandidateIdentifier\":false,\"containsBusinessIdentityIdentifier\":false,\"containsActorSubject\":false,\"containsCorrelationOrTraceIdentifier\":false,\"containsFreeText\":false}}"
       ],
       "error_examples": [
         "400 invalid_request for blank scope, naive timestamps, invalid half-open window, evaluation before window end, or maxOpportunities outside 1..10000.",
@@ -1939,6 +1939,46 @@
         "tests/unit/test_postgres_opportunity_effectiveness.py::test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates the typed 200 response example plus product-safe 400/403/503 Problem Details; scripts/endpoint_certification_gate.py requires this implementation-backed ledger entry. Presentation receipt and consumer E2E certification remain issue-backed in sgajbi/lotus-gateway#692 and sgajbi/lotus-workbench#954."
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/idea-candidates/{candidateId}/presentation-receipts",
+      "certification_status": "implemented_not_certified",
+      "certification_blockers": [
+        "gateway_presentation_receipt_pass_through_not_certified",
+        "workbench_visible_render_producer_not_certified"
+      ],
+      "owner": "lotus-idea opportunity effectiveness",
+      "purpose": "Persist immutable, bounded evidence that one exact candidate version was visibly rendered at a governed rank in the advisor review queue without recording client content, candidate rationale, or actor identity.",
+      "when_to_use": "Use from the governed Workbench visible-render producer through exact Gateway pass-through with advisor or operator role, idea.presentation-receipt.record capability, exact tenant entitlement, and a stable Idempotency-Key for the presentation receipt.",
+      "when_not_to_use": "Do not call on queue retrieval, prefetch, filtering, failed render, or background refresh; do not use as a recommendation, suitability decision, client-level surveillance feed, Gateway or Workbench certification, or supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/idea-candidates/candidate-presentation-001/presentation-receipts with Idempotency-Key: receipt-presentation-001, advisor role, idea.presentation-receipt.record capability, X-Caller-Tenant-Ids: tenant-private-bank-sg, and trusted caller-context provenance in production profiles.",
+        "{\"tenantId\":\"tenant-private-bank-sg\",\"presentedAtUtc\":\"2026-08-30T12:00:00Z\",\"rankAtPresentation\":2,\"visibleCandidateCount\":7,\"queueSnapshotDigest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"queuePolicyVersion\":\"idea-review-queue-v1\",\"rankingPolicyVersion\":\"idea-score-v2\",\"candidateMaterialVersion\":1,\"candidateEvidenceVersion\":1}"
+      ],
+      "response_examples": [
+        "{\"receipt\":{\"receiptId\":\"receipt-presentation-001\",\"candidateId\":\"candidate-presentation-001\",\"tenantId\":\"tenant-private-bank-sg\",\"presentedAtUtc\":\"2026-08-30T12:00:00Z\",\"rankAtPresentation\":2,\"visibleCandidateCount\":7,\"queueSnapshotDigest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"queuePolicyVersion\":\"idea-review-queue-v1\",\"rankingPolicyVersion\":\"idea-score-v2\",\"candidateMaterialVersion\":1,\"candidateEvidenceVersion\":1,\"schemaVersion\":\"lotus-idea.candidate-presentation-receipt.v1\",\"surface\":\"advisor_review_queue\",\"producer\":\"lotus-workbench\"},\"persistenceDecision\":\"accepted\",\"durableStorageBacked\":true,\"effectivenessMeasurementStatus\":\"stored_consumer_certification_pending\",\"certificationStatus\":\"not_certified\",\"certificationBlockers\":[\"gateway_presentation_receipt_pass_through_not_certified\",\"workbench_visible_render_producer_not_certified\"],\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "400 invalid_request for malformed bounded fields, non-UTC presentedAtUtc, invalid rank/count, or missing Idempotency-Key.",
+        "403 permission_denied for missing advisor/operator role, idea.presentation-receipt.record capability, exact tenant entitlement, or trusted production provenance.",
+        "404 candidate_not_found without creating receipt evidence.",
+        "409 presentation_receipt_identity_conflict when the Idempotency-Key identifies different immutable evidence.",
+        "409 presentation_receipt_candidate_state_conflict when tenant, material version, evidence version, or chronology does not match the candidate.",
+        "503 durable repository or recovery posture is not write-ready, or presentation receipt persistence fails closed."
+      ],
+      "test_evidence": [
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_accepts_and_replays_exact_visible_render_evidence",
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_rejects_changed_idempotent_evidence",
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_requires_role_capability_and_exact_tenant_scope",
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_fails_closed_on_candidate_or_rank_mismatch",
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_returns_not_found_without_creating_evidence",
+        "tests/integration/test_presentation_receipts_api.py::test_presentation_receipt_api_emits_only_bounded_operation_event_evidence",
+        "tests/integration/test_postgres_presentation_receipts_runtime.py::test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced",
+        "tests/unit/test_presentation_receipts.py::test_in_memory_repository_reports_identity_conflict_without_overwrite",
+        "tests/unit/test_postgres_presentation_receipts.py::test_postgres_receipt_insert_is_candidate_tenant_and_version_fenced"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates the typed 201 success example, required Idempotency-Key and caller-context contract, plus product-safe 400/403/404/409/503 Problem Details. The route remains not certified until sgajbi/lotus-gateway#692 and sgajbi/lotus-workbench#954 are merged and validated on exact main."
     },
     {
       "method": "GET",

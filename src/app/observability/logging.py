@@ -89,6 +89,7 @@ class IdeaOperation(StrEnum):
     MESH_TRUST_TELEMETRY_PREVIEW_READ = "mesh_trust_telemetry_preview_read"
     MESH_TRUST_TELEMETRY_SNAPSHOT_READ = "mesh_trust_telemetry_snapshot_read"
     OPPORTUNITY_EFFECTIVENESS_READ = "opportunity_effectiveness_read"
+    PRESENTATION_RECEIPT_RECORD = "presentation_receipt_record"
     SOURCE_INGESTION_RUN_ONCE = "source_ingestion_run_once"
     SOURCE_INGESTION_READINESS_READ = "source_ingestion_readiness_read"
     IMPLEMENTATION_PROOF_READINESS_READ = "implementation_proof_readiness_read"

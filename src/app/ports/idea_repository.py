@@ -219,7 +219,8 @@ class OpportunityEffectivenessProjectionRepository(Protocol):
     ) -> OpportunityEffectivenessRepositorySummary: ...
 
 
-class PresentationReceiptRepository(Protocol):
+@runtime_checkable
+class PresentationReceiptRepository(CandidateSnapshotRepository, Protocol):
     def record_presentation_receipt(
         self,
         receipt: CandidatePresentationReceipt,

@@ -224,6 +224,12 @@
           "supportability_status": "not_certified"
         },
         {
+          "operation": "presentation_receipt_record",
+          "scope": "Immutable visible-render evidence for one governed candidate version",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
           "operation": "source_ingestion_run_once",
           "scope": "Internal source-ingestion run-once operator action",
           "source_authority": "lotus-core",
