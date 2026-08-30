@@ -1394,8 +1394,9 @@ closed after signal API contract-gate hardening; #1104 is closed after supported
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues. #681 remains in progress
-for Slice 18 synchronization, while #1139 is under protected review in PR #1147
-for live posture hardening.
+for Slice 18 synchronization. #1139 is closed after PR #1147 reached exact main
+with Main Releasability, CodeQL, live posture, wiki parity, and branch-hygiene
+evidence.
 
 ### Live RFC-0002 Posture And Protected-Lane Liveness
 

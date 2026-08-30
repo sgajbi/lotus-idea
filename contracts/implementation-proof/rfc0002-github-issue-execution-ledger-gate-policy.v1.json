@@ -454,19 +454,28 @@
       "data-mesh certification",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ],
-    "1139": [
-      "Keep #1139 open",
-      "truncated GitHub issue-state fetch",
-      "repository-total reconciliation",
-      "live RFC-0002 posture-snapshot workflow gate",
-      "four protected evidence-lane liveness dispositions",
-      "execution-governance hardening only",
-      "does not certify protected migration, capacity, dependency-recovery, or load/soak evidence",
-      "does not promote supported features"
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1139": [
+      "Closed #1139 after QA passed",
+      "PR #1146",
+      "6f92b8c6888bae33e5d7a08cb40763054924bbc4",
+      "PR #1147",
+      "0fd885bbc0542e7df697756f8035bfcb4b5484f4",
+      "PR Merge Gate 33289120249",
+      "Main Releasability run 33289306863",
+      "CodeQL run 33289301162",
+      "Issue Posture Audit run 33289301314",
+      "ghcr.io/sgajbi/lotus-idea@sha256:205a6543520b490dc277d7b9c21cb415770d644c12c6ca779ee6e82e192b29c8",
+      "Wiki publication f806488",
+      "strict DiffCount 0",
+      "patch-equivalent to main",
+      "no assertion, threshold, input population, failure verdict, or supported-feature blocker was weakened",
+      "does not certify protected migration, capacity, dependency-recovery, or load/soak evidence",
+      "does not promote supported features",
+      "final RFC-0002 closure"
+    ],
     "1119": [
       "Closed #1119",
       "PR #1120",

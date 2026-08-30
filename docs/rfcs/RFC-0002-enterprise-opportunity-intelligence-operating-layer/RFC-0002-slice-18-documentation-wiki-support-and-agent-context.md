@@ -1034,8 +1034,11 @@ open `status/blocked` issues are classified and 0 are app-actionable blocked
 issues. The baseline is 200 closed and 37 open across 13 repositories, with 25
 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
 `status/tracker`; at that baseline, `sgajbi/lotus-idea#681` and `#1139` were in
-progress. The current source ledger records #681 in progress and #1139 under
-protected review in PR #1147 for live-posture hardening.
+progress. The current source ledger records #681 in progress and #1139 closed
+after PR #1147 reached exact main `0fd885bbc0542e7df697756f8035bfcb4b5484f4`;
+Main Releasability `33289306863`, CodeQL `33289301162`, live posture audit
+`33289301314`, wiki publication `f806488`, strict parity, and branch cleanup
+passed.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
 `lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,
