@@ -74,6 +74,15 @@ from app.domain.conversion_outcome_policy import (
     validate_conversion_outcome_history,
     validate_conversion_outcome_progression,
 )
+from app.domain.presentation_receipts import (
+    MAX_PRESENTED_CANDIDATE_COUNT,
+    PRESENTATION_PRODUCER,
+    PRESENTATION_RECEIPT_SCHEMA_VERSION,
+    PRESENTATION_SURFACE,
+    CandidatePresentationReceipt,
+    PresentationReceiptDecision,
+    PresentationReceiptResult,
+)
 from app.domain.outbox.events import (
     OUTBOX_EVENT_AGGREGATE_TYPE,
     OUTBOX_EVENT_SCHEMA_VERSION,
@@ -381,6 +390,13 @@ __all__ = [
     "current_conversion_outcome_identity",
     "validate_conversion_outcome_history",
     "validate_conversion_outcome_progression",
+    "MAX_PRESENTED_CANDIDATE_COUNT",
+    "PRESENTATION_PRODUCER",
+    "PRESENTATION_RECEIPT_SCHEMA_VERSION",
+    "PRESENTATION_SURFACE",
+    "CandidatePresentationReceipt",
+    "PresentationReceiptDecision",
+    "PresentationReceiptResult",
     "OutboxEventRecord",
     "EventLineageContext",
     "EventLineageOrigin",

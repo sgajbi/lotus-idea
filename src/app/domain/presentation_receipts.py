@@ -1,0 +1,104 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
+import re
+from typing import Any
+
+
+PRESENTATION_RECEIPT_SCHEMA_VERSION = "lotus-idea.candidate-presentation-receipt.v1"
+PRESENTATION_SURFACE = "advisor_review_queue"
+PRESENTATION_PRODUCER = "lotus-workbench"
+MAX_PRESENTED_CANDIDATE_COUNT = 100
+_REFERENCE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{2,255}$")
+_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+class PresentationReceiptDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
+
+
+@dataclass(frozen=True)
+class CandidatePresentationReceipt:
+    receipt_id: str
+    candidate_id: str
+    tenant_id: str
+    presented_at_utc: datetime
+    rank_at_presentation: int
+    visible_candidate_count: int
+    queue_snapshot_digest: str
+    queue_policy_version: str
+    ranking_policy_version: str
+    candidate_material_version: int
+    candidate_evidence_version: int
+    schema_version: str = PRESENTATION_RECEIPT_SCHEMA_VERSION
+    surface: str = PRESENTATION_SURFACE
+    producer: str = PRESENTATION_PRODUCER
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "receipt_id",
+            "candidate_id",
+            "tenant_id",
+            "queue_policy_version",
+            "ranking_policy_version",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str):
+                raise ValueError(f"{field_name} must be a governed reference")
+            if _REFERENCE_PATTERN.fullmatch(value) is None:
+                raise ValueError(f"{field_name} must be a governed reference")
+        if self.schema_version != PRESENTATION_RECEIPT_SCHEMA_VERSION:
+            raise ValueError("unsupported presentation receipt schema_version")
+        if self.surface != PRESENTATION_SURFACE:
+            raise ValueError("unsupported presentation receipt surface")
+        if self.producer != PRESENTATION_PRODUCER:
+            raise ValueError("unsupported presentation receipt producer")
+        if not isinstance(self.presented_at_utc, datetime):
+            raise ValueError("presented_at_utc must be a datetime")
+        if self.presented_at_utc.tzinfo is None or self.presented_at_utc.utcoffset() is None:
+            raise ValueError("presented_at_utc must be timezone-aware")
+        if self.presented_at_utc.utcoffset() != UTC.utcoffset(self.presented_at_utc):
+            raise ValueError("presented_at_utc must be UTC")
+        if not _is_integer(self.visible_candidate_count) or not (
+            1 <= self.visible_candidate_count <= MAX_PRESENTED_CANDIDATE_COUNT
+        ):
+            raise ValueError(
+                f"visible_candidate_count must be between 1 and {MAX_PRESENTED_CANDIDATE_COUNT}"
+            )
+        if not _is_integer(self.rank_at_presentation) or not (
+            1 <= self.rank_at_presentation <= self.visible_candidate_count
+        ):
+            raise ValueError("rank_at_presentation must be within the visible candidate count")
+        if not isinstance(self.queue_snapshot_digest, str) or (
+            _DIGEST_PATTERN.fullmatch(self.queue_snapshot_digest) is None
+        ):
+            raise ValueError("queue_snapshot_digest must be a sha256 digest")
+        for field_name in ("candidate_material_version", "candidate_evidence_version"):
+            value = getattr(self, field_name)
+            if not _is_integer(value) or value <= 0:
+                raise ValueError(f"{field_name} must be a positive integer")
+
+
+@dataclass(frozen=True)
+class PresentationReceiptResult:
+    decision: PresentationReceiptDecision
+    receipt: CandidatePresentationReceipt | None
+
+
+def _is_integer(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+__all__ = [
+    "MAX_PRESENTED_CANDIDATE_COUNT",
+    "PRESENTATION_PRODUCER",
+    "PRESENTATION_RECEIPT_SCHEMA_VERSION",
+    "PRESENTATION_SURFACE",
+    "CandidatePresentationReceipt",
+    "PresentationReceiptDecision",
+    "PresentationReceiptResult",
+]
