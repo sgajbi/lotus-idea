@@ -148,7 +148,8 @@
     1125,
     1127,
     1129,
-    1131
+    1131,
+    1139
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -451,6 +452,16 @@
       "data-mesh certification",
       "supported-feature promotion",
       "final RFC-0002 closure"
+    ],
+    "1139": [
+      "Keep #1139 open",
+      "truncated GitHub issue-state fetch",
+      "repository-total reconciliation",
+      "live RFC-0002 posture-snapshot workflow gate",
+      "four protected evidence-lane liveness dispositions",
+      "execution-governance hardening only",
+      "does not certify protected migration, capacity, dependency-recovery, or load/soak evidence",
+      "does not promote supported features"
     ]
   },
   "requiredClosedIssueEvidence": {

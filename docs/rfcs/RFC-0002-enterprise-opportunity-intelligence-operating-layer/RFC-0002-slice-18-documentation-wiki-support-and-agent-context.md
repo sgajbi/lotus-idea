@@ -1029,16 +1029,48 @@ Its Markdown output also renders each blocked issue with issue URL,
 actionability, blocker class, and remaining authority, so the current
 Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
-For the current 234 label-backed RFC-0002 issue program posture, 25 open
-`status/blocked` issues are classified; 0 are app-actionable blocked issues.
-The current cross-repo posture is 197 closed and 37 open across 13
-repositories, with `sgajbi/lotus-idea#681` as the in-progress Slice 18 tracker.
+As of 2026-08-30, for the current 237 label-backed RFC-0002 issue program
+posture, 25 open `status/blocked` issues are classified; 0 are app-actionable
+blocked issues. The current cross-repo posture is 200 closed and 37 open across
+13 repositories, with 25 `status/blocked`, 2 `status/in-progress`, 1
+`status/merged-main`, 9 `status/tracker`; `sgajbi/lotus-idea#681` and
+`#1139` are the in-progress Slice 18 tracker and live-posture hardening issue.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
 `lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,
 `lotus-render`, `lotus-archive`, `lotus-ai`, or `lotus-platform` without Core,
 IdP, protected-environment, provider, bank/legal, or certification evidence,
 the issue must be reclassified to ready or in-progress and implemented.
+
+The 2026-08-30 `#1139` hardening tranche removes the hidden 200-issue audit
+window and the same fixed-cap pattern from the 13-repository posture command.
+The shared inventory now queries each repository issue total, requests that
+complete result set, and fails closed when GitHub returns a different
+cardinality. A separate `make rfc0002-issue-posture-live-gate` compares the
+dated source snapshot with live label-backed posture across all 13 repositories
+and rejects count, status-map, title-only-reference, or seven-day freshness
+drift. `.github/workflows/issue-posture-audit.yml` runs that volatile
+external-state check on a daily schedule, manual dispatch, and relevant
+`main`-path changes without making unrelated PR validation depend on mutable
+GitHub state.
+
+The same audit invoked the three capacity-production-like workflows once from
+exact main `f944bdaaa2e9b575268afd18db1b799c9f6abf60`. PostgreSQL capacity run
+`33283746668`, dependency-recovery run `33283753824`, and load/soak run
+`33283761340` each reached the governed self-hosted runner queue with zero steps
+started. They were cancelled cleanly rather than left dangling. This proves
+dispatch wiring only and leaves `#693` blocked on the governed runner,
+protected environment, execution, attestations, and matching FinOps evidence.
+The deployment migration workflow now has a non-mutating request-validation
+mode that cannot enter its protected migrate job; post-merge dispatch can prove
+request wiring without inventing a database credential, change approval, image
+availability, or staging/production evidence. Actual protected migration proof
+remains tracked by `#375`.
+
+The same fixed-window weakness can recur in reusable issue-discovery and
+issue-resolution skills. Platform follow-up `sgajbi/lotus-platform#761` owns
+the cross-repository skill and automation hardening; this Idea slice records
+that dependency without modifying the concurrently active platform branch.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

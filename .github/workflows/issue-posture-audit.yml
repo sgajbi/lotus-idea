@@ -1,0 +1,44 @@
+name: RFC-0002 Issue Posture Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/issue-posture-audit.yml"
+      - "contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json"
+      - "contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"
+      - "scripts/cross_repo_blocker_actionability.py"
+      - "scripts/cross_repo_issue_posture.py"
+      - "scripts/github_issue_inventory.py"
+      - "scripts/issue_posture_live_gate.py"
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: issue-posture-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-posture:
+    name: Compare Published Snapshot With Live GitHub State
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout governed source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Fail on stale or drifting RFC-0002 issue posture
+        run: python scripts/issue_posture_live_gate.py

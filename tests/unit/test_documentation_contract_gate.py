@@ -345,7 +345,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
         + ", ".join(
-            f"`{fragment}`" for fragment in _current_rfc0002_posture_fragments("crossRepo")[:3]
+            f"`{fragment}`" for fragment in _current_rfc0002_posture_fragments("crossRepo")[:-1]
         )
     ]
 
@@ -383,9 +383,8 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
         "95 closed and 25 open; #681 is the current Slice 18 "
         "tracker and #1059 is QA-closed after the Slice 15/19 refactor. "
         "Current governed cross-repo RFC-0002 posture has "
-        f"{cross_repo_fragments[0]} across 13 repositories: "
-        f"{cross_repo_fragments[1]}. The open split is {cross_repo_fragments[2]}; "
-        f"blocked actionability remains {cross_repo_fragments[3]} issues.\n",
+        + " ".join(cross_repo_fragments)
+        + ".\n",
         encoding="utf-8",
     )
 

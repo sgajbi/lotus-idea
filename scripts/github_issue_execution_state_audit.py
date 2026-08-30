@@ -24,6 +24,10 @@ from scripts.github_issue_execution_ledger_gate import (
     _load_gate_policy,
     _load_json,
 )
+from scripts.github_issue_inventory import (
+    fetch_complete_issue_list,
+    fetch_repository_issue_counts,
+)
 
 
 EXPECTED_OPEN_LABEL_BY_STATUS = {
@@ -67,10 +71,9 @@ def load_github_issue_states(path: Path) -> dict[int, GitHubIssueState]:
 def fetch_github_issue_states(
     *,
     repository: str,
-    limit: int,
     required_issue_numbers: set[int] | frozenset[int] | None = None,
 ) -> dict[int, GitHubIssueState]:
-    states = _fetch_github_issue_list(repository=repository, limit=limit)
+    states = _fetch_github_issue_list(repository=repository)
     if required_issue_numbers:
         states.update(
             _fetch_missing_required_issue_states(
@@ -82,31 +85,14 @@ def fetch_github_issue_states(
     return states
 
 
-def _fetch_github_issue_list(*, repository: str, limit: int) -> dict[int, GitHubIssueState]:
-    result = subprocess.run(
-        [
-            "gh",
-            "issue",
-            "list",
-            "--repo",
-            repository,
-            "--state",
-            "all",
-            "--limit",
-            str(limit),
-            "--json",
-            GITHUB_ISSUE_FIELDS,
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
+def _fetch_github_issue_list(*, repository: str) -> dict[int, GitHubIssueState]:
+    total_issue_count = fetch_repository_issue_counts(repository=repository).total
+    raw_payload = fetch_complete_issue_list(
+        repository=repository,
+        state="all",
+        fields=GITHUB_ISSUE_FIELDS,
+        expected_count=total_issue_count,
     )
-    if result.returncode != 0:
-        stderr = result.stderr.strip() or result.stdout.strip()
-        raise RuntimeError(f"gh issue list failed: {stderr}")
-    raw_payload = json.loads(result.stdout)
-    if not isinstance(raw_payload, list):
-        raise ValueError("gh issue list returned non-list JSON")
     return _parse_github_issue_states(raw_payload)
 
 
@@ -341,7 +327,6 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Offline gh issue list JSON fixture. If omitted, the script calls gh.",
     )
     parser.add_argument("--repo", default="sgajbi/lotus-idea")
-    parser.add_argument("--limit", type=int, default=200)
     return parser.parse_args(argv)
 
 
@@ -359,7 +344,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.github_issues_json is not None
             else fetch_github_issue_states(
                 repository=args.repo,
-                limit=args.limit,
                 required_issue_numbers=required_issue_numbers,
             )
         )

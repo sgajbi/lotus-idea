@@ -132,6 +132,17 @@ def test_fetch_github_issue_states_recovers_required_issue_outside_list_window(
     payload_by_number = {issue["number"]: issue for issue in _github_issue_payload(ledger)}
     commands: list[list[str]] = []
 
+    monkeypatch.setattr(
+        module,
+        "fetch_repository_issue_counts",
+        lambda **kwargs: SimpleNamespace(total=1),
+    )
+    monkeypatch.setattr(
+        module,
+        "fetch_complete_issue_list",
+        lambda **kwargs: [payload_by_number[681]],
+    )
+
     def fake_run(
         command: list[str],
         *,
@@ -143,12 +154,6 @@ def test_fetch_github_issue_states_recovers_required_issue_outside_list_window(
         assert capture_output is True
         assert text is True
         commands.append(command)
-        if command[:3] == ["gh", "issue", "list"]:
-            return SimpleNamespace(
-                returncode=0,
-                stdout=json.dumps([payload_by_number[681]]),
-                stderr="",
-            )
         if command[:3] == ["gh", "issue", "view"]:
             return SimpleNamespace(
                 returncode=0,
@@ -161,13 +166,22 @@ def test_fetch_github_issue_states_recovers_required_issue_outside_list_window(
 
     states = module.fetch_github_issue_states(
         repository="sgajbi/lotus-idea",
-        limit=1,
         required_issue_numbers={340, 681},
     )
 
     assert sorted(states) == [340, 681]
-    assert commands[0][:3] == ["gh", "issue", "list"]
-    assert commands[1][:4] == ["gh", "issue", "view", "340"]
+    assert commands == [
+        [
+            "gh",
+            "issue",
+            "view",
+            "340",
+            "--repo",
+            "sgajbi/lotus-idea",
+            "--json",
+            module.GITHUB_ISSUE_FIELDS,
+        ]
+    ]
 
 
 def test_github_issue_execution_state_audit_rejects_rfc_labeled_issue_missing_from_ledger(

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-21",
+  "asOfDate": "2026-08-30",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -1374,6 +1374,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #1131 after PR #1132 rebase-merged masked or nested releasability dispatch rejection to Idea main `015b96ba0f2ce560456dc88c3340cd25a6ab3162`. The dispatcher contract now validates only outer-shell `gh workflow run main-releasability.yml` invocations, rejects masked/chained/backgrounded dispatch commands, and requires the complete dispatch command to carry the immutable dispatch ref plus exact expected SHA. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is release-evidence assurance only and does not promote supported features, certify product support, or close final RFC-0002 blockers."
+    },
+    {
+      "issueNumber": 1139,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1139",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1139 open while the Slice 18 implementation replaces the truncated GitHub issue-state fetch, adds repository-total reconciliation, adds a live RFC-0002 posture-snapshot workflow gate, dates published current-count prose, and records the four protected evidence-lane liveness dispositions. This is execution-governance hardening only; it does not certify protected migration, capacity, dependency-recovery, or load/soak evidence and does not promote supported features."
     }
   ]
 }
