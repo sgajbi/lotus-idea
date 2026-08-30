@@ -8,6 +8,7 @@ import pytest
 
 from app.infrastructure.migrations import (
     MigrationDirection,
+    MigrationStep,
     build_migration_plan,
     discover_migrations,
     dry_run_migration_plan,
@@ -162,6 +163,56 @@ def test_migration_splitter_preserves_postgres_dollar_quoted_blocks() -> None:
     assert rollback_guard.endswith("$$;")
 
 
+def test_migration_splitter_preserves_quoted_semicolons_and_final_statement(
+    tmp_path: Path,
+) -> None:
+    forward_path = tmp_path / "018_quoted_sql.sql"
+    rollback_path = tmp_path / "018_quoted_sql.rollback.sql"
+    forward_path.write_text(
+        """
+        INSERT INTO audit_log(message) VALUES ('adviser''s governed; feedback');
+        DO $governance$
+        BEGIN
+            PERFORM 'internal; statement';
+        END
+        $governance$;
+        SELECT "governed""identifier" FROM audit_log
+        """,
+        encoding="utf-8",
+    )
+    rollback_path.write_text("SELECT 1;", encoding="utf-8")
+    step = MigrationStep(
+        version="018",
+        name="quoted_sql",
+        forward_path=forward_path,
+        rollback_path=rollback_path,
+    )
+
+    statements = migration_statements(step, MigrationDirection.APPLY)
+
+    assert statements == (
+        "INSERT INTO audit_log(message) VALUES ('adviser''s governed; feedback');",
+        "DO $governance$\n        BEGIN\n            PERFORM 'internal; statement';\n        END\n        $governance$;",
+        'SELECT "governed""identifier" FROM audit_log;',
+    )
+
+
+def test_migration_splitter_rejects_unterminated_quoted_sql(tmp_path: Path) -> None:
+    forward_path = tmp_path / "018_unterminated_sql.sql"
+    rollback_path = tmp_path / "018_unterminated_sql.rollback.sql"
+    forward_path.write_text("SELECT 'unterminated;", encoding="utf-8")
+    rollback_path.write_text("SELECT 1;", encoding="utf-8")
+    step = MigrationStep(
+        version="018",
+        name="unterminated_sql",
+        forward_path=forward_path,
+        rollback_path=rollback_path,
+    )
+
+    with pytest.raises(ValueError, match="Unterminated SQL quote '"):
+        migration_statements(step, MigrationDirection.APPLY)
+
+
 def test_candidate_state_rollback_is_safe_when_the_foundation_table_is_absent() -> None:
     rollback_sql = (ROOT / "migrations" / "005_candidate_state_policy.rollback.sql").read_text(
         encoding="utf-8"
@@ -259,6 +310,34 @@ def test_tracked_migration_apply_fails_closed_on_content_drift() -> None:
     )
 
     with pytest.raises(ValueError, match="content drift"):
+        execute_tracked_migration_plan(connection, plan)
+
+    assert connection.commit_count == 0
+    assert connection.rollback_count == 1
+
+
+def test_tracked_migration_apply_fails_closed_when_history_is_ahead_of_image() -> None:
+    plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
+    history = [(step.version, step.name, step.content_sha256) for step in plan.steps] + [
+        ("999", "unknown", "sha256:" + "0" * 64)
+    ]
+    connection = TrackedMigrationConnection(history)
+
+    with pytest.raises(ValueError, match="history is ahead of the current image"):
+        execute_tracked_migration_plan(connection, plan)
+
+    assert connection.commit_count == 0
+    assert connection.rollback_count == 1
+
+
+def test_tracked_migration_apply_fails_closed_on_non_contiguous_history() -> None:
+    plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
+    second_step = plan.steps[1]
+    connection = TrackedMigrationConnection(
+        [(second_step.version, second_step.name, second_step.content_sha256)]
+    )
+
+    with pytest.raises(ValueError, match="history is not a contiguous image prefix"):
         execute_tracked_migration_plan(connection, plan)
 
     assert connection.commit_count == 0
