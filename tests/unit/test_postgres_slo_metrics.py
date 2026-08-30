@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import pytest
+import psycopg
 from typing import NoReturn
 
 import app.infrastructure.postgres_slo as postgres_slo_module
+from app.infrastructure.postgres_slo import PostgresOperationUnavailableError
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 
@@ -44,6 +46,37 @@ def test_postgres_snapshot_records_failure_without_query_identity(
     assert set(observations[0]) == {"operation", "outcome", "duration_seconds"}
 
 
+def test_postgres_driver_failure_is_translated_after_recording_failure_sli(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observations: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        postgres_slo_module,
+        "observe_postgres_operation",
+        lambda **values: observations.append(values),
+    )
+    driver_error = psycopg.OperationalError("connection unavailable")
+
+    with pytest.raises(
+        PostgresOperationUnavailableError,
+        match="PostgreSQL operation unavailable",
+    ) as captured:
+        postgres_slo_module.execute_observed_postgres_call(
+            "projection_read",
+            lambda: _raise(driver_error),
+        )
+
+    assert captured.value.__cause__ is driver_error
+    assert len(observations) == 1
+    assert observations[0]["operation"] == "projection_read"
+    assert observations[0]["outcome"] == "failed"
+    assert set(observations[0]) == {"operation", "outcome", "duration_seconds"}
+
+
 class FailingConnection(FakePostgresConnection):
     def cursor(self) -> NoReturn:
         raise RuntimeError("database unavailable")
+
+
+def _raise(error: Exception) -> NoReturn:
+    raise error
