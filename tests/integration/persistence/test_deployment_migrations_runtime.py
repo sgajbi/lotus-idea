@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from typing import cast
+from typing import Any, cast
 
 import psycopg
 import pytest
@@ -29,6 +29,7 @@ from app.infrastructure.migrations import (
     discover_migrations,
     migration_bundle_sha256,
 )
+from app.application.deployment_migration_contract import load_deployment_migration_contract
 from scripts.deployment_migration_evidence_gate import (
     validate_deployment_migration_evidence,
 )
@@ -37,7 +38,14 @@ from tests.integration.postgres_runtime_support import execute_migrations
 
 ROOT = Path(__file__).resolve().parents[3]
 MIGRATIONS_DIR = ROOT / "migrations"
-MIGRATION_BUNDLE_SHA256 = migration_bundle_sha256(discover_migrations(MIGRATIONS_DIR))
+MIGRATION_CONTRACT_PATH = (
+    ROOT / "contracts" / "operations" / "lotus-idea-deployment-migrations.v1.json"
+)
+MIGRATIONS = discover_migrations(MIGRATIONS_DIR)
+MIGRATION_BUNDLE_SHA256 = migration_bundle_sha256(MIGRATIONS)
+MIGRATION_VERSIONS = tuple(migration.version for migration in MIGRATIONS)
+CURRENT_MIGRATION_VERSION = MIGRATION_VERSIONS[-1]
+PREVIOUS_MIGRATION_VERSION = MIGRATION_VERSIONS[-2]
 
 
 def test_existing_schema_requires_validated_adoption_and_rejects_drift(
@@ -53,6 +61,9 @@ def test_existing_schema_requires_validated_adoption_and_rejects_drift(
             executor.execute(_command(DeploymentMigrationOperation.APPLY))
         with connection.cursor() as cursor:
             expected_fingerprint = postgres_idea_schema_fingerprint(cursor)
+            contract = load_deployment_migration_contract(MIGRATION_CONTRACT_PATH)
+            assert expected_fingerprint == contract.schema_fingerprint_sha256
+            assert _schema_inventory_counts(cursor) == _contract_schema_inventory_counts()
             cursor.execute("ALTER TABLE idea_candidate_record ADD COLUMN adoption_drift TEXT")
         connection.commit()
         with pytest.raises(
@@ -76,9 +87,9 @@ def test_existing_schema_requires_validated_adoption_and_rejects_drift(
         )
         replay = executor.execute(_command(DeploymentMigrationOperation.APPLY, run_id="123457"))
 
-    assert adoption.adopted_versions == tuple(f"{index:03d}" for index in range(1, 18))
+    assert adoption.adopted_versions == MIGRATION_VERSIONS
     assert replay.applied_versions == ()
-    assert replay.current_version == "017"
+    assert replay.current_version == CURRENT_MIGRATION_VERSION
 
 
 def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
@@ -95,18 +106,19 @@ def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT operation, migration_version FROM lotus_idea_schema_migration_event "
-                "WHERE migration_version = '017' ORDER BY migration_event_id"
+                "WHERE migration_version = %s ORDER BY migration_event_id",
+                (CURRENT_MIGRATION_VERSION,),
             )
             events = cursor.fetchall()
 
-    assert applied.applied_versions == tuple(f"{index:03d}" for index in range(1, 18))
-    assert rolled_back.rolled_back_versions == ("017",)
-    assert rolled_back.current_version == "016"
-    assert reapplied.applied_versions == ("017",)
+    assert applied.applied_versions == MIGRATION_VERSIONS
+    assert rolled_back.rolled_back_versions == (CURRENT_MIGRATION_VERSION,)
+    assert rolled_back.current_version == PREVIOUS_MIGRATION_VERSION
+    assert reapplied.applied_versions == (CURRENT_MIGRATION_VERSION,)
     assert [tuple(row) for row in events] == [
-        ("apply", "017"),
-        ("rollback", "017"),
-        ("apply", "017"),
+        ("apply", CURRENT_MIGRATION_VERSION),
+        ("rollback", CURRENT_MIGRATION_VERSION),
+        ("apply", CURRENT_MIGRATION_VERSION),
     ]
 
 
@@ -161,15 +173,15 @@ def test_concurrent_fresh_deploys_are_serialized(postgres_database_url: str) -> 
     with ThreadPoolExecutor(max_workers=2) as pool:
         outcomes = tuple(pool.map(execute, ("123456", "123457")))
 
-    assert sorted(len(outcome) for outcome in outcomes) == [0, 16]
+    assert sorted(len(outcome) for outcome in outcomes) == [0, len(MIGRATIONS)]
     with psycopg.connect(postgres_database_url) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM lotus_idea_schema_migration")
-            assert cursor.fetchone() == (16,)
+            assert cursor.fetchone() == (len(MIGRATIONS),)
             cursor.execute(
                 "SELECT count(*) FROM lotus_idea_schema_migration_event WHERE operation = 'apply'"
             )
-            assert cursor.fetchone() == (16,)
+            assert cursor.fetchone() == (len(MIGRATIONS),)
 
 
 def test_applied_content_drift_fails_before_schema_mutation(
@@ -203,7 +215,7 @@ def test_applied_content_drift_fails_before_schema_mutation(
             )
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM lotus_idea_schema_migration_event")
-            assert cursor.fetchone() == (16,)
+            assert cursor.fetchone() == (len(MIGRATIONS),)
 
 
 def test_exact_cli_persists_release_lineage_and_emits_validated_evidence(
@@ -253,7 +265,12 @@ def test_exact_cli_persists_release_lineage_and_emits_validated_evidence(
                 "count(*) FROM lotus_idea_schema_migration "
                 "GROUP BY environment_class, change_reference, deployment_actor"
             )
-            assert cursor.fetchone() == ("staging", "CHG-123456", "lotus-release", 16)
+            assert cursor.fetchone() == (
+                "staging",
+                "CHG-123456",
+                "lotus-release",
+                len(MIGRATIONS),
+            )
 
 
 @pytest.mark.parametrize("statement", ["UPDATE", "DELETE"])
@@ -283,6 +300,43 @@ def _executor(connection: psycopg.Connection[object]) -> PostgresDeploymentMigra
         cast(DeploymentMigrationConnection, connection),
         migrations_dir=MIGRATIONS_DIR,
     )
+
+
+def _schema_inventory_counts(cursor: Any) -> dict[str, int]:
+    queries = {
+        "ideaTableCount": """SELECT COUNT(*) FROM pg_catalog.pg_tables
+                              WHERE schemaname = 'public'
+                                AND tablename LIKE 'idea\\_%' ESCAPE '\\'""",
+        "columnCount": """SELECT COUNT(*) FROM information_schema.columns
+                           WHERE table_schema = 'public'
+                             AND table_name LIKE 'idea\\_%' ESCAPE '\\'""",
+        "constraintCount": """SELECT COUNT(*) FROM pg_constraint constraint_record
+                               JOIN pg_class relation
+                                 ON relation.oid = constraint_record.conrelid
+                               JOIN pg_namespace namespace
+                                 ON namespace.oid = relation.relnamespace
+                               WHERE namespace.nspname = 'public'
+                                 AND relation.relname LIKE 'idea\\_%' ESCAPE '\\'""",
+        "indexCount": """SELECT COUNT(*) FROM pg_indexes
+                          WHERE schemaname = 'public'
+                            AND tablename LIKE 'idea\\_%' ESCAPE '\\'""",
+    }
+    counts: dict[str, int] = {}
+    for name, query in queries.items():
+        cursor.execute(query)
+        row = cursor.fetchone()
+        assert row is not None
+        counts[name] = int(row[0])
+    return counts
+
+
+def _contract_schema_inventory_counts() -> dict[str, int]:
+    payload = json.loads(MIGRATION_CONTRACT_PATH.read_text(encoding="utf-8"))
+    adoption = payload["legacyAdoption"]
+    return {
+        name: int(adoption[name])
+        for name in ("ideaTableCount", "columnCount", "constraintCount", "indexCount")
+    }
 
 
 def _command(
