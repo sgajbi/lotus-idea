@@ -99,9 +99,7 @@ def test_presentation_receipt_api_accepts_and_replays_exact_visible_render_evide
     }
     assert payload["persistenceDecision"] == "accepted"
     assert payload["durableStorageBacked"] is False
-    assert payload["effectivenessMeasurementStatus"] == (
-        "stored_consumer_certification_pending"
-    )
+    assert payload["effectivenessMeasurementStatus"] == ("stored_consumer_certification_pending")
     assert payload["certificationStatus"] == "not_certified"
     assert payload["supportedFeaturePromoted"] is False
     assert replayed.json()["persistenceDecision"] == "replayed"
