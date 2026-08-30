@@ -94,6 +94,9 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
 from app.infrastructure.postgres_opportunity_effectiveness import (
     load_opportunity_effectiveness_summary,
 )
+from app.infrastructure.postgres_presentation_receipts import (
+    PostgresPresentationReceiptRepositoryMixin,
+)
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
 from app.infrastructure.postgres_candidate_detail import (
@@ -129,6 +132,7 @@ class PostgresIdeaRepository(
     PostgresOutboxRepositoryMixin,
     PostgresOutboxRecoveryRepositoryMixin,
     PostgresDownstreamSubmissionRepositoryMixin,
+    PostgresPresentationReceiptRepositoryMixin,
 ):
     """PostgreSQL-backed implementation of the governed idea repository ports."""
 

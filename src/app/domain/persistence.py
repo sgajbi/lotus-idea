@@ -21,6 +21,9 @@ from app.domain.persistence_review_workflow import InMemoryReviewWorkflowReposit
 from app.domain.persistence_downstream_submission import (
     InMemoryDownstreamSubmissionRepositoryMixin,
 )
+from app.domain.persistence_presentation_receipts import (
+    InMemoryPresentationReceiptRepositoryMixin,
+)
 from app.domain.persistence_conversion_outcomes import (
     conversion_outcome_identity_result,
     precheck_conversion_outcome_identity_mutation,
@@ -60,6 +63,7 @@ from app.domain.conversion_outcome_policy import (
     validate_conversion_outcome_progression,
 )
 from app.domain.report_evidence import ReportEvidencePackResult
+from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.lotus_ai_attestation_replay import LotusAIAttestationReplayIndex
 from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 
@@ -70,6 +74,7 @@ class InMemoryIdeaRepository(
     InMemoryOutboxRepositoryMixin,
     InMemoryReviewWorkflowRepositoryMixin,
     InMemoryDownstreamSubmissionRepositoryMixin,
+    InMemoryPresentationReceiptRepositoryMixin,
 ):
     """Behavioral reference repository for local development and unit tests."""
 
@@ -85,6 +90,7 @@ class InMemoryIdeaRepository(
         self._outbox_events: dict[str, OutboxEventRecord] = {}
         self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
+        self._presentation_receipts: dict[str, CandidatePresentationReceipt] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)

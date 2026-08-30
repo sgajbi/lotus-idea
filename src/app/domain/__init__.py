@@ -80,8 +80,10 @@ from app.domain.presentation_receipts import (
     PRESENTATION_RECEIPT_SCHEMA_VERSION,
     PRESENTATION_SURFACE,
     CandidatePresentationReceipt,
+    PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
     PresentationReceiptResult,
+    validate_presentation_receipt_candidate,
 )
 from app.domain.outbox.events import (
     OUTBOX_EVENT_AGGREGATE_TYPE,
@@ -395,8 +397,10 @@ __all__ = [
     "PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_SURFACE",
     "CandidatePresentationReceipt",
+    "PresentationReceiptCandidateStateError",
     "PresentationReceiptDecision",
     "PresentationReceiptResult",
+    "validate_presentation_receipt_candidate",
     "OutboxEventRecord",
     "EventLineageContext",
     "EventLineageOrigin",
