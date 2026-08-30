@@ -13,10 +13,12 @@ from app.application.conversion_workflow import (
     RequestConversionIntentToRepositoryCommand,
     request_conversion_intent_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     CandidatePersistenceDecision,
     ConversionIntentCommand,
     ConversionPersistenceDecision,
+    ConversionPersistenceResult,
     ConversionTarget,
     EvidenceFreshness,
     EvidenceSupportability,
@@ -52,9 +54,56 @@ def test_request_conversion_intent_uses_candidate_projection_without_snapshot() 
         repository=repository,
     )
 
-    assert result.conversion_result is not None
+    assert result.conversion_intent is not None
     assert result.persistence.decision is ConversionPersistenceDecision.ACCEPTED
     assert repository.looked_up_candidate_ids == ["idea-conversion-workflow-001"]
+
+
+def test_conversion_intent_replay_returns_exact_persisted_intent() -> None:
+    repository = repository_with_approved_candidate()
+    command = RequestConversionIntentToRepositoryCommand(
+        candidate_id="idea-conversion-workflow-001",
+        conversion=conversion_command(),
+        idempotency_key="conversion-workflow-request-001",
+        access_scope_filter=authorized_scope_filter(),
+    )
+
+    accepted = request_conversion_intent_to_repository(command, repository=repository)
+    replayed = request_conversion_intent_to_repository(command, repository=repository)
+
+    assert accepted.conversion_intent is not None
+    assert replayed.conversion_intent == accepted.conversion_intent
+    assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
+    assert replayed.persistence.record == accepted.persistence.record
+    assert replayed.persistence.record is not None
+    assert len(replayed.persistence.record.conversion_intents) == 1
+
+
+def test_conversion_intent_replay_fails_closed_when_persisted_intent_is_missing() -> None:
+    repository = repository_with_approved_candidate()
+    record = repository.candidate_record_by_id("idea-conversion-workflow-001")
+    assert record is not None
+    replay_repository = PrecheckedConversionWorkflowRepository(
+        repository,
+        ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=record,
+        ),
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="exactly one persisted action",
+    ):
+        request_conversion_intent_to_repository(
+            RequestConversionIntentToRepositoryCommand(
+                candidate_id="idea-conversion-workflow-001",
+                conversion=conversion_command(),
+                idempotency_key="conversion-workflow-request-001",
+                access_scope_filter=authorized_scope_filter(),
+            ),
+            repository=replay_repository,
+        )
 
 
 def test_request_conversion_intent_returns_not_found_without_snapshot_for_missing_candidate() -> (
@@ -72,7 +121,7 @@ def test_request_conversion_intent_returns_not_found_without_snapshot_for_missin
         repository=repository,
     )
 
-    assert result.conversion_result is None
+    assert result.conversion_intent is None
     assert result.persistence.decision is ConversionPersistenceDecision.NOT_FOUND
     assert result.persistence.record is None
     assert repository.looked_up_candidate_ids == ["missing-candidate"]
@@ -235,3 +284,16 @@ class ProjectionOnlyConversionWorkflowRepository:
         raise AssertionError(
             "conversion workflow candidate lookup must not hydrate a full snapshot"
         )
+
+
+class PrecheckedConversionWorkflowRepository(ProjectionOnlyConversionWorkflowRepository):
+    def __init__(
+        self,
+        repository: InMemoryIdeaRepository,
+        prechecked: ConversionPersistenceResult,
+    ) -> None:
+        super().__init__(repository)
+        self._prechecked = prechecked
+
+    def precheck_conversion_mutation(self, **kwargs: Any) -> ConversionPersistenceResult:
+        return self._prechecked

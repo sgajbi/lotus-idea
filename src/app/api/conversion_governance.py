@@ -20,10 +20,14 @@ from app.api.conversion_governance_operations import (
     conversion_invalid_request_response,
     conversion_invalid_state_response,
     conversion_permission_denied_response,
+    emit_conversion_operation_event,
     emit_conversion_persistence_event_or_problem,
     prepare_conversion_mutation,
 )
-from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
+from app.api.durable_write_guard import (
+    durable_repository_write_unavailable_metadata,
+    recovery_posture_problem,
+)
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.examples.conversion_workflow import (
     build_conversion_intent_response_examples,
@@ -43,11 +47,13 @@ from app.application.conversion_workflow import (
     record_conversion_outcome_to_repository,
     request_conversion_intent_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     InvalidConversionIntent,
     InvalidConversionOutcome,
 )
-from app.observability import IdeaOperation
+from app.domain.recovery_posture import ServiceRecoveryPosture
+from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import PermissionDeniedError
 
 _CONVERSION_INTENT_CAPABILITY = "idea.conversion.intent.record"
@@ -112,14 +118,19 @@ async def record_conversion_intent(
         )
         if isinstance(context, JSONResponse):
             return context
-        result = _record_conversion_intent(
-            request=request,
-            candidate_id=candidate_id,
-            idempotency_key=idempotency_key,
-            context=context,
-            http_request=http_request,
-            causation_id=x_causation_id,
-        )
+        try:
+            result = _record_conversion_intent(
+                request=request,
+                candidate_id=candidate_id,
+                idempotency_key=idempotency_key,
+                context=context,
+                http_request=http_request,
+                causation_id=x_causation_id,
+            )
+        except PersistedActionEvidenceUnavailable:
+            return _conversion_intent_persisted_evidence_problem(
+                durable_storage_backed=context.durable_storage_backed
+            )
     except (PermissionDeniedError, ConversionAccessScopeDenied):
         return _conversion_intent_permission_denied_response()
     except InvalidConversionIntent:
@@ -216,6 +227,19 @@ def _conversion_intent_invalid_request_response() -> JSONResponse:
     )
 
 
+def _conversion_intent_persisted_evidence_problem(
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse:
+    emit_conversion_operation_event(
+        IdeaOperation.CONVERSION_INTENT,
+        OperationOutcome.BLOCKED,
+        error_code="service_recovery_degraded",
+        durable_storage_backed=durable_storage_backed,
+    )
+    return recovery_posture_problem(ServiceRecoveryPosture.DEGRADED)
+
+
 def _conversion_intent_api_response(
     result: ConversionIntentWorkflowResult,
     *,
@@ -229,11 +253,7 @@ def _conversion_intent_api_response(
     if problem is not None:
         return problem
     return ConversionIntentApiResponse(
-        conversionIntent=(
-            ConversionIntentResponse.from_domain(result.conversion_result.conversion_intent)
-            if result.conversion_result is not None
-            else None
-        ),
+        conversionIntent=ConversionIntentResponse.from_domain(result.require_conversion_intent()),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
@@ -334,7 +354,10 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
         "through the RFC-0002 Slice 12 conversion foundation. The route requires a "
         "conversion-intent capability, complete tenant/book/portfolio/client caller "
         "entitlement scope, and Idempotency-Key, transitions only through the canonical "
-        "idea lifecycle graph, and does not grant Advise, Manage, Report, suitability, "
+        "idea lifecycle graph, and returns the exact persisted intent for accepted and "
+        "replayed success responses. Missing or ambiguous persisted intent evidence fails "
+        "closed. The route "
+        "does not grant Advise, Manage, Report, suitability, "
         "execution, or client-communication authority."
     ),
     "status_code": status.HTTP_200_OK,
@@ -342,7 +365,7 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
     "tags": ["Idea Conversion"],
     "responses": {
         200: {
-            "description": "Conversion intent accepted or replayed through the internal repository foundation.",
+            "description": "Conversion intent accepted or replayed with the exact persisted intent.",
             "content": {
                 "application/json": {
                     "example": build_conversion_intent_response_examples()["accepted"]

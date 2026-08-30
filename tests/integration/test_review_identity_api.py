@@ -43,7 +43,7 @@ def test_review_action_api_governs_resource_identity_across_transport_keys() -> 
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["reviewDecision"] is None
+    assert replayed.json()["reviewDecision"] == first.json()["reviewDecision"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "review_identity_conflict"
@@ -83,7 +83,7 @@ def test_feedback_api_governs_resource_identity_across_transport_keys() -> None:
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["feedbackEvent"] is None
+    assert replayed.json()["feedbackEvent"] == first.json()["feedbackEvent"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "review_identity_conflict"

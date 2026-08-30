@@ -25,46 +25,42 @@ CONVERSION_OUTCOME_SUCCESS_EXAMPLE_SUMMARIES = {
 
 
 def build_conversion_intent_response_examples() -> dict[str, dict[str, Any]]:
+    accepted = _validated_conversion_intent_response(
+        {
+            "conversionIntent": {
+                "conversionIntentId": "conversion-report-001",
+                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                "target": "report_evidence",
+                "sourceStatus": "approved",
+                "targetSourceAuthority": "lotus-report",
+                "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                "evidenceContentHash": "sha256:evidence-lineage",
+                "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
+                "boundary": "intent_only",
+                "reasonCodes": ["review_approved_for_conversion"],
+                "requestedAtUtc": "2026-06-21T10:15:00Z",
+                "grantsDownstreamAuthority": False,
+            },
+            "persistence": {
+                "decision": "accepted",
+                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                "lifecycleStatus": "converted_to_report",
+                "reviewPosture": "approved_for_conversion",
+                "auditEventType": "idea.conversion.intent_requested",
+            },
+            "durableStorageBacked": False,
+            "supportedFeaturePromoted": False,
+        }
+    )
     return {
-        "accepted": _validated_conversion_intent_response(
-            {
-                "conversionIntent": {
-                    "conversionIntentId": "conversion-report-001",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "target": "report_evidence",
-                    "sourceStatus": "approved",
-                    "targetSourceAuthority": "lotus-report",
-                    "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                    "evidenceContentHash": "sha256:evidence-lineage",
-                    "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
-                    "boundary": "intent_only",
-                    "reasonCodes": ["review_approved_for_conversion"],
-                    "requestedAtUtc": "2026-06-21T10:15:00Z",
-                    "grantsDownstreamAuthority": False,
-                },
-                "persistence": {
-                    "decision": "accepted",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.conversion.intent_requested",
-                },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
-            }
-        ),
+        "accepted": accepted,
         "replayed": _validated_conversion_intent_response(
             {
-                "conversionIntent": None,
+                **accepted,
                 "persistence": {
+                    **accepted["persistence"],
                     "decision": "replayed",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.conversion.intent_requested",
                 },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
             }
         ),
     }

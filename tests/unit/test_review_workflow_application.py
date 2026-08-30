@@ -15,6 +15,7 @@ from app.application.review_workflow import (
     apply_review_action_to_repository,
     record_feedback_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
@@ -38,6 +39,7 @@ from app.domain import (
     ReviewDecisionCommand,
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
+    ReviewPersistenceResult,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -213,7 +215,7 @@ def test_apply_review_action_to_repository_persists_candidate_decision_and_audit
         repository=repository,
     )
 
-    assert result.review_result is not None
+    assert result.review_decision is not None
     assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
     assert result.persistence.record is not None
     assert result.persistence.record.candidate.lifecycle_status is IdeaLifecycleStatus.APPROVED
@@ -242,7 +244,7 @@ def test_apply_review_action_uses_candidate_projection_without_snapshot() -> Non
         repository=repository,
     )
 
-    assert result.review_result is not None
+    assert result.review_decision is not None
     assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
     assert repository.looked_up_candidate_ids == ["idea-review-001"]
 
@@ -273,10 +275,37 @@ def test_apply_review_action_to_repository_replays_before_reapplying_domain_tran
     replayed = apply_review_action_to_repository(command, repository=repository)
 
     assert first.persistence.record is not None
-    assert replayed.review_result is None
+    assert replayed.review_decision == first.review_decision
+    assert replayed.review_decision is not None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.review_decisions) == 1
+
+
+def test_review_replay_fails_closed_when_persisted_decision_is_missing() -> None:
+    repository = repository_with_candidate()
+    record = repository.candidate_record_by_id("idea-review-001")
+    assert record is not None
+    replay_repository = PrecheckedReviewWorkflowRepository(
+        repository,
+        ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.REPLAYED,
+            record=record,
+        ),
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="exactly one persisted action",
+    ):
+        apply_review_action_to_repository(
+            ApplyReviewActionToRepositoryCommand(
+                candidate_id="idea-review-001",
+                review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+                idempotency_key="review-action:missing-evidence:001",
+            ),
+            repository=replay_repository,
+        )
 
 
 def test_review_resource_identity_replays_with_a_new_transport_key_without_side_effects() -> None:
@@ -300,7 +329,8 @@ def test_review_resource_identity_replays_with_a_new_transport_key_without_side_
     after_replay = repository.snapshot()
 
     assert first.persistence.decision is ReviewPersistenceDecision.ACCEPTED
-    assert replayed.review_result is None
+    assert replayed.review_decision == first.review_decision
+    assert replayed.review_decision is not None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert after_replay.candidate_records == before_replay.candidate_records
     assert after_replay.outbox_events == before_replay.outbox_events
@@ -329,7 +359,7 @@ def test_review_resource_identity_conflicts_before_terminal_state_validation() -
         repository=repository,
     )
 
-    assert conflict.review_result is None
+    assert conflict.review_decision is None
     assert conflict.persistence.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
     assert repository.snapshot() == before_conflict
 
@@ -360,7 +390,7 @@ def test_apply_review_action_to_repository_detects_idempotency_conflict_without_
         repository=repository,
     )
 
-    assert conflict.review_result is None
+    assert conflict.review_decision is None
     assert conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
     assert conflict.persistence.record is not None
     assert len(conflict.persistence.record.review_decisions) == 1
@@ -417,16 +447,17 @@ def test_review_action_source_reason_is_canonical_without_weakening_transport_co
         repository=repository,
     )
 
-    assert first.review_result is not None
-    assert first.review_result.decision.reason_codes == (
+    assert first.review_decision is not None
+    assert first.review_decision.reason_codes == (
         ReasonCode.REVIEW_SUPPRESSED,
         ReasonCode.REVIEW_REQUIRED,
     )
-    assert same_transport_key_conflict.review_result is None
+    assert same_transport_key_conflict.review_decision is None
     assert same_transport_key_conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
-    assert replayed.review_result is None
+    assert replayed.review_decision == first.review_decision
+    assert replayed.review_decision is not None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
-    assert changed_caller_reason_conflict.review_result is None
+    assert changed_caller_reason_conflict.review_decision is None
     assert (
         changed_caller_reason_conflict.persistence.decision
         is ReviewPersistenceDecision.IDENTITY_CONFLICT
@@ -462,7 +493,7 @@ def test_record_feedback_to_repository_persists_source_provenanced_feedback() ->
         repository=repository,
     )
 
-    assert result.feedback_result is not None
+    assert result.feedback_event is not None
     assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
     assert result.persistence.record is not None
     assert len(result.persistence.record.feedback_events) == 1
@@ -485,7 +516,7 @@ def test_record_feedback_uses_candidate_projection_without_snapshot() -> None:
         repository=repository,
     )
 
-    assert result.feedback_result is not None
+    assert result.feedback_event is not None
     assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
     assert repository.looked_up_candidate_ids == ["idea-review-001"]
 
@@ -516,10 +547,37 @@ def test_record_feedback_to_repository_replays_before_reapplying_domain_feedback
     replayed = record_feedback_to_repository(command, repository=repository)
 
     assert first.persistence.record is not None
-    assert replayed.feedback_result is None
+    assert replayed.feedback_event == first.feedback_event
+    assert replayed.feedback_event is not None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.feedback_events) == 1
+
+
+def test_feedback_replay_fails_closed_when_persisted_event_is_missing() -> None:
+    repository = repository_with_candidate()
+    record = repository.candidate_record_by_id("idea-review-001")
+    assert record is not None
+    replay_repository = PrecheckedReviewWorkflowRepository(
+        repository,
+        ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.REPLAYED,
+            record=record,
+        ),
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="exactly one persisted action",
+    ):
+        record_feedback_to_repository(
+            RecordFeedbackToRepositoryCommand(
+                candidate_id="idea-review-001",
+                feedback=feedback_command(),
+                idempotency_key="review-feedback:missing-evidence:001",
+            ),
+            repository=replay_repository,
+        )
 
 
 def test_feedback_resource_identity_replays_or_conflicts_independently_of_transport_key() -> None:
@@ -558,9 +616,10 @@ def test_feedback_resource_identity_replays_or_conflicts_independently_of_transp
     )
 
     assert first.persistence.decision is ReviewPersistenceDecision.ACCEPTED
-    assert replayed.feedback_result is None
+    assert replayed.feedback_event == first.feedback_event
+    assert replayed.feedback_event is not None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
-    assert conflict.feedback_result is None
+    assert conflict.feedback_event is None
     assert conflict.persistence.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
     assert repository.snapshot().candidate_records == before_retry.candidate_records
     assert repository.snapshot().outbox_events == before_retry.outbox_events
@@ -578,11 +637,9 @@ def test_feedback_persistence_publishes_the_canonical_taxonomy() -> None:
         repository=repository,
     )
 
-    assert first.feedback_result is not None
-    assert first.feedback_result.feedback_event.feedback.reason is FeedbackReason.RELEVANT
-    assert (
-        first.feedback_result.feedback_event.feedback.taxonomy_version == FEEDBACK_TAXONOMY_VERSION
-    )
+    assert first.feedback_event is not None
+    assert first.feedback_event.feedback.reason is FeedbackReason.RELEVANT
+    assert first.feedback_event.feedback.taxonomy_version == FEEDBACK_TAXONOMY_VERSION
     feedback_outbox_event = next(
         event
         for event in repository.snapshot().outbox_events.values()
@@ -608,7 +665,7 @@ def test_record_feedback_to_repository_returns_not_found_for_missing_candidate()
         repository=repository,
     )
 
-    assert result.feedback_result is None
+    assert result.feedback_event is None
     assert result.persistence.decision is ReviewPersistenceDecision.NOT_FOUND
     assert result.persistence.record is None
 
@@ -658,7 +715,7 @@ def test_review_workflow_returns_not_found_for_missing_candidate() -> None:
         repository=repository,
     )
 
-    assert result.review_result is None
+    assert result.review_decision is None
     assert result.persistence.decision is ReviewPersistenceDecision.NOT_FOUND
     assert result.persistence.record is None
 
@@ -683,3 +740,16 @@ class ProjectionOnlyReviewWorkflowRepository:
 
     def snapshot(self) -> Any:
         raise AssertionError("review workflow candidate lookup must not hydrate a full snapshot")
+
+
+class PrecheckedReviewWorkflowRepository(ProjectionOnlyReviewWorkflowRepository):
+    def __init__(
+        self,
+        repository: InMemoryIdeaRepository,
+        prechecked: ReviewPersistenceResult,
+    ) -> None:
+        super().__init__(repository)
+        self._prechecked = prechecked
+
+    def precheck_review_mutation(self, **kwargs: Any) -> ReviewPersistenceResult:
+        return self._prechecked

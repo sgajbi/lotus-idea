@@ -4,7 +4,10 @@ from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
-from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
+from app.api.durable_write_guard import (
+    durable_repository_write_unavailable_metadata,
+    recovery_posture_problem,
+)
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.examples.review_workflow import (
     build_feedback_response_examples,
@@ -43,6 +46,7 @@ from app.application.review_workflow import (
     apply_review_action_to_repository,
     record_feedback_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     InvalidCandidateState,
     InvalidFeedbackTaxonomyCombination,
@@ -50,6 +54,7 @@ from app.domain import (
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
 )
+from app.domain.recovery_posture import ServiceRecoveryPosture
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import PermissionDeniedError
@@ -126,14 +131,20 @@ async def record_review_action(
         )
         if isinstance(context, JSONResponse):
             return context
-        result = _apply_review_action_request(
-            request,
-            context=context,
-            candidate_id=candidate_id,
-            idempotency_key=idempotency_key,
-            http_request=http_request,
-            causation_id=x_causation_id,
-        )
+        try:
+            result = _apply_review_action_request(
+                request,
+                context=context,
+                candidate_id=candidate_id,
+                idempotency_key=idempotency_key,
+                http_request=http_request,
+                causation_id=x_causation_id,
+            )
+        except PersistedActionEvidenceUnavailable:
+            return _persisted_action_evidence_problem(
+                IdeaOperation.REVIEW_ACTION,
+                durable_storage_backed=context.durable_storage_backed,
+            )
     except PermissionDeniedError:
         return _review_action_permission_problem(
             "The caller is not permitted to record idea reviews."
@@ -287,11 +298,7 @@ def _review_action_response(
         durable_storage_backed=durable_storage_backed,
     )
     return ReviewActionResponse(
-        reviewDecision=(
-            ReviewDecisionResponse.from_domain(result.review_result.decision)
-            if result.review_result is not None
-            else None
-        ),
+        reviewDecision=ReviewDecisionResponse.from_domain(result.require_review_decision()),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
@@ -330,14 +337,20 @@ async def record_feedback(
         )
         if isinstance(context, JSONResponse):
             return context
-        result = _apply_feedback_request(
-            request,
-            context=context,
-            candidate_id=candidate_id,
-            idempotency_key=idempotency_key,
-            http_request=http_request,
-            causation_id=x_causation_id,
-        )
+        try:
+            result = _apply_feedback_request(
+                request,
+                context=context,
+                candidate_id=candidate_id,
+                idempotency_key=idempotency_key,
+                http_request=http_request,
+                causation_id=x_causation_id,
+            )
+        except PersistedActionEvidenceUnavailable:
+            return _persisted_action_evidence_problem(
+                IdeaOperation.FEEDBACK_RECORD,
+                durable_storage_backed=context.durable_storage_backed,
+            )
     except PermissionDeniedError:
         return _feedback_permission_problem("The caller is not permitted to record idea feedback.")
     except ReviewEntitlementDenied:
@@ -460,11 +473,7 @@ def _feedback_response(
         durable_storage_backed=durable_storage_backed,
     )
     return FeedbackResponse(
-        feedbackEvent=(
-            FeedbackEventResponse.from_domain(result.feedback_result.feedback_event)
-            if result.feedback_result is not None
-            else None
-        ),
+        feedbackEvent=FeedbackEventResponse.from_domain(result.require_feedback_event()),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
@@ -477,6 +486,20 @@ def _error_code_from_review_decision(
     return error_code_from_review_decision(decision)
 
 
+def _persisted_action_evidence_problem(
+    operation: IdeaOperation,
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse:
+    _emit_review_operation_event(
+        operation,
+        OperationOutcome.BLOCKED,
+        "service_recovery_degraded",
+        durable_storage_backed,
+    )
+    return recovery_posture_problem(ServiceRecoveryPosture.DEGRADED)
+
+
 REVIEW_ACTION_ROUTE: RouteMetadata = {
     "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
     "operation_id": "recordIdeaCandidateReviewAction",
@@ -485,6 +508,8 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
         "Records an internal advisor review action for a persisted idea candidate through "
         "the RFC-0002 Slice 08 review workflow foundation. The route requires a mutating "
         "review capability, caller role, upstream-authorized scope, and Idempotency-Key. "
+        "Accepted and replayed success responses return the exact persisted review decision; "
+        "missing or ambiguous persisted action evidence fails closed. "
         "It does not approve suitability, compliance, mandate, execution, or client "
         "communication, and it does not promote a supported business feature."
     ),
@@ -493,7 +518,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
     "tags": ["Idea Review"],
     "responses": {
         200: {
-            "description": "Review action accepted or replayed through the internal repository foundation.",
+            "description": "Review action accepted or replayed with the exact persisted review decision.",
             "content": {
                 "application/json": {"example": build_review_action_response_examples()["accepted"]}
             },
@@ -532,6 +557,8 @@ FEEDBACK_ROUTE: RouteMetadata = {
         "Records internal advisor feedback for a persisted idea candidate through the "
         "RFC-0002 Slice 08 feedback foundation. The route requires a mutating feedback "
         "capability, caller role, upstream-authorized scope, and Idempotency-Key. "
+        "Accepted and replayed success responses return the exact persisted feedback event; "
+        "missing or ambiguous persisted action evidence fails closed. "
         "Feedback is source-provenanced and audited, but remains an internal foundation. "
         "Process-local writes are allowed only for local/test profiles; "
         "production-like profiles require LOTUS_IDEA_DATABASE_URL. Data-product certification, Gateway, "
@@ -542,7 +569,7 @@ FEEDBACK_ROUTE: RouteMetadata = {
     "tags": ["Idea Review"],
     "responses": {
         200: {
-            "description": "Feedback accepted or replayed through the internal repository foundation.",
+            "description": "Feedback accepted or replayed with the exact persisted feedback event.",
             "content": {
                 "application/json": {"example": build_feedback_response_examples()["accepted"]}
             },

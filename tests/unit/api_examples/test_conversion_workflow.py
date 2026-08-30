@@ -30,9 +30,15 @@ def test_conversion_intent_success_examples_match_ledger_and_openapi() -> None:
     assert intent is not None
     assert intent["grantsDownstreamAuthority"] is False
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
-    assert expected["replayed"]["conversionIntent"] is None
+    assert expected["replayed"]["conversionIntent"] == expected["accepted"]["conversionIntent"]
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
+
+    response_schema = app.openapi()["components"]["schemas"]["ConversionIntentApiResponse"]
+    assert "conversionIntent" in response_schema["required"]
+    assert response_schema["properties"]["conversionIntent"] == {
+        "$ref": "#/components/schemas/ConversionIntentResponse"
+    }
 
 
 def test_conversion_outcome_success_examples_match_ledger_and_openapi() -> None:

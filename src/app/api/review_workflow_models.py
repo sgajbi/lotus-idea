@@ -217,14 +217,14 @@ class ReviewPersistenceSummaryResponse(CamelModel):
 
 
 class ReviewActionResponse(CamelModel):
-    review_decision: ReviewDecisionResponse | None = Field(default=None, alias="reviewDecision")
+    review_decision: ReviewDecisionResponse = Field(..., alias="reviewDecision")
     persistence: ReviewPersistenceSummaryResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
 
 class FeedbackResponse(CamelModel):
-    feedback_event: FeedbackEventResponse | None = Field(default=None, alias="feedbackEvent")
+    feedback_event: FeedbackEventResponse = Field(..., alias="feedbackEvent")
     persistence: ReviewPersistenceSummaryResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
