@@ -67,11 +67,11 @@ class PostgresSnapshotWriteRepositoryMixin:
                 business_identity_id, identity_policy_version,
                 material_fingerprint, material_version, evidence_version,
                 change_reason, supersedes_material_version,
-                persisted_at_utc, updated_at_utc
+                generated_at_utc, persisted_at_utc, updated_at_utc
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s,
-                %s, %s
+                %s, %s, %s
             )
             """,
             (
@@ -89,6 +89,7 @@ class PostgresSnapshotWriteRepositoryMixin:
                 candidate.identity.evidence_version,
                 candidate.identity.change_reason.value,
                 candidate.identity.supersedes_material_version,
+                candidate.created_at_utc,
                 record.persisted_at_utc,
                 candidate.updated_at_utc,
             ),

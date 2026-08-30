@@ -91,6 +91,9 @@ from app.infrastructure.postgres_review_queue import (
 from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
+from app.infrastructure.postgres_opportunity_effectiveness import (
+    load_opportunity_effectiveness_summary,
+)
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
 from app.infrastructure.postgres_candidate_detail import (
@@ -110,6 +113,7 @@ from app.infrastructure.data_lifecycle.postgres_policy import (
 )
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
+from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
 from app.domain.data_lifecycle import DataLifecycleCommand, DataLifecycleOperationResult
 from app.ports.data_lifecycle import DataLifecycleEvaluator
 
@@ -140,6 +144,24 @@ class PostgresIdeaRepository(
 
     def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
         return load_runtime_trust_telemetry_summary(self._connection)
+
+    def opportunity_effectiveness_summary(
+        self,
+        *,
+        tenant_id: str,
+        window_start_utc: datetime,
+        window_end_utc: datetime,
+        evaluated_at_utc: datetime,
+        max_opportunities: int,
+    ) -> OpportunityEffectivenessRepositorySummary:
+        return load_opportunity_effectiveness_summary(
+            self._connection,
+            tenant_id=tenant_id,
+            window_start_utc=window_start_utc,
+            window_end_utc=window_end_utc,
+            evaluated_at_utc=evaluated_at_utc,
+            max_opportunities=max_opportunities,
+        )
 
     def execute_data_lifecycle(
         self,

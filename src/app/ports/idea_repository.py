@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Mapping, Protocol, runtime_checkable
 
 from app.domain import (
@@ -117,6 +118,33 @@ class RuntimeTrustTelemetryRepositorySummary:
     lifecycle_control_missing_count: int
 
 
+@dataclass(frozen=True)
+class OpportunityEffectivenessRepositorySummary:
+    """Tenant-scoped aggregate facts used by the governed effectiveness methodology."""
+
+    generated_opportunity_count: int
+    reviewed_opportunity_count: int
+    feedback_opportunity_count: int
+    conversion_opportunity_count: int
+    conversion_intent_count: int
+    stale_evidence_opportunity_count: int
+    unavailable_evidence_opportunity_count: int
+    unsupported_evidence_opportunity_count: int
+    suppressed_opportunity_count: int
+    duplicate_suppressed_opportunity_count: int
+    recurrent_opportunity_count: int
+    recurrent_detection_count: int
+    reconciled_submission_count: int
+    family_counts: Mapping[str, int]
+    score_band_counts: Mapping[str, int]
+    latest_review_action_counts: Mapping[str, int]
+    feedback_reason_counts: Mapping[str, int]
+    current_downstream_outcome_counts: Mapping[str, int]
+    downstream_submission_posture_counts: Mapping[str, int]
+    detection_to_review_seconds: tuple[Decimal, ...]
+    approval_to_conversion_seconds: tuple[Decimal, ...]
+
+
 class CandidateSnapshotRepository(Protocol):
     def snapshot(self) -> IdeaRepositorySnapshot: ...
 
@@ -174,6 +202,19 @@ class DownstreamRealizationReadinessProjectionRepository(Protocol):
 @runtime_checkable
 class RuntimeTrustTelemetryProjectionRepository(Protocol):
     def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary: ...
+
+
+@runtime_checkable
+class OpportunityEffectivenessProjectionRepository(Protocol):
+    def opportunity_effectiveness_summary(
+        self,
+        *,
+        tenant_id: str,
+        window_start_utc: datetime,
+        window_end_utc: datetime,
+        evaluated_at_utc: datetime,
+        max_opportunities: int,
+    ) -> OpportunityEffectivenessRepositorySummary: ...
 
 
 class CandidatePersistenceRepository(Protocol):
