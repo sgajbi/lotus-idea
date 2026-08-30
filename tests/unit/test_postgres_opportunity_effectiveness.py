@@ -82,9 +82,52 @@ def test_postgres_effectiveness_projection_rejects_malformed_driver_values() -> 
         )
 
 
+@pytest.mark.parametrize("row_count", (0, 2))
+def test_postgres_effectiveness_projection_requires_exactly_one_summary_row(
+    row_count: int,
+) -> None:
+    with pytest.raises(RuntimeError, match="exactly one summary row"):
+        load_opportunity_effectiveness_summary(
+            _Connection({}, rows=[{} for _ in range(row_count)]),
+            tenant_id="tenant-a",
+            window_start_utc=_time(8),
+            window_end_utc=_time(12),
+            evaluated_at_utc=_time(14),
+            max_opportunities=100,
+        )
+
+
+@pytest.mark.parametrize(
+    ("column", "value", "message"),
+    (
+        ("generated_opportunity_count", True, "must be an integer"),
+        ("family_counts", [], "must be a mapping"),
+        ("family_counts", {1: 2}, "keys must be strings"),
+        ("detection_to_review_seconds", "60", "must be an array"),
+    ),
+)
+def test_postgres_effectiveness_projection_rejects_malformed_summary_shapes(
+    column: str,
+    value: object,
+    message: str,
+) -> None:
+    row = _summary_row()
+    row[column] = value
+
+    with pytest.raises(TypeError, match=message):
+        load_opportunity_effectiveness_summary(
+            _Connection(row),
+            tenant_id="tenant-a",
+            window_start_utc=_time(8),
+            window_end_utc=_time(12),
+            evaluated_at_utc=_time(14),
+            max_opportunities=100,
+        )
+
+
 class _Cursor:
-    def __init__(self, row: dict[str, Any]) -> None:
-        self.row = row
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
         self.query = ""
         self.params: Sequence[Any] | None = None
 
@@ -93,7 +136,7 @@ class _Cursor:
         self.params = params
 
     def fetchall(self) -> list[dict[str, Any]]:
-        return [self.row]
+        return self.rows
 
     def __enter__(self) -> _Cursor:
         return self
@@ -103,8 +146,13 @@ class _Cursor:
 
 
 class _Connection:
-    def __init__(self, row: dict[str, Any]) -> None:
-        self.cursor_instance = _Cursor(row)
+    def __init__(
+        self,
+        row: dict[str, Any],
+        *,
+        rows: list[dict[str, Any]] | None = None,
+    ) -> None:
+        self.cursor_instance = _Cursor([row] if rows is None else rows)
 
     def cursor(self) -> _Cursor:
         return self.cursor_instance
