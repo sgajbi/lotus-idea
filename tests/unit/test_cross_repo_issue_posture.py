@@ -4,7 +4,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -216,6 +216,36 @@ EXPECTED_WORKBENCH_BLOCKED_ISSUE = {
     "blockerClass": "canonical_workbench_runtime_core_readiness",
     "remainingAuthority": "test authority boundary",
 }
+
+
+def test_fetch_repository_payloads_uses_authoritative_population_counts(
+    monkeypatch: Any,
+) -> None:
+    module = _load_module()
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        module,
+        "fetch_repository_issue_counts",
+        lambda **kwargs: SimpleNamespace(total=358, open=31, labeled=146),
+    )
+
+    def fake_fetch(**kwargs: Any) -> list[dict[str, Any]]:
+        calls.append(kwargs)
+        return []
+
+    monkeypatch.setattr(module, "fetch_complete_issue_list", fake_fetch)
+
+    payloads = module.fetch_repository_payloads(repositories=("sgajbi/lotus-idea",))
+
+    assert payloads == {
+        "sgajbi/lotus-idea": {
+            "openIssues": [],
+            "allIssues": [],
+            "rfc0002Issues": [],
+        }
+    }
+    assert [call["expected_count"] for call in calls] == [31, 358, 146]
+    assert calls[2]["label"] == "rfc/RFC-0002"
 
 
 def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path: Path) -> None:

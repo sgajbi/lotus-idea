@@ -1383,17 +1383,40 @@ supported feature.
 ## RFC-0002 Current Execution Posture
 
 RFC-0002 execution is tracked through GitHub issue state plus the
-source-controlled implementation-proof ledgers. The current governed posture is
-234 label-backed RFC-0002 issues across 13 repositories: 197 closed and 37 open.
-The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`,
-and 0 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
+source-controlled implementation-proof ledgers. As of 2026-08-30, the current
+governed posture is 237 label-backed RFC-0002 issues across 13 repositories:
+200 closed and 37 open. The open set is 25 `status/blocked`, 2
+`status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`, and 0
+app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
 closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues, while #681 remains open
-after PR #1097 merged.
+after PR #1097 merged and #1139 remains in progress for live posture hardening.
+
+### Live RFC-0002 Posture And Protected-Lane Liveness
+
+`make rfc0002-issue-posture-live-gate` compares the dated source snapshot with
+the full label-backed GitHub posture across all 13 governed repositories. It
+fails on any count or status-map drift and when the snapshot is more than seven
+days old. The `RFC-0002 Issue Posture Audit` workflow runs this check daily,
+manually, and when the governed snapshot or audit implementation changes on
+`main`. This live external-state check is deliberately separate from the
+deterministic documentation gate used on every branch.
+
+| Protected evidence lane | 2026-08-30 liveness evidence | Trigger policy and remaining authority |
+| --- | --- | --- |
+| PostgreSQL capacity | [Run 33283746668](https://github.com/sgajbi/lotus-idea/actions/runs/33283746668) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it saturates a dedicated PostgreSQL target. `#693` remains blocked on the governed runner, protected target, execution, and attestation. |
+| Dependency recovery | [Run 33283753824](https://github.com/sgajbi/lotus-idea/actions/runs/33283753824) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it performs a controlled dependency-failure exercise. `#693` remains blocked on protected execution and attestation. |
+| Load and soak | [Run 33283761340](https://github.com/sgajbi/lotus-idea/actions/runs/33283761340) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it performs a one-hour mutating synthetic workload. `#693` remains blocked on protected execution, resource/cost evidence, and attestation. |
+| Deployment migration | The workflow now separates non-mutating request validation from protected execution. The validation-only job cannot enter the environment-bound migrate job. | Dispatch validation-only after the control reaches `main`; actual migration stays manual and requires an exact signed image, protected database target and secret, approved connectivity, and approved change reference under `#375`. |
+
+Cancelled zero-step runs prove dispatch and queue wiring only. They are not
+capacity, recovery, migration, production-readiness, or supported-feature
+evidence.
+
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
 `30723235065`, and published wiki source to `lotus-idea.wiki` commit

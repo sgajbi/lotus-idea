@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -19,6 +18,10 @@ from cross_repo_blocker_actionability import (  # noqa: E402
     blocked_actionability_summary,
     load_blocker_classifications,
     render_blocked_actionability_markdown,
+)
+from github_issue_inventory import (  # noqa: E402
+    fetch_complete_issue_list,
+    fetch_repository_issue_counts,
 )
 
 DEFAULT_REPOSITORIES = tuple(
@@ -62,14 +65,12 @@ def build_cross_repo_issue_posture(
     repositories: Sequence[str] = DEFAULT_REPOSITORIES,
     fixture_path: Path | None = None,
     blocker_classification_path: Path | None = DEFAULT_BLOCKER_CLASSIFICATION_PATH,
-    limit: int = 1000,
 ) -> dict[str, Any]:
     repo_payloads = (
         load_fixture_payload(fixture_path)
         if fixture_path is not None
         else fetch_repository_payloads(
             repositories=repositories,
-            limit=limit,
         )
     )
 
@@ -140,20 +141,37 @@ def build_cross_repo_issue_posture(
     }
 
 
-def fetch_repository_payloads(*, repositories: Sequence[str], limit: int) -> dict[str, Any]:
-    return {
-        repository: {
-            "openIssues": _fetch_issues(repository=repository, state="open", limit=limit),
-            "allIssues": _fetch_issues(repository=repository, state="all", limit=limit),
-            "rfc0002Issues": _fetch_issues(
+def fetch_repository_payloads(*, repositories: Sequence[str]) -> dict[str, Any]:
+    payloads: dict[str, Any] = {}
+    for repository in repositories:
+        counts = fetch_repository_issue_counts(
+            repository=repository,
+            label=EXPECTED_RFC_LABEL,
+        )
+        if counts.labeled is None:
+            raise ValueError(f"{repository}: RFC-0002 labeled issue count is missing")
+        payloads[repository] = {
+            "openIssues": fetch_complete_issue_list(
+                repository=repository,
+                state="open",
+                fields=GITHUB_ISSUE_FIELDS,
+                expected_count=counts.open,
+            ),
+            "allIssues": fetch_complete_issue_list(
                 repository=repository,
                 state="all",
-                limit=limit,
+                fields=GITHUB_ISSUE_FIELDS,
+                expected_count=counts.total,
+            ),
+            "rfc0002Issues": fetch_complete_issue_list(
+                repository=repository,
+                state="all",
+                fields=GITHUB_ISSUE_FIELDS,
+                expected_count=counts.labeled,
                 label=EXPECTED_RFC_LABEL,
             ),
         }
-        for repository in repositories
-    }
+    return payloads
 
 
 def load_fixture_payload(path: Path | None) -> dict[str, Any]:
@@ -219,38 +237,6 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
             )
     lines.extend(["", "## Usage Boundary", "", str(summary["usageBoundary"])])
     return "\n".join(lines).rstrip() + "\n"
-
-
-def _fetch_issues(
-    *,
-    repository: str,
-    state: str,
-    limit: int,
-    label: str | None = None,
-) -> list[dict[str, Any]]:
-    command = [
-        "gh",
-        "issue",
-        "list",
-        "--repo",
-        repository,
-        "--state",
-        state,
-        "--limit",
-        str(limit),
-        "--json",
-        GITHUB_ISSUE_FIELDS,
-    ]
-    if label is not None:
-        command.extend(["--label", label])
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        stderr = result.stderr.strip() or result.stdout.strip()
-        raise RuntimeError(f"gh issue list failed for {repository}: {stderr}")
-    payload = json.loads(result.stdout)
-    if not isinstance(payload, list):
-        raise ValueError(f"gh issue list for {repository} returned non-list JSON")
-    return payload
 
 
 def _repo_payload(repo_payloads: Mapping[str, Any], repository: str) -> Mapping[str, Any]:
@@ -439,7 +425,6 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         default=DEFAULT_BLOCKER_CLASSIFICATION_PATH,
         help="Source-controlled classifier for open RFC-0002 status/blocked issues.",
     )
-    parser.add_argument("--limit", type=int, default=1000)
     parser.add_argument("--format", choices=("json", "markdown"), default="markdown")
     parser.add_argument("--output", type=Path)
     return parser.parse_args(argv)
@@ -453,7 +438,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             repositories=repositories,
             fixture_path=args.fixture_json,
             blocker_classification_path=args.blocker_classification_json,
-            limit=args.limit,
         )
         rendered = (
             json.dumps(summary, indent=2, sort_keys=True) + "\n"
