@@ -31,7 +31,7 @@ def test_execution_backlog_tracks_economic_candidate_identity() -> None:
     issue = _current_issues()[1154]
 
     assert issue["githubState"] == "open"
-    assert issue["executionStatus"] == "open_in_progress"
+    assert issue["executionStatus"] == "open_pr_raised"
     assert issue["allowPullRequestAutoClose"] is False
     assert issue["rfcSlices"] == ["slice-03", "slice-05", "slice-06", "slice-07"]
     _assert_instruction_contains(
