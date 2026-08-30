@@ -393,14 +393,18 @@ def review_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def feedback_headers(idempotency_key: str) -> dict[str, str]:
+def feedback_headers(
+    idempotency_key: str,
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.feedback.record",
         "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-feedback-api",
         "Idempotency-Key": idempotency_key,
@@ -488,11 +492,11 @@ def evidence_replay_payload(*, suffix: str) -> dict[str, Any]:
     }
 
 
-def access_scope() -> dict[str, str]:
+def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:
     return {
         "tenantId": "tenant-private-bank-sg",
         "bookId": "book-advisor-001",
-        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "portfolioId": portfolio_id,
         "clientId": "client-001",
     }
 
@@ -630,10 +634,18 @@ def capture_operation_events(
     return events
 
 
-def persist_candidate(client: ManagedTestClient, *, suffix: str, idempotency_key: str) -> str:
+def persist_candidate(
+    client: ManagedTestClient,
+    *,
+    suffix: str,
+    idempotency_key: str,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> str:
+    request = high_cash_payload(suffix=suffix, scoped=True)
+    request["accessScope"] = access_scope(portfolio_id=portfolio_id)
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(suffix=suffix, scoped=True),
+        json=request,
         headers=persist_headers(idempotency_key),
     )
     assert response.status_code == 200
@@ -939,6 +951,7 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
         client,
         suffix="-feedback",
         idempotency_key="operation-persist-feedback-001",
+        portfolio_id="PB_SG_FEEDBACK_002",
     )
 
     lifecycle_response = client.post(
@@ -962,7 +975,10 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     feedback_response = client.post(
         f"/api/v1/idea-candidates/{feedback_candidate_id}/feedback",
         json=feedback_payload(),
-        headers=feedback_headers("operation-feedback-accepted-001"),
+        headers=feedback_headers(
+            "operation-feedback-accepted-001",
+            portfolio_id="PB_SG_FEEDBACK_002",
+        ),
     )
 
     assert lifecycle_response.status_code == 200
