@@ -123,6 +123,19 @@ Implemented in this slice:
     request under a new transport key replays the existing review resource,
     while changed raw content under the same key remains an idempotency
     conflict. This does not add downstream rewriting or promote review support.
+28. Governed feedback now uses `idea-feedback-taxonomy-v1`, separating the
+    usefulness outcome from an actionable reason while leaving review actions
+    as independent lifecycle facts. Invalid combinations fail closed with a
+    stable error across domain, API/OpenAPI, mutation identity, persistence,
+    replay/conflict, audit, candidate detail, and `idea.feedback.recorded.v2`
+    outbox truth. A bounded single-tenant offline projection aggregates
+    immutable family, identity/scoring/ranking policy, rank, evidence,
+    preceding review, feedback, and subsequent source-safe downstream posture;
+    it excludes raw scope/actor/downstream identifiers, free text, prompts, and
+    model content and has no production mutation authority. Migration `017`
+    deterministically upgrades legacy records and fails closed when rollback
+    would discard newly governed evidence. The supported-feature posture is
+    unchanged.
 
 Validation evidence from the implementation slice:
 

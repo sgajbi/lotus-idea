@@ -11,6 +11,7 @@
 
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
+- [Feedback Evaluation](Feedback-Evaluation)
 - [Integrations](Integrations)
 - [Demo Readiness](Demo-Readiness)
 
