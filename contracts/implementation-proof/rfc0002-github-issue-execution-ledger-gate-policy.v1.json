@@ -150,7 +150,8 @@
     1129,
     1131,
     1139,
-    1145
+    1145,
+    1150
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -167,6 +168,16 @@
       "Caller-supplied and omitted source reasons",
       "changed content must conflict truthfully",
       "no Gateway/Workbench compatibility rewrite",
+      "supported-feature promotion"
+    ],
+    "1150": [
+      "Keep #1150 open",
+      "Slice 08 review-decision correctness hardening",
+      "action-owned review reason exactly once",
+      "mutation identity, persistence, replay, API response",
+      "caller omission, single inclusion, and repeated inclusion",
+      "changed raw content remains a transport conflict",
+      "no Gateway/Workbench rewriting",
       "supported-feature promotion"
     ],
     "343": [
