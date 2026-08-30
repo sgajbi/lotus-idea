@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.domain import (
     ConversionTarget,
     ConversionIntentResult,
@@ -59,6 +61,7 @@ def candidate() -> IdeaCandidate:
     source = source_ref()
     return IdeaCandidate(
         candidate_id="idea-report-evidence-001",
+        identity=initial_candidate_identity("idea-report-evidence-001"),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,

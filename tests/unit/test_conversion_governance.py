@@ -6,6 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.domain import (
     ConversionBoundary,
     ConversionIntentCommand,
@@ -87,6 +89,7 @@ def candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id="idea-conversion-001",
+        identity=initial_candidate_identity("idea-conversion-001"),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,

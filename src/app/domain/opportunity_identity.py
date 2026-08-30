@@ -8,7 +8,12 @@ import json
 from typing import TypeAlias
 
 from app.domain.access_scope import ReviewAccessScope
-from app.domain.ideas import OpportunityFamily, SourceRef
+from app.domain.ideas import (
+    CandidateChangeReason,
+    CandidateIdentity,
+    OpportunityFamily,
+    SourceRef,
+)
 
 
 OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v2"
@@ -29,6 +34,16 @@ class OpportunityIdentity:
     signal_id: str
     evidence_packet_id: str
     lineage_id: str
+
+    def initial_candidate_identity(self) -> CandidateIdentity:
+        return CandidateIdentity(
+            business_identity_id=self.business_identity_id,
+            policy_version=self.policy_version,
+            material_fingerprint=self.material_fingerprint,
+            material_version=1,
+            evidence_version=1,
+            change_reason=CandidateChangeReason.INITIAL_DETECTION,
+        )
 
 
 def build_opportunity_identity(
@@ -66,10 +81,12 @@ def build_opportunity_identity(
     evidence_digest = _canonical_digest(
         {
             "business_identity_digest": business_digest,
+            "material_identity_digest": material_digest,
             "source_refs": [_source_ref_identity_payload(ref) for ref in _sorted_refs(source_refs)],
         }
     )
-    candidate_token = material_digest[:16]
+    candidate_token = business_digest[:16]
+    material_token = material_digest[:16]
     evidence_token = evidence_digest[:16]
     identifier_kind = normalized_kind.replace("-", "_")
     return OpportunityIdentity(
@@ -79,9 +96,14 @@ def build_opportunity_identity(
         material_fingerprint=f"sha256:{material_digest}",
         evidence_fingerprint=f"sha256:{evidence_digest}",
         candidate_id=f"idea_{identifier_kind}_{candidate_token}",
-        signal_id=f"signal_{identifier_kind}_{candidate_token}_{evidence_token}",
-        evidence_packet_id=f"iep_{identifier_kind}_{candidate_token}_{evidence_token}",
-        lineage_id=(f"lineage:lotus-idea:{normalized_kind}:{candidate_token}:{evidence_token}"),
+        signal_id=(f"signal_{identifier_kind}_{candidate_token}_{material_token}_{evidence_token}"),
+        evidence_packet_id=(
+            f"iep_{identifier_kind}_{candidate_token}_{material_token}_{evidence_token}"
+        ),
+        lineage_id=(
+            f"lineage:lotus-idea:{normalized_kind}:{candidate_token}:"
+            f"{material_token}:{evidence_token}"
+        ),
     )
 
 

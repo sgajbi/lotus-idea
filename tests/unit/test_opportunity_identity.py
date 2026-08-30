@@ -101,8 +101,23 @@ def test_material_change_versions_candidate_under_the_same_business_identity() -
 
     assert changed.business_identity_id == original.business_identity_id
     assert changed.material_fingerprint != original.material_fingerprint
-    assert changed.candidate_id != original.candidate_id
-    assert changed.evidence_fingerprint == original.evidence_fingerprint
+    assert changed.candidate_id == original.candidate_id
+    assert changed.evidence_fingerprint != original.evidence_fingerprint
+    assert changed.signal_id != original.signal_id
+    assert changed.evidence_packet_id != original.evidence_packet_id
+    assert changed.lineage_id != original.lineage_id
+
+
+def test_initial_candidate_identity_carries_explicit_version_posture() -> None:
+    identity = _identity().initial_candidate_identity()
+
+    assert identity.business_identity_id == _identity().business_identity_id
+    assert identity.policy_version == OPPORTUNITY_IDENTITY_POLICY_VERSION
+    assert identity.material_fingerprint == _identity().material_fingerprint
+    assert identity.material_version == 1
+    assert identity.evidence_version == 1
+    assert identity.change_reason.value == "initial_detection"
+    assert identity.supersedes_material_version is None
 
 
 def test_business_scope_and_opportunity_kind_are_identity_boundaries() -> None:

@@ -16,6 +16,8 @@ from app.domain.conversion_governance import (
     GovernedConversionOutcome,
 )
 from app.domain.ideas import (
+    CandidateChangeReason,
+    CandidateIdentity,
     ConversionOutcomeStatus,
     ConversionTarget,
     EvidenceFreshness,
@@ -184,6 +186,15 @@ def _json(row: Any, key: str) -> dict[str, Any]:
 def _candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
     return {
         "candidate_id": candidate.candidate_id,
+        "identity": {
+            "business_identity_id": candidate.identity.business_identity_id,
+            "policy_version": candidate.identity.policy_version,
+            "material_fingerprint": candidate.identity.material_fingerprint,
+            "material_version": candidate.identity.material_version,
+            "evidence_version": candidate.identity.evidence_version,
+            "change_reason": candidate.identity.change_reason.value,
+            "supersedes_material_version": candidate.identity.supersedes_material_version,
+        },
         "family": candidate.family.value,
         "lifecycle_status": candidate.lifecycle_status.value,
         "review_posture": candidate.review_posture.value,
@@ -200,8 +211,22 @@ def _candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
 
 
 def _candidate_from_json(payload: Mapping[str, Any]) -> IdeaCandidate:
+    identity = payload["identity"]
     return IdeaCandidate(
         candidate_id=str(payload["candidate_id"]),
+        identity=CandidateIdentity(
+            business_identity_id=str(identity["business_identity_id"]),
+            policy_version=str(identity["policy_version"]),
+            material_fingerprint=str(identity["material_fingerprint"]),
+            material_version=int(identity["material_version"]),
+            evidence_version=int(identity["evidence_version"]),
+            change_reason=CandidateChangeReason(identity["change_reason"]),
+            supersedes_material_version=(
+                int(identity["supersedes_material_version"])
+                if identity.get("supersedes_material_version") is not None
+                else None
+            ),
+        ),
         family=OpportunityFamily(payload["family"]),
         lifecycle_status=IdeaLifecycleStatus(payload["lifecycle_status"]),
         review_posture=ReviewPosture(payload["review_posture"]),
