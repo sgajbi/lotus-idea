@@ -51,7 +51,7 @@ def test_execution_backlog_tracks_economic_candidate_identity() -> None:
     )
 
 
-def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
+def test_execution_backlog_tracks_product_quality_work() -> None:
     issues = _current_issues()
     feedback_quality = issues[1155]
     effectiveness = issues[1156]
@@ -77,7 +77,9 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
         "presentation proxy",
     )
 
-    assert golden_evaluation["executionStatus"] == "open_in_progress"
+    assert golden_evaluation["githubState"] == "closed"
+    assert golden_evaluation["executionStatus"] == "closed_complete"
+    assert golden_evaluation["allowPullRequestAutoClose"] is True
     assert golden_evaluation["rfcSlices"] == [
         "slice-05",
         "slice-07",
@@ -94,8 +96,13 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
         "all 11 governed opportunity families",
         "all 12 implemented signal policies",
         "no-opportunity portfolio",
-        "Expected outputs must be handwritten",
+        "Expected outputs are handwritten",
         "5,732 unit tests",
-        "wiki publication with strict parity",
-        "clean branch/worktree hygiene",
+        "PR #1164",
+        "Main Releasability run 33323617114",
+        "CodeQL run 33323616468",
+        "ghcr.io/sgajbi/lotus-idea@sha256:d7701bbaa0411219659e6e0b4af04a434fe1a0d02f2a8eded665f48436e9935e",
+        "lotus-idea.wiki commit 384c618",
+        "strict DiffCount 0 parity",
+        "does not create a compatibility layer",
     )

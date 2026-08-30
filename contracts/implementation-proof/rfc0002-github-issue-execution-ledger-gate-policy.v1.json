@@ -513,23 +513,34 @@
       "Queue retrieval must never be used as a presentation proxy",
       "Metrics alone do not promote a supported feature",
       "complete RFC-0002"
-    ],
-    "1162": [
-      "Keep #1162 open and status/in-progress",
-      "independently authored opportunity-quality golden evaluation set",
-      "production domain policy, scoring, queue, and lifecycle paths",
-      "at least four distinct opportunity families",
-      "multi-family rank order",
-      "no-opportunity portfolio",
-      "Expected outputs must be handwritten",
-      "do not create a generic signal framework",
-      "deliberate expected-output tampering fails",
-      "5,732 unit tests",
-      "exact-main Main Releasability and CodeQL success",
-      "supported-feature claim"
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1162": [
+      "Closed #1162 after QA passed",
+      "PR #1163",
+      "f3aa9f1ddc76181d8e642cbba3712114be09254c",
+      "Main Releasability run 33322378418",
+      "CodeQL run 33322371179",
+      "all 11 governed opportunity families",
+      "all 12 implemented signal policies",
+      "Expected outputs are handwritten",
+      "result, reason, score, rank, and version tampering fails",
+      "5,732 unit tests",
+      "PR #1164",
+      "738a23daf946772e200ed36d2108fd5bbb4a934d",
+      "Main Releasability run 33323617114",
+      "CodeQL run 33323616468",
+      "99% combined coverage",
+      "ghcr.io/sgajbi/lotus-idea@sha256:d7701bbaa0411219659e6e0b4af04a434fe1a0d02f2a8eded665f48436e9935e",
+      "lotus-idea.wiki commit 384c618",
+      "strict DiffCount 0 parity",
+      "patch-equivalence and zero-diff proof",
+      "does not create a generic signal framework",
+      "does not create a compatibility layer",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
     "1150": [
       "Closed #1150",
       "PR #1152",
