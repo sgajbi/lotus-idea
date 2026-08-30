@@ -1885,6 +1885,21 @@ Use correlation and trace headers across outbound calls when available.
 Metrics and operation-event vocabulary are governed by
 `contracts/observability/lotus-idea-operation-metrics.v1.json`.
 
+Presentation receipts preserve two independent populations. The positive
+`rankAtPresentation` is the Idea-owned global review-queue rank copied from the
+rendered item; `visibleCandidateCount` is the Workbench-owned visible-set size
+bounded to 1–100. Never compare, renumber, or coerce them: a globally ranked
+candidate may be the only item visible after scrolling or filtering. Tenant,
+candidate version, UTC chronology, digest, caller-context, and idempotency
+fences remain mandatory. Migration `020_independent_presentation_rank` adds and
+validates the replacement PostgreSQL constraint before removing the legacy
+cross-population rule; its rollback fails closed if governed receipts rely on
+the independent rank semantics.
+
+Presentation rank, visible count, and candidate material/evidence versions are
+strict JSON integers at the API boundary. Boolean and numeric-string coercion
+is forbidden even when the resulting number would otherwise be in range.
+
 AI model-risk operations proof is limited to implemented AI explanation
 telemetry and is classified as `source_contract`. Keep its builder, thin
 generator, gate, and focused tests under capability-oriented

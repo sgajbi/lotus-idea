@@ -146,16 +146,39 @@ def test_presentation_receipt_api_requires_role_capability_and_exact_tenant_scop
     assert response.json()["code"] == "permission_denied"
 
 
+def test_presentation_receipt_api_does_not_disclose_candidate_outside_entitled_scope() -> None:
+    candidate = candidate_fixture(
+        "candidate-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
+        tenant_id="tenant-b",
+    )
+    reset_idea_repository_for_tests(
+        InMemoryIdeaRepository(snapshot_fixture(record_fixture(candidate)))
+    )
+
+    response = managed_test_client(app).post(
+        _path(),
+        json=_payload(),
+        headers=_headers(),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert "candidate-presentation-001" not in response.text
+    assert "tenant-b" not in response.text
+
+
 @pytest.mark.parametrize(
     "payload",
     (
         {**_payload(), "candidateMaterialVersion": 2},
         {**_payload(), "candidateEvidenceVersion": 2},
         {**_payload(), "presentedAtUtc": "2026-08-30T10:59:59Z"},
-        {**_payload(), "rankAtPresentation": 8},
     ),
 )
-def test_presentation_receipt_api_fails_closed_on_candidate_or_rank_mismatch(
+def test_presentation_receipt_api_fails_closed_on_candidate_state_mismatch(
     payload: dict[str, object],
 ) -> None:
     response = managed_test_client(app).post(
@@ -169,6 +192,50 @@ def test_presentation_receipt_api_fails_closed_on_candidate_or_rank_mismatch(
         "invalid_request",
         "presentation_receipt_candidate_state_conflict",
     }
+
+
+def test_presentation_receipt_api_preserves_global_rank_independently_of_visible_count() -> None:
+    response = managed_test_client(app).post(
+        _path(),
+        json={
+            **_payload(),
+            "rankAtPresentation": 25,
+            "visibleCandidateCount": 1,
+        },
+        headers={
+            **_headers(),
+            "Idempotency-Key": "receipt-global-rank-001",
+        },
+    )
+
+    assert response.status_code == 201
+    receipt = response.json()["receipt"]
+    assert receipt["rankAtPresentation"] == 25
+    assert receipt["visibleCandidateCount"] == 1
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    (
+        "rankAtPresentation",
+        "visibleCandidateCount",
+        "candidateMaterialVersion",
+        "candidateEvidenceVersion",
+    ),
+)
+@pytest.mark.parametrize("invalid_value", (True, "1"))
+def test_presentation_receipt_api_rejects_coerced_integer_evidence(
+    field_name: str,
+    invalid_value: object,
+) -> None:
+    response = managed_test_client(app).post(
+        _path(),
+        json={**_payload(), field_name: invalid_value},
+        headers=_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
 
 
 def test_presentation_receipt_api_returns_not_found_without_creating_evidence() -> None:

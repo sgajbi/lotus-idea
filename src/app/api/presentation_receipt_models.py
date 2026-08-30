@@ -20,12 +20,13 @@ _SHA256_DIGEST = r"^sha256:[0-9a-f]{64}$"
 class PresentationReceiptRequest(CamelModel):
     tenant_id: str = Field(..., alias="tenantId", pattern=_GOVERNED_REFERENCE)
     presented_at_utc: datetime = Field(..., alias="presentedAtUtc")
-    rank_at_presentation: int = Field(..., alias="rankAtPresentation", ge=1)
+    rank_at_presentation: int = Field(..., alias="rankAtPresentation", ge=1, strict=True)
     visible_candidate_count: int = Field(
         ...,
         alias="visibleCandidateCount",
         ge=1,
         le=MAX_PRESENTED_CANDIDATE_COUNT,
+        strict=True,
     )
     queue_snapshot_digest: str = Field(..., alias="queueSnapshotDigest", pattern=_SHA256_DIGEST)
     queue_policy_version: str = Field(
@@ -38,8 +39,18 @@ class PresentationReceiptRequest(CamelModel):
         alias="rankingPolicyVersion",
         pattern=_GOVERNED_REFERENCE,
     )
-    candidate_material_version: int = Field(..., alias="candidateMaterialVersion", ge=1)
-    candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion", ge=1)
+    candidate_material_version: int = Field(
+        ...,
+        alias="candidateMaterialVersion",
+        ge=1,
+        strict=True,
+    )
+    candidate_evidence_version: int = Field(
+        ...,
+        alias="candidateEvidenceVersion",
+        ge=1,
+        strict=True,
+    )
 
     @field_validator("presented_at_utc")
     @classmethod
