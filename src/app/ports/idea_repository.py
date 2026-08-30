@@ -42,6 +42,8 @@ from app.domain import (
     ReviewPersistenceResult,
     FeedbackResult,
     SourceRef,
+    CandidatePresentationReceipt,
+    PresentationReceiptResult,
 )
 from app.domain.idempotency import IdempotencyDecision
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
@@ -215,6 +217,13 @@ class OpportunityEffectivenessProjectionRepository(Protocol):
         evaluated_at_utc: datetime,
         max_opportunities: int,
     ) -> OpportunityEffectivenessRepositorySummary: ...
+
+
+class PresentationReceiptRepository(Protocol):
+    def record_presentation_receipt(
+        self,
+        receipt: CandidatePresentationReceipt,
+    ) -> PresentationReceiptResult: ...
 
 
 class CandidatePersistenceRepository(Protocol):

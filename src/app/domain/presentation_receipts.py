@@ -6,6 +6,8 @@ from enum import StrEnum
 import re
 from typing import Any
 
+from app.domain.ideas import IdeaCandidate
+
 
 PRESENTATION_RECEIPT_SCHEMA_VERSION = "lotus-idea.candidate-presentation-receipt.v1"
 PRESENTATION_SURFACE = "advisor_review_queue"
@@ -89,6 +91,28 @@ class PresentationReceiptResult:
     receipt: CandidatePresentationReceipt | None
 
 
+class PresentationReceiptCandidateStateError(RuntimeError):
+    """The candidate no longer matches the immutable presentation claim."""
+
+
+def validate_presentation_receipt_candidate(
+    receipt: CandidatePresentationReceipt,
+    candidate: IdeaCandidate,
+) -> None:
+    if receipt.candidate_id != candidate.candidate_id:
+        raise PresentationReceiptCandidateStateError("candidate identity does not match receipt")
+    if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
+        raise PresentationReceiptCandidateStateError("candidate tenant does not match receipt")
+    if receipt.candidate_material_version != candidate.identity.material_version:
+        raise PresentationReceiptCandidateStateError("candidate material version does not match")
+    if receipt.candidate_evidence_version != candidate.identity.evidence_version:
+        raise PresentationReceiptCandidateStateError("candidate evidence version does not match")
+    if receipt.presented_at_utc < candidate.updated_at_utc:
+        raise PresentationReceiptCandidateStateError(
+            "presentation predates the referenced candidate version"
+        )
+
+
 def _is_integer(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
@@ -99,6 +123,8 @@ __all__ = [
     "PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_SURFACE",
     "CandidatePresentationReceipt",
+    "PresentationReceiptCandidateStateError",
     "PresentationReceiptDecision",
     "PresentationReceiptResult",
+    "validate_presentation_receipt_candidate",
 ]
