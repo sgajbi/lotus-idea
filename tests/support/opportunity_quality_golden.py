@@ -35,6 +35,7 @@ from app.domain import (
     MissingBenchmarkSignalPolicy,
     MissingSuitabilityContextSignalInput,
     MissingSuitabilityContextSignalPolicy,
+    OpportunityFamily,
     ReviewPosture,
     ReviewQueueAudience,
     SourceRef,
@@ -68,19 +69,7 @@ GOLDEN_SET_PATH = (
     / "opportunity-quality-golden-set.v1.json"
 )
 EXPECTED_SCHEMA_VERSION = "lotus-idea-opportunity-quality-golden-set.v1"
-REQUIRED_FAMILIES = {
-    "allocation_drift",
-    "bond_maturity",
-    "concentration",
-    "high_cash",
-    "high_volatility",
-    "low_income",
-    "mandate_restriction",
-    "missing_risk_profile",
-    "missing_benchmark",
-    "missing_suitability_context",
-    "underperformance",
-}
+REQUIRED_FAMILIES = {family.value for family in OpportunityFamily}
 
 
 def load_golden_set(path: Path = GOLDEN_SET_PATH) -> dict[str, Any]:
