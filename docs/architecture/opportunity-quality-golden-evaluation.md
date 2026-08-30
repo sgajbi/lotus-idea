@@ -50,7 +50,8 @@ those differences without improving the evaluation.
 
 ## Version 1 Coverage
 
-The first tranche covers four distinct opportunity families:
+Version 1 exercises every implemented opportunity family and both Risk-owned
+policies that currently share the governed high-volatility family:
 
 | Family | Source authority | Positive and boundary posture | Fail-closed posture |
 | --- | --- | --- | --- |
@@ -58,6 +59,14 @@ The first tranche covers four distinct opportunity families:
 | Concentration | Lotus Risk concentration report | Above and exactly at a concentration threshold | incomplete issuer-coverage certification |
 | Underperformance | Lotus Performance returns series and benchmark context | Below and exactly at the active-return threshold | missing benchmark context |
 | Allocation drift | Lotus Manage portfolio action register | Above and exactly at workflow/lineage minima | unconfirmed portfolio scope |
+| Bond maturity | Lotus Core holdings and maturity summary | contractual maturity inside the policy window | family-local tests retain stale/missing-source cases |
+| Low income | Lotus Core cash movements and cashflow projection | projected cumulative cashflow below the policy threshold | family-local tests retain stale/missing-source cases |
+| Missing benchmark | Lotus Core benchmark assignment | unresolved benchmark assignment | family-local tests retain ready-assignment and stale/missing-source cases |
+| Missing risk profile | Lotus Advise policy evaluation | missing or review-due client risk-profile context | family-local tests retain current-context and stale/missing-source cases |
+| Missing suitability context | Lotus Advise policy evaluation | open suitability requirements and sign-off blockers | family-local tests retain complete-context and stale/missing-source cases |
+| Mandate restriction | Lotus Advise policy evaluation | changed restriction with actionability blocked | family-local tests retain no-change and stale/missing-source cases |
+| High volatility | Lotus Risk metrics report | source-reported volatility above policy threshold | family-local tests retain threshold and unsupported-source cases |
+| Drawdown review | Lotus Risk drawdown analytics report | source-reported drawdown beyond policy threshold | family-local tests retain threshold and unsupported-source cases |
 
 The same dataset also proves:
 
@@ -107,6 +116,6 @@ When changing an included policy:
 5. never populate expected values by calling production code or copying a
    runtime response into the fixture.
 
-Extending the set to the remaining implemented families is tracked through
-GitHub issue `sgajbi/lotus-idea#1162`; version 1 is not a claim of exhaustive
-product certification.
+Future scenario enrichment and any new family must extend the same contract
+through GitHub issue-backed work. Coverage of implemented policies is not a
+claim of exhaustive product, live-runtime, or production certification.

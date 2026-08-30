@@ -8,15 +8,31 @@ from pathlib import Path
 from typing import Any, cast
 
 from app.domain import (
+    BondMaturitySignalInput,
+    BondMaturitySignalPolicy,
     ConcentrationRiskSignalInput,
     ConcentrationRiskSignalPolicy,
+    DrawdownReviewSignalInput,
+    DrawdownReviewSignalPolicy,
     EvidenceFreshness,
     HighCashSignalInput,
     HighCashSignalPolicy,
+    HighVolatilitySignalInput,
+    HighVolatilitySignalPolicy,
     IdeaCandidate,
+    LowIncomeSignalInput,
+    LowIncomeSignalPolicy,
     MandateHealthSignalInput,
     MandateHealthSignalPolicy,
     IdeaLifecycleStatus,
+    MandateRestrictionSignalInput,
+    MandateRestrictionSignalPolicy,
+    MissingRiskProfileSignalInput,
+    MissingRiskProfileSignalPolicy,
+    MissingBenchmarkSignalInput,
+    MissingBenchmarkSignalPolicy,
+    MissingSuitabilityContextSignalInput,
+    MissingSuitabilityContextSignalPolicy,
     ReviewPosture,
     ReviewQueueAudience,
     SourceRef,
@@ -26,8 +42,16 @@ from app.domain import (
     UnderperformanceSignalPolicy,
     build_review_queue,
     evaluate_concentration_risk_signal,
+    evaluate_bond_maturity_signal,
+    evaluate_drawdown_review_signal,
     evaluate_high_cash_signal,
+    evaluate_high_volatility_signal,
+    evaluate_low_income_signal,
     evaluate_mandate_health_signal,
+    evaluate_mandate_restriction_signal,
+    evaluate_missing_risk_profile_signal,
+    evaluate_missing_benchmark_signal,
+    evaluate_missing_suitability_context_signal,
     evaluate_underperformance_signal,
 )
 from app.domain.candidate_reconciliation import reconcile_candidate
@@ -41,7 +65,19 @@ GOLDEN_SET_PATH = (
     / "opportunity-quality-golden-set.v1.json"
 )
 EXPECTED_SCHEMA_VERSION = "lotus-idea-opportunity-quality-golden-set.v1"
-REQUIRED_FAMILIES = {"high_cash", "concentration", "underperformance", "allocation_drift"}
+REQUIRED_FAMILIES = {
+    "allocation_drift",
+    "bond_maturity",
+    "concentration",
+    "high_cash",
+    "high_volatility",
+    "low_income",
+    "mandate_restriction",
+    "missing_risk_profile",
+    "missing_benchmark",
+    "missing_suitability_context",
+    "underperformance",
+}
 
 
 def load_golden_set(path: Path = GOLDEN_SET_PATH) -> dict[str, Any]:
@@ -84,7 +120,9 @@ def evaluate_golden_set(golden_set: dict[str, Any]) -> tuple[str, ...]:
             for case_id, result in cases_by_portfolio.get(expectation["portfolio"], [])
             if result.candidate is not None
         }
-        actual_case_ids = [case_id_by_candidate_id[item.candidate.candidate_id] for item in queue.items]
+        actual_case_ids = [
+            case_id_by_candidate_id[item.candidate.candidate_id] for item in queue.items
+        ]
         actual_buckets = [item.priority_bucket.value for item in queue.items]
         queue_name = f"{expectation['portfolio']}:{expectation['audience']}"
         if actual_case_ids != expectation["orderedCaseIds"]:
@@ -194,8 +232,18 @@ def _validate_contract(golden_set: dict[str, Any]) -> tuple[str, ...]:
     source_authorities = golden_set.get("sourceAuthorities")
     if not isinstance(source_authorities, list):
         errors.append("sourceAuthorities must be a list")
-    elif {item.get("family") for item in source_authorities} != REQUIRED_FAMILIES:
-        errors.append("sourceAuthorities must cover every golden-set family exactly once")
+    else:
+        authority_families = [item.get("family") for item in source_authorities]
+        if set(authority_families) != REQUIRED_FAMILIES or len(authority_families) != len(
+            REQUIRED_FAMILIES
+        ):
+            errors.append("sourceAuthorities must cover every golden-set family exactly once")
+        if any(
+            not isinstance(item.get(field_name), str) or not item[field_name].strip()
+            for item in source_authorities
+            for field_name in ("owner", "authority", "ideaNoClaimBoundary")
+        ):
+            errors.append("every source authority requires owner, authority, and no-claim text")
 
     cases = golden_set.get("cases")
     if not isinstance(cases, list) or not cases:
@@ -207,6 +255,13 @@ def _validate_contract(golden_set: dict[str, Any]) -> tuple[str, ...]:
     families = {case.get("family") for case in cases}
     if families != REQUIRED_FAMILIES:
         errors.append(f"families must be exactly {sorted(REQUIRED_FAMILIES)!r}")
+    case_id_set = set(case_ids)
+    for expectation in golden_set.get("queueExpectations", []):
+        unknown_case_ids = set(expectation.get("orderedCaseIds", [])) - case_id_set
+        if unknown_case_ids:
+            errors.append(
+                f"queue expectation references unknown cases: {sorted(unknown_case_ids)!r}"
+            )
     return tuple(errors)
 
 
@@ -276,6 +331,176 @@ def _evaluate_case(
                 "underperformance-review-v1", Decimal("-0.005"), Decimal("74")
             ),
         )
+    if family == "bond_maturity":
+        return evaluate_bond_maturity_signal(
+            BondMaturitySignalInput(
+                as_of_date=as_of_date,
+                source_reported_next_maturity_date=date.fromisoformat(facts["nextMaturityDate"]),
+                source_reported_maturing_position_count=facts["maturingPositionCount"],
+                holdings_ref=_source_ref(
+                    product_id="lotus-core:HoldingsAsOf:v1",
+                    source_system=SourceSystem.LOTUS_CORE,
+                    route="/portfolios/{portfolio_id}/positions",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                maturity_fact_ref=_source_ref(
+                    product_id="lotus-core:PortfolioMaturitySummary:v1",
+                    source_system=SourceSystem.LOTUS_CORE,
+                    route="/portfolios/{portfolio_id}/maturity-summary",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                evaluated_at_utc=evaluated_at,
+            ),
+            BondMaturitySignalPolicy("bond-maturity-review-v1", 30, Decimal("70")),
+        )
+    if family == "missing_risk_profile":
+        return evaluate_missing_risk_profile_signal(
+            MissingRiskProfileSignalInput(
+                as_of_date=as_of_date,
+                risk_profile_ref=_advise_policy_ref(
+                    route="/advisory/policy-evaluations/pev_golden/workflow",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                risk_profile_status=facts["riskProfileStatus"],
+                risk_profile_effective_for_as_of_date=facts["riskProfileEffectiveForAsOfDate"],
+                risk_profile_review_due=facts["riskProfileReviewDue"],
+                evaluated_at_utc=evaluated_at,
+            ),
+            MissingRiskProfileSignalPolicy("missing-risk-profile-review-v1", Decimal("64")),
+        )
+    if family == "missing_suitability_context":
+        return evaluate_missing_suitability_context_signal(
+            MissingSuitabilityContextSignalInput(
+                as_of_date=as_of_date,
+                evaluation_status=facts["evaluationStatus"],
+                open_requirement_count=facts["openRequirementCount"],
+                blocked_requirement_count=facts["blockedRequirementCount"],
+                sign_off_status=facts["signOffStatus"],
+                sign_off_blocker_count=facts["signOffBlockerCount"],
+                client_ready_publication=facts["clientReadyPublication"],
+                policy_ref=_advise_policy_ref(
+                    route="/advisory/policy-evaluations/pev_golden/workflow",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                evaluated_at_utc=evaluated_at,
+            ),
+            MissingSuitabilityContextSignalPolicy(
+                "missing-suitability-context-review-v1", 1, Decimal("68")
+            ),
+        )
+    if family == "mandate_restriction":
+        return evaluate_mandate_restriction_signal(
+            MandateRestrictionSignalInput(
+                as_of_date=as_of_date,
+                restriction_ref=_advise_policy_ref(
+                    route="/advisory/policy-evaluations/pev_golden/restriction-posture",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                restriction_status=facts["restrictionStatus"],
+                changed_since_last_review=facts["changedSinceLastReview"],
+                actionability_blocked=facts["actionabilityBlocked"],
+                evaluated_at_utc=evaluated_at,
+            ),
+            MandateRestrictionSignalPolicy("mandate-restriction-review-v1", Decimal("66")),
+        )
+    if family == "low_income":
+        return evaluate_low_income_signal(
+            LowIncomeSignalInput(
+                as_of_date=as_of_date,
+                source_reported_min_projected_cumulative_cashflow=Decimal(
+                    facts["minimumProjectedCumulativeCashflow"]
+                ),
+                cash_movement_count=facts["cashMovementCount"],
+                cash_movement_ref=_source_ref(
+                    product_id="lotus-core:PortfolioCashMovementSummary:v1",
+                    source_system=SourceSystem.LOTUS_CORE,
+                    route="/portfolios/{portfolio_id}/cash-movement-summary",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                cashflow_projection_ref=_source_ref(
+                    product_id="lotus-core:PortfolioCashflowProjection:v1",
+                    source_system=SourceSystem.LOTUS_CORE,
+                    route="/portfolios/{portfolio_id}/cashflow-projection",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                evaluated_at_utc=evaluated_at,
+            ),
+            LowIncomeSignalPolicy("cashflow-liquidity-review-v1", Decimal("-10000"), Decimal("68")),
+        )
+    if family == "missing_benchmark":
+        return evaluate_missing_benchmark_signal(
+            MissingBenchmarkSignalInput(
+                as_of_date=as_of_date,
+                benchmark_assignment_ref=_source_ref(
+                    product_id="lotus-core:BenchmarkAssignment:v1",
+                    source_system=SourceSystem.LOTUS_CORE,
+                    route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                benchmark_identity_resolved=facts["benchmarkIdentityResolved"],
+                assignment_effective_for_as_of_date=facts["assignmentEffectiveForAsOfDate"],
+                assignment_status=facts["assignmentStatus"],
+                assignment_version_present=facts["assignmentVersionPresent"],
+                evaluated_at_utc=evaluated_at,
+            ),
+            MissingBenchmarkSignalPolicy("missing-benchmark-review-v1", Decimal("68")),
+        )
+    if family == "high_volatility" and case.get("signalType") == "drawdown_review":
+        return evaluate_drawdown_review_signal(
+            DrawdownReviewSignalInput(
+                as_of_date=as_of_date,
+                source_reported_max_drawdown=Decimal(facts["maximumDrawdown"]),
+                risk_supportability_state=facts["riskSupportabilityState"],
+                risk_ref=_source_ref(
+                    product_id="lotus-risk:DrawdownAnalyticsReport:v1",
+                    source_system=SourceSystem.LOTUS_RISK,
+                    route="/analytics/risk/drawdown",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                evaluated_at_utc=evaluated_at,
+            ),
+            DrawdownReviewSignalPolicy(
+                "drawdown-review-attention-v1", Decimal("-0.08"), Decimal("72")
+            ),
+        )
+    if family == "high_volatility":
+        return evaluate_high_volatility_signal(
+            HighVolatilitySignalInput(
+                as_of_date=as_of_date,
+                source_reported_volatility=Decimal(facts["volatility"]),
+                risk_supportability_state=facts["riskSupportabilityState"],
+                risk_ref=_source_ref(
+                    product_id="lotus-risk:RiskMetricsReport:v1",
+                    source_system=SourceSystem.LOTUS_RISK,
+                    route="/analytics/risk/calculate",
+                    as_of_date=as_of_date,
+                    evaluated_at=evaluated_at,
+                    freshness=freshness,
+                ),
+                evaluated_at_utc=evaluated_at,
+            ),
+            HighVolatilitySignalPolicy(
+                "high-volatility-attention-v1", Decimal("12.00"), Decimal("72")
+            ),
+        )
     if family == "allocation_drift":
         return evaluate_mandate_health_signal(
             MandateHealthSignalInput(
@@ -294,11 +519,26 @@ def _evaluate_case(
                 ),
                 evaluated_at_utc=evaluated_at,
             ),
-            MandateHealthSignalPolicy(
-                "allocation-drift-mandate-review-v1", 1, 1, Decimal("70")
-            ),
+            MandateHealthSignalPolicy("allocation-drift-mandate-review-v1", 1, 1, Decimal("70")),
         )
     raise AssertionError(f"unsupported golden-set family: {family}")
+
+
+def _advise_policy_ref(
+    *,
+    route: str,
+    as_of_date: date,
+    evaluated_at: datetime,
+    freshness: EvidenceFreshness,
+) -> SourceRef:
+    return _source_ref(
+        product_id="lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+        source_system=SourceSystem.LOTUS_ADVISE,
+        route=route,
+        as_of_date=as_of_date,
+        evaluated_at=evaluated_at,
+        freshness=freshness,
+    )
 
 
 def _compare_case(case: dict[str, Any], result: SignalEvaluationResult) -> tuple[str, ...]:
@@ -354,7 +594,10 @@ def _high_cash_refs(
     freshness: EvidenceFreshness,
 ) -> tuple[SourceRef, SourceRef, SourceRef, SourceRef]:
     products_and_routes = (
-        ("lotus-core:PortfolioStateSnapshot:v1", "/integration/portfolios/{portfolio_id}/core-snapshot"),
+        (
+            "lotus-core:PortfolioStateSnapshot:v1",
+            "/integration/portfolios/{portfolio_id}/core-snapshot",
+        ),
         ("lotus-core:HoldingsAsOf:v1", "/portfolios/{portfolio_id}/cash-balances"),
         (
             "lotus-core:PortfolioCashMovementSummary:v1",

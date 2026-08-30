@@ -29,6 +29,48 @@
       "owner": "lotus-manage",
       "authority": "portfolio-scoped mandate workflow supportability and lineage",
       "ideaNoClaimBoundary": "Idea requests human review and does not propose or authorize a rebalance."
+    },
+    {
+      "family": "bond_maturity",
+      "owner": "lotus-core",
+      "authority": "portfolio holdings and contractual maturity facts",
+      "ideaNoClaimBoundary": "Idea consumes contractual maturity facts and does not value instruments or project maturity proceeds."
+    },
+    {
+      "family": "missing_risk_profile",
+      "owner": "lotus-advise",
+      "authority": "approved client risk-profile status and review posture",
+      "ideaNoClaimBoundary": "Idea detects an evidence gap and does not create, approve, or assess a risk profile."
+    },
+    {
+      "family": "missing_suitability_context",
+      "owner": "lotus-advise",
+      "authority": "suitability requirements, sign-off, and client-publication posture",
+      "ideaNoClaimBoundary": "Idea routes compliance review and does not determine suitability or publish client advice."
+    },
+    {
+      "family": "mandate_restriction",
+      "owner": "lotus-advise",
+      "authority": "mandate restriction policy evaluation and actionability posture",
+      "ideaNoClaimBoundary": "Idea routes compliance review and does not interpret restrictions or authorize action."
+    },
+    {
+      "family": "low_income",
+      "owner": "lotus-core",
+      "authority": "portfolio cash movements and projected cumulative cashflows",
+      "ideaNoClaimBoundary": "Idea consumes cashflow facts and does not calculate income, liquidity, or cashflow projections."
+    },
+    {
+      "family": "missing_benchmark",
+      "owner": "lotus-core",
+      "authority": "portfolio benchmark assignment identity, effectiveness, status, and version",
+      "ideaNoClaimBoundary": "Idea detects assignment gaps and does not assign benchmarks or calculate performance."
+    },
+    {
+      "family": "high_volatility",
+      "owner": "lotus-risk",
+      "authority": "volatility and drawdown facts and methodology",
+      "ideaNoClaimBoundary": "Idea consumes risk facts and does not calculate or reinterpret volatility or drawdown."
     }
   ],
   "evaluationContext": {
@@ -122,6 +164,190 @@
         "evidenceSupportability": "ready",
         "reviewPosture": "pm_review_required",
         "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
+      }
+    },
+    {
+      "caseId": "active-bond-maturity",
+      "portfolio": "active-opportunities",
+      "family": "bond_maturity",
+      "facts": {
+        "nextMaturityDate": "2026-07-10",
+        "maturingPositionCount": 2,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["maturity_window", "review_required"],
+        "unsupportedReasons": [],
+        "score": "70",
+        "scorePolicyVersion": "bond-maturity-review-v1",
+        "scoreComponents": {"policyCandidateScore": "70"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": [
+          "lotus-core:HoldingsAsOf:v1",
+          "lotus-core:PortfolioMaturitySummary:v1"
+        ]
+      }
+    },
+    {
+      "caseId": "incomplete-risk-profile",
+      "portfolio": "incomplete-advisory-context",
+      "family": "missing_risk_profile",
+      "facts": {
+        "riskProfileStatus": "MISSING",
+        "riskProfileEffectiveForAsOfDate": false,
+        "riskProfileReviewDue": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["missing_risk_profile", "review_required"],
+        "unsupportedReasons": [],
+        "score": "64",
+        "scorePolicyVersion": "missing-risk-profile-review-v1",
+        "scoreComponents": {"policyCandidateScore": "64"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
+      }
+    },
+    {
+      "caseId": "incomplete-suitability-context",
+      "portfolio": "incomplete-advisory-context",
+      "family": "missing_suitability_context",
+      "facts": {
+        "evaluationStatus": "PENDING_REVIEW",
+        "openRequirementCount": 2,
+        "blockedRequirementCount": 0,
+        "signOffStatus": "PENDING_REVIEW",
+        "signOffBlockerCount": 1,
+        "clientReadyPublication": "BLOCKED",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["suitability_context_missing", "review_required"],
+        "unsupportedReasons": [],
+        "score": "68",
+        "scorePolicyVersion": "missing-suitability-context-review-v1",
+        "scoreComponents": {"policyCandidateScore": "68"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "compliance_review_required",
+        "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
+      }
+    },
+    {
+      "caseId": "changed-mandate-restriction",
+      "portfolio": "incomplete-advisory-context",
+      "family": "mandate_restriction",
+      "facts": {
+        "restrictionStatus": "REVIEW_REQUIRED",
+        "changedSinceLastReview": true,
+        "actionabilityBlocked": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["mandate_restriction_review", "review_required"],
+        "unsupportedReasons": [],
+        "score": "66",
+        "scorePolicyVersion": "mandate-restriction-review-v1",
+        "scoreComponents": {"policyCandidateScore": "66"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "compliance_review_required",
+        "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
+      }
+    },
+    {
+      "caseId": "cashflow-pressure-low-income",
+      "portfolio": "cashflow-pressure",
+      "family": "low_income",
+      "facts": {
+        "minimumProjectedCumulativeCashflow": "-12500",
+        "cashMovementCount": 3,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["income_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "68",
+        "scorePolicyVersion": "cashflow-liquidity-review-v1",
+        "scoreComponents": {"policyCandidateScore": "68"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": [
+          "lotus-core:PortfolioCashMovementSummary:v1",
+          "lotus-core:PortfolioCashflowProjection:v1"
+        ]
+      }
+    },
+    {
+      "caseId": "missing-benchmark-assignment",
+      "portfolio": "incomplete-advisory-context",
+      "family": "missing_benchmark",
+      "facts": {
+        "benchmarkIdentityResolved": false,
+        "assignmentEffectiveForAsOfDate": false,
+        "assignmentStatus": "active",
+        "assignmentVersionPresent": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["missing_benchmark", "review_required"],
+        "unsupportedReasons": [],
+        "score": "68",
+        "scorePolicyVersion": "missing-benchmark-review-v1",
+        "scoreComponents": {"policyCandidateScore": "68"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-core:BenchmarkAssignment:v1"]
+      }
+    },
+    {
+      "caseId": "high-volatility-risk-attention",
+      "portfolio": "risk-attention",
+      "family": "high_volatility",
+      "signalType": "volatility",
+      "facts": {
+        "volatility": "14.25",
+        "riskSupportabilityState": "ready",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["volatility_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "72",
+        "scorePolicyVersion": "high-volatility-attention-v1",
+        "scoreComponents": {"policyCandidateScore": "72"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-risk:RiskMetricsReport:v1"]
+      }
+    },
+    {
+      "caseId": "drawdown-risk-attention",
+      "portfolio": "risk-attention",
+      "family": "high_volatility",
+      "signalType": "drawdown_review",
+      "facts": {
+        "maximumDrawdown": "-0.1245",
+        "riskSupportabilityState": "ready",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["drawdown_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "72",
+        "scorePolicyVersion": "drawdown-review-attention-v1",
+        "scoreComponents": {"policyCandidateScore": "72"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-risk:DrawdownAnalyticsReport:v1"]
       }
     },
     {
@@ -422,14 +648,31 @@
     {
       "portfolio": "active-opportunities",
       "audience": "advisor",
-      "orderedCaseIds": ["active-high-cash", "active-concentration", "active-underperformance"],
-      "priorityBuckets": ["high", "high", "high"]
+      "orderedCaseIds": [
+        "active-high-cash",
+        "active-concentration",
+        "active-underperformance",
+        "active-bond-maturity"
+      ],
+      "priorityBuckets": ["high", "high", "high", "high"]
     },
     {
       "portfolio": "active-opportunities",
       "audience": "portfolio_manager",
       "orderedCaseIds": ["active-allocation-drift"],
       "priorityBuckets": ["high"]
+    },
+    {
+      "portfolio": "incomplete-advisory-context",
+      "audience": "advisor",
+      "orderedCaseIds": ["missing-benchmark-assignment", "incomplete-risk-profile"],
+      "priorityBuckets": ["standard", "standard"]
+    },
+    {
+      "portfolio": "incomplete-advisory-context",
+      "audience": "compliance",
+      "orderedCaseIds": ["incomplete-suitability-context", "changed-mandate-restriction"],
+      "priorityBuckets": ["standard", "standard"]
     },
     {
       "portfolio": "quiet-portfolio",

@@ -11,6 +11,28 @@ def test_independently_authored_opportunity_quality_golden_set_passes() -> None:
     assert evaluate_golden_set(golden_set) == ()
 
 
+def test_golden_set_covers_every_implemented_signal_policy() -> None:
+    golden_set = load_golden_set()
+    covered_policies = {
+        (case["family"], case.get("signalType", case["family"])) for case in golden_set["cases"]
+    }
+
+    assert covered_policies == {
+        ("allocation_drift", "allocation_drift"),
+        ("bond_maturity", "bond_maturity"),
+        ("concentration", "concentration"),
+        ("high_cash", "high_cash"),
+        ("high_volatility", "drawdown_review"),
+        ("high_volatility", "volatility"),
+        ("low_income", "low_income"),
+        ("mandate_restriction", "mandate_restriction"),
+        ("missing_benchmark", "missing_benchmark"),
+        ("missing_risk_profile", "missing_risk_profile"),
+        ("missing_suitability_context", "missing_suitability_context"),
+        ("underperformance", "underperformance"),
+    }
+
+
 def test_golden_set_detects_outcome_regression() -> None:
     golden_set = deepcopy(load_golden_set())
     golden_set["cases"][0]["expected"]["outcome"] = "not_eligible"
