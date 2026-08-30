@@ -19,7 +19,7 @@ dependency map, and closure rules without relying on chat memory.
 
 | Evidence | Current value |
 | --- | --- |
-| As-of date | 2026-08-31 |
+| As-of date | 2026-08-30 UTC |
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Live drift gate | `make rfc0002-issue-posture-live-gate`; scheduled and manually dispatchable through `RFC-0002 Issue Posture Audit` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
@@ -47,7 +47,7 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>247 label-backed RFC-0002 issues<br/>as of 2026-08-31"]
+    Issues["GitHub issue posture<br/>247 label-backed RFC-0002 issues<br/>as of 2026-08-30 UTC"]
     Open["205 closed and 42 open<br/>25 `status/blocked`, 7 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
@@ -70,11 +70,11 @@ flowchart LR
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: the dated 2026-08-31 GitHub baseline has 247
+Latest synchronization evidence: the dated 2026-08-30 UTC GitHub baseline has 247
 label-backed RFC-0002 issues, 205 closed and 42 open, with 25 `status/blocked`,
 7 `status/in-progress`, 1 `status/merged-main`, 9
 `status/tracker`, and 0 app-actionable blocked issues. As
-of 2026-08-31, the Idea source ledger tracks 152 RFC-0002 issues: 125 closed and
+of 2026-08-30 UTC, the Idea source ledger tracks 152 RFC-0002 issues: 125 closed and
 27 open. `#681`, `#1155`, and `#1156` remain in progress. PR #1163
 placed the #1162 evaluation implementation on exact main
 `f3aa9f1ddc76181d8e642cbba3712114be09254c`; Main Releasability run
