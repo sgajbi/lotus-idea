@@ -116,7 +116,7 @@ def _insert_legacy_feedback(connection: psycopg.Connection[dict[str, object]]) -
             INSERT INTO idea_candidate_record (
                 candidate_id, family, lifecycle_status, review_posture,
                 evidence_packet_id, evidence_hash, candidate_json,
-                persisted_at_utc, updated_at_utc,
+                generated_at_utc, persisted_at_utc, updated_at_utc,
                 business_identity_id, identity_policy_version,
                 material_fingerprint, material_version, evidence_version,
                 change_reason, supersedes_material_version
@@ -135,6 +135,7 @@ def _insert_legacy_feedback(connection: psycopg.Connection[dict[str, object]]) -
                     'evidence_packet', jsonb_build_object('supportability', 'ready')
                 ),
                 '2026-06-21T10:00:00Z', '2026-06-21T10:00:00Z',
+                '2026-06-21T10:00:00Z',
                 'opportunity_legacy_feedback_candidate',
                 'idea-opportunity-identity-v2',
                 'sha256:2222222222222222222222222222222222222222222222222222222222222222',
@@ -191,7 +192,7 @@ def _insert_governed_feedback(connection: psycopg.Connection[dict[str, object]])
             INSERT INTO idea_candidate_record (
                 candidate_id, family, lifecycle_status, review_posture,
                 evidence_packet_id, evidence_hash, candidate_json,
-                persisted_at_utc, updated_at_utc,
+                generated_at_utc, persisted_at_utc, updated_at_utc,
                 business_identity_id, identity_policy_version,
                 material_fingerprint, material_version, evidence_version,
                 change_reason, supersedes_material_version
@@ -199,7 +200,8 @@ def _insert_governed_feedback(connection: psycopg.Connection[dict[str, object]])
                 'governed-feedback-candidate', 'high_cash', 'generated',
                 'advisor_review_required', 'governed-evidence',
                 'sha256:5555555555555555555555555555555555555555555555555555555555555555',
-                '{}'::JSONB, '2026-06-21T11:00:00Z', '2026-06-21T11:00:00Z',
+                '{}'::JSONB, '2026-06-21T11:00:00Z',
+                '2026-06-21T11:00:00Z', '2026-06-21T11:00:00Z',
                 'opportunity_governed_feedback_candidate',
                 'idea-opportunity-identity-v2',
                 'sha256:6666666666666666666666666666666666666666666666666666666666666666',
