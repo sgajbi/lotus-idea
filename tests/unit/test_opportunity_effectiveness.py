@@ -22,6 +22,7 @@ from app.domain import (
     ConversionBoundary,
     ConversionOutcomeStatus,
     ConversionTarget,
+    DownstreamSubmissionPosture,
     EvidenceFreshness,
     EvidenceSupportability,
     FEEDBACK_TAXONOMY_VERSION,
@@ -55,6 +56,7 @@ from app.domain import (
 )
 from app.domain.persistence_models import CandidatePersistenceRecord
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 
 
 WINDOW_START = datetime(2026, 6, 21, 8, 0, tzinfo=UTC)
@@ -295,6 +297,62 @@ def test_effectiveness_snapshot_observes_only_facts_available_at_evaluation_time
     }
     assert projection.downstream_accepted_rate.value == Decimal("0.000000")
     assert projection.downstream_uncertain_rate.value == Decimal("1.000000")
+
+
+def test_effectiveness_snapshot_counts_candidate_level_suppression_without_review() -> None:
+    candidate = _candidate(
+        "idea-policy-suppressed-001",
+        family=OpportunityFamily.CONCENTRATION,
+        score=None,
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        review_posture=ReviewPosture.SUPPRESSED,
+        suppression_reason=SuppressionReason.DUPLICATE,
+    )
+
+    projection = _build(_snapshot(_record(candidate)))
+
+    assert projection.reviewed_opportunity_count == 0
+    assert projection.suppressed_opportunity_count == 1
+    assert projection.duplicate_suppressed_opportunity_count == 1
+
+
+def test_effectiveness_snapshot_counts_only_cohort_downstream_submissions() -> None:
+    candidate = _candidate(
+        "idea-submitted-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    record = _record(
+        candidate,
+        review=_review(
+            candidate.candidate_id,
+            action=ReviewAction.APPROVE_FOR_CONVERSION,
+            decided_at=WINDOW_START + timedelta(hours=2),
+        ),
+        conversion=True,
+    )
+    submission = build_downstream_submission_record(
+        idempotency_key="submission-idea-submitted-001",
+        request_fingerprint=f"sha256:{'8' * 64}",
+        resource_id="intent-idea-submitted-001",
+        submitted_at_utc=WINDOW_START + timedelta(hours=4),
+        status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+    )
+    snapshot = replace(
+        _snapshot(record),
+        downstream_submission_records={submission.idempotency_key: submission},
+    )
+
+    projection = _build(snapshot)
+
+    assert _counts(projection.downstream_submission_posture_counts) == {
+        DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM.value: 1
+    }
+    assert projection.reconciled_submission_count == 0
 
 
 def test_effectiveness_snapshot_fails_closed_on_scope_identity_and_event_corruption() -> None:
