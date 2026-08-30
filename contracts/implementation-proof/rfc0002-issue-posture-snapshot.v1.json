@@ -22,12 +22,12 @@
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
     "totalTrackedIssues": 152,
-    "openIssues": 28,
-    "closedIssues": 124,
+    "openIssues": 27,
+    "closedIssues": 125,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
-      "open_in_progress": 4,
+      "open_in_progress": 3,
       "open_merged_main_qa_pending": 0,
       "open_pr_raised": 0,
       "open_ready": 0,
@@ -41,11 +41,11 @@
     "inProgressIssues": [
       "sgajbi/lotus-idea#681",
       "sgajbi/lotus-idea#1155",
-      "sgajbi/lotus-idea#1156",
-      "sgajbi/lotus-idea#1162"
+      "sgajbi/lotus-idea#1156"
     ],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
+      "sgajbi/lotus-idea#1162",
       "sgajbi/lotus-idea#1154",
       "sgajbi/lotus-idea#1150",
       "sgajbi/lotus-idea#1145",
@@ -88,13 +88,13 @@
   "crossRepo": {
     "repositoriesChecked": 13,
     "totalRfc0002Issues": 247,
-    "openRfc0002Issues": 43,
-    "closedRfc0002Issues": 204,
+    "openRfc0002Issues": 42,
+    "closedRfc0002Issues": 205,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
-      "status/in-progress": 8,
+      "status/in-progress": 7,
       "status/merged-main": 1,
       "status/tracker": 9
     },
@@ -107,7 +107,6 @@
       "sgajbi/lotus-gateway#692",
       "sgajbi/lotus-idea#1155",
       "sgajbi/lotus-idea#1156",
-      "sgajbi/lotus-idea#1162",
       "sgajbi/lotus-idea#343",
       "sgajbi/lotus-idea#344",
       "sgajbi/lotus-idea#345",
@@ -150,7 +149,7 @@
   "expectedCurrentFragments": {
     "ideaLedger": [
       "152 tracked RFC-0002 issues",
-      "124 closed and 28 open",
+      "125 closed and 27 open",
       "2026-08-31",
       "#681",
       "#1145",
@@ -180,9 +179,9 @@
     ],
     "crossRepo": [
       "247 label-backed RFC-0002 issues",
-      "204 closed and 43 open",
+      "205 closed and 42 open",
       "2026-08-31",
-      "25 `status/blocked`, 8 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`",
+      "25 `status/blocked`, 7 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },
