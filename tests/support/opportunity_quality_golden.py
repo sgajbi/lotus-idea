@@ -7,34 +7,34 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
+from app.application.bond_maturity_signal import DEFAULT_BOND_MATURITY_POLICY
+from app.application.concentration_risk_signal import DEFAULT_CONCENTRATION_RISK_POLICY
+from app.application.drawdown_review_signal import DEFAULT_DRAWDOWN_REVIEW_POLICY
+from app.application.high_cash_signal import DEFAULT_HIGH_CASH_POLICY
+from app.application.high_volatility_signal import DEFAULT_HIGH_VOLATILITY_POLICY
+from app.application.low_income_signal import DEFAULT_LOW_INCOME_POLICY
+from app.application.mandate_health_signal import DEFAULT_MANDATE_HEALTH_POLICY
+from app.application.mandate_restriction_signal import DEFAULT_MANDATE_RESTRICTION_POLICY
+from app.application.missing_benchmark_signal import DEFAULT_MISSING_BENCHMARK_POLICY
+from app.application.missing_risk_profile_signal import DEFAULT_MISSING_RISK_PROFILE_POLICY
+from app.application.missing_suitability_signal import DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY
+from app.application.underperformance_signal import DEFAULT_UNDERPERFORMANCE_POLICY
 from app.domain import (
     BondMaturitySignalInput,
-    BondMaturitySignalPolicy,
     ConcentrationRiskSignalInput,
-    ConcentrationRiskSignalPolicy,
     DrawdownReviewSignalInput,
-    DrawdownReviewSignalPolicy,
     EvidenceFreshness,
     HighCashSignalInput,
-    HighCashSignalPolicy,
     HighVolatilitySignalInput,
-    HighVolatilitySignalPolicy,
     IdeaCandidate,
     IdeaScoringInputs,
-    IdeaScoringPolicy,
     LowIncomeSignalInput,
-    LowIncomeSignalPolicy,
     MandateHealthSignalInput,
-    MandateHealthSignalPolicy,
     IdeaLifecycleStatus,
     MandateRestrictionSignalInput,
-    MandateRestrictionSignalPolicy,
     MissingRiskProfileSignalInput,
-    MissingRiskProfileSignalPolicy,
     MissingBenchmarkSignalInput,
-    MissingBenchmarkSignalPolicy,
     MissingSuitabilityContextSignalInput,
-    MissingSuitabilityContextSignalPolicy,
     OpportunityFamily,
     ReviewPosture,
     ReviewQueueAudience,
@@ -42,7 +42,6 @@ from app.domain import (
     SourceSystem,
     SuppressionReason,
     UnderperformanceSignalInput,
-    UnderperformanceSignalPolicy,
     build_review_queue,
     evaluate_concentration_risk_signal,
     evaluate_bond_maturity_signal,
@@ -58,7 +57,7 @@ from app.domain import (
     evaluate_underperformance_signal,
 )
 from app.domain.candidate_reconciliation import reconcile_candidate
-from app.domain.scoring import score_inputs
+from app.domain.scoring import DEFAULT_SCORING_POLICY, score_inputs
 from app.domain.signal_evaluation_models import SignalEvaluationResult
 
 
@@ -156,7 +155,7 @@ def _evaluate_scoring_expectation(scenario: dict[str, Any]) -> tuple[str, ...]:
             downstream_fit=Decimal(inputs["downstreamFit"]),
             has_conflict_flags=inputs["hasConflictFlags"],
         ),
-        policy=IdeaScoringPolicy(policy_version="idea-weighted-evidence-score-v1"),
+        policy=DEFAULT_SCORING_POLICY,
     )
     actual: dict[str, object] = {
         "policyVersion": breakdown.policy_version,
@@ -348,7 +347,7 @@ def _evaluate_high_cash_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        HighCashSignalPolicy("idle-liquidity-v1", Decimal("0.12"), Decimal("82")),
+        DEFAULT_HIGH_CASH_POLICY,
     )
 
 
@@ -371,9 +370,7 @@ def _evaluate_concentration_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        ConcentrationRiskSignalPolicy(
-            "concentration-attention-v1", Decimal("0.15"), Decimal("0.20"), Decimal("78")
-        ),
+        DEFAULT_CONCENTRATION_RISK_POLICY,
     )
 
 
@@ -395,9 +392,7 @@ def _evaluate_underperformance_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        UnderperformanceSignalPolicy(
-            "underperformance-review-v1", Decimal("-0.005"), Decimal("74")
-        ),
+        DEFAULT_UNDERPERFORMANCE_POLICY,
     )
 
 
@@ -427,7 +422,7 @@ def _evaluate_bond_maturity_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        BondMaturitySignalPolicy("bond-maturity-review-v1", 30, Decimal("70")),
+        DEFAULT_BOND_MATURITY_POLICY,
     )
 
 
@@ -448,7 +443,7 @@ def _evaluate_missing_risk_profile_case(
             risk_profile_review_due=facts["riskProfileReviewDue"],
             evaluated_at_utc=evaluated_at,
         ),
-        MissingRiskProfileSignalPolicy("missing-risk-profile-review-v1", Decimal("64")),
+        DEFAULT_MISSING_RISK_PROFILE_POLICY,
     )
 
 
@@ -472,9 +467,7 @@ def _evaluate_missing_suitability_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        MissingSuitabilityContextSignalPolicy(
-            "missing-suitability-context-review-v1", 1, Decimal("68")
-        ),
+        DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY,
     )
 
 
@@ -495,7 +488,7 @@ def _evaluate_mandate_restriction_case(
             actionability_blocked=facts["actionabilityBlocked"],
             evaluated_at_utc=evaluated_at,
         ),
-        MandateRestrictionSignalPolicy("mandate-restriction-review-v1", Decimal("66")),
+        DEFAULT_MANDATE_RESTRICTION_POLICY,
     )
 
 
@@ -527,7 +520,7 @@ def _evaluate_low_income_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        LowIncomeSignalPolicy("cashflow-liquidity-review-v1", Decimal("-10000"), Decimal("68")),
+        DEFAULT_LOW_INCOME_POLICY,
     )
 
 
@@ -551,7 +544,7 @@ def _evaluate_missing_benchmark_case(
             assignment_version_present=facts["assignmentVersionPresent"],
             evaluated_at_utc=evaluated_at,
         ),
-        MissingBenchmarkSignalPolicy("missing-benchmark-review-v1", Decimal("68")),
+        DEFAULT_MISSING_BENCHMARK_POLICY,
     )
 
 
@@ -573,7 +566,7 @@ def _evaluate_drawdown_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        DrawdownReviewSignalPolicy("drawdown-review-attention-v1", Decimal("-0.08"), Decimal("72")),
+        DEFAULT_DRAWDOWN_REVIEW_POLICY,
     )
 
 
@@ -595,7 +588,7 @@ def _evaluate_high_volatility_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        HighVolatilitySignalPolicy("high-volatility-attention-v1", Decimal("12.00"), Decimal("72")),
+        DEFAULT_HIGH_VOLATILITY_POLICY,
     )
 
 
@@ -619,7 +612,7 @@ def _evaluate_allocation_drift_case(
             ),
             evaluated_at_utc=evaluated_at,
         ),
-        MandateHealthSignalPolicy("allocation-drift-mandate-review-v1", 1, 1, Decimal("70")),
+        DEFAULT_MANDATE_HEALTH_POLICY,
     )
 
 
@@ -740,7 +733,7 @@ def _high_cash_candidate(
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=evaluated_at,
         ),
-        HighCashSignalPolicy("idle-liquidity-v1", Decimal("0.12"), Decimal("82")),
+        DEFAULT_HIGH_CASH_POLICY,
     )
     if result.candidate is None:
         raise AssertionError("lifecycle golden scenario must create a high-cash candidate")
