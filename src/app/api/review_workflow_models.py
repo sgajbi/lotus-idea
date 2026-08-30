@@ -88,7 +88,14 @@ class ReviewActionRequest(CamelModel):
 class FeedbackRequest(CamelModel):
     feedback_id: str = Field(..., alias="feedbackId")
     outcome: FeedbackOutcome
-    reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
+    reason_codes: tuple[ReasonCode, ...] = Field(
+        ...,
+        alias="reasonCodes",
+        description=(
+            "Feedback reasons supplied by the caller. Lotus Idea records the source-owned "
+            "feedback_recorded reason exactly once, whether or not the caller includes it."
+        ),
+    )
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
 
     @field_validator("feedback_id")

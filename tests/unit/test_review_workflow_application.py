@@ -473,6 +473,56 @@ def test_feedback_resource_identity_replays_or_conflicts_independently_of_transp
     assert repository.snapshot().outbox_events == before_retry.outbox_events
 
 
+def test_feedback_resource_identity_treats_the_source_reason_as_canonical() -> None:
+    repository = repository_with_candidate()
+    first_feedback = feedback_command()
+    first = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id="idea-review-001",
+            feedback=first_feedback,
+            idempotency_key="review-feedback:canonical:first",
+        ),
+        repository=repository,
+    )
+    caller_supplied_source_reason = FeedbackCommand(
+        feedback_id=first_feedback.feedback_id,
+        actor=first_feedback.actor,
+        outcome=first_feedback.outcome,
+        reason_codes=(ReasonCode.FEEDBACK_RECORDED, *first_feedback.reason_codes),
+        recorded_at_utc=first_feedback.recorded_at_utc,
+    )
+
+    same_transport_key_conflict = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id="idea-review-001",
+            feedback=caller_supplied_source_reason,
+            idempotency_key="review-feedback:canonical:first",
+        ),
+        repository=repository,
+    )
+    replayed = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id="idea-review-001",
+            feedback=caller_supplied_source_reason,
+            idempotency_key="review-feedback:canonical:replay",
+        ),
+        repository=repository,
+    )
+
+    assert first.feedback_result is not None
+    assert first.feedback_result.feedback_event.feedback.reason_codes == (
+        ReasonCode.FEEDBACK_RECORDED,
+        ReasonCode.REVIEW_REQUIRED,
+    )
+    assert same_transport_key_conflict.feedback_result is None
+    assert same_transport_key_conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
+    assert replayed.feedback_result is None
+    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
+    assert replayed.persistence.record == first.persistence.record
+    assert replayed.persistence.record is not None
+    assert len(replayed.persistence.record.feedback_events) == 1
+
+
 def test_record_feedback_to_repository_returns_not_found_for_missing_candidate() -> None:
     repository = InMemoryIdeaRepository()
 
