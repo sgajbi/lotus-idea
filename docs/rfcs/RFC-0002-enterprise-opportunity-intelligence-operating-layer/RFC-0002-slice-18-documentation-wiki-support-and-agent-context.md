@@ -1031,11 +1031,12 @@ Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
 The dated 2026-08-30 baseline covers 242 label-backed RFC-0002 issues. Its 25
 open `status/blocked` issues are classified and 0 are app-actionable blocked
-issues. The baseline is 203 closed and 39 open across 13 repositories, with 25
-`status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2
+issues. The baseline is 204 closed and 38 open across 13 repositories, with 25
+`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2
 `status/ready`, 9 `status/tracker`; `sgajbi/lotus-idea#681` remains the Slice 18
-tracker, `#1154` is PR-open in PR #1157 for governed economic candidate
-identity, and `#1155` then `#1156` are ready for feedback-quality evaluation and opportunity-
+tracker, `#1154` is closed after PR #1157 exact-main, release-image, wiki, and
+branch-hygiene proof for governed economic candidate identity, and `#1155`
+then `#1156` are ready for feedback-quality evaluation and opportunity-
 effectiveness measurement. `#1150` is closed
 after PR #1152 exact-main, release-image, wiki, and branch-hygiene proof, and
 `#1145` is closed after PR #1149 exact-main and wiki proof. The
