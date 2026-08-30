@@ -1029,13 +1029,12 @@ Its Markdown output also renders each blocked issue with issue URL,
 actionability, blocker class, and remaining authority, so the current
 Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
-As of 2026-08-30, for the current 237 label-backed RFC-0002 issue program
-posture, 25 open `status/blocked` issues are classified; 0 are app-actionable
-blocked issues. The current cross-repo posture is 200 closed and 37 open across
-13 repositories, with 25 `status/blocked`, 1 `status/in-progress`, 1
-`status/merged-main`, 1 `status/pr-open`, 9 `status/tracker`;
-`sgajbi/lotus-idea#681` remains the in-progress Slice 18 tracker and `#1139` is
-PR-open in PR #1146 for live-posture hardening.
+The dated 2026-08-30 baseline covers 237 label-backed RFC-0002 issues. Its 25
+open `status/blocked` issues are classified and 0 are app-actionable blocked
+issues. The baseline is 200 closed and 37 open across 13 repositories, with 25
+`status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker`; `sgajbi/lotus-idea#681` and `#1139` remain in progress for
+Slice 18 synchronization and live-posture hardening.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
 `lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,
@@ -1048,9 +1047,14 @@ window and the same fixed-cap pattern from the 13-repository posture command.
 The shared inventory now queries each repository issue total, requests that
 complete result set, and fails closed when GitHub returns a different
 cardinality. A separate `make rfc0002-issue-posture-live-gate` compares the
-dated source snapshot with live label-backed posture across all 13 repositories
-and rejects count, status-map, title-only-reference, or seven-day freshness
-drift. `.github/workflows/issue-posture-audit.yml` runs that volatile
+dated source snapshot with live label-backed posture across all 13 repositories.
+Its `dated_non_regression_v1` policy requires exact repository and total-issue
+cardinality, retains the exact baseline open-issue identity set, and rejects
+newly open or reopened issues, open/blocker growth, closed-count regression,
+ungoverned status coverage, title-only-reference drift, or seven-day freshness
+drift. It permits issue closure and lifecycle-status redistribution while those
+invariants hold, preventing the snapshot issue's own post-merge transition from
+creating a recursive synchronization PR. `.github/workflows/issue-posture-audit.yml` runs that volatile
 external-state check on a daily schedule, manual dispatch, and relevant
 `main`-path changes without making unrelated PR validation depend on mutable
 GitHub state.

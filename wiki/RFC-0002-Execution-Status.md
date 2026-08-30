@@ -29,7 +29,14 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active Slice 18 work | `sgajbi/lotus-idea#681` remains the synchronization tracker and `#1139` is PR-open in PR #1146 for repository-total reconciliation, live snapshot drift enforcement, dated prose, and protected-lane liveness disposition. The latest completed Slice 18 synchronization is PR #1136 on main `97e7641a49b882d05e5583675a7881df0d89db63` after exact-main Main Releasability run `32429389622`, wiki publication `8d2fc0b`, strict wiki parity, and branch hygiene passed. This sync updates durable posture only; it does not promote a supported feature or complete final RFC-0002 blockers. |
+| Active Slice 18 work | `sgajbi/lotus-idea#681` remains the synchronization tracker and `#1139` remains in progress for non-regressive live posture enforcement. PR #1146 merged the repository-total inventory, blocker-state audit, workflow, and validation-only migration request path to main `6f92b8c6888bae33e5d7a08cb40763054924bbc4`; Main Releasability `33287018872`, CodeQL `33287014532`, migration request validation `33287345077`, wiki publication `133889a`, strict parity, and branch cleanup passed. #1139 stays active because its required post-merge lifecycle transition exposed brittle exact status-count equality. This sync updates durable posture only; it does not promote a supported feature or complete final RFC-0002 blockers. |
+
+These figures are a dated baseline, not a demand that normal delivery freezes
+all lifecycle labels. The live gate permits issue closure and status
+redistribution inside the seven-day freshness window while requiring exact
+repository and total-issue cardinality, a no-new-or-reopened open-issue set,
+non-increasing blocker counts, complete governed lifecycle coverage, and exact
+title-only references.
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -41,7 +48,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>237 label-backed RFC-0002 issues<br/>as of 2026-08-30"]
-    Open["200 closed and 37 open<br/>25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1 `status/pr-open`, 9 `status/tracker`"]
+    Open["200 closed and 37 open<br/>25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -59,18 +66,17 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 1 | Slice 18 tracker `sgajbi/lotus-idea#681` remains active. |
+| `status/in-progress` | 2 | Slice 18 tracker `sgajbi/lotus-idea#681` and live-posture hardening issue `#1139` remain active. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
-| `status/pr-open` | 1 | Live-posture hardening issue `sgajbi/lotus-idea#1139` is under protected review in PR #1146. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: As of 2026-08-30, current GitHub issue posture
-has 237 label-backed RFC-0002 issues, 200 closed and 37 open, with 25
-`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1
-`status/pr-open`, 9 `status/tracker`, and 0 app-actionable blocked issues. As of
+Latest synchronization evidence: the dated 2026-08-30 GitHub baseline has 237
+label-backed RFC-0002 issues, 200 closed and 37 open, with 25 `status/blocked`,
+2 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`, and 0
+app-actionable blocked issues. As of
 2026-08-30, the Idea source ledger tracks 146 RFC-0002 issues: 120 closed and 26
-open. `#681` remains in progress and `#1139` is PR-open in PR #1146 for Slice 18
-synchronization and live posture enforcement. `lotus-idea#1119`,
+open. `#681` and `#1139` remain in progress for Slice 18 synchronization and
+non-regressive live posture enforcement. `lotus-idea#1119`,
 `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and `#1131` are closed after
 Slice 17 release-governance hardening; `lotus-idea#1110` is closed after PR #1114/#1115/#1116 for
 downstream intake wire-contract gate hardening;
