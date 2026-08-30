@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-import hashlib
-import json
 
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import (
@@ -22,6 +20,7 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
+from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -211,19 +210,19 @@ def _candidate_result(
     source_refs = (source_input.policy_ref,)
     identity = _stable_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
-        signal_id=f"signal_missing_suitability_context_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
         source_refs=source_refs,
         reason_codes=(ReasonCode.SUITABILITY_CONTEXT_MISSING,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:missing-suitability-context:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
     evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_missing_suitability_context_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -234,7 +233,7 @@ def _candidate_result(
         created_at_utc=source_input.evaluated_at_utc,
     )
     candidate = IdeaCandidate(
-        candidate_id=f"idea_missing_suitability_context_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
@@ -262,28 +261,23 @@ def _stable_identity(
     source_input: MissingSuitabilityContextSignalInput,
     policy: MissingSuitabilityContextSignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "blocked_requirement_count": source_input.blocked_requirement_count,
-        "client_ready_publication": source_input.client_ready_publication,
-        "evaluation_status": source_input.evaluation_status,
-        "family": OpportunityFamily.MISSING_SUITABILITY_CONTEXT.value,
-        "open_requirement_count": source_input.open_requirement_count,
-        "policy_version": policy.policy_version,
-        "sign_off_blocker_count": source_input.sign_off_blocker_count,
-        "sign_off_status": source_input.sign_off_status,
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
+        opportunity_kind="missing_suitability_context",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "blocked_requirement_count": source_input.blocked_requirement_count,
+            "client_ready_publication": (source_input.client_ready_publication or "")
+            .strip()
+            .upper(),
+            "evaluation_status": (source_input.evaluation_status or "").strip().upper(),
+            "open_requirement_count": source_input.open_requirement_count,
+            "policy_version": policy.policy_version,
+            "sign_off_blocker_count": source_input.sign_off_blocker_count,
+            "sign_off_status": (source_input.sign_off_status or "").strip().upper(),
+        },
+        source_refs=source_refs,
+    )
