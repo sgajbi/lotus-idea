@@ -260,14 +260,15 @@ The `signal-api-contract-gate` blocks source-backed routes that bypass this
 boundary. This is design modularity inside one process, not a new runtime
 service or process boundary.
 
-The versioned `idea-source-temporal-v1` policy in
+The versioned `idea-source-temporal-v2` policy in
 `app.domain.source_temporal` reconciles consumer `asOfDate` and
 `evaluatedAtUtc` with every included source reference. Exact business-date
 mismatches, future-generated evidence, and stale optional cross-domain refs
 return bounded blocked posture before candidate creation or persistence. The
 same policy governs caller-supplied, adapter-returned, and source-ingestion
-evidence. Source corrections preserve changed content hashes in lineage and
-produce new candidate identity; no effective-date window is inferred.
+evidence. Source corrections preserve the business candidate and material
+version while producing a new evidence packet and lineage version; no
+effective-date window is inferred.
 
 ### Canonical Source-Proof Runner
 

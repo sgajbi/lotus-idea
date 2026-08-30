@@ -514,7 +514,7 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
         "opportunity family. Every source business date must equal request asOfDate, "
         "and source generatedAtUtc must not be after evaluatedAtUtc; violations return "
         "bounded source-quality posture without candidate creation. Source corrections "
-        "retain content lineage and produce new candidate identity. "
+        "preserve business candidate identity while creating a new evidence and lineage version. "
         "The endpoint is a certified API foundation for RFC-0002 Slice 10; "
         "it does not fetch upstream sources, certify a data product, or promote a supported "
         "business feature."

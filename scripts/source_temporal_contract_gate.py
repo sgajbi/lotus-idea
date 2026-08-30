@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_TEMPORAL_MODULE = Path("src/app/domain/source_temporal.py")
 SIGNAL_DOMAIN_MODULES = (
     Path("src/app/domain/bond_maturity_signal.py"),
+    Path("src/app/domain/drawdown_review_evaluation.py"),
+    Path("src/app/domain/high_volatility_evaluation.py"),
     Path("src/app/domain/low_income_signal.py"),
     Path("src/app/domain/mandate_restriction_signal.py"),
     Path("src/app/domain/missing_benchmark_signal.py"),
@@ -16,10 +18,11 @@ SIGNAL_DOMAIN_MODULES = (
     Path("src/app/domain/signal_evaluation.py"),
 )
 TEMPORAL_HELPER = "temporal_blocked_signal_result"
+IDENTITY_BUILDER = "build_opportunity_identity"
 SOURCE_TEMPORAL_CONTRACT_FRAGMENTS = (
     "SOURCE_TEMPORAL_CONTRACT_VERSION",
     "for family in OpportunityFamily",
-    "NEW_CONTENT_HASH_CREATES_NEW_CANDIDATE_IDENTITY",
+    "CONTENT_HASH_VERSIONS_EVIDENCE_PRESERVES_BUSINESS_IDENTITY",
 )
 
 
@@ -41,7 +44,8 @@ def validate_source_temporal_contract(root: Path = ROOT) -> list[str]:
         if not path.is_file():
             errors.append(f"{relative_path.as_posix()}: signal domain module is missing")
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
         helper_calls = [
             node
             for node in ast.walk(tree)
@@ -52,6 +56,22 @@ def validate_source_temporal_contract(root: Path = ROOT) -> list[str]:
         if not helper_calls:
             errors.append(
                 f"{relative_path.as_posix()}: signal domain policy must call `{TEMPORAL_HELPER}`"
+            )
+        identity_builder_calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == IDENTITY_BUILDER
+        ]
+        if not identity_builder_calls:
+            errors.append(
+                f"{relative_path.as_posix()}: signal domain policy must call `{IDENTITY_BUILDER}`"
+            )
+        if "source_hashes" in source:
+            errors.append(
+                f"{relative_path.as_posix()}: source content hashes must not define business "
+                "candidate identity"
             )
     return sorted(errors)
 
