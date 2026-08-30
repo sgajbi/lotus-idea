@@ -183,6 +183,7 @@ def _missing_benchmark_candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.MISSING_BENCHMARK,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

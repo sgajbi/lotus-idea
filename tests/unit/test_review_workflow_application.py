@@ -7,6 +7,8 @@ from typing import Any
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
     RecordFeedbackToRepositoryCommand,
@@ -78,6 +80,7 @@ def review_candidate(candidate_id: str = "idea-review-001") -> IdeaCandidate:
     )
     return IdeaCandidate(
         candidate_id=candidate_id,
+        identity=initial_candidate_identity(candidate_id),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

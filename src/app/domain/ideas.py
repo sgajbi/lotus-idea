@@ -144,6 +144,14 @@ class SuppressionReason(StrEnum):
     MANUAL_SUPPRESSION = "manual_suppression"
 
 
+class CandidateChangeReason(StrEnum):
+    INITIAL_DETECTION = "initial_detection"
+    EVIDENCE_CORRECTION = "evidence_correction"
+    MATERIAL_CHANGE = "material_change"
+    RECURRENT_CONDITION = "recurrent_condition"
+    MIGRATION_BACKFILL = "migration_backfill"
+
+
 class FeedbackOutcome(StrEnum):
     USEFUL = "useful"
     NOT_USEFUL = "not_useful"
@@ -283,6 +291,33 @@ class IdeaScore:
 
 
 @dataclass(frozen=True)
+class CandidateIdentity:
+    business_identity_id: str
+    policy_version: str
+    material_fingerprint: str
+    material_version: int
+    evidence_version: int
+    change_reason: CandidateChangeReason
+    supersedes_material_version: int | None = None
+
+    def __post_init__(self) -> None:
+        _require_text(self.business_identity_id, "business_identity_id")
+        _require_text(self.policy_version, "policy_version")
+        _require_text(self.material_fingerprint, "material_fingerprint")
+        if not self.material_fingerprint.startswith("sha256:"):
+            raise ValueError("material_fingerprint must use sha256")
+        if self.material_version < 1:
+            raise ValueError("material_version must be positive")
+        if self.evidence_version < 1:
+            raise ValueError("evidence_version must be positive")
+        if self.supersedes_material_version is not None:
+            if self.supersedes_material_version < 1:
+                raise ValueError("supersedes_material_version must be positive")
+            if self.supersedes_material_version >= self.material_version:
+                raise ValueError("supersedes_material_version must precede material_version")
+
+
+@dataclass(frozen=True)
 class ReviewDecision:
     review_id: str
     posture: ReviewPosture
@@ -321,6 +356,7 @@ class IdeaFeedback:
 @dataclass(frozen=True)
 class IdeaCandidate:
     candidate_id: str
+    identity: CandidateIdentity
     family: OpportunityFamily
     lifecycle_status: IdeaLifecycleStatus
     review_posture: ReviewPosture

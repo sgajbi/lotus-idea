@@ -156,6 +156,7 @@ def _candidate_result(inputs: _HighVolatilityCandidateInputs) -> SignalEvaluatio
     evidence_packet = _evidence_packet(inputs)
     candidate = IdeaCandidate(
         candidate_id=inputs.identity.candidate_id,
+        identity=inputs.identity.initial_candidate_identity(),
         family=OpportunityFamily.HIGH_VOLATILITY,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

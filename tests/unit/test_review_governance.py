@@ -6,6 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.domain import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -96,6 +98,7 @@ def candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=candidate_id,
+        identity=initial_candidate_identity(candidate_id),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,

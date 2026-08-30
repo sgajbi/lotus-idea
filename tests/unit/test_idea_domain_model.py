@@ -6,6 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.domain import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
     ConversionOutcomeStatus,
@@ -79,6 +81,7 @@ def candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id="idea_high_cash_001",
+        identity=initial_candidate_identity("idea_high_cash_001"),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,
@@ -252,6 +255,7 @@ def test_valid_lifecycle_path_reaches_approved_conversion_ready_state() -> None:
 
     reviewed = IdeaCandidate(
         candidate_id=current.candidate_id,
+        identity=current.identity,
         family=current.family,
         lifecycle_status=current.lifecycle_status,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -421,6 +425,7 @@ def test_candidate_requires_source_signal_ids() -> None:
     with pytest.raises(ValueError, match="source_signal_ids is required"):
         IdeaCandidate(
             candidate_id="idea_high_cash_001",
+            identity=initial_candidate_identity("idea_high_cash_001"),
             family=OpportunityFamily.HIGH_CASH,
             lifecycle_status=IdeaLifecycleStatus.GENERATED,
             review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

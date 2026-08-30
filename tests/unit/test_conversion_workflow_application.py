@@ -6,6 +6,8 @@ from typing import Any
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
     RequestConversionIntentToRepositoryCommand,
@@ -171,6 +173,7 @@ def approved_candidate() -> IdeaCandidate:
     )
     return IdeaCandidate(
         candidate_id="idea-conversion-workflow-001",
+        identity=initial_candidate_identity("idea-conversion-workflow-001"),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,

@@ -205,6 +205,7 @@ def _high_cash_candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -383,6 +384,7 @@ def _concentration_risk_candidate_created_result(
     )
     candidate = IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.CONCENTRATION,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -603,6 +605,7 @@ def _underperformance_candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.UNDERPERFORMANCE,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -768,6 +771,7 @@ def _mandate_health_candidate_created_result(
     )
     candidate = IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.ALLOCATION_DRIFT,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.PM_REVIEW_REQUIRED,

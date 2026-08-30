@@ -7,6 +7,8 @@ from typing import Any
 
 import pytest
 
+from tests.support.candidate_identity import initial_candidate_identity
+
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     EvaluateAIExplanationToRepositoryCommand,
@@ -115,6 +117,7 @@ def candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id="idea-ai-001",
+        identity=initial_candidate_identity("idea-ai-001"),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

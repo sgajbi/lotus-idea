@@ -115,6 +115,19 @@ def test_candidate_construction_and_rehydration_reject_contradictory_state() -> 
         assert error.review_posture is ReviewPosture.PM_REVIEW_REQUIRED
 
 
+def test_candidate_identity_round_trips_without_losing_version_posture() -> None:
+    candidate = high_cash_candidate()
+
+    restored = idea_candidate_from_json(idea_candidate_to_json(candidate))
+
+    assert restored == candidate
+    assert restored.identity.business_identity_id == candidate.identity.business_identity_id
+    assert restored.identity.material_fingerprint == candidate.identity.material_fingerprint
+    assert restored.identity.material_version == 1
+    assert restored.identity.evidence_version == 1
+    assert restored.identity.supersedes_material_version is None
+
+
 def test_terminal_transitions_normalize_review_posture_to_non_actionable_state() -> None:
     candidate = high_cash_candidate()
 

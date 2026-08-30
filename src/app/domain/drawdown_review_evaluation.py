@@ -191,6 +191,7 @@ def _drawdown_review_candidate_result(
     )
     candidate = IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=family,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

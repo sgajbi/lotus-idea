@@ -195,6 +195,7 @@ def _idea_candidate(
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=inputs.identity.candidate_id,
+        identity=inputs.identity.initial_candidate_identity(),
         family=OpportunityFamily.LOW_INCOME,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,

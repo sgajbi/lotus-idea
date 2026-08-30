@@ -234,6 +234,7 @@ def _candidate_result(
     )
     candidate = IdeaCandidate(
         candidate_id=identity.candidate_id,
+        identity=identity.initial_candidate_identity(),
         family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
