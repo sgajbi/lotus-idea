@@ -160,16 +160,6 @@
     "source-controlled ledger/docs/wiki/context update is required"
   ],
   "requiredOpenIssueEvidence": {
-    "1145": [
-      "Keep #1145 open",
-      "Slice 08 feedback correctness hardening",
-      "feedback_recorded reason exactly once",
-      "mutation identity, persistence, replay, API response",
-      "Caller-supplied and omitted source reasons",
-      "changed content must conflict truthfully",
-      "no Gateway/Workbench compatibility rewrite",
-      "supported-feature promotion"
-    ],
     "1150": [
       "Keep #1150 open",
       "Slice 08 review-decision correctness hardening",
@@ -479,6 +469,30 @@
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1145": [
+      "Closed #1145",
+      "PR #1149",
+      "be5fd8686a19e7b930dd15eac9274d6d32452231",
+      "d4a02236570284ebd0577a4959569945f369c7c5",
+      "PR Merge Gate 33292852482",
+      "Feature Lane 33292850988",
+      "CodeQL 33292851467",
+      "Main Releasability run 33293109314",
+      "Push-on-main CodeQL run 33293105968",
+      "Issue Posture Audit run 33293106094",
+      "ghcr.io/sgajbi/lotus-idea@sha256:bd32cb4a3f1bb14f1be6cb3b1edd45f6d680b8bcb275dbe0c309ce2c1d50152d",
+      "Wiki publication edb925e",
+      "strict DiffCount 0",
+      "5,574 unit tests",
+      "99.03% local combined coverage",
+      "source-owned feedback_recorded reason exactly once",
+      "raw transport idempotency conflict",
+      "No Gateway/Workbench compatibility rewrite",
+      "no supported-feature promotion",
+      "branch cleanup",
+      "#1150",
+      "final RFC-0002 closure"
+    ],
     "1139": [
       "Closed #1139 after QA passed",
       "PR #1146",
