@@ -32,6 +32,23 @@ def test_deployment_migration_contract_gate_rejects_bundle_drift(tmp_path: Path)
     assert "migrationBundleSha256 does not match the repository migration bundle" in errors
 
 
+def test_deployment_migration_contract_gate_rejects_table_inventory_drift(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    payload["legacyAdoption"]["ideaTableCount"] -= 1
+    altered_contract = tmp_path / "deployment-migrations.json"
+    altered_contract.write_text(json.dumps(payload), encoding="utf-8")
+
+    errors = module.validate_deployment_migration_contract(
+        ROOT,
+        contract_path=altered_contract,
+    )
+
+    assert "legacyAdoption ideaTableCount does not match migrated Idea tables" in errors
+
+
 def test_deployment_migration_workflow_rejects_mutable_or_injected_execution() -> None:
     module = _load_gate()
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")

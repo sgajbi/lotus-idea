@@ -23,6 +23,7 @@ from app.domain.deployment_migrations import (
     SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR,
 )
 from app.infrastructure.migrations import discover_migrations, migration_bundle_sha256
+from scripts.migration_table_inventory import migration_owned_tables
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +94,10 @@ def validate_deployment_migration_contract(
     current_version = migrations[-1].version if migrations else ""
     if contract.current_migration_version != current_version:
         errors.append("currentMigrationVersion does not match the latest repository migration")
+    adoption = payload.get("legacyAdoption")
+    expected_table_count = len(migration_owned_tables(root, Path("migrations")))
+    if isinstance(adoption, Mapping) and adoption.get("ideaTableCount") != expected_table_count:
+        errors.append("legacyAdoption ideaTableCount does not match migrated Idea tables")
     if contract.schema_version != DEPLOYMENT_MIGRATION_CONTRACT_VERSION:
         errors.append("schemaVersion does not match the code-owned contract version")
     if contract.evidence_schema_version != MIGRATION_EVIDENCE_SCHEMA_VERSION:
@@ -126,9 +131,9 @@ def _validate_fixed_contract_fields(payload: Mapping[str, Any], errors: list[str
         "runtimeTopology": "existing_api_and_optional_worker_roles_only",
         "migrationHistorySchemaVersion": MIGRATION_HISTORY_SCHEMA_VERSION,
     }
-    for key, value in expected.items():
-        if payload.get(key) != value:
-            errors.append(f"{key} must be {value}")
+    for fixed_field, fixed_expected in expected.items():
+        if payload.get(fixed_field) != fixed_expected:
+            errors.append(f"{fixed_field} must be {fixed_expected}")
 
     adoption = payload.get("legacyAdoption")
     if not isinstance(adoption, Mapping):
@@ -142,13 +147,17 @@ def _validate_fixed_contract_fields(payload: Mapping[str, Any], errors: list[str
             "schemaFingerprintAlgorithm": "postgresql-structural-inventory-v1",
             "silentAdoptionAllowed": False,
         }
-        for key, value in expected_adoption.items():
-            if adoption.get(key) != value:
-                errors.append(f"legacyAdoption {key} must be {value}")
-        for key in ("ideaTableCount", "columnCount", "constraintCount", "indexCount"):
-            value = adoption.get(key)
-            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
-                errors.append(f"legacyAdoption {key} must be a positive integer")
+        for adoption_field, adoption_expected in expected_adoption.items():
+            if adoption.get(adoption_field) != adoption_expected:
+                errors.append(f"legacyAdoption {adoption_field} must be {adoption_expected}")
+        for field_name in ("ideaTableCount", "columnCount", "constraintCount", "indexCount"):
+            observed_count = adoption.get(field_name)
+            if (
+                not isinstance(observed_count, int)
+                or isinstance(observed_count, bool)
+                or observed_count < 1
+            ):
+                errors.append(f"legacyAdoption {field_name} must be a positive integer")
 
     execution = payload.get("executionPolicy")
     expected_execution = {
@@ -167,9 +176,9 @@ def _validate_fixed_contract_fields(payload: Mapping[str, Any], errors: list[str
     if not isinstance(execution, Mapping):
         errors.append("executionPolicy must be an object")
     else:
-        for key, value in expected_execution.items():
-            if execution.get(key) != value:
-                errors.append(f"executionPolicy {key} must be {value}")
+        for execution_field, execution_expected in expected_execution.items():
+            if execution.get(execution_field) != execution_expected:
+                errors.append(f"executionPolicy {execution_field} must be {execution_expected}")
 
     certification = payload.get("certificationPosture")
     if not isinstance(certification, Mapping):
