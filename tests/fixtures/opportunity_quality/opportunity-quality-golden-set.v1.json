@@ -5,6 +5,32 @@
     "expectedResultsDerivedFromProductionCode": false,
     "classification": "synthetic_non_client_data"
   },
+  "sourceAuthorities": [
+    {
+      "family": "high_cash",
+      "owner": "lotus-core",
+      "authority": "portfolio state, holdings, cash movements, and projected cashflows",
+      "ideaNoClaimBoundary": "Idea consumes source-reported cash facts and does not calculate holdings, balances, or cashflows."
+    },
+    {
+      "family": "concentration",
+      "owner": "lotus-risk",
+      "authority": "concentration measures and issuer coverage certification",
+      "ideaNoClaimBoundary": "Idea consumes certified concentration facts and does not calculate risk measures."
+    },
+    {
+      "family": "underperformance",
+      "owner": "lotus-performance",
+      "authority": "portfolio, benchmark, and active-return series",
+      "ideaNoClaimBoundary": "Idea consumes source-reported active return and does not calculate performance."
+    },
+    {
+      "family": "allocation_drift",
+      "owner": "lotus-manage",
+      "authority": "portfolio-scoped mandate workflow supportability and lineage",
+      "ideaNoClaimBoundary": "Idea requests human review and does not propose or authorize a rebalance."
+    }
+  ],
   "evaluationContext": {
     "asOfDate": "2026-06-21",
     "evaluatedAtUtc": "2026-06-21T10:00:00Z"
@@ -20,6 +46,9 @@
         "reasonCodes": ["high_cash_ratio", "cash_source_ready", "review_required"],
         "unsupportedReasons": [],
         "score": "82",
+        "scorePolicyVersion": "idle-liquidity-v1",
+        "scoreComponents": {"policyCandidateScore": "82"},
+        "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": [
           "lotus-core:PortfolioStateSnapshot:v1",
@@ -44,6 +73,9 @@
         "reasonCodes": ["concentration_attention", "review_required"],
         "unsupportedReasons": [],
         "score": "78",
+        "scorePolicyVersion": "concentration-attention-v1",
+        "scoreComponents": {"policyCandidateScore": "78"},
+        "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-risk:ConcentrationRiskReport:v1"]
       }
@@ -62,6 +94,9 @@
         "reasonCodes": ["underperformance_attention", "review_required"],
         "unsupportedReasons": [],
         "score": "74",
+        "scorePolicyVersion": "underperformance-review-v1",
+        "scoreComponents": {"policyCandidateScore": "74"},
+        "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-performance:ReturnsSeriesBundle:v1"]
       }
@@ -82,6 +117,9 @@
         "reasonCodes": ["allocation_drift_attention", "review_required"],
         "unsupportedReasons": [],
         "score": "70",
+        "scorePolicyVersion": "allocation-drift-mandate-review-v1",
+        "scoreComponents": {"policyCandidateScore": "70"},
+        "evidenceSupportability": "ready",
         "reviewPosture": "pm_review_required",
         "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
       }
@@ -146,6 +184,109 @@
       }
     },
     {
+      "caseId": "boundary-high-cash",
+      "portfolio": "exact-boundaries",
+      "family": "high_cash",
+      "facts": {"cashWeight": "0.12", "freshness": "current"},
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["high_cash_ratio", "cash_source_ready", "review_required"],
+        "unsupportedReasons": [],
+        "score": "82",
+        "scorePolicyVersion": "idle-liquidity-v1",
+        "scoreComponents": {"policyCandidateScore": "82"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": [
+          "lotus-core:PortfolioStateSnapshot:v1",
+          "lotus-core:HoldingsAsOf:v1",
+          "lotus-core:PortfolioCashMovementSummary:v1",
+          "lotus-core:PortfolioCashflowProjection:v1"
+        ]
+      }
+    },
+    {
+      "caseId": "boundary-concentration",
+      "portfolio": "exact-boundaries",
+      "family": "concentration",
+      "facts": {
+        "topPositionWeight": "0.15",
+        "topIssuerWeight": "0.10",
+        "issuerCoverageStatus": "complete",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["concentration_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "78",
+        "scorePolicyVersion": "concentration-attention-v1",
+        "scoreComponents": {"policyCandidateScore": "78"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-risk:ConcentrationRiskReport:v1"]
+      }
+    },
+    {
+      "caseId": "boundary-underperformance",
+      "portfolio": "exact-boundaries",
+      "family": "underperformance",
+      "facts": {
+        "activeReturn": "-0.005",
+        "benchmarkContextAvailable": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["underperformance_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "74",
+        "scorePolicyVersion": "underperformance-review-v1",
+        "scoreComponents": {"policyCandidateScore": "74"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-performance:ReturnsSeriesBundle:v1"]
+      }
+    },
+    {
+      "caseId": "boundary-allocation-drift",
+      "portfolio": "exact-boundaries",
+      "family": "allocation_drift",
+      "facts": {
+        "workflowDecisionCount": 1,
+        "lineageEdgeCount": 1,
+        "supportabilityState": "ready",
+        "portfolioScopeConfirmed": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["allocation_drift_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "70",
+        "scorePolicyVersion": "allocation-drift-mandate-review-v1",
+        "scoreComponents": {"policyCandidateScore": "70"},
+        "evidenceSupportability": "ready",
+        "reviewPosture": "pm_review_required",
+        "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
+      }
+    },
+    {
+      "caseId": "blocked-unavailable-cashflow-source",
+      "portfolio": "unsupported-evidence",
+      "family": "high_cash",
+      "facts": {
+        "cashWeight": "0.18",
+        "freshness": "current",
+        "cashflowProjectionAvailable": false
+      },
+      "expected": {
+        "outcome": "blocked",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["missing_source"]
+      }
+    },
+    {
       "caseId": "blocked-stale-high-cash",
       "portfolio": "unsupported-evidence",
       "family": "high_cash",
@@ -202,6 +343,78 @@
         "outcome": "blocked",
         "reasonCodes": ["source_partial"],
         "unsupportedReasons": ["missing_source"]
+      }
+    }
+  ],
+  "lifecycleExpectations": [
+    {
+      "scenarioId": "evidence-correction-preserves-review",
+      "initial": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:initial",
+        "lifecycleStatus": "reviewed_by_advisor",
+        "reviewPosture": "advisor_reviewed"
+      },
+      "incoming": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:corrected"
+      },
+      "expected": {
+        "decision": "evidence_refreshed",
+        "candidateIdStable": true,
+        "materialVersion": 1,
+        "evidenceVersion": 2,
+        "changeReason": "evidence_correction",
+        "lifecycleStatus": "reviewed_by_advisor",
+        "reviewPosture": "advisor_reviewed",
+        "suppressionReason": null
+      }
+    },
+    {
+      "scenarioId": "material-change-clears-suppression",
+      "initial": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:initial",
+        "lifecycleStatus": "generated",
+        "reviewPosture": "suppressed",
+        "suppressionReason": "manual_suppression"
+      },
+      "incoming": {
+        "cashWeight": "0.21",
+        "evidenceHash": "sha256:golden:cashflow:material-change"
+      },
+      "expected": {
+        "decision": "material_version_created",
+        "candidateIdStable": true,
+        "materialVersion": 2,
+        "evidenceVersion": 1,
+        "changeReason": "material_change",
+        "lifecycleStatus": "generated",
+        "reviewPosture": "advisor_review_required",
+        "suppressionReason": null
+      }
+    },
+    {
+      "scenarioId": "expired-condition-reopens-for-review",
+      "initial": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:initial",
+        "lifecycleStatus": "expired",
+        "reviewPosture": "no_action"
+      },
+      "incoming": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:recurrent"
+      },
+      "expected": {
+        "decision": "recurrent_condition_reopened",
+        "candidateIdStable": true,
+        "materialVersion": 2,
+        "evidenceVersion": 1,
+        "changeReason": "recurrent_condition",
+        "lifecycleStatus": "generated",
+        "reviewPosture": "advisor_review_required",
+        "suppressionReason": null
       }
     }
   ],

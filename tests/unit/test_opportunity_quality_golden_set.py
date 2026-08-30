@@ -42,6 +42,18 @@ def test_golden_set_detects_ranking_regression() -> None:
     assert any("active-opportunities:advisor orderedCaseIds" in error for error in errors)
 
 
+def test_golden_set_detects_candidate_reopen_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["lifecycleExpectations"][2]["expected"]["evidenceVersion"] = 2
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any(
+        "expired-condition-reopens-for-review evidenceVersion expected 2" in error
+        for error in errors
+    )
+
+
 def test_golden_set_rejects_production_derived_expectations() -> None:
     golden_set = deepcopy(load_golden_set())
     golden_set["authorship"]["expectedResultsDerivedFromProductionCode"] = True
