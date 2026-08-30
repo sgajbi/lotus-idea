@@ -62,6 +62,8 @@ def test_api_idempotency_boundary_gate_blocks_optional_openapi_header() -> None:
         "missing OpenAPI operation",
         "POST /api/v1/idea-candidates/{candidateId}/review-actions: missing OpenAPI operation",
         "POST /api/v1/idea-candidates/{candidateId}/feedback: missing OpenAPI operation",
+        "POST /api/v1/idea-candidates/{candidateId}/presentation-receipts: "
+        "missing OpenAPI operation",
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents: missing OpenAPI operation",
         "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions: "
         "missing OpenAPI operation",
