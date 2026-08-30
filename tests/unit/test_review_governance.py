@@ -200,19 +200,32 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
 
 
-def test_feedback_resource_identity_matches_the_persisted_event() -> None:
+@pytest.mark.parametrize(
+    "caller_reason_codes",
+    (
+        (ReasonCode.REVIEW_REQUIRED,),
+        (ReasonCode.FEEDBACK_RECORDED, ReasonCode.REVIEW_REQUIRED),
+    ),
+)
+def test_feedback_resource_identity_matches_the_canonical_persisted_event(
+    caller_reason_codes: tuple[ReasonCode, ...],
+) -> None:
     source_candidate = candidate()
     command = FeedbackCommand(
         feedback_id="feedback-identity-001",
         actor=advisor_context(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+        reason_codes=caller_reason_codes,
         recorded_at_utc=DECIDED_AT,
     )
     result = record_feedback(source_candidate, command)
 
     assert feedback_mutation_identity_from_command(source_candidate, command) == (
         result.feedback_event.mutation_identity
+    )
+    assert result.feedback_event.feedback.reason_codes == (
+        ReasonCode.FEEDBACK_RECORDED,
+        ReasonCode.REVIEW_REQUIRED,
     )
 
 

@@ -41,10 +41,17 @@ def test_feedback_success_examples_match_ledger_and_openapi() -> None:
     assert all(FeedbackResponse.model_validate(value) for value in expected.values())
 
     assert expected["accepted"]["feedbackEvent"] is not None
+    assert expected["accepted"]["feedbackEvent"]["reasonCodes"].count("feedback_recorded") == 1
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
     assert expected["replayed"]["feedbackEvent"] is None
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
+
+    request_schema = app.openapi()["components"]["schemas"]["FeedbackRequest"]
+    reason_code_description = request_schema["properties"]["reasonCodes"]["description"]
+    assert (
+        "records the source-owned feedback_recorded reason exactly once" in reason_code_description
+    )
 
 
 def _ledger_examples(operation_path: str) -> list[dict[str, object]]:

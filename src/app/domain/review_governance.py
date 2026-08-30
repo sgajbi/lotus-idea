@@ -404,7 +404,7 @@ def feedback_mutation_identity_from_command(
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
         event_name=command.outcome.value,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED, *command.reason_codes),
+        reason_codes=_canonical_feedback_reason_codes(command.reason_codes),
         occurred_at_utc=command.recorded_at_utc,
         source_signal_ids=candidate.source_signal_ids,
     )
@@ -493,7 +493,7 @@ def record_feedback(
         feedback_id=command.feedback_id,
         outcome=command.outcome,
         actor_role=command.actor.role.value,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED, *command.reason_codes),
+        reason_codes=_canonical_feedback_reason_codes(command.reason_codes),
         recorded_at_utc=command.recorded_at_utc,
     )
     feedback_event = GovernedFeedbackEvent(
@@ -518,6 +518,16 @@ def record_feedback(
         },
     )
     return FeedbackResult(feedback_event=feedback_event, audit_event=audit_event)
+
+
+def _canonical_feedback_reason_codes(
+    caller_reason_codes: tuple[ReasonCode, ...],
+) -> tuple[ReasonCode, ...]:
+    """Place the source-owned feedback reason first and persist it exactly once."""
+    return (
+        ReasonCode.FEEDBACK_RECORDED,
+        *(reason for reason in caller_reason_codes if reason is not ReasonCode.FEEDBACK_RECORDED),
+    )
 
 
 def _candidate_after_review(

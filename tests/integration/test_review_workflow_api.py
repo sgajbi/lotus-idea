@@ -174,11 +174,12 @@ def feedback_payload(
     *,
     feedback_id: str = "feedback-useful-001",
     outcome: str = "useful",
+    reason_codes: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "feedbackId": feedback_id,
         "outcome": outcome,
-        "reasonCodes": ["review_required"],
+        "reasonCodes": ["review_required"] if reason_codes is None else reason_codes,
         "recordedAtUtc": "2026-06-21T10:06:00Z",
     }
 
@@ -610,6 +611,39 @@ def test_feedback_api_persists_source_provenanced_feedback() -> None:
     assert payload["persistence"]["auditEventType"] == "idea.feedback.recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+
+
+def test_feedback_api_canonicalizes_a_caller_supplied_source_reason_and_replays() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="seed-feedback-canonical-reason-001",
+    )
+    request = feedback_payload(
+        feedback_id="feedback-canonical-reason-001",
+        reason_codes=["feedback_recorded", "review_required"],
+    )
+
+    accepted = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/feedback",
+        json=request,
+        headers=feedback_headers("feedback-canonical-reason-accepted-001"),
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/feedback",
+        json=request | {"reasonCodes": ["review_required"]},
+        headers=feedback_headers("feedback-canonical-reason-replayed-001"),
+    )
+
+    assert accepted.status_code == 200
+    assert accepted.json()["feedbackEvent"]["reasonCodes"] == [
+        "feedback_recorded",
+        "review_required",
+    ]
+    assert replayed.status_code == 200
+    assert replayed.json()["feedbackEvent"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
 
 
 def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
