@@ -77,7 +77,7 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
         "presentation proxy",
     )
 
-    assert golden_evaluation["executionStatus"] == "open_pr_raised"
+    assert golden_evaluation["executionStatus"] == "open_in_progress"
     assert golden_evaluation["rfcSlices"] == [
         "slice-05",
         "slice-07",
@@ -87,10 +87,15 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
     _assert_instruction_contains(
         golden_evaluation,
         "PR #1163",
+        "f3aa9f1ddc76181d8e642cbba3712114be09254c",
+        "Main Releasability run 33322378418",
+        "CodeQL run 33322371179",
         "independently authored opportunity-quality golden evaluation set",
         "all 11 governed opportunity families",
         "all 12 implemented signal policies",
         "no-opportunity portfolio",
         "Expected outputs must be handwritten",
         "5,732 unit tests",
+        "wiki publication with strict parity",
+        "clean branch/worktree hygiene",
     )
