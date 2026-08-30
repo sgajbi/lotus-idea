@@ -23,8 +23,10 @@ dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 151
 RFC-0002 issues, 124 closed and 27 open. `#681` remains the Slice 18 tracker,
 `#1154` is closed after PR #1157 exact-main, release-image, wiki, and
 branch-hygiene proof for governed economic candidate identity, and
-`#1155` then `#1156` are ready for feedback-quality and effectiveness
-measurement. `#1145`
+`#1155` has its Idea-owned governed feedback taxonomy and offline evaluation
+foundation on exact main, while `#1156` is actively implementing opportunity
+effectiveness and immutable visible-render receipt evidence. Both remain open
+for their issue-backed consumer and certification proof. `#1145`
 is closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene
 proof, `#1150` is closed after PR #1152 exact-main, release-image, wiki, and
 branch-hygiene proof, and `#1139` is closed

@@ -24,6 +24,8 @@ promoted.
 | Downstream realization is blocked | `/api/v1/downstream-realization/readiness` | `docs/operations/downstream-realization-readiness.md` |
 | AI explanation is blocked | `/api/v1/ai-explanations/readiness` | `docs/operations/ai-governance.md` |
 | Mesh posture is blocked | `/api/v1/data-mesh/readiness` | `docs/operations/mesh-readiness.md` |
+| Opportunity effectiveness is unavailable | `/api/v1/operations/opportunity-effectiveness`, tenant/window/evaluation bounds | [Opportunity Effectiveness](Opportunity-Effectiveness) |
+| Presentation receipt conflicts | Receipt `Idempotency-Key`, candidate version, tenant, UTC time, and rank/count | [Opportunity Effectiveness](Opportunity-Effectiveness) |
 | Error budget is burning or latency is elevated | Service SLO dashboard, dependency and PostgreSQL panels | [Service SLO and Capacity](Service-SLO-And-Capacity) |
 | Incident response is declared or severity is uncertain | Current severity, impacted workflow, mitigation status, next update time | [Incident Response](Incident-Response), `docs/runbooks/incident-response.md` |
 
@@ -35,6 +37,7 @@ promoted.
 | `make implementation-proof-readiness-check` | Aggregate blocker and proof posture. |
 | `make runtime-trust-telemetry-snapshot-check` | Runtime trust telemetry snapshot. |
 | `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
+| `python -m pytest tests/integration/test_presentation_receipts_api.py -q` | Visible-render receipt contract, authorization, replay/conflict, and bounded telemetry proof. |
 | `make test-client-lifecycle-gate` | Verify integration HTTP clients use deterministic lifespan and shutdown management. |
 | `make deployment-migration-contract-gate` | Exact-image migration workflow, history, evidence, Docker closure, and anti-bypass contract. |
 | `make disaster-recovery-proof-gate` | Restore integrity, RPO/RTO, replay, fencing, and no-mutation evidence. |

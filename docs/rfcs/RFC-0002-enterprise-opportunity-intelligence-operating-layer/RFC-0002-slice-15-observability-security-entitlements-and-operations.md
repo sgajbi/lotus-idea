@@ -302,6 +302,21 @@ Implementation evidence:
     proof is `source_contract` evidence, clears no aggregate blocker, and blocks
     premature dashboard-runtime, alert-runtime, `lotus-ai`, Workbench,
     client-ready, data-mesh, or supported-feature certification claims.
+35. `GET /api/v1/operations/opportunity-effectiveness` exposes a bounded,
+    single-tenant, versioned economic-opportunity funnel with explicit
+    numerators, denominators, zero-denominator behavior, timing distributions,
+    privacy exclusions, and a deterministic snapshot digest. PostgreSQL uses a
+    bounded repository-side aggregate rather than whole-store hydration.
+36. `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts` records
+    immutable visible-render evidence using `Idempotency-Key` as receipt
+    identity. Domain and PostgreSQL boundaries fence candidate, tenant,
+    material/evidence versions, UTC chronology, rank, visible count, and queue
+    digest. Operation telemetry exposes no candidate or tenant identifier.
+37. Presentation counts remain
+    `unavailable_consumer_certification_pending`; queue reads are not treated as
+    shown evidence. Gateway issue `#692` and Workbench issue `#954` remain the
+    consumer-certification dependencies, so the new contract and storage clear
+    no supported-feature or end-to-end measurement blocker by themselves.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,

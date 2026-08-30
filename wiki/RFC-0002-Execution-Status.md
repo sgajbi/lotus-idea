@@ -29,7 +29,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof for governed economic candidate identity and evidence versioning. `#1155` is ready next for governed review-feedback taxonomy and offline quality evaluation; `#1156` follows for opportunity-effectiveness measurement. These issues do not promote a supported feature or complete final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof for governed economic candidate identity and evidence versioning. `#1155` has its Idea-owned feedback taxonomy and offline evaluation on exact main while consumer proof remains open; `#1156` is actively implementing opportunity effectiveness and governed visible-render receipts. Neither issue promotes a supported feature or completes final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -37,6 +37,11 @@ redistribution inside the seven-day freshness window while requiring exact
 repository and total-issue cardinality, a no-new-or-reopened open-issue set,
 non-increasing blocker counts, complete governed lifecycle coverage, and exact
 title-only references.
+
+Execution has advanced since that immutable baseline: `#1155` and `#1156` are
+currently `status/in-progress`. The baseline counts below remain unchanged
+until the governed cross-repository snapshot is regenerated; GitHub issue
+labels remain the live execution truth.
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,

@@ -94,6 +94,8 @@ Current instrumented operations:
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_preview_read` | Internal runtime trust telemetry preview diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_snapshot_read` | Internal runtime trust telemetry snapshot diagnostic read | `lotus-idea` | `not_certified` |
+| `opportunity_effectiveness_read` | Bounded privacy-safe opportunity effectiveness diagnostic | `lotus-idea` | `not_certified` |
+| `presentation_receipt_record` | Immutable visible-render evidence for one governed candidate version | `lotus-idea` | `not_certified` |
 | `source_ingestion_run_once` | Internal source-ingestion run-once operator action | `lotus-core` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 | `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |

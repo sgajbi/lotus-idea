@@ -122,9 +122,12 @@ issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, as of 2026-08-30 the
 current Idea ledger posture has 151 tracked RFC-0002 issues, 124 closed and 27
 open. #681 remains the Slice 18 synchronization tracker, #1154 is closed after
-PR #1157 exact-main, release-image, wiki, and branch-hygiene proof, and #1155 then #1156 are
-ready for feedback-quality evaluation and opportunity-effectiveness
-measurement. #1145 is closed
+PR #1157 exact-main, release-image, wiki, and branch-hygiene proof, #1155 has
+merged its Idea-owned governed feedback taxonomy and evaluation foundation,
+and #1156 is implementing versioned opportunity-effectiveness measurement plus
+immutable visible-render receipt evidence. Presentation counts remain
+unavailable pending Gateway `#692` and Workbench `#954` consumer certification;
+queue retrieval must never be used as a shown proxy. #1145 is closed
 after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1150 is closed after
 PR #1152 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed
 after PR #1147 merged the non-regressive live posture correction to exact main
@@ -144,9 +147,12 @@ hardening issues. #1110 reached Idea main
 The dated 2026-08-30 cross-repo RFC-0002 snapshot baseline is 242 label-backed
 RFC-0002 issues across 13 repositories: 204 closed and 38 open. The open set is
 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/ready`, 9 `status/tracker` issues; #681 is the active Idea tracker,
-while #1155 and #1156 are ready next. As of 2026-08-30, the current
-Idea source ledger tracks 151 RFC-0002 issues, 124 closed and 27 open.
+`status/ready`, 9 `status/tracker` issues; #681 is the active Idea tracker.
+Since that dated baseline, #1155 has reached exact main for its Idea-owned
+feedback/evaluation foundation and #1156 is actively implementing opportunity
+effectiveness and governed visible-render receipt evidence. The dated
+2026-08-30 Idea source ledger tracks 151 RFC-0002 issues, 124 closed and 27
+open.
 Blocked actionability remains 0 app-actionable blocked issues.
 
 Slice 18 live-posture enforcement is owned by
@@ -467,7 +473,10 @@ fixed the post-merge QA hash-compatibility defects on main
 As of 2026-08-30, current Idea ledger posture has 151 tracked RFC-0002 issues,
 124 closed and 27 open. `sgajbi/lotus-idea#681` remains the synchronization
 tracker, `#1154` is closed after PR #1157 exact-main, release-image, wiki, and
-branch-hygiene proof, and `#1155` then `#1156` are ready.
+branch-hygiene proof. `#1155` now has its Idea-owned feedback/evaluation
+foundation on exact main, and `#1156` is actively implementing effectiveness
+and presentation-receipt evidence; their remaining consumer/certification work
+stays issue-backed.
 `#1145`
 is closed after PR #1149 exact-main and wiki proof, and `#1150` is closed after
 PR #1152 exact-main and wiki proof;
@@ -1797,8 +1806,10 @@ The dated snapshot baseline as of 2026-08-30 is
 external/protected/canonical-proof evidence blockers, 1 in-progress Idea
 RFC-0002 issue, no PR-open issues, 2 ready Idea RFC-0002 issues, 1 merged-main RFC-0002 issue
 outside the Idea ledger, and no merged-main QA-pending Idea RFC-0002 issues,
-with `sgajbi/lotus-idea#681` in progress, `#1155` and `#1156`
-ready in that order, `#1154` closed after PR #1157 exact-main, release-image,
+with `sgajbi/lotus-idea#681` in progress. Since that baseline, `#1155` has
+reached exact main for the Idea-owned feedback/evaluation foundation and `#1156`
+is actively implementing effectiveness and presentation-receipt evidence;
+`#1154` remains closed after PR #1157 exact-main, release-image,
 wiki, and branch-hygiene proof, `#1150` closed after PR #1152 exact-main,
 release-image, wiki, and branch-hygiene proof, `#1145` closed after PR #1149
 exact-main and wiki proof, and `#1139` closed,
