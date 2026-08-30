@@ -121,8 +121,10 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, as of 2026-08-30 the
 current Idea ledger posture has 146 tracked RFC-0002 issues, 120 closed and 26
-open; #681 remains in progress and #1139 is PR-open in PR #1146 for Slice 18
-synchronization and live posture enforcement. #1119, #1121, #1123, #1125, #1127,
+open; #681 and #1139 remain in progress for Slice 18 synchronization and
+non-regressive live posture enforcement. PR #1146 is merged and exact-main
+validated; #1139 remains active for the lifecycle self-invalidation correction.
+#1119, #1121, #1123, #1125, #1127,
 #1129, and #1131 are closed Slice 17 release-governance hardening issues after
 PRs #1120, #1122, #1124, #1126, #1128, #1130, and #1132 reached main. #1110 is closed after PR #1114/#1115/#1116
 for downstream intake wire-contract gate hardening, #1109 is closed after PR
@@ -132,10 +134,10 @@ supported-feature gate fixture hardening, and #1101, #1098, #1094, #1091,
 hardening issues. #1110 reached Idea main
 `1208330a4fba9914307d4df84c5f84afcb54c417`; Main Releasability
 `31843321791`, push-on-main CodeQL `31843316096`, and branch hygiene passed.
-As of 2026-08-30, the current live cross-repo RFC-0002 posture is 237
-label-backed RFC-0002 issues across 13 repositories: 200 closed and 37 open.
-The open set is 25 `status/blocked`, 1 `status/in-progress`, 1
-`status/merged-main`, 1 `status/pr-open`, 9 `status/tracker` issues; this
+The dated 2026-08-30 cross-repo RFC-0002 snapshot baseline is 237 label-backed
+RFC-0002 issues across 13 repositories: 200 closed and 37 open. The open set is
+25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker` issues; this
 includes #681 and #1139 as the active Idea Slice 18 issues and #1131 as the latest closed Idea
 Slice 17 release-governance hardening issue. As of 2026-08-30, the current Idea
 source ledger tracks 146 tracked RFC-0002 issues, 120 closed and 26 open.
@@ -143,9 +145,14 @@ Blocked actionability remains 0 app-actionable blocked issues.
 
 Slice 18 live-posture enforcement is owned by
 `scripts/issue_posture_live_gate.py` and
-`.github/workflows/issue-posture-audit.yml`. The gate compares the
-dated source snapshot with all 13 repositories and fails on count, status-map,
-title-only-reference, or seven-day freshness drift. The shared GitHub issue
+`.github/workflows/issue-posture-audit.yml`. The gate compares the dated source
+snapshot with all 13 repositories. It requires exact repository and total-issue
+cardinality, rejects newly open or reopened issue identities, open/blocker
+growth, closed-count regression, ungoverned status coverage,
+title-only-reference drift, or a snapshot older than seven days. It permits
+issue closure and lifecycle redistribution inside the freshness window when
+those non-regression invariants hold, so normal issue delivery cannot make the
+snapshot recursively invalidate itself. The shared GitHub issue
 inventory used by both the local Idea issue-state audit and cross-repository
 posture command first queries each repository issue total and rejects incomplete
 cardinality, so a newly RFC-labeled issue beyond a fixed list window cannot be
@@ -471,10 +478,10 @@ PR #1136 is the latest Slice 18 source-truth synchronization on main
 `97e7641a49b882d05e5583675a7881df0d89db63`; exact-main Main Releasability
 `32429389622`, wiki publication `8d2fc0b`, strict wiki parity, and branch
 hygiene passed.
-As of 2026-08-30, current governed cross-repo RFC-0002 posture is 237
-label-backed RFC-0002 issues across 13 repositories: 200 closed and 37 open.
-The open split is 25 `status/blocked`, 1 `status/in-progress`, 1
-`status/merged-main`, 1 `status/pr-open`, 9 `status/tracker`. The
+The dated 2026-08-30 governed cross-repo RFC-0002 baseline is 237 label-backed
+RFC-0002 issues across 13 repositories: 200 closed and 37 open. The open split
+is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
 evidence blockers. Title-only
 RFC-0002 references remain reported separately
@@ -1761,12 +1768,12 @@ Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
 writable Lotus app branch cannot truthfully produce. As of 2026-08-30, current
 Idea ledger posture has 146 tracked RFC-0002 issues, 120 closed and 26 open.
-Current live posture as of 2026-08-30 is
+The dated snapshot baseline as of 2026-08-30 is
 25 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
-external/protected/canonical-proof evidence blockers, 1 PR-open Idea
-RFC-0002 issue, 1 merged-main RFC-0002 issue outside the Idea ledger, no
-merged-main QA-pending Idea RFC-0002 issues, 0 PR-open RFC-0002 issues outside Idea,
-with `sgajbi/lotus-idea#681` in progress and `#1139` PR-open in PR #1146,
+external/protected/canonical-proof evidence blockers, 2 in-progress Idea
+RFC-0002 issues, 1 merged-main RFC-0002 issue outside the Idea ledger, no
+merged-main QA-pending Idea RFC-0002 issues, and no PR-open RFC-0002 issue,
+with `sgajbi/lotus-idea#681` and `#1139` in progress,
 `sgajbi/lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
 `#1131` closed after Slice 17 release-governance hardening,
 `sgajbi/lotus-idea#1110` closed after downstream intake wire-contract gate
@@ -1777,9 +1784,9 @@ closed after release-CI hardening, and `sgajbi/lotus-idea#1094`,
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as recent QA-closed maintainability hardening
 issues. As of 2026-08-30, the full live posture is 237 label-backed RFC-0002
-issues across 13 repositories: 200 closed and 37 open. The open split is 25
-`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1
-`status/pr-open`, 9 `status/tracker`.
+issues across 13 repositories: 200 closed and 37 open. The dated baseline open
+split is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
@@ -2299,6 +2306,20 @@ Minimum local validation for a backend slice:
 
 Run broader gates when shared infrastructure, API contracts, persistence,
 security, CI workflows, or documentation surfaces are touched.
+
+Quality fixes must preserve the engineering consequence of the control:
+
+1. never make a test or gate green by weakening its assertions, excluding the
+   failing input, normalizing away governed fields, suppressing the verdict, or
+   accepting missing evidence; fix the implementation or classifier and retain
+   a focused regression test for the original failure,
+2. treat existing architecture as evidence, not an obligation to preserve a
+   poor boundary; refactor an in-scope design defect while preserving only
+   domain, API, persistence, and operational contracts that are still required,
+3. introduce an abstraction only when it removes duplicated responsibility or
+   protects a stable ownership boundary; do not add speculative features,
+   compatibility aliases, or migration layers without a proven consumer and
+   an explicit retirement path.
 
 GitHub Actions remain the source of merge-check truth. Local green checks are
 necessary but not enough for final closure.

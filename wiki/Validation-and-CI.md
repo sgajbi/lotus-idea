@@ -1383,26 +1383,29 @@ supported feature.
 ## RFC-0002 Current Execution Posture
 
 RFC-0002 execution is tracked through GitHub issue state plus the
-source-controlled implementation-proof ledgers. As of 2026-08-30, the current
-governed posture is 237 label-backed RFC-0002 issues across 13 repositories:
-200 closed and 37 open. The open set is 25 `status/blocked`, 1
-`status/in-progress`, 1 `status/merged-main`, 1 `status/pr-open`, 9
-`status/tracker`, and 0
+source-controlled implementation-proof ledgers. The dated 2026-08-30 baseline
+is 237 label-backed RFC-0002 issues across 13 repositories: 200 closed and 37
+open. The open set is 25 `status/blocked`, 2 `status/in-progress`, 1
+`status/merged-main`, 9 `status/tracker`, and 0
 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
 closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
-latest closed Idea maintainability hardening issues, while #681 remains in
-progress and #1139 is PR-open in PR #1146 for live posture hardening.
+latest closed Idea maintainability hardening issues, while #681 and #1139
+remain in progress for Slice 18 synchronization and live posture hardening.
 
 ### Live RFC-0002 Posture And Protected-Lane Liveness
 
 `make rfc0002-issue-posture-live-gate` compares the dated source snapshot with
 the full label-backed GitHub posture across all 13 governed repositories. It
-fails on any count or status-map drift and when the snapshot is more than seven
-days old. The `RFC-0002 Issue Posture Audit` workflow runs this check daily,
+requires exact repository and total-issue cardinality, preserves the exact
+baseline open-issue identity set, and rejects newly open or reopened issues,
+open/blocker growth, closed-count regression, ungoverned status coverage,
+title-only-reference drift, and snapshots more than seven days old. Issue
+closure and lifecycle redistribution are allowed inside the freshness window
+when those non-regression invariants hold. The `RFC-0002 Issue Posture Audit` workflow runs this check daily,
 manually, and when the governed snapshot or audit implementation changes on
 `main`. This live external-state check is deliberately separate from the
 deterministic documentation gate used on every branch.
@@ -1419,7 +1422,7 @@ closure.
 | PostgreSQL capacity | [Run 33283746668](https://github.com/sgajbi/lotus-idea/actions/runs/33283746668) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it saturates a dedicated PostgreSQL target. `#693` remains blocked on the governed runner, protected target, execution, and attestation. |
 | Dependency recovery | [Run 33283753824](https://github.com/sgajbi/lotus-idea/actions/runs/33283753824) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it performs a controlled dependency-failure exercise. `#693` remains blocked on protected execution and attestation. |
 | Load and soak | [Run 33283761340](https://github.com/sgajbi/lotus-idea/actions/runs/33283761340) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it performs a one-hour mutating synthetic workload. `#693` remains blocked on protected execution, resource/cost evidence, and attestation. |
-| Deployment migration | The workflow now separates non-mutating request validation from protected execution. The validation-only job cannot enter the environment-bound migrate job. | Dispatch validation-only after the control reaches `main`; actual migration stays manual and requires an exact signed image, protected database target and secret, approved connectivity, and approved change reference under `#375`. |
+| Deployment migration | [Run 33287345077](https://github.com/sgajbi/lotus-idea/actions/runs/33287345077) validated the request against exact main `6f92b8c6888bae33e5d7a08cb40763054924bbc4` and digest-bound image `ghcr.io/sgajbi/lotus-idea@sha256:943ce22b3da0eaec32602272035a5788f05f46c242d1bbc079d8241735b48642`; the environment-bound migration job was skipped. | Request wiring is proven only. Actual migration stays manual and requires a protected database target and secret, approved connectivity, and approved change reference under `#375`. |
 
 Cancelled zero-step runs prove dispatch and queue wiring only. They are not
 capacity, recovery, migration, production-readiness, or supported-feature
