@@ -1055,6 +1055,17 @@ external-state check on a daily schedule, manual dispatch, and relevant
 `main`-path changes without making unrelated PR validation depend on mutable
 GitHub state.
 
+The execution ledger also separates historical issue references from current
+external blockers. An open blocked entry that asserts a specific current
+dependency records canonical `currentBlockerIssueRefs` values in
+`owner/repo#number` form. The live issue-state audit queries each owning
+repository and fails when a declared blocker is missing or closed. This prevents
+regression tests from preserving an obsolete blocker narrative after the owning
+repository has merged and closed its issue. The 2026-08-30 reconciliation removes
+closed Core `#882` as the current blocker for Idea `#685`, `#686`, and `#814`,
+while preserving the fresh canonical browser/full-journey evidence still
+required by those issues.
+
 The same audit invoked the three capacity-production-like workflows once from
 exact main `f944bdaaa2e9b575268afd18db1b799c9f6abf60`. PostgreSQL capacity run
 `33283746668`, dependency-recovery run `33283753824`, and load/soak run

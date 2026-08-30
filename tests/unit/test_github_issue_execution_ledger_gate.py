@@ -574,6 +574,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_principal_blocke
     )
     assert "entitlement-denied proof" in issue_687["closureInstruction"]
     assert "local/dev caller-authority fixture" in issue_687["closureInstruction"]
+    assert issue_687["currentBlockerIssueRefs"] == [
+        "sgajbi/lotus-platform#563",
+        "sgajbi/lotus-workbench#436",
+    ]
 
 
 def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence(
@@ -654,7 +658,8 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_open_blocke
     assert "wiki commit c08509a" in issue_691["closureInstruction"]
     assert "rendered_output_creation_missing" in issue_691["closureInstruction"]
     assert "archive_record_creation_missing" in issue_691["closureInstruction"]
-    assert "lotus-archive #55" in issue_691["closureInstruction"]
+    assert "sgajbi/lotus-archive#55" in issue_691["closureInstruction"]
+    assert issue_691["currentBlockerIssueRefs"] == ["sgajbi/lotus-archive#55"]
     assert "This issue is not QA-pending" in issue_691["closureInstruction"]
 
 
@@ -752,7 +757,7 @@ def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_eviden
     assert "#380: closureInstruction missing required evidence `open_blocked`" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_current_issue_380_core_blocker() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_current_issue_380_blockers() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_380 = next(
@@ -763,11 +768,14 @@ def test_rfc0002_github_issue_execution_ledger_tracks_current_issue_380_core_blo
 
     assert issue_380["githubState"] == "open"
     assert issue_380["executionStatus"] == "open_blocked"
-    assert "reopened sgajbi/lotus-core#836" in issue_380["closureInstruction"]
-    assert "sgajbi/lotus-core#795" not in issue_380["closureInstruction"]
-    assert "positions data quality UNKNOWN" in issue_380["closureInstruction"]
-    assert "drained valuation and aggregation queues" in issue_380["closureInstruction"]
-    assert "current Core/Gateway dates for 2026-04-10" in issue_380["closureInstruction"]
+    assert issue_380["currentBlockerIssueRefs"] == [
+        "sgajbi/lotus-platform#563",
+        "sgajbi/lotus-workbench#436",
+    ]
+    assert (
+        "Earlier Core runtime blockers #836 and #882 are closed"
+        in (issue_380["closureInstruction"])
+    )
     assert "foundation_only with zero promoted features" in issue_380["closureInstruction"]
 
 
@@ -869,9 +877,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependen
     )
     assert "Platform PR #629 merged bounded cost-attribution" in issue_693["closureInstruction"]
     assert (
-        "platform issue #495 remains the protected FinOps execution"
+        "sgajbi/lotus-platform#495 remains the protected FinOps execution"
         in (issue_693["closureInstruction"])
     )
+    assert issue_345["currentBlockerIssueRefs"] == ["sgajbi/lotus-platform#495"]
+    assert issue_693["currentBlockerIssueRefs"] == ["sgajbi/lotus-platform#495"]
     assert "This issue is not QA-pending" in issue_693["closureInstruction"]
     assert "governed self-hosted lotus-capacity-evidence runner" in issue_693["closureInstruction"]
     assert (
@@ -896,9 +906,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
         "Workbench PR #501 merged the browser-action proof path"
         in (issue_686["closureInstruction"])
     )
-    assert "sgajbi/lotus-core#882" in issue_686["closureInstruction"]
+    assert "Core #882 / PR #924 supplied" in issue_686["closureInstruction"]
     assert "source_batch_fingerprint/content_hash" in issue_686["closureInstruction"]
     assert "DpmPortfolioUniverseCandidate:v1" in issue_686["closureInstruction"]
+    assert "fresh exact-main Workbench live validation" in issue_686["closureInstruction"]
     assert "This issue is not QA-pending" in issue_686["closureInstruction"]
     assert "production identity" in issue_686["closureInstruction"]
 
@@ -922,11 +933,13 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
     assert "stale runtime-proof timestamp variable" in issue_685["closureInstruction"]
     assert (
-        "later Core blockers #836, #840, #856, and #873 closed" in issue_685["closureInstruction"]
+        "Core blockers #836, #840, #856, #873, and #882 are closed"
+        in (issue_685["closureInstruction"])
     )
-    assert "sgajbi/lotus-core#882" in issue_685["closureInstruction"]
-    assert "BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED" in issue_685["closureInstruction"]
+    assert "Core #882 / PR #924 supplied" in issue_685["closureInstruction"]
+    assert "source_batch_fingerprint/content_hash" in issue_685["closureInstruction"]
     assert "DpmPortfolioUniverseCandidate:v1" in issue_685["closureInstruction"]
+    assert "Fresh exact-main Gateway/BFF-backed Workbench" in issue_685["closureInstruction"]
     assert "supported-feature promotion" in issue_685["closureInstruction"]
 
 
@@ -978,6 +991,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_live_journey_as_blocked() 
         in issue_699["closureInstruction"]
     )
     assert "approved non-stub live-provider execution" in issue_699["closureInstruction"]
+    assert issue_699["currentBlockerIssueRefs"] == [
+        "sgajbi/lotus-ai#115",
+        "sgajbi/lotus-ai#122",
+    ]
     assert "This issue is not QA-pending" in issue_699["closureInstruction"]
     assert "full live journey validation remains blocked" in issue_699["closureInstruction"]
 
@@ -1111,15 +1128,48 @@ def test_rfc0002_github_issue_execution_ledger_tracks_capacity_seed_authorizatio
     assert "1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac" in issue_814["closureInstruction"]
     assert "30543504302" in issue_814["closureInstruction"]
     assert (
-        "earlier Core blockers #836, #840, #856, and #873 are closed"
-        in issue_814["closureInstruction"]
+        "Core blockers #836, #840, #856, #873, and #882 are closed"
+        in (issue_814["closureInstruction"])
     )
-    assert "sgajbi/lotus-core#882" in issue_814["closureInstruction"]
-    assert "source_batch_fingerprint/content_hash" in issue_814["closureInstruction"]
-    assert "2026-04-17" not in issue_814["closureInstruction"]
-    assert "2026-04-30" not in issue_814["closureInstruction"]
+    assert "Fresh 2026-08-29 exact-main evidence" in issue_814["closureInstruction"]
+    assert issue_814["currentBlockerIssueRefs"] == [
+        "sgajbi/lotus-workbench#904",
+        "sgajbi/lotus-advise#557",
+    ]
     assert "does not implement production authentication" in issue_814["closureInstruction"]
     assert "supported-feature promotion" in issue_814["closureInstruction"]
+
+
+def test_rfc0002_github_issue_execution_ledger_rejects_malformed_current_blocker_ref(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_814 = _issue_by_number(payload, 814)
+    issue_814["currentBlockerIssueRefs"] = ["lotus-workbench-904"]
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert "#814: every currentBlockerIssueRefs entry must use owner/repo#number" in errors
+
+
+def test_rfc0002_github_issue_execution_ledger_requires_blocker_ref_in_instruction(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_814 = _issue_by_number(payload, 814)
+    issue_814["closureInstruction"] = issue_814["closureInstruction"].replace(
+        "sgajbi/lotus-workbench#904",
+        "the Workbench memo issue",
+    )
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert (
+        "#814: current blocker sgajbi/lotus-workbench#904 must appear in closureInstruction"
+        in errors
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> None:

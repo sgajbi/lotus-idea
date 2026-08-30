@@ -1407,6 +1407,13 @@ manually, and when the governed snapshot or audit implementation changes on
 `main`. This live external-state check is deliberately separate from the
 deterministic documentation gate used on every branch.
 
+`make rfc0002-github-issue-execution-state-audit` additionally validates
+structured `currentBlockerIssueRefs` on open blocked ledger entries. Every
+declared `owner/repo#number` dependency is queried from its owning repository;
+missing or closed dependencies fail the audit. Historical issue references may
+remain as evidence, but they cannot remain declared as current blockers after
+closure.
+
 | Protected evidence lane | 2026-08-30 liveness evidence | Trigger policy and remaining authority |
 | --- | --- | --- |
 | PostgreSQL capacity | [Run 33283746668](https://github.com/sgajbi/lotus-idea/actions/runs/33283746668) reached the protected runner queue with zero steps and was cancelled cleanly. | Manual only because it saturates a dedicated PostgreSQL target. `#693` remains blocked on the governed runner, protected target, execution, and attestation. |

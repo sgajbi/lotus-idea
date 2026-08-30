@@ -214,7 +214,10 @@
       "open_blocked",
       "6f8875dc6784dd17975e6700c09b9ff71d66fb8b",
       "30327202465",
-      "30327193673"
+      "30327193673",
+      "sgajbi/lotus-platform#563",
+      "sgajbi/lotus-workbench#436",
+      "Earlier Core runtime blockers #836 and #882 are closed"
     ],
     "681": [
       "PR #765 merged the Slice 18 cross-repo issue posture command",
@@ -314,16 +317,15 @@
     ],
     "685": [
       "Keep #685 open and status/blocked",
-      "later Core blockers #836, #840, #856, and #873 closed",
-      "sgajbi/lotus-core#882",
-      "BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED",
-      "DpmPortfolioUniverseCandidate:v1"
+      "Core blockers #836, #840, #856, #873, and #882 are closed",
+      "Core #882 / PR #924 supplied the previously missing DpmPortfolioUniverseCandidate:v1 source_batch_fingerprint/content_hash evidence",
+      "Fresh exact-main Gateway/BFF-backed Workbench queue and candidate-detail browser evidence"
     ],
     "686": [
       "Keep #686 open and status/blocked",
       "Workbench PR #501 merged the browser-action proof path",
-      "sgajbi/lotus-core#882",
-      "source_batch_fingerprint/content_hash",
+      "Core #882 / PR #924 supplied deterministic source_batch_fingerprint/content_hash evidence",
+      "fresh exact-main Workbench live validation",
       "This issue is not QA-pending"
     ],
     "687": [
@@ -350,7 +352,7 @@
       "29972535964",
       "rendered_output_creation_missing",
       "archive_record_creation_missing",
-      "lotus-archive #55",
+      "sgajbi/lotus-archive#55",
       "This issue is not QA-pending"
     ],
     "692": [
@@ -365,7 +367,7 @@
     "693": [
       "Platform PR #629 merged bounded cost-attribution",
       "823e2641778aaf7db4e1df6218cf84eab0084526",
-      "platform issue #495 remains the protected FinOps execution",
+      "sgajbi/lotus-platform#495 remains the protected FinOps execution",
       "does not provision self-hosted runners"
     ],
     "699": [
@@ -1847,18 +1849,11 @@
       "Workbench PR #516",
       "1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac",
       "30543504302",
-      "original #814 authorization and Workbench validator defects are no longer the active failure path",
-      "sgajbi/lotus-core#836",
-      "holdings_status=READY",
-      "pricing_status=READY",
-      "transactions_status=READY",
-      "reporting_status=READY",
-      "blocking_reason_codes=[]",
-      "pending_valuation_jobs=0",
-      "pending_aggregation_jobs=0",
-      "aggregation_jobs.statuses=[COMPLETE]",
-      "analytics_performance_end_date=2026-04-10",
-      "positions_data_quality_status=UNKNOWN",
+      "The original #814 authorization and Workbench validator defects are no longer the active failure path",
+      "Core blockers #836, #840, #856, #873, and #882 are closed",
+      "Fresh 2026-08-29 exact-main evidence proves two consecutive governed Idea downstream-capacity seeds completed",
+      "sgajbi/lotus-workbench#904",
+      "sgajbi/lotus-advise#557",
       "fresh canonical validation completes on mainline sources",
       "does not implement production authentication",
       "supported-feature promotion"

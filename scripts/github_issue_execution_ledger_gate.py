@@ -26,6 +26,7 @@ OPEN_STATUSES = frozenset(
 )
 CLOSED_STATUSES = frozenset({"closed_complete"})
 AUTO_CLOSE_KEYWORDS = tuple("close closes closed fix fixes fixed resolve resolves resolved".split())
+ISSUE_REFERENCE_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[1-9][0-9]*$")
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class IssueEntry:
     allow_pull_request_auto_close: bool
     closure_instruction: str
     rfc_slices: tuple[str, ...]
+    current_blocker_issue_refs: tuple[str, ...]
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -134,6 +136,7 @@ def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
         allow_pull_request_auto_close = raw_entry.get("allowPullRequestAutoClose")
         closure_instruction = raw_entry.get("closureInstruction")
         rfc_slices = raw_entry.get("rfcSlices")
+        current_blocker_issue_refs = raw_entry.get("currentBlockerIssueRefs", [])
         if not isinstance(issue_number, int):
             raise ValueError(f"issues[{index}].issueNumber must be an integer")
         if github_state not in {"open", "closed"}:
@@ -148,6 +151,19 @@ def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
             raise ValueError(f"#{issue_number}: rfcSlices must be a non-empty list")
         if not all(isinstance(slice_id, str) for slice_id in rfc_slices):
             raise ValueError(f"#{issue_number}: every rfcSlices entry must be a string")
+        if not isinstance(current_blocker_issue_refs, list):
+            raise ValueError(f"#{issue_number}: currentBlockerIssueRefs must be a list")
+        if not all(
+            isinstance(issue_ref, str) and ISSUE_REFERENCE_RE.fullmatch(issue_ref)
+            for issue_ref in current_blocker_issue_refs
+        ):
+            raise ValueError(
+                f"#{issue_number}: every currentBlockerIssueRefs entry must use owner/repo#number"
+            )
+        if len(current_blocker_issue_refs) != len(set(current_blocker_issue_refs)):
+            raise ValueError(
+                f"#{issue_number}: currentBlockerIssueRefs must not contain duplicates"
+            )
         entries.append(
             IssueEntry(
                 issue_number=issue_number,
@@ -156,6 +172,7 @@ def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
                 allow_pull_request_auto_close=allow_pull_request_auto_close,
                 closure_instruction=closure_instruction,
                 rfc_slices=tuple(rfc_slices),
+                current_blocker_issue_refs=tuple(current_blocker_issue_refs),
             )
         )
     return entries
@@ -225,6 +242,15 @@ def validate_github_issue_execution_ledger(
                     errors.append(
                         f"#{number}: closureInstruction missing required evidence `{fragment}`"
                     )
+            if entry.current_blocker_issue_refs and entry.execution_status != "open_blocked":
+                errors.append(
+                    f"#{number}: currentBlockerIssueRefs require executionStatus=open_blocked"
+                )
+            for issue_ref in entry.current_blocker_issue_refs:
+                if issue_ref not in entry.closure_instruction:
+                    errors.append(
+                        f"#{number}: current blocker {issue_ref} must appear in closureInstruction"
+                    )
         else:
             if entry.execution_status not in CLOSED_STATUSES:
                 errors.append(f"#{number}: closed issue has invalid executionStatus")
@@ -239,6 +265,8 @@ def validate_github_issue_execution_ledger(
                     errors.append(
                         f"#{number}: closureInstruction missing required closed evidence `{fragment}`"
                     )
+            if entry.current_blocker_issue_refs:
+                errors.append(f"#{number}: closed issue cannot declare currentBlockerIssueRefs")
 
     missing = sorted(gate_policy.expected_issue_numbers - seen)
     extra = sorted(seen - gate_policy.expected_issue_numbers)
