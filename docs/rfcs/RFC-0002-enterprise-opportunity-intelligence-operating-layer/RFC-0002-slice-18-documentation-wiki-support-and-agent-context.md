@@ -1032,10 +1032,9 @@ chat-only explanation.
 The dated 2026-08-30 baseline covers 239 label-backed RFC-0002 issues. Its 25
 open `status/blocked` issues are classified and 0 are app-actionable blocked
 issues. The baseline is 202 closed and 37 open across 13 repositories, with 25
-`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1
-`status/ready`, 9 `status/tracker`; `sgajbi/lotus-idea#681` is in progress,
-`#1145` is closed after PR #1149 exact-main and wiki proof, and `#1150` is
-ready for the adjacent Slice 08 ownership correction. The
+`status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker`; `sgajbi/lotus-idea#681` and `#1150` are in progress, and
+`#1145` is closed after PR #1149 exact-main and wiki proof. The
 current source ledger records #1139 closed
 after PR #1147 reached exact main `0fd885bbc0542e7df697756f8035bfcb4b5484f4`;
 Main Releasability `33289306863`, CodeQL `33289301162`, live posture audit

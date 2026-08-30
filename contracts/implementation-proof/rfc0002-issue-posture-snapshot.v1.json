@@ -27,19 +27,20 @@
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
-      "open_in_progress": 1,
+      "open_in_progress": 2,
       "open_merged_main_qa_pending": 0,
       "open_pr_raised": 0,
-      "open_ready": 1,
+      "open_ready": 0,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
     "fixedLocalIssues": [],
     "prOpenIssues": [],
-    "readyIssues": ["sgajbi/lotus-idea#1150"],
+    "readyIssues": [],
     "inProgressIssues": [
-      "sgajbi/lotus-idea#681"
+      "sgajbi/lotus-idea#681",
+      "sgajbi/lotus-idea#1150"
     ],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
@@ -89,9 +90,8 @@
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
-      "status/in-progress": 1,
+      "status/in-progress": 2,
       "status/merged-main": 1,
-      "status/ready": 1,
       "status/tracker": 9
     },
     "openIssueRefs": [
@@ -168,7 +168,7 @@
       "239 label-backed RFC-0002 issues",
       "202 closed and 37 open",
       "2026-08-30",
-      "25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`",
+      "25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

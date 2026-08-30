@@ -115,6 +115,14 @@ Implemented in this slice:
     that source reason under a new transport key is the same feedback resource;
     reusing one transport key with changed payload remains a truthful conflict.
     Gateway and Workbench do not rewrite persisted Idea feedback events.
+27. GitHub issue `#1150` applies the same ownership invariant to review
+    decisions. The reason owned by the requested review action is first and
+    appears exactly once in mutation identity, persisted decision, API
+    projection, audit attributes, and source-safe outbox evidence. Other caller
+    reasons preserve their order and multiplicity. A semantically equivalent
+    request under a new transport key replays the existing review resource,
+    while changed raw content under the same key remains an idempotency
+    conflict. This does not add downstream rewriting or promote review support.
 
 Validation evidence from the implementation slice:
 
