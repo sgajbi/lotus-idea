@@ -1411,10 +1411,10 @@
       "issueNumber": 1145,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1145",
       "rfcSlices": ["slice-08"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1145 open while PR #1149 carries the Slice 08 feedback correctness hardening through merge, exact-main validation, wiki publication, and branch hygiene. The branch canonicalizes the source-owned feedback_recorded reason exactly once before mutation identity, persistence, replay, API response, and downstream evidence projection. Caller-supplied and omitted source reasons are covered explicitly; equivalent business-resource retries under new transport keys replay, changed content must conflict truthfully, and no Gateway/Workbench compatibility rewrite or supported-feature promotion is permitted. Local make check and make ci passed with 5,574 unit tests, 502 integration tests, 4 E2E tests, 99.03% combined coverage, and no known dependency vulnerabilities."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1145 after QA passed for RFC-0002 Slice 08 feedback reason ownership. PR #1149 rebase-merged branch head be5fd8686a19e7b930dd15eac9274d6d32452231 to Idea main d4a02236570284ebd0577a4959569945f369c7c5. PR Merge Gate 33292852482, Feature Lane 33292850988, and CodeQL 33292851467 passed with PostgreSQL runtime proof, 5,574 unit tests, integration/E2E tests, 99.03% local combined coverage, 99% remote coverage enforcement, Docker build/runtime smoke/image scan, and CI signal evidence. Exact-main Main Releasability run 33293109314, Push-on-main CodeQL run 33293105968, and Issue Posture Audit run 33293106094 passed. Release image ghcr.io/sgajbi/lotus-idea@sha256:bd32cb4a3f1bb14f1be6cb3b1edd45f6d680b8bcb275dbe0c309ce2c1d50152d was published-digest validated, scanned, signed, SBOM/provenance attested, and release/license identity bound. Wiki publication edb925e reached strict DiffCount 0. The implementation records the source-owned feedback_recorded reason exactly once across mutation identity, persistence, replay, API response, audit/outbox evidence, and OpenAPI truth while preserving raw transport idempotency conflict behavior. No Gateway/Workbench compatibility rewrite, no supported-feature promotion, and no final RFC-0002 closure is claimed. Final branch cleanup removed the remote feature branch, retained one clean Idea worktree on main, and found no unmerged remote branch. Adjacent review-decision ownership work remains separately tracked by #1150."
     },
     {
       "issueNumber": 1150,
