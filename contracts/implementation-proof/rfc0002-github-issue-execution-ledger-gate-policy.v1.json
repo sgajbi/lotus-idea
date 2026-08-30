@@ -160,16 +160,6 @@
     "source-controlled ledger/docs/wiki/context update is required"
   ],
   "requiredOpenIssueEvidence": {
-    "1150": [
-      "Keep #1150 open",
-      "Slice 08 review-decision correctness hardening",
-      "action-owned review reason exactly once",
-      "mutation identity, persistence, replay, API response",
-      "caller omission, single inclusion, and repeated inclusion",
-      "changed raw content remains a transport conflict",
-      "no Gateway/Workbench rewriting",
-      "supported-feature promotion"
-    ],
     "343": [
       "Keep #343 open and status/blocked",
       "versioned DR contract",
@@ -469,6 +459,33 @@
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1150": [
+      "Closed #1150",
+      "PR #1152",
+      "8169e03d92c78675f0411e895b1d7122876934ab",
+      "782f8596ed56efc42cb5b901e94c42d25f9c7c3c",
+      "110 tests",
+      "5,585 unit tests",
+      "Ruff and MyPy",
+      "Feature Lane",
+      "PR Merge Gate",
+      "CodeQL",
+      "Main Releasability run 33295063677",
+      "Push-on-main CodeQL run 33295060112",
+      "RFC posture audit run 33295060269",
+      "ghcr.io/sgajbi/lotus-idea@sha256:e010376b8a257522ea83c3ca4a25ae0dafec7d4d0e33b8dbacac9319fc1500e4",
+      "Wiki publication bd8e41e",
+      "strict DiffCount 0",
+      "action-owned review reason first and exactly once",
+      "non-owner reason order and multiplicity",
+      "raw same-key transport idempotency conflict",
+      "No assertion or failure was weakened",
+      "no Gateway/Workbench rewrite or compatibility layer",
+      "no speculative abstraction",
+      "no supported feature was promoted",
+      "branch cleanup",
+      "final RFC-0002 closure"
+    ],
     "1145": [
       "Closed #1145",
       "PR #1149",
