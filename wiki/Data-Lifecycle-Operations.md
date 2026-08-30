@@ -27,6 +27,13 @@ mainline-proven. Production-authorized policy sources, provider-native evidence,
 managed keys/stores, bank approvals, and production purge execution remain
 certification blockers.
 
+Candidate presentation receipts are bounded regulated advisory evidence. They
+contain candidate and tenant references, version identity, render time, rank,
+visible count, policy versions, and a queue digest—but no actor identity, client
+content, rationale, or raw queue payload. They inherit the seven-year policy and
+legal-hold freeze. Erasure preserves the source-safe immutable receipt; it does
+not permit retention of any excluded presentation payload.
+
 Scheduled review run `29180046362` passed on Idea main SHA `f496c442` with
 PostgreSQL 18 and an attested source-safe artifact. The artifact remains
 review-only and `not_certified`; it does not authorize purge.

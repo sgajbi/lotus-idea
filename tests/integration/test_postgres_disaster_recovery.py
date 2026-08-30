@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import psycopg
+
 from app.infrastructure.postgres_disaster_recovery import (
     PostgresRestoredDatabaseInspector,
 )
@@ -16,11 +18,15 @@ OWNED_TABLES = frozenset(
     {
         "idea_ai_explanation_lineage",
         "idea_audit_event",
+        "idea_candidate_presentation_receipt",
         "idea_candidate_record",
         "idea_candidate_state_quarantine",
+        "idea_candidate_version_history",
         "idea_conversion_intent",
         "idea_conversion_outcome",
         "idea_conversion_outcome_quarantine",
+        "idea_data_lifecycle_control",
+        "idea_data_lifecycle_operation",
         "idea_downstream_submission",
         "idea_feedback_event",
         "idea_idempotency_record",
@@ -97,3 +103,37 @@ def test_postgres_restored_fixture_resumes_without_duplicate_mutation(
 
     assert evidence.status == "passed"
     assert evidence.no_duplicate_or_mutation is True
+
+
+def test_postgres_restore_inspector_detects_presentation_receipt_lineage_corruption(
+    postgres_database_url: str,
+) -> None:
+    seed_disaster_recovery_fixture(
+        postgres_database_url,
+        confirm_disposable_database=True,
+    )
+    inspector = PostgresRestoredDatabaseInspector(postgres_database_url)
+
+    with psycopg.connect(postgres_database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """UPDATE idea_candidate_presentation_receipt
+               SET candidate_material_version = 999
+               WHERE receipt_id = 'dr-fixture-presentation-receipt-001'"""
+        )
+        assert cursor.rowcount == 1
+
+    broken_version = inspector.inspect(expected_tables=OWNED_TABLES)
+    assert broken_version.referential_violation_counts["presentation_receipt_version_history"] == 1
+
+    with psycopg.connect(postgres_database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """UPDATE idea_candidate_presentation_receipt
+               SET candidate_material_version = 1,
+                   tenant_id = 'tenant-corrupted',
+                   presented_at_utc = TIMESTAMPTZ '2026-07-11 04:59:00+00'
+               WHERE receipt_id = 'dr-fixture-presentation-receipt-001'"""
+        )
+        assert cursor.rowcount == 1
+
+    broken_scope = inspector.inspect(expected_tables=OWNED_TABLES)
+    assert broken_scope.semantic_violation_counts["presentation_receipt_tenant_and_chronology"] == 1

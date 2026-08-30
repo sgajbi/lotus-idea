@@ -42,7 +42,7 @@ FIXTURE_TIME = datetime(2026, 7, 11, 5, 0, tzinfo=UTC)
 FIXTURE_CANDIDATE_PREFIX = "idea_dr_fixture"
 
 
-def high_cash_candidate() -> IdeaCandidate:
+def high_cash_candidate(*, portfolio_id: str = "portfolio-dr-fixture") -> IdeaCandidate:
     refs = _source_refs()
     result = evaluate_high_cash_signal(
         HighCashSignalInput(
@@ -53,7 +53,7 @@ def high_cash_candidate() -> IdeaCandidate:
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=FIXTURE_TIME,
-            access_scope=_access_scope(),
+            access_scope=_access_scope(portfolio_id),
         ),
         HighCashSignalPolicy(
             policy_version="dr-fixture-idle-liquidity-v1",
@@ -145,11 +145,11 @@ def _source_refs() -> tuple[SourceRef, ...]:
     )
 
 
-def _access_scope() -> ReviewAccessScope:
+def _access_scope(portfolio_id: str) -> ReviewAccessScope:
     return ReviewAccessScope(
         tenant_id="tenant-dr-fixture",
         book_id="book-dr-fixture",
-        portfolio_id="portfolio-dr-fixture",
+        portfolio_id=portfolio_id,
         client_id="client-dr-fixture",
     )
 

@@ -127,7 +127,10 @@ merged its Idea-owned governed feedback taxonomy and evaluation foundation,
 and #1156 is implementing versioned opportunity-effectiveness measurement plus
 immutable visible-render receipt evidence. Presentation counts remain
 unavailable pending Gateway `#692` and Workbench `#954` consumer certification;
-queue retrieval must never be used as a shown proxy. #1145 is closed
+queue retrieval must never be used as a shown proxy. Migration `019` receipt
+evidence is covered by the complete 19-table lifecycle and recovery inventories,
+representative PostgreSQL restore state, and candidate/version/tenant/chronology
+integrity checks. #1145 is closed
 after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1150 is closed after
 PR #1152 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed
 after PR #1147 merged the non-regressive live posture correction to exact main

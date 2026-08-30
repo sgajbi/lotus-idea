@@ -34,7 +34,9 @@ def test_disaster_recovery_fixture_uses_source_safe_synthetic_identifiers() -> N
 
     assert "PB_SG_GLOBAL_BAL_001" not in source
     assert "portfolio-dr-fixture" in source
+    assert "portfolio-dr-fixture-conversion" in source
     assert "client-dr-fixture" in source
+    assert "dr-fixture-presentation-receipt-001" in source
     assert "confirm-disposable-database" in source
     assert 'approved_metadata={"channel": "advisor-workbench"}' in source
     assert 'approved_metadata={"audience": "internal_advisor_review"}' not in source
