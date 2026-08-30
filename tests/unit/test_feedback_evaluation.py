@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 import json
 
@@ -218,6 +218,94 @@ def test_offline_feedback_projection_enforces_the_requested_bound() -> None:
             evaluated_at_utc=EVALUATED_AT,
             max_observations=1,
         )
+
+
+def test_offline_feedback_projection_rejects_invalid_execution_boundaries() -> None:
+    snapshot = _snapshot()
+
+    with pytest.raises(FeedbackEvaluationScopeError, match="tenant_id is required"):
+        build_offline_feedback_evaluation(
+            snapshot,
+            tenant_id="  ",
+            evaluated_at_utc=EVALUATED_AT,
+        )
+
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        build_offline_feedback_evaluation(
+            snapshot,
+            tenant_id="tenant-a",
+            evaluated_at_utc=EVALUATED_AT.replace(tzinfo=None),
+        )
+
+    for invalid_bound in (0, 10_001):
+        with pytest.raises(ValueError, match="max_observations must be between 1 and 10000"):
+            build_offline_feedback_evaluation(
+                snapshot,
+                tenant_id="tenant-a",
+                evaluated_at_utc=EVALUATED_AT,
+                max_observations=invalid_bound,
+            )
+
+
+def test_offline_feedback_projection_excludes_future_and_feedback_free_records() -> None:
+    feedback_record = _record(
+        _candidate("idea-future-001", OpportunityFamily.HIGH_CASH, "tenant-a", Decimal("82")),
+        feedback_reason=FeedbackReason.WRONG_TIMING,
+    )
+    feedback_event = feedback_record.feedback_events[0]
+    future_feedback_event = replace(
+        feedback_event,
+        feedback=replace(
+            feedback_event.feedback,
+            recorded_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        ),
+    )
+    future_record = replace(feedback_record, feedback_events=(future_feedback_event,))
+    feedback_free_record = replace(
+        _record(
+            _candidate(
+                "idea-feedback-free-001",
+                OpportunityFamily.UNDERPERFORMANCE,
+                "tenant-a",
+                Decimal("74"),
+            ),
+            feedback_reason=FeedbackReason.NOT_RELEVANT,
+        ),
+        feedback_events=(),
+    )
+
+    projection = build_offline_feedback_evaluation(
+        _snapshot(future_record, feedback_free_record),
+        tenant_id="tenant-a",
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.source_observation_count == 0
+    assert projection.cohorts == ()
+
+
+def test_offline_feedback_projection_preserves_unscored_unranked_context() -> None:
+    candidate = replace(
+        _candidate(
+            "idea-unranked-001",
+            OpportunityFamily.HIGH_CASH,
+            "tenant-a",
+            Decimal("82"),
+        ),
+        score=None,
+    )
+    record = _record(candidate, feedback_reason=FeedbackReason.INSUFFICIENT_EVIDENCE)
+
+    projection = build_offline_feedback_evaluation(
+        _snapshot(record),
+        tenant_id="tenant-a",
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.source_observation_count == 1
+    assert projection.cohorts[0].score_policy_version is None
+    assert projection.cohorts[0].score is None
+    assert projection.cohorts[0].rank_context.value == "unranked"
 
 
 def _candidate(
