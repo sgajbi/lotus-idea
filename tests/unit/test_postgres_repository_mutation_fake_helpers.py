@@ -28,6 +28,7 @@ def test_row_for_insert_builds_candidate_record_row_with_unwrapped_jsonb() -> No
             1,
             "initial_detection",
             None,
+            "2026-07-18T00:59:00Z",
             "2026-07-18T01:00:00Z",
             "2026-07-18T01:01:00Z",
         ),
@@ -48,6 +49,7 @@ def test_row_for_insert_builds_candidate_record_row_with_unwrapped_jsonb() -> No
         "evidence_version": 1,
         "change_reason": "initial_detection",
         "supersedes_material_version": None,
+        "generated_at_utc": "2026-07-18T00:59:00Z",
         "persisted_at_utc": "2026-07-18T01:00:00Z",
         "updated_at_utc": "2026-07-18T01:01:00Z",
     }
