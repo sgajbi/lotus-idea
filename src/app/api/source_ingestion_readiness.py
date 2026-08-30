@@ -485,42 +485,10 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
             "description": "Source-ingestion run-once summary returned.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "repository": "lotus-idea",
-                        "runStatus": "blocked",
-                        "supportabilityStatus": "not_certified",
-                        "sourceAuthority": "lotus-core",
-                        "opportunityFamily": "high_cash",
-                        "durableStorageBacked": False,
-                        "configuredManifestAvailable": False,
-                        "coreBaseUrlConfigured": False,
-                        "coreQueryBaseUrlConfigured": False,
-                        "coreQueryControlPlaneBaseUrlConfigured": False,
-                        "totalCount": 0,
-                        "decisionCounts": {
-                            "accepted": 0,
-                            "replayed": 0,
-                            "conflict": 0,
-                            "duplicate_candidate": 0,
-                            "skipped_not_eligible": 0,
-                            "blocked": 0,
-                        },
-                        "sourceFailureCounts": {
-                            "source_unavailable": 0,
-                            "entitlement_denied": 0,
-                            "other_blocked": 0,
-                        },
-                        "configurationBlockers": ["durable_repository_not_configured"],
-                        "certificationBlockers": [
-                            "live_core_source_proof_missing",
-                            "scheduled_worker_deploy_proof_missing",
-                            "data_mesh_runtime_telemetry_not_certified",
-                            "gateway_workbench_proof_missing",
-                            "supported_feature_promotion_missing",
-                        ],
-                        "liveSourceCertified": False,
-                        "supportedFeaturePromoted": False,
-                    }
+                    "example": SourceIngestionRunOnceResponse.blocked(
+                        blocker="durable_repository_not_configured",
+                        durable_storage_backed=False,
+                    ).model_dump(by_alias=True, mode="json")
                 }
             },
         },

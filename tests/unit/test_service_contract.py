@@ -1,5 +1,7 @@
 from app.errors import ProblemDetails
 from pytest import MonkeyPatch
+
+from app.application.source_ingestion import HighCashSourceIngestionDecision
 from app.application.service_profile import current_service_profile
 from app.domain.service_profile import DEFAULT_SERVICE_PROFILE, ServiceProfile
 from app.main import BUILD_METADATA, SERVICE_NAME, app
@@ -192,4 +194,21 @@ def test_source_ingestion_openapi_publishes_both_dependency_failure_codes() -> N
     }
     assert response["content"]["application/problem+json"]["schema"] == {
         "$ref": "#/components/schemas/ProblemDetails"
+    }
+
+
+def test_source_ingestion_openapi_decision_counts_follow_domain_vocabulary() -> None:
+    schema = app.openapi()
+    example = schema["paths"]["/api/v1/source-ingestion/run-once"]["post"]["responses"]["200"][
+        "content"
+    ]["application/json"]["example"]
+
+    assert example["decisionCounts"] == {
+        decision.value: 0 for decision in HighCashSourceIngestionDecision
+    }
+    assert "suppressed" not in example["decisionCounts"]
+    assert example["sourceFailureCounts"] == {
+        "source_unavailable": 0,
+        "entitlement_denied": 0,
+        "other_blocked": 0,
     }

@@ -133,7 +133,7 @@ def _high_cash_candidate_created_result(
 ) -> SignalEvaluationResult:
     identity = _stable_identity(source_input, policy, source_refs)
     signal = _high_cash_signal(identity, source_input, source_refs)
-    lineage = _high_cash_lineage(identity, source_refs)
+    lineage = _lineage_ref(identity, source_refs)
     evidence_packet = _high_cash_evidence_packet(identity, source_input, source_refs, lineage)
     candidate = _high_cash_candidate(identity, source_input, policy, signal, evidence_packet)
     return SignalEvaluationResult(
@@ -159,7 +159,7 @@ def _high_cash_signal(
     )
 
 
-def _high_cash_lineage(
+def _lineage_ref(
     identity: OpportunityIdentity,
     source_refs: tuple[SourceRef, ...],
 ) -> LineageRef:
@@ -505,7 +505,7 @@ def _underperformance_candidate_created_result(
 ) -> SignalEvaluationResult:
     identity = _stable_underperformance_identity(source_input, policy, source_refs)
     signal = _underperformance_signal(identity, source_input, source_refs)
-    lineage = _underperformance_lineage(identity, source_refs)
+    lineage = _lineage_ref(identity, source_refs)
     evidence_packet = _underperformance_evidence_packet(
         identity,
         source_input,
@@ -545,17 +545,6 @@ def _underperformance_signal(
         source_refs=source_refs,
         reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
-    )
-
-
-def _underperformance_lineage(
-    identity: OpportunityIdentity,
-    source_refs: tuple[SourceRef, ...],
-) -> LineageRef:
-    return LineageRef(
-        lineage_id=identity.lineage_id,
-        source_refs=source_refs,
-        content_hash=identity.evidence_fingerprint,
     )
 
 
