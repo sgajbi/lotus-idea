@@ -12,6 +12,7 @@
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Feedback Evaluation](Feedback-Evaluation)
+- [Opportunity Effectiveness](Opportunity-Effectiveness)
 - [Integrations](Integrations)
 - [Demo Readiness](Demo-Readiness)
 

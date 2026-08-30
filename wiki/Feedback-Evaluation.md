@@ -56,3 +56,9 @@ scope or unscoped historical feedback fails closed.
 This remains an internal, not-certified foundation. Workbench journey proof,
 data-product certification, client publication, and supported-feature
 promotion remain separate gates.
+
+For the broader economic-opportunity funnel, presentation-receipt contract,
+timing methodology, and consumer-certification boundary, continue to
+[Opportunity Effectiveness](Opportunity-Effectiveness). Feedback remains one
+input to that read-only evaluation; it does not become online learning or
+production policy authority.

@@ -11,7 +11,7 @@ certification, client-ready publication, and supported-feature promotion remain 
 
 ## Route Families
 
-Eleven families covering the 61 operations this service serves. The machine-readable inventory is the [endpoint certification ledger](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/endpoint-certification-ledger.json), which `make endpoint-certification-gate` verifies against the generated OpenAPI.
+Eleven families covering the 63 operations this service serves. The machine-readable inventory is the [endpoint certification ledger](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/endpoint-certification-ledger.json), which `make endpoint-certification-gate` verifies against the generated OpenAPI.
 
 Each family below states what its routes do today and, separately, what they explicitly do **not** grant. The boundary text is load-bearing: it is what keeps a certified internal foundation from being read as an externally supported capability.
 
@@ -132,14 +132,15 @@ Internal and not certified. Lotus Idea enforces approved local decisions but doe
 - `GET /api/v1/review-queues/advisor/readiness`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
 - `POST /api/v1/idea-candidates/{candidateId}/feedback`
+- `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts`
 
 **Current use**
 
-Audience-bound business queues, candidate-safe operator exception posture, readiness, and review/feedback capture. Queue reads use candidate-created-at as-of visibility and audience-bound opaque continuation snapshots. The advisor queue publishes application-backed `itemsAvailable` and `noItemsAvailable` 200 examples through its real projection and response DTO. Queue `policyVersion` is distinct from candidate `scorePolicyVersion`; unknown score policies fail closed. Mutations accept no body scope and authorize persisted candidate scope against trusted caller entitlements. Review-action and feedback OpenAPI publish both newly accepted and idempotent business-resource replay success modes; replay payloads explicitly expose a null decision/event without granting downstream authority. Feedback uses `idea-feedback-taxonomy-v1`: `useful/relevant` or `not_useful` with a bounded reason. Invalid combinations fail closed, and review actions remain separate lifecycle facts. The canonical taxonomy drives business-resource identity, persistence, API projection, audit, candidate detail, and source-safe `idea.feedback.recorded.v2` outbox evidence. Gateway and Workbench consume the Idea-owned taxonomy without rewriting it; browser-supplied Idea authority is not trusted, and the configured authority fixture is local/dev/test only. See [Feedback Evaluation](Feedback-Evaluation) for the read-only offline quality-evaluation and privacy boundary.
+Audience-bound business queues, candidate-safe operator exception posture, readiness, review/feedback capture, and immutable visible-render evidence. Queue reads use candidate-created-at as-of visibility and audience-bound opaque continuation snapshots. The advisor queue publishes application-backed `itemsAvailable` and `noItemsAvailable` 200 examples through its real projection and response DTO. Queue `policyVersion` is distinct from candidate `scorePolicyVersion`; unknown score policies fail closed. Review and feedback authorize persisted candidate scope against trusted caller entitlements. Feedback uses `idea-feedback-taxonomy-v1`: `useful/relevant` or `not_useful` with a bounded reason. Presentation receipts use a stable `Idempotency-Key` and are fenced by tenant, candidate material/evidence versions, UTC chronology, rank, and visible count. Queue retrieval is never treated as presentation. Gateway and Workbench must pass and produce the receipt contract without rewriting it; their consumer certification remains open. See [Feedback Evaluation](Feedback-Evaluation) and [Opportunity Effectiveness](Opportunity-Effectiveness).
 
 **Boundary — not granted by these routes**
 
-PM/compliance routes do not grant Manage or compliance authority. The action path is not authenticated-principal proof, full Workbench runtime proof, data-product certification, or supported review-product promotion.
+PM/compliance routes do not grant Manage or compliance authority. Presentation receipt storage does not certify shown metrics until Gateway and Workbench consumer proof passes. These paths are not authenticated-principal proof, full Workbench runtime proof, data-product certification, or supported review-product promotion.
 
 ### AI explanation governance
 
