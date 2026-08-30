@@ -121,9 +121,10 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, as of 2026-08-30 the
 current Idea ledger posture has 146 tracked RFC-0002 issues, 120 closed and 26
-open; #681 and #1139 remain in progress for Slice 18 synchronization and
-non-regressive live posture enforcement. PR #1146 is merged and exact-main
-validated; #1139 remains active for the lifecycle self-invalidation correction.
+open; #681 remains in progress for Slice 18 synchronization and #1139 is under
+protected review in PR #1147 for non-regressive live posture enforcement. PR
+#1146 is merged and exact-main validated; #1139 remains active for the lifecycle
+self-invalidation correction.
 #1119, #1121, #1123, #1125, #1127,
 #1129, and #1131 are closed Slice 17 release-governance hardening issues after
 PRs #1120, #1122, #1124, #1126, #1128, #1130, and #1132 reached main. #1110 is closed after PR #1114/#1115/#1116
@@ -460,7 +461,7 @@ fixed the post-merge QA hash-compatibility defects on main
 `31268949391` passing.
 As of 2026-08-30, current Idea ledger posture has 146 tracked RFC-0002 issues,
 120 closed and 26 open; `sgajbi/lotus-idea#681` remains in progress and `#1139`
-is PR-open in PR #1146 for Slice 18 synchronization and live posture enforcement.
+is PR-open in PR #1147 for Slice 18 synchronization and live posture enforcement.
 `sgajbi/lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
 `#1131` are closed after Slice 17 release-governance hardening.
 `sgajbi/lotus-idea#1110` is closed after PR #1114/#1115/#1116 for downstream
