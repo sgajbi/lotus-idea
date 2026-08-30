@@ -1001,7 +1001,12 @@ content returns `review_identity_conflict` without exposing prior content.
 PostgreSQL claims review or feedback primary-key identity before candidate,
 audit, and outbox writes. A collision rolls back and retries once from fresh
 state, converging to replay or typed conflict without duplicate side effects or
-raw database errors. This remains an internal bounded module; a runtime service
+raw database errors. Accepted and replayed success responses bind to the exact
+persisted decision or feedback event; the application requires one matching
+mutation identity and returns product-safe degraded-recovery posture when that
+evidence is missing or ambiguous. Conversion-intent recording uses the same
+exact persisted-evidence invariant for same-key replay. This remains an
+internal bounded module; a runtime service
 split has no workload, failure-isolation, ownership, or operability evidence.
 Gateway/Workbench functionality and supported review-product promotion remain
 planned.

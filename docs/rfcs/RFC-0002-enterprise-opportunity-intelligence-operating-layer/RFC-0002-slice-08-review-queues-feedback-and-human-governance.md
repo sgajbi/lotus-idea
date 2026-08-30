@@ -136,6 +136,16 @@ Implemented in this slice:
     deterministically upgrades legacy records and fails closed when rollback
     would discard newly governed evidence. The supported-feature posture is
     unchanged.
+29. GitHub issue `#1168` makes successful adviser-action replay evidence
+    exact. Accepted and replayed review actions return the same persisted
+    review decision; accepted and cross-key business-resource feedback replays
+    return the same persisted feedback event. The application resolves exactly
+    one event from the repository record using the governed mutation identity
+    and fails closed with product-safe degraded-recovery posture when evidence
+    is missing or ambiguous. Tests preserve the existing no-duplicate
+    candidate, audit, outbox, and resource behavior. No migration is required
+    because the governed events were already persisted, and supported-feature
+    posture remains unchanged.
 
 Validation evidence from the implementation slice:
 

@@ -37,6 +37,15 @@ candidate-scope mismatches with product-safe `403 permission_denied` before
 recording an intent. This is local/dev trusted-caller proof only; it is not an
 end-user IdP, session, or token-claims implementation.
 
+Issue `#1168` closes the source-owned retry-evidence prerequisite for the
+current Gateway transport work. Review-action, feedback, and conversion-intent
+success replays now return the exact persisted business event rather than a
+successful persistence decision paired with null action evidence. Missing or
+ambiguous persisted evidence fails closed with product-safe degraded-recovery
+posture. This corrects the Idea source contract before Gateway or Workbench
+consumes it; it does not certify the downstream product surface, change
+identity posture, or promote support.
+
 This remains a bounded product-surface foundation. It does not provide an
 end-user identity-provider integration, entitlement-denied panel proof, full
 canonical live-stack proof, data-product certification, demo-ready screenshots,

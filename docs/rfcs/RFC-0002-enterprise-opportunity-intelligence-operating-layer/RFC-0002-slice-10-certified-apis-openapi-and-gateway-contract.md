@@ -112,10 +112,12 @@ suitability/compliance/mandate/execution/client-communication authority, and
 keep `supportedFeaturePromoted=false`. `durableStorageBacked` follows the
 active repository provider.
 
-Issue `#532` certifies both executable feedback success modes. Code-owned,
-DTO-validated examples now publish a newly accepted feedback event and a
-cross-key business-resource replay with `feedbackEvent=null` and
-`persistence.decision=replayed`. OpenAPI and the endpoint ledger must exactly
+Issue `#532` certifies both executable feedback success modes. Issue `#1168`
+strengthens their evidence contract: code-owned, DTO-validated examples now
+publish the exact persisted feedback event for both a newly accepted event and
+a cross-key business-resource replay, with only
+`persistence.decision` changing from `accepted` to `replayed`. OpenAPI and the
+endpoint ledger must exactly
 match those examples, and the endpoint certification gate fails if either
 mode, its authority boundary, or its integration evidence drifts. This
 contract work does not promote feedback as a data product or supported
@@ -123,9 +125,10 @@ feature.
 
 Issue `#535` applies the same executable-contract standard to review actions
 and consolidates both review-workflow mutations behind one internal contract
-module. Code-owned, DTO-validated examples publish a newly accepted review
-decision and a business-resource replay with `reviewDecision=null` and
-`persistence.decision=replayed`. The accepted example preserves the explicit
+module. Issue `#1168` requires code-owned, DTO-validated examples to publish
+the exact persisted review decision for both a newly accepted action and a
+business-resource replay, with only `persistence.decision` changing from
+`accepted` to `replayed`. Both examples preserve the explicit
 nullable `snoozedUntilUtc` field and the
 `grantsDownstreamAuthority=false` boundary. OpenAPI, the endpoint ledger, and
 the contract tests must match both modes exactly; the certification gate fails
