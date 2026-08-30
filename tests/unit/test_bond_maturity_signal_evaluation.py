@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -101,15 +102,55 @@ def test_bond_maturity_positive_case_creates_review_candidate() -> None:
     assert first.candidate.source_signal_ids == (first.signal.signal_id,)
     assert first.candidate.evidence_packet.source_refs == first.signal.source_refs
     assert first.candidate.evidence_packet.lineage_ref is not None
-    identity_suffix = first.candidate.candidate_id.removeprefix("idea_bond_maturity_")
-    assert first.signal.signal_id == f"signal_bond_maturity_{identity_suffix}"
-    assert first.candidate.evidence_packet.evidence_packet_id == (
-        f"iep_bond_maturity_{identity_suffix}"
+    assert second.signal is not None
+    assert first.signal.signal_id == second.signal.signal_id
+    assert (
+        first.candidate.evidence_packet.evidence_packet_id
+        == second.candidate.evidence_packet.evidence_packet_id
     )
-    assert first.candidate.evidence_packet.lineage_ref.lineage_id == (
-        f"lineage:lotus-idea:bond-maturity:{identity_suffix}"
+    assert (
+        first.candidate.evidence_packet.lineage_ref.lineage_id
+        == second.candidate.evidence_packet.lineage_ref.lineage_id
     )
-    assert first.candidate.evidence_packet.lineage_ref.content_hash == (f"sha256:{identity_suffix}")
+
+
+def test_bond_maturity_source_correction_preserves_candidate_and_versions_evidence() -> None:
+    source_input = maturity_input()
+    assert source_input.holdings_ref is not None
+    corrected_input = replace(
+        source_input,
+        holdings_ref=replace(
+            source_input.holdings_ref,
+            content_hash="sha256:lotus-core:HoldingsAsOf:v1:correction-2",
+        ),
+    )
+
+    original = evaluate_bond_maturity_signal(source_input, policy())
+    corrected = evaluate_bond_maturity_signal(corrected_input, policy())
+
+    assert original.signal is not None
+    assert corrected.signal is not None
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert original.signal.signal_id != corrected.signal.signal_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
+    )
 
 
 def test_bond_maturity_not_eligible_outside_maturity_window() -> None:

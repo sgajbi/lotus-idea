@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -101,6 +102,45 @@ def test_low_income_positive_case_creates_review_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED)
+
+
+def test_low_income_source_correction_preserves_candidate_and_versions_evidence() -> None:
+    source_input = low_income_input()
+    assert source_input.cashflow_projection_ref is not None
+    corrected_input = replace(
+        source_input,
+        cashflow_projection_ref=replace(
+            source_input.cashflow_projection_ref,
+            content_hash="sha256:lotus-core:PortfolioCashflowProjection:v1:correction-2",
+        ),
+    )
+
+    original = evaluate_low_income_signal(source_input, policy())
+    corrected = evaluate_low_income_signal(corrected_input, policy())
+
+    assert original.signal is not None
+    assert corrected.signal is not None
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert original.signal.signal_id != corrected.signal.signal_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert corrected.candidate.evidence_packet.source_refs[1].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
+    )
 
 
 def test_low_income_candidate_identity_is_bound_to_access_scope() -> None:
