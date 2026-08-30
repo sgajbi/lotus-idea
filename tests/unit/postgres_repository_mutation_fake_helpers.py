@@ -28,6 +28,7 @@ def _candidate_record_row(values: Sequence[Any]) -> dict[str, Any]:
             "evidence_version",
             "change_reason",
             "supersedes_material_version",
+            "generated_at_utc",
             "persisted_at_utc",
             "updated_at_utc",
         ),

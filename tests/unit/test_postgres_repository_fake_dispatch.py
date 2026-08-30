@@ -12,7 +12,7 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
 
     cursor.execute(
         "insert into idea_candidate_record values "
-        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
         (
             "candidate-1",
             "high_cash",
@@ -28,6 +28,7 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
             1,
             "initial_detection",
             None,
+            now,
             now,
             now,
         ),
@@ -51,9 +52,10 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
             "material_fingerprint": "material-fingerprint-1",
             "material_version": 1,
             "evidence_version": 1,
-            "change_reason": "initial_detection",
-            "supersedes_material_version": None,
-            "persisted_at_utc": now,
+                "change_reason": "initial_detection",
+                "supersedes_material_version": None,
+                "generated_at_utc": now,
+                "persisted_at_utc": now,
             "updated_at_utc": now,
         }
     ]

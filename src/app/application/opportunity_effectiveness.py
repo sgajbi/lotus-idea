@@ -7,7 +7,7 @@ from decimal import Decimal, ROUND_HALF_EVEN
 from enum import StrEnum
 import hashlib
 import json
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from app.domain.conversion_governance import GovernedConversionIntent, current_conversion_outcome
 from app.domain.downstream_submission import (
@@ -30,6 +30,7 @@ from app.domain.review_governance import (
     ReviewAction,
 )
 from app.domain.review_queue import priority_bucket_for_score
+from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
 
 
 OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v1"
@@ -193,108 +194,132 @@ def build_opportunity_effectiveness_snapshot(
         window_end_utc=window_end_utc,
         max_opportunities=max_opportunities,
     )
-    measures = _effectiveness_measures(records, evaluated_at_utc=evaluated_at_utc)
-    generated_count = len(records)
-    approved_count = measures.latest_review_action_counts[ReviewAction.APPROVE_FOR_CONVERSION.value]
-    rejected_count = measures.latest_review_action_counts[ReviewAction.REJECT.value]
+    summary = _in_memory_repository_summary(
+        snapshot,
+        records=records,
+        evaluated_at_utc=evaluated_at_utc,
+    )
+    return build_opportunity_effectiveness_snapshot_from_summary(
+        summary,
+        tenant_id=tenant_id,
+        window_start_utc=window_start_utc,
+        window_end_utc=window_end_utc,
+        evaluated_at_utc=evaluated_at_utc,
+        max_opportunities=max_opportunities,
+    )
+
+
+def build_opportunity_effectiveness_snapshot_from_summary(
+    summary: OpportunityEffectivenessRepositorySummary,
+    *,
+    tenant_id: str,
+    window_start_utc: datetime,
+    window_end_utc: datetime,
+    evaluated_at_utc: datetime,
+    max_opportunities: int = MAX_EFFECTIVENESS_OPPORTUNITIES,
+) -> OpportunityEffectivenessSnapshot:
+    """Apply the versioned methodology to privacy-safe repository aggregate facts."""
+
+    _validate_scope(
+        tenant_id=tenant_id,
+        window_start_utc=window_start_utc,
+        window_end_utc=window_end_utc,
+        evaluated_at_utc=evaluated_at_utc,
+        max_opportunities=max_opportunities,
+    )
+    _validate_repository_summary(summary, max_opportunities=max_opportunities)
+    approved_count = _count(
+        summary.latest_review_action_counts,
+        ReviewAction.APPROVE_FOR_CONVERSION.value,
+    )
+    rejected_count = _count(summary.latest_review_action_counts, ReviewAction.REJECT.value)
     accepted_outcome_count = sum(
-        measures.current_downstream_outcome_counts[status.value]
+        _count(summary.current_downstream_outcome_counts, status.value)
         for status in (ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED)
     )
-    rejected_outcome_count = measures.current_downstream_outcome_counts[
-        ConversionOutcomeStatus.REJECTED.value
-    ]
+    rejected_outcome_count = _count(
+        summary.current_downstream_outcome_counts,
+        ConversionOutcomeStatus.REJECTED.value,
+    )
     uncertain_outcome_count = sum(
-        measures.current_downstream_outcome_counts[value]
+        _count(summary.current_downstream_outcome_counts, value)
         for value in (
             DownstreamOutcomePosture.NOT_REPORTED.value,
             ConversionOutcomeStatus.REQUESTED.value,
-        )
-    )
-    downstream_submission_posture_counts, reconciled_submission_count = (
-        _downstream_submission_measures(
-            snapshot,
-            cohort_intent_ids=measures.cohort_intent_ids,
-            evaluated_at_utc=evaluated_at_utc,
         )
     )
     provisional = OpportunityEffectivenessSnapshot(
         window_start_utc=window_start_utc,
         window_end_utc=window_end_utc,
         evaluated_at_utc=evaluated_at_utc,
-        generated_opportunity_count=generated_count,
-        reviewed_opportunity_count=measures.reviewed_opportunity_count,
-        feedback_opportunity_count=measures.feedback_opportunity_count,
-        conversion_opportunity_count=measures.conversion_opportunity_count,
-        conversion_intent_count=measures.conversion_intent_count,
-        stale_evidence_opportunity_count=sum(_has_stale_evidence(record) for record in records),
-        unavailable_evidence_opportunity_count=sum(
-            _has_unavailable_evidence(record) for record in records
-        ),
-        unsupported_evidence_opportunity_count=sum(
-            record.candidate.evidence_packet.supportability is not EvidenceSupportability.READY
-            for record in records
-        ),
-        suppressed_opportunity_count=measures.suppressed_opportunity_count,
-        duplicate_suppressed_opportunity_count=(measures.duplicate_suppressed_opportunity_count),
-        recurrent_opportunity_count=measures.recurrent_opportunity_count,
-        recurrent_detection_count=measures.recurrent_detection_count,
-        reconciled_submission_count=reconciled_submission_count,
+        generated_opportunity_count=summary.generated_opportunity_count,
+        reviewed_opportunity_count=summary.reviewed_opportunity_count,
+        feedback_opportunity_count=summary.feedback_opportunity_count,
+        conversion_opportunity_count=summary.conversion_opportunity_count,
+        conversion_intent_count=summary.conversion_intent_count,
+        stale_evidence_opportunity_count=summary.stale_evidence_opportunity_count,
+        unavailable_evidence_opportunity_count=summary.unavailable_evidence_opportunity_count,
+        unsupported_evidence_opportunity_count=summary.unsupported_evidence_opportunity_count,
+        suppressed_opportunity_count=summary.suppressed_opportunity_count,
+        duplicate_suppressed_opportunity_count=summary.duplicate_suppressed_opportunity_count,
+        recurrent_opportunity_count=summary.recurrent_opportunity_count,
+        recurrent_detection_count=summary.recurrent_detection_count,
+        reconciled_submission_count=summary.reconciled_submission_count,
         presentation_measurement_status=(
             PresentationMeasurementStatus.UNAVAILABLE_NO_GOVERNED_PRESENTATION_RECEIPTS
         ),
         presented_opportunity_count=None,
         top_ranked_accepted_opportunity_count=None,
         family_counts=_dimension_counts(
-            Counter(record.candidate.family.value for record in records),
+            Counter(summary.family_counts),
             (family.value for family in OpportunityFamily),
         ),
         score_band_counts=_dimension_counts(
-            Counter(_score_band(record) for record in records),
+            Counter(summary.score_band_counts),
             (*("critical", "high", "standard", "watchlist"), "unranked"),
         ),
         latest_review_action_counts=_dimension_counts(
-            measures.latest_review_action_counts,
+            Counter(summary.latest_review_action_counts),
             (action.value for action in ReviewAction),
         ),
         feedback_reason_counts=_dimension_counts(
-            measures.feedback_reason_counts,
+            Counter(summary.feedback_reason_counts),
             (reason.value for reason in FeedbackReason),
         ),
         current_downstream_outcome_counts=_dimension_counts(
-            measures.current_downstream_outcome_counts,
+            Counter(summary.current_downstream_outcome_counts),
             (posture.value for posture in DownstreamOutcomePosture),
         ),
         downstream_submission_posture_counts=_dimension_counts(
-            downstream_submission_posture_counts,
+            Counter(summary.downstream_submission_posture_counts),
             (posture.value for posture in DownstreamSubmissionPosture),
         ),
-        review_rate=_rate(measures.reviewed_opportunity_count, generated_count),
-        approval_rate=_rate(approved_count, measures.reviewed_opportunity_count),
-        rejection_rate=_rate(rejected_count, measures.reviewed_opportunity_count),
+        review_rate=_rate(summary.reviewed_opportunity_count, summary.generated_opportunity_count),
+        approval_rate=_rate(approved_count, summary.reviewed_opportunity_count),
+        rejection_rate=_rate(rejected_count, summary.reviewed_opportunity_count),
         suppression_rate=_rate(
-            measures.suppressed_opportunity_count,
-            measures.reviewed_opportunity_count,
+            summary.suppressed_opportunity_count,
+            summary.reviewed_opportunity_count,
         ),
         feedback_rate=_rate(
-            measures.feedback_opportunity_count,
-            measures.reviewed_opportunity_count,
+            summary.feedback_opportunity_count,
+            summary.reviewed_opportunity_count,
         ),
-        conversion_rate=_rate(measures.conversion_opportunity_count, approved_count),
+        conversion_rate=_rate(summary.conversion_opportunity_count, approved_count),
         downstream_accepted_rate=_rate(
             accepted_outcome_count,
-            measures.conversion_intent_count,
+            summary.conversion_intent_count,
         ),
         downstream_rejected_rate=_rate(
             rejected_outcome_count,
-            measures.conversion_intent_count,
+            summary.conversion_intent_count,
         ),
         downstream_uncertain_rate=_rate(
             uncertain_outcome_count,
-            measures.conversion_intent_count,
+            summary.conversion_intent_count,
         ),
-        detection_to_review=_duration(measures.detection_to_review_seconds),
-        approval_to_conversion=_duration(measures.approval_to_conversion_seconds),
+        detection_to_review=_duration(summary.detection_to_review_seconds),
+        approval_to_conversion=_duration(summary.approval_to_conversion_seconds),
         snapshot_digest="",
     )
     payload = _snapshot_payload_without_digest(provisional)
@@ -368,6 +393,100 @@ def _cohort_records(
                 f"opportunity effectiveness exceeds the {max_opportunities} opportunity bound"
             )
     return tuple(records)
+
+
+def _in_memory_repository_summary(
+    snapshot: IdeaRepositorySnapshot,
+    *,
+    records: tuple[CandidatePersistenceRecord, ...],
+    evaluated_at_utc: datetime,
+) -> OpportunityEffectivenessRepositorySummary:
+    measures = _effectiveness_measures(records, evaluated_at_utc=evaluated_at_utc)
+    downstream_postures, reconciled_count = _downstream_submission_measures(
+        snapshot,
+        cohort_intent_ids=measures.cohort_intent_ids,
+        evaluated_at_utc=evaluated_at_utc,
+    )
+    return OpportunityEffectivenessRepositorySummary(
+        generated_opportunity_count=len(records),
+        reviewed_opportunity_count=measures.reviewed_opportunity_count,
+        feedback_opportunity_count=measures.feedback_opportunity_count,
+        conversion_opportunity_count=measures.conversion_opportunity_count,
+        conversion_intent_count=measures.conversion_intent_count,
+        stale_evidence_opportunity_count=sum(_has_stale_evidence(record) for record in records),
+        unavailable_evidence_opportunity_count=sum(
+            _has_unavailable_evidence(record) for record in records
+        ),
+        unsupported_evidence_opportunity_count=sum(
+            record.candidate.evidence_packet.supportability is not EvidenceSupportability.READY
+            for record in records
+        ),
+        suppressed_opportunity_count=measures.suppressed_opportunity_count,
+        duplicate_suppressed_opportunity_count=measures.duplicate_suppressed_opportunity_count,
+        recurrent_opportunity_count=measures.recurrent_opportunity_count,
+        recurrent_detection_count=measures.recurrent_detection_count,
+        reconciled_submission_count=reconciled_count,
+        family_counts=Counter(record.candidate.family.value for record in records),
+        score_band_counts=Counter(_score_band(record) for record in records),
+        latest_review_action_counts=measures.latest_review_action_counts,
+        feedback_reason_counts=measures.feedback_reason_counts,
+        current_downstream_outcome_counts=measures.current_downstream_outcome_counts,
+        downstream_submission_posture_counts=downstream_postures,
+        detection_to_review_seconds=measures.detection_to_review_seconds,
+        approval_to_conversion_seconds=measures.approval_to_conversion_seconds,
+    )
+
+
+def _validate_repository_summary(
+    summary: OpportunityEffectivenessRepositorySummary,
+    *,
+    max_opportunities: int,
+) -> None:
+    if summary.generated_opportunity_count > max_opportunities:
+        raise OpportunityEffectivenessBoundExceeded(
+            f"opportunity effectiveness exceeds the {max_opportunities} opportunity bound"
+        )
+    scalar_counts = (
+        summary.generated_opportunity_count,
+        summary.reviewed_opportunity_count,
+        summary.feedback_opportunity_count,
+        summary.conversion_opportunity_count,
+        summary.conversion_intent_count,
+        summary.stale_evidence_opportunity_count,
+        summary.unavailable_evidence_opportunity_count,
+        summary.unsupported_evidence_opportunity_count,
+        summary.suppressed_opportunity_count,
+        summary.duplicate_suppressed_opportunity_count,
+        summary.recurrent_opportunity_count,
+        summary.recurrent_detection_count,
+        summary.reconciled_submission_count,
+    )
+    dimension_counts = (
+        *summary.family_counts.values(),
+        *summary.score_band_counts.values(),
+        *summary.latest_review_action_counts.values(),
+        *summary.feedback_reason_counts.values(),
+        *summary.current_downstream_outcome_counts.values(),
+        *summary.downstream_submission_posture_counts.values(),
+    )
+    if any(
+        isinstance(value, bool) or not isinstance(value, int) or value < 0
+        for value in (*scalar_counts, *dimension_counts)
+    ):
+        raise OpportunityEffectivenessDataError(
+            "opportunity effectiveness repository summary contains an invalid count"
+        )
+    if any(
+        value < 0
+        for value in (*summary.detection_to_review_seconds, *summary.approval_to_conversion_seconds)
+    ):
+        raise OpportunityEffectivenessDataError(
+            "opportunity effectiveness repository summary contains a negative duration"
+        )
+
+
+def _count(counts: Mapping[str, int], value: str) -> int:
+    return counts.get(value, 0)
 
 
 def _effectiveness_measures(
@@ -722,7 +841,7 @@ def _snapshot_payload_without_digest(
 
 
 def _decimal_payload(value: Decimal | None) -> str | None:
-    return str(value) if value is not None else None
+    return format(value.normalize(), "f") if value is not None else None
 
 
 __all__ = [
@@ -739,4 +858,5 @@ __all__ = [
     "OpportunityEffectivenessSnapshot",
     "PresentationMeasurementStatus",
     "build_opportunity_effectiveness_snapshot",
+    "build_opportunity_effectiveness_snapshot_from_summary",
 ]
