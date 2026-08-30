@@ -120,7 +120,7 @@ def test_high_cash_positive_case_creates_reproducible_candidate() -> None:
     )
 
 
-def test_high_cash_source_correction_creates_new_lineage_bound_candidate_identity() -> None:
+def test_high_cash_source_correction_preserves_candidate_and_versions_evidence_lineage() -> None:
     source_input = high_cash_input()
     assert source_input.holdings_ref is not None
     corrected_input = replace(
@@ -136,7 +136,19 @@ def test_high_cash_source_correction_creates_new_lineage_bound_candidate_identit
 
     assert original.candidate is not None
     assert corrected.candidate is not None
-    assert original.candidate.candidate_id != corrected.candidate.candidate_id
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
     assert corrected.candidate.evidence_packet.source_refs[1].content_hash.endswith("correction-2")
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs

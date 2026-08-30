@@ -1,0 +1,156 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+import hashlib
+import json
+from typing import TypeAlias
+
+from app.domain.access_scope import ReviewAccessScope
+from app.domain.ideas import OpportunityFamily, SourceRef
+
+
+OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v2"
+
+IdentityMaterialValue: TypeAlias = str | int | bool | None
+
+
+@dataclass(frozen=True)
+class OpportunityIdentity:
+    """Separate stable opportunity scope, material state, and evidence version."""
+
+    policy_version: str
+    opportunity_kind: str
+    business_identity_id: str
+    material_fingerprint: str
+    evidence_fingerprint: str
+    candidate_id: str
+    signal_id: str
+    evidence_packet_id: str
+    lineage_id: str
+
+
+def build_opportunity_identity(
+    *,
+    family: OpportunityFamily,
+    opportunity_kind: str,
+    as_of_date: date,
+    access_scope: ReviewAccessScope | None,
+    material_facts: Mapping[str, IdentityMaterialValue],
+    source_refs: tuple[SourceRef, ...],
+) -> OpportunityIdentity:
+    """Build deterministic identities without treating source bytes as business meaning."""
+    normalized_kind = opportunity_kind.strip()
+    if not normalized_kind:
+        raise ValueError("opportunity_kind is required")
+    if not material_facts:
+        raise ValueError("material_facts is required")
+    if not source_refs:
+        raise ValueError("source_refs is required")
+    _validate_material_facts(material_facts)
+
+    business_payload = {
+        "family": family.value,
+        "opportunity_kind": normalized_kind,
+        "scope": _business_scope_payload(access_scope, as_of_date=as_of_date),
+    }
+    business_digest = _canonical_digest(business_payload)
+    material_digest = _canonical_digest(
+        {
+            "business_identity_digest": business_digest,
+            "identity_policy_version": OPPORTUNITY_IDENTITY_POLICY_VERSION,
+            "material_facts": dict(material_facts),
+        }
+    )
+    evidence_digest = _canonical_digest(
+        {
+            "business_identity_digest": business_digest,
+            "source_refs": [_source_ref_identity_payload(ref) for ref in _sorted_refs(source_refs)],
+        }
+    )
+    candidate_token = material_digest[:16]
+    evidence_token = evidence_digest[:16]
+    identifier_kind = normalized_kind.replace("-", "_")
+    return OpportunityIdentity(
+        policy_version=OPPORTUNITY_IDENTITY_POLICY_VERSION,
+        opportunity_kind=normalized_kind,
+        business_identity_id=f"opportunity_{identifier_kind}_{business_digest[:24]}",
+        material_fingerprint=f"sha256:{material_digest}",
+        evidence_fingerprint=f"sha256:{evidence_digest}",
+        candidate_id=f"idea_{identifier_kind}_{candidate_token}",
+        signal_id=f"signal_{identifier_kind}_{candidate_token}_{evidence_token}",
+        evidence_packet_id=f"iep_{identifier_kind}_{candidate_token}_{evidence_token}",
+        lineage_id=(f"lineage:lotus-idea:{normalized_kind}:{candidate_token}:{evidence_token}"),
+    )
+
+
+def _validate_material_facts(material_facts: Mapping[str, IdentityMaterialValue]) -> None:
+    for key, value in material_facts.items():
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("material fact names must be non-blank strings")
+        if value is not None and not isinstance(value, (str, int, bool)):
+            raise TypeError(f"material fact {key} must be a canonical scalar")
+
+
+def _business_scope_payload(
+    access_scope: ReviewAccessScope | None,
+    *,
+    as_of_date: date,
+) -> dict[str, str]:
+    if access_scope is None:
+        return {
+            "scope_kind": "unscoped_evaluation_date",
+            "as_of_date": as_of_date.isoformat(),
+        }
+    return {
+        "scope_kind": "review_access_scope",
+        "tenant_id": access_scope.tenant_id,
+        "book_id": access_scope.book_id,
+        "portfolio_id": access_scope.portfolio_id,
+        "client_id": access_scope.client_id,
+    }
+
+
+def _sorted_refs(source_refs: tuple[SourceRef, ...]) -> tuple[SourceRef, ...]:
+    return tuple(
+        sorted(
+            source_refs,
+            key=lambda ref: (
+                ref.source_system.value,
+                ref.product_id,
+                ref.product_version,
+                ref.route,
+                ref.as_of_date,
+                ref.generated_at_utc,
+                ref.content_hash,
+            ),
+        )
+    )
+
+
+def _source_ref_identity_payload(source_ref: SourceRef) -> dict[str, str]:
+    return {
+        "source_system": source_ref.source_system.value,
+        "product_id": source_ref.product_id,
+        "product_version": source_ref.product_version,
+        "route": source_ref.route,
+        "as_of_date": source_ref.as_of_date.isoformat(),
+        "generated_at_utc": source_ref.generated_at_utc.isoformat(),
+        "content_hash": source_ref.content_hash,
+        "data_quality_status": source_ref.data_quality_status,
+        "freshness": source_ref.freshness.value,
+    }
+
+
+def _canonical_digest(payload: Mapping[str, object]) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+__all__ = [
+    "OPPORTUNITY_IDENTITY_POLICY_VERSION",
+    "IdentityMaterialValue",
+    "OpportunityIdentity",
+    "build_opportunity_identity",
+]
