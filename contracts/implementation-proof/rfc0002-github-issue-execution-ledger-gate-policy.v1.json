@@ -149,7 +149,8 @@
     1127,
     1129,
     1131,
-    1139
+    1139,
+    1145
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -158,6 +159,16 @@
     "source-controlled ledger/docs/wiki/context update is required"
   ],
   "requiredOpenIssueEvidence": {
+    "1145": [
+      "Keep #1145 open",
+      "Slice 08 feedback correctness hardening",
+      "feedback_recorded reason exactly once",
+      "mutation identity, persistence, replay, API response",
+      "Caller-supplied and omitted source reasons",
+      "changed content must conflict truthfully",
+      "no Gateway/Workbench compatibility rewrite",
+      "supported-feature promotion"
+    ],
     "343": [
       "Keep #343 open and status/blocked",
       "versioned DR contract",
