@@ -872,6 +872,9 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
         payload["persistence"]["candidateId"] == payload["evaluation"]["candidate"]["candidateId"]
     )
     assert payload["persistence"]["auditEventType"] == "idea.candidate.persisted"
+    assert payload["persistence"]["identity"]["materialVersion"] == 1
+    assert payload["persistence"]["identity"]["evidenceVersion"] == 1
+    assert payload["persistence"]["identity"]["changeReason"] == "initial_detection"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
 
@@ -1043,6 +1046,35 @@ def test_high_cash_persist_api_returns_existing_candidate_for_new_retry_key() ->
         duplicate.json()["persistence"]["candidateId"] == first.json()["persistence"]["candidateId"]
     )
     assert len(get_idea_repository().snapshot().candidate_records) == 1
+
+
+def test_high_cash_persist_api_versions_corrected_evidence_without_duplicate_candidate() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    first = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("persist-high-cash-api-correction-first"),
+    )
+    corrected_payload = high_cash_payload()
+    projection_ref = corrected_payload["sourceEvidence"]["cashflowProjectionRef"]
+    projection_ref["contentHash"] = "sha256:corrected-cashflow-projection"
+
+    corrected = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=corrected_payload,
+        headers=persistence_headers("persist-high-cash-api-correction-second"),
+    )
+
+    assert (first.status_code, corrected.status_code) == (200, 200)
+    assert corrected.json()["persistence"]["decision"] == "evidence_refreshed"
+    persistence = corrected.json()["persistence"]
+    assert persistence["candidateId"] == first.json()["persistence"]["candidateId"]
+    identity = persistence["identity"]
+    assert (identity["materialVersion"], identity["evidenceVersion"]) == (1, 2)
+    assert identity["changeReason"] == "evidence_correction"
+    records = tuple(get_idea_repository().snapshot().candidate_records.values())
+    assert (len(records), len(records[0].version_history)) == (1, 2)
 
 
 def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload() -> None:

@@ -74,6 +74,21 @@
       "description": "Candidate persisted after source-owned signal evaluation and internal idempotent persistence."
     },
     {
+      "eventType": "idea.candidate.evidence_refreshed.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Equivalent corrected evidence was attached to the existing economic candidate without resetting its active review posture."
+    },
+    {
+      "eventType": "idea.candidate.material_version_created.v1",
+      "aggregateType": "idea_candidate",
+      "description": "A material economic change created a superseding candidate version on the existing business aggregate."
+    },
+    {
+      "eventType": "idea.candidate.recurrent_condition_reopened.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Changed authoritative evidence reopened a terminal economic candidate as an explicit recurrent condition."
+    },
+    {
       "eventType": "idea.lifecycle.transitioned.v1",
       "aggregateType": "idea_candidate",
       "description": "Candidate lifecycle status changed through governed internal workflow."

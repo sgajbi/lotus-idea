@@ -36,6 +36,7 @@ OUTBOX_MIGRATION_PATHS = (
     ROOT / "migrations" / "001_idea_repository_foundation.sql",
     ROOT / "migrations" / "003_outbox_event_contract_constraints.sql",
     ROOT / "migrations" / "007_outbox_event_lineage.sql",
+    ROOT / "migrations" / "016_candidate_economic_identity.sql",
 )
 
 PERSISTENCE_EVENT_WRITER_SOURCES = {

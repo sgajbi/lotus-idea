@@ -22,6 +22,7 @@ from app.domain import (
     HighCashSignalPolicy,
     InMemoryIdeaRepository,
     IdeaRepositorySnapshot,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -487,6 +488,12 @@ def _high_cash_input(
             data_quality_status=data_quality_status,
         ),
         evaluated_at_utc=OBSERVED_AT,
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-sg-001",
+            book_id="book-private-bank-sg",
+            portfolio_id=f"PB_SG_GLOBAL_BAL_001-{suffix}",
+            client_id="client-001",
+        ),
     )
 
 

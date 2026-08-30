@@ -11,6 +11,7 @@ from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.persistence import (
     CandidatePersistenceRecord,
+    CandidateVersionHistoryEntry,
     IdeaRepositorySnapshot,
     LifecycleHistoryEntry,
 )
@@ -63,8 +64,15 @@ class PostgresSnapshotWriteRepositoryMixin:
             INSERT INTO idea_candidate_record (
                 candidate_id, family, lifecycle_status, review_posture,
                 evidence_packet_id, evidence_hash, candidate_json,
+                business_identity_id, identity_policy_version,
+                material_fingerprint, material_version, evidence_version,
+                change_reason, supersedes_material_version,
                 persisted_at_utc, updated_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s,
+                %s, %s
+            )
             """,
             (
                 candidate.candidate_id,
@@ -74,6 +82,13 @@ class PostgresSnapshotWriteRepositoryMixin:
                 candidate.evidence_packet.evidence_packet_id,
                 record.evidence_hash,
                 Jsonb(idea_candidate_to_json(candidate)),
+                candidate.identity.business_identity_id,
+                candidate.identity.policy_version,
+                candidate.identity.material_fingerprint,
+                candidate.identity.material_version,
+                candidate.identity.evidence_version,
+                candidate.identity.change_reason.value,
+                candidate.identity.supersedes_material_version,
                 record.persisted_at_utc,
                 candidate.updated_at_utc,
             ),
@@ -113,6 +128,7 @@ class PostgresSnapshotWriteRepositoryMixin:
         cursor: PostgresCursor,
         record: CandidatePersistenceRecord,
     ) -> None:
+        self._insert_version_history(cursor, record)
         self._insert_lifecycle_history(cursor, record)
         self._insert_audit_events(cursor, record)
         self._insert_review_decisions(cursor, record)
@@ -121,6 +137,50 @@ class PostgresSnapshotWriteRepositoryMixin:
         self._insert_conversion_outcomes(cursor, record)
         self._insert_report_evidence_packs(cursor, record)
         insert_ai_explanation_lineage_records(cursor, record)
+
+    def _insert_version_history(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
+        for entry in record.version_history:
+            self._insert_version_history_entry(cursor, candidate_id, entry)
+
+    def _insert_version_history_entry(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        entry: CandidateVersionHistoryEntry,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_candidate_version_history (
+                candidate_version_history_id, candidate_id, business_identity_id,
+                material_fingerprint, material_version, evidence_version,
+                change_reason, source_lifecycle_status, resulting_lifecycle_status,
+                supersedes_material_version, evidence_hash, recorded_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                (f"{candidate_id}:version:{entry.material_version}:{entry.evidence_version}"),
+                candidate_id,
+                entry.business_identity_id,
+                entry.material_fingerprint,
+                entry.material_version,
+                entry.evidence_version,
+                entry.change_reason.value,
+                (
+                    entry.source_lifecycle_status.value
+                    if entry.source_lifecycle_status is not None
+                    else None
+                ),
+                entry.resulting_lifecycle_status.value,
+                entry.supersedes_material_version,
+                entry.evidence_hash,
+                entry.recorded_at_utc,
+            ),
+        )
 
     def _insert_downstream_submission_record(
         self,

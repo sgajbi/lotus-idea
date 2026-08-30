@@ -104,12 +104,15 @@ def persist_high_cash_candidate(
     idempotency_key: str = "signal-ingestion:high-cash:001",
     candidate_scope: ReviewAccessScope | None = None,
 ) -> str:
+    effective_scope = candidate_scope or access_scope(
+        portfolio_id=f"PB_SG_GLOBAL_BAL_001{suffix or '-default'}"
+    )
     result = evaluate_and_persist_high_cash_signal(
         EvaluateAndPersistHighCashSignalCommand(
             evaluation=high_cash_command(
                 cash_weight=cash_weight,
                 suffix=suffix,
-                candidate_scope=candidate_scope,
+                candidate_scope=effective_scope,
             ),
             idempotency_key=idempotency_key,
             actor_subject="signal-ingestion-worker",

@@ -11,7 +11,8 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
     now = datetime(2026, 7, 18, tzinfo=UTC)
 
     cursor.execute(
-        "insert into idea_candidate_record values (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        "insert into idea_candidate_record values "
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
         (
             "candidate-1",
             "high_cash",
@@ -20,6 +21,13 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
             "evidence-1",
             "hash-1",
             {"candidateId": "candidate-1"},
+            "opportunity-high-cash-1",
+            "economic-candidate-identity-v1",
+            "material-fingerprint-1",
+            1,
+            1,
+            "initial_detection",
+            None,
             now,
             now,
         ),
@@ -38,6 +46,13 @@ def test_fake_cursor_routes_generic_insert_select_and_delete_with_write_tracking
             "evidence_packet_id": "evidence-1",
             "evidence_hash": "hash-1",
             "candidate_json": {"candidateId": "candidate-1"},
+            "business_identity_id": "opportunity-high-cash-1",
+            "identity_policy_version": "economic-candidate-identity-v1",
+            "material_fingerprint": "material-fingerprint-1",
+            "material_version": 1,
+            "evidence_version": 1,
+            "change_reason": "initial_detection",
+            "supersedes_material_version": None,
             "persisted_at_utc": now,
             "updated_at_utc": now,
         }

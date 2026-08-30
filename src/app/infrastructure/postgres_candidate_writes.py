@@ -47,6 +47,13 @@ def update_postgres_candidate_record(
             evidence_packet_id = %s,
             evidence_hash = %s,
             candidate_json = %s,
+            business_identity_id = %s,
+            identity_policy_version = %s,
+            material_fingerprint = %s,
+            material_version = %s,
+            evidence_version = %s,
+            change_reason = %s,
+            supersedes_material_version = %s,
             updated_at_utc = %s
         WHERE candidate_id = %s
           AND updated_at_utc = %s
@@ -59,6 +66,13 @@ def update_postgres_candidate_record(
             candidate.evidence_packet.evidence_packet_id,
             record.evidence_hash,
             Jsonb(idea_candidate_to_json(candidate)),
+            candidate.identity.business_identity_id,
+            candidate.identity.policy_version,
+            candidate.identity.material_fingerprint,
+            candidate.identity.material_version,
+            candidate.identity.evidence_version,
+            candidate.identity.change_reason.value,
+            candidate.identity.supersedes_material_version,
             candidate.updated_at_utc,
             candidate.candidate_id,
             expected_updated_at_utc,

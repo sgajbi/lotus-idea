@@ -129,6 +129,45 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
     assert connection.commits == 2
 
 
+def test_postgres_repository_versions_corrected_evidence_on_one_candidate_aggregate() -> None:
+    connection = FakePostgresConnection()
+    scope = access_scope()
+    candidate = high_cash_candidate(candidate_scope=scope)
+    corrected = high_cash_candidate(
+        candidate_scope=scope,
+        cashflow_hash="sha256:corrected-cashflow",
+    )
+    repository = PostgresIdeaRepository(connection)
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:001",
+        payload={"candidateId": candidate.candidate_id, "sourceVersion": "original"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    refreshed = PostgresIdeaRepository(connection).persist_candidate(
+        corrected,
+        idempotency_key="signal-ingestion:high-cash:002",
+        payload={"candidateId": corrected.candidate_id, "sourceVersion": "corrected"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+    hydrated = PostgresIdeaRepository(connection).candidate_record_by_id(candidate.candidate_id)
+
+    assert refreshed.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    assert hydrated == refreshed.record
+    assert hydrated is not None
+    assert hydrated.candidate.identity.material_version == 1
+    assert hydrated.candidate.identity.evidence_version == 2
+    assert len(hydrated.version_history) == 2
+    assert len(connection.rows["idea_candidate_record"]) == 1
+    assert len(connection.rows["idea_candidate_version_history"]) == 2
+    assert connection.rows["idea_outbox_event"][-1]["event_type"] == (
+        "idea.candidate.evidence_refreshed.v1"
+    )
+
+
 def test_postgres_repository_rejects_uncontracted_outbox_rows_on_load() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -905,12 +944,17 @@ def test_postgres_repository_rolls_back_when_flush_fails() -> None:
     assert connection.rollbacks == 1
 
 
-def high_cash_candidate(candidate_scope: ReviewAccessScope | None = None) -> IdeaCandidate:
-    refs = source_refs()
+def high_cash_candidate(
+    candidate_scope: ReviewAccessScope | None = None,
+    *,
+    cash_weight: Decimal = Decimal("0.18"),
+    cashflow_hash: str | None = None,
+) -> IdeaCandidate:
+    refs = source_refs(cashflow_hash=cashflow_hash)
     result = evaluate_high_cash_signal(
         HighCashSignalInput(
             as_of_date=AS_OF_DATE,
-            source_reported_cash_weight=Decimal("0.18"),
+            source_reported_cash_weight=cash_weight,
             portfolio_state_ref=refs[0],
             holdings_ref=refs[1],
             cash_movement_ref=refs[2],
@@ -928,16 +972,19 @@ def high_cash_candidate(candidate_scope: ReviewAccessScope | None = None) -> Ide
     return result.candidate
 
 
-def source_refs() -> tuple[SourceRef, ...]:
+def source_refs(*, cashflow_hash: str | None = None) -> tuple[SourceRef, ...]:
     return (
         source_ref("lotus-core:PortfolioStateSnapshot:v1"),
         source_ref("lotus-core:HoldingsAsOf:v1"),
         source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
-        source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        source_ref(
+            "lotus-core:PortfolioCashflowProjection:v1",
+            content_hash=cashflow_hash,
+        ),
     )
 
 
-def source_ref(product_id: str) -> SourceRef:
+def source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef:
     routes = {
         "lotus-core:PortfolioStateSnapshot:v1": "/integration/portfolios/{portfolio_id}/core-snapshot",
         "lotus-core:HoldingsAsOf:v1": "/portfolios/{portfolio_id}/cash-balances",
@@ -951,7 +998,7 @@ def source_ref(product_id: str) -> SourceRef:
         route=routes[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=content_hash or f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

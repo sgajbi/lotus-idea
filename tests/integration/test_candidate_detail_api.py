@@ -292,6 +292,12 @@ def test_candidate_detail_api_returns_source_safe_persisted_candidate_detail() -
     assert payload["candidate"]["candidateId"] == candidate_id
     assert payload["candidate"]["family"] == "high_cash"
     assert payload["candidate"]["supportability"] == "ready"
+    assert payload["candidate"]["identity"]["materialVersion"] == 1
+    assert payload["candidate"]["identity"]["evidenceVersion"] == 1
+    assert payload["candidate"]["identity"]["changeReason"] == "initial_detection"
+    assert len(payload["versionHistory"]) == 1
+    assert payload["versionHistory"][0]["materialVersion"] == 1
+    assert payload["versionHistory"][0]["evidenceVersion"] == 1
     assert payload["evidence"]["evidenceContentHash"].startswith("sha256:")
     assert payload["evidence"]["sourceRefs"]
     assert "route" not in payload["evidence"]["sourceRefs"][0]

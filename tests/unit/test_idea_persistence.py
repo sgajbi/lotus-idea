@@ -14,6 +14,7 @@ from app.domain import (
     AIWorkflowPackRef,
     AIWorkflowPurpose,
     CandidatePersistenceDecision,
+    CandidateChangeReason,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -104,12 +105,16 @@ def high_cash_candidate_source_refs(
     )
 
 
-def high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
-    refs = high_cash_candidate_source_refs()
+def high_cash_candidate(
+    *,
+    cash_weight: Decimal = Decimal("0.18"),
+    cashflow_hash: str | None = None,
+) -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
+    refs = high_cash_candidate_source_refs(cashflow_hash=cashflow_hash)
     result = evaluate_high_cash_signal(
         HighCashSignalInput(
             as_of_date=AS_OF_DATE,
-            source_reported_cash_weight=Decimal("0.18"),
+            source_reported_cash_weight=cash_weight,
             portfolio_state_ref=refs[0],
             holdings_ref=refs[1],
             cash_movement_ref=refs[2],
@@ -285,6 +290,8 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
     assert second.decision is CandidatePersistenceDecision.REPLAYED
     assert first.record == second.record
     assert first.record is not None
+    assert len(first.record.version_history) == 1
+    assert first.record.version_history[0].change_reason is CandidateChangeReason.INITIAL_DETECTION
     assert len(first.record.audit_events) == 1
     assert first.record.audit_events[0].event_type == "idea.candidate.persisted"
     assert len(repository.snapshot().outbox_events) == 1
@@ -351,6 +358,17 @@ def test_duplicate_candidate_identity_is_not_persisted_twice() -> None:
     assert duplicate.decision is CandidatePersistenceDecision.DUPLICATE_CANDIDATE
     assert duplicate.record is not None
     assert len(duplicate.record.audit_events) == 1
+    assert len(duplicate.record.version_history) == 1
+
+    replay = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:002",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    assert replay.decision is CandidatePersistenceDecision.REPLAYED
 
 
 def test_replay_matches_hash_or_returns_stale_and_mismatch_posture() -> None:

@@ -57,6 +57,9 @@ def build_runtime_receipts(
         return None, None
     if persistence.decision not in {
         CandidatePersistenceDecision.ACCEPTED,
+        CandidatePersistenceDecision.EVIDENCE_REFRESHED,
+        CandidatePersistenceDecision.MATERIAL_VERSION_CREATED,
+        CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED,
         CandidatePersistenceDecision.REPLAYED,
     }:
         return None, None

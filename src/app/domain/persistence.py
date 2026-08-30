@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
+from app.domain.candidate_reconciliation import reconcile_candidate
 from app.domain.outbox.events import (
     EventLineageContext,
     OutboxEventRecord,
@@ -28,6 +29,7 @@ from app.domain.persistence_models import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
     CandidatePersistenceResult,
+    CandidateVersionHistoryEntry,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
     EvidencePackPersistenceDecision,
@@ -138,10 +140,16 @@ class InMemoryIdeaRepository(
                 decision=CandidatePersistenceDecision.REPLAYED,
                 record=self._record_for_idempotency_key(idempotency_key),
             )
-        if candidate.candidate_id in self._candidate_records:
-            return CandidatePersistenceResult(
-                decision=CandidatePersistenceDecision.DUPLICATE_CANDIDATE,
-                record=self._candidate_records[candidate.candidate_id],
+        existing_record = self._candidate_records.get(candidate.candidate_id)
+        if existing_record is not None:
+            return self._reconcile_existing_candidate(
+                existing_record=existing_record,
+                incoming_candidate=candidate,
+                idempotency_key=idempotency_key,
+                idempotency_record=idempotency_record,
+                actor_subject=actor_subject,
+                occurred_at_utc=event_time,
+                event_lineage=event_lineage,
             )
 
         audit_event = _audit_event(
@@ -159,11 +167,22 @@ class InMemoryIdeaRepository(
             candidate=candidate,
             evidence_hash=evidence_hash_for_candidate(candidate),
             persisted_at_utc=event_time,
+            version_history=(
+                _candidate_version_history_entry(
+                    candidate=candidate,
+                    evidence_hash=evidence_hash_for_candidate(candidate),
+                    source_lifecycle_status=None,
+                    recorded_at_utc=event_time,
+                ),
+            ),
             audit_events=(audit_event,),
         )
         self._candidate_records[candidate.candidate_id] = record
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate.candidate_id
+        self._record_candidate_idempotency(
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
+            candidate_id=candidate.candidate_id,
+        )
         self._append_outbox_event(
             event_type="idea.candidate.persisted.v1",
             aggregate_id=candidate.candidate_id,
@@ -181,6 +200,144 @@ class InMemoryIdeaRepository(
             record=record,
             audit_event=audit_event,
         )
+
+    def _reconcile_existing_candidate(
+        self,
+        *,
+        existing_record: CandidatePersistenceRecord,
+        incoming_candidate: IdeaCandidate,
+        idempotency_key: str,
+        idempotency_record: IdempotencyRecord,
+        actor_subject: str,
+        occurred_at_utc: datetime,
+        event_lineage: EventLineageContext | None,
+    ) -> CandidatePersistenceResult:
+        incoming_evidence_hash = evidence_hash_for_candidate(incoming_candidate)
+        reconciliation = reconcile_candidate(
+            existing=existing_record.candidate,
+            incoming=incoming_candidate,
+            existing_evidence_hash=existing_record.evidence_hash,
+            incoming_evidence_hash=incoming_evidence_hash,
+            occurred_at_utc=occurred_at_utc,
+        )
+        if reconciliation.decision is CandidatePersistenceDecision.IDENTITY_CONFLICT:
+            return CandidatePersistenceResult(
+                decision=reconciliation.decision,
+                record=existing_record,
+            )
+        if reconciliation.decision is CandidatePersistenceDecision.DUPLICATE_CANDIDATE:
+            self._record_candidate_idempotency(
+                idempotency_key=idempotency_key,
+                idempotency_record=idempotency_record,
+                candidate_id=incoming_candidate.candidate_id,
+            )
+            return CandidatePersistenceResult(
+                decision=reconciliation.decision,
+                record=existing_record,
+            )
+
+        reconciled_candidate = reconciliation.candidate
+        if reconciled_candidate is None:
+            raise RuntimeError("candidate reconciliation returned no governed mutation")
+        audit_event = _candidate_reconciliation_audit_event(
+            decision=reconciliation.decision,
+            candidate=reconciled_candidate,
+            source_lifecycle_status=existing_record.candidate.lifecycle_status,
+            actor_subject=actor_subject,
+            occurred_at_utc=occurred_at_utc,
+        )
+        updated_record = replace(
+            existing_record,
+            candidate=reconciled_candidate,
+            evidence_hash=incoming_evidence_hash,
+            version_history=(
+                *existing_record.version_history,
+                _candidate_version_history_entry(
+                    candidate=reconciled_candidate,
+                    evidence_hash=incoming_evidence_hash,
+                    source_lifecycle_status=existing_record.candidate.lifecycle_status,
+                    recorded_at_utc=occurred_at_utc,
+                ),
+            ),
+            audit_events=(*existing_record.audit_events, audit_event),
+        )
+        self._candidate_records[incoming_candidate.candidate_id] = updated_record
+        self._record_candidate_idempotency(
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
+            candidate_id=incoming_candidate.candidate_id,
+        )
+        self._append_candidate_reconciliation_event(
+            decision=reconciliation.decision,
+            candidate=reconciled_candidate,
+            occurred_at_utc=occurred_at_utc,
+            idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
+        )
+        return CandidatePersistenceResult(
+            decision=reconciliation.decision,
+            record=updated_record,
+            audit_event=audit_event,
+        )
+
+    def _record_candidate_idempotency(
+        self,
+        *,
+        idempotency_key: str,
+        idempotency_record: IdempotencyRecord,
+        candidate_id: str,
+    ) -> None:
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+
+    def _append_candidate_reconciliation_event(
+        self,
+        *,
+        decision: CandidatePersistenceDecision,
+        candidate: IdeaCandidate,
+        occurred_at_utc: datetime,
+        idempotency_key: str,
+        event_lineage: EventLineageContext | None,
+    ) -> None:
+        payload = {
+            "candidate_family": candidate.family.value,
+            "lifecycle_status": candidate.lifecycle_status.value,
+            "review_posture": candidate.review_posture.value,
+            "change_reason": candidate.identity.change_reason.value,
+            "material_version": str(candidate.identity.material_version),
+            "evidence_version": str(candidate.identity.evidence_version),
+        }
+        if decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED:
+            self._append_outbox_event(
+                event_type="idea.candidate.evidence_refreshed.v1",
+                aggregate_id=candidate.candidate_id,
+                occurred_at_utc=occurred_at_utc,
+                idempotency_key=idempotency_key,
+                event_lineage=event_lineage,
+                payload=payload,
+            )
+            return
+        if decision is CandidatePersistenceDecision.MATERIAL_VERSION_CREATED:
+            self._append_outbox_event(
+                event_type="idea.candidate.material_version_created.v1",
+                aggregate_id=candidate.candidate_id,
+                occurred_at_utc=occurred_at_utc,
+                idempotency_key=idempotency_key,
+                event_lineage=event_lineage,
+                payload=payload,
+            )
+            return
+        if decision is CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED:
+            self._append_outbox_event(
+                event_type="idea.candidate.recurrent_condition_reopened.v1",
+                aggregate_id=candidate.candidate_id,
+                occurred_at_utc=occurred_at_utc,
+                idempotency_key=idempotency_key,
+                event_lineage=event_lineage,
+                payload=payload,
+            )
+            return
+        raise ValueError(f"unsupported candidate reconciliation decision: {decision.value}")
 
     def transition_candidate(
         self,
@@ -723,6 +880,62 @@ def _audit_event(
     )
 
 
+def _candidate_reconciliation_audit_event(
+    *,
+    decision: CandidatePersistenceDecision,
+    candidate: IdeaCandidate,
+    source_lifecycle_status: IdeaLifecycleStatus,
+    actor_subject: str,
+    occurred_at_utc: datetime,
+) -> AuditEvent:
+    event_type_by_decision = {
+        CandidatePersistenceDecision.EVIDENCE_REFRESHED: ("idea.candidate.evidence_refreshed"),
+        CandidatePersistenceDecision.MATERIAL_VERSION_CREATED: (
+            "idea.candidate.material_version_created"
+        ),
+        CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED: (
+            "idea.candidate.recurrent_condition_reopened"
+        ),
+    }
+    return _audit_event(
+        event_type=event_type_by_decision[decision],
+        actor_subject=actor_subject,
+        outcome="accepted",
+        occurred_at_utc=occurred_at_utc,
+        attributes={
+            "candidate_family": candidate.family.value,
+            "source_lifecycle_status": source_lifecycle_status.value,
+            "resulting_lifecycle_status": candidate.lifecycle_status.value,
+            "change_reason": candidate.identity.change_reason.value,
+            "material_version": str(candidate.identity.material_version),
+            "evidence_version": str(candidate.identity.evidence_version),
+        },
+    )
+
+
+def _candidate_version_history_entry(
+    *,
+    candidate: IdeaCandidate,
+    evidence_hash: str,
+    source_lifecycle_status: IdeaLifecycleStatus | None,
+    recorded_at_utc: datetime,
+) -> CandidateVersionHistoryEntry:
+    identity = candidate.identity
+    return CandidateVersionHistoryEntry(
+        candidate_id=candidate.candidate_id,
+        business_identity_id=identity.business_identity_id,
+        material_fingerprint=identity.material_fingerprint,
+        material_version=identity.material_version,
+        evidence_version=identity.evidence_version,
+        change_reason=identity.change_reason,
+        source_lifecycle_status=source_lifecycle_status,
+        resulting_lifecycle_status=candidate.lifecycle_status,
+        supersedes_material_version=identity.supersedes_material_version,
+        evidence_hash=evidence_hash,
+        recorded_at_utc=recorded_at_utc,
+    )
+
+
 def _record_with_conversion_outcome(
     record: CandidatePersistenceRecord,
     result: ConversionOutcomeResult,
@@ -806,6 +1019,7 @@ __all__ = [
     "CandidatePersistenceDecision",
     "CandidatePersistenceRecord",
     "CandidatePersistenceResult",
+    "CandidateVersionHistoryEntry",
     "ConversionPersistenceDecision",
     "ConversionPersistenceResult",
     "EvidencePackPersistenceDecision",

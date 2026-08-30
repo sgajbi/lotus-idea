@@ -4,6 +4,7 @@ from typing import Any, Protocol
 
 from app.domain import (
     CandidatePersistenceRecord,
+    CandidateVersionHistoryEntry,
     DownstreamSubmissionRecord,
     GovernedConversionIntent,
     GovernedConversionOutcome,
@@ -72,6 +73,13 @@ class PostgresSnapshotDeltaWriter(Protocol):
         candidate_id: str,
         entry: LifecycleHistoryEntry,
         index: int,
+    ) -> None: ...
+
+    def _insert_version_history_entry(
+        self,
+        cursor: Any,
+        candidate_id: str,
+        entry: CandidateVersionHistoryEntry,
     ) -> None: ...
 
     def _insert_audit_event(
@@ -203,11 +211,18 @@ def _insert_record_detail_delta(
     after: CandidatePersistenceRecord,
 ) -> None:
     candidate_id = after.candidate.candidate_id
-    for offset, entry in enumerate(
+    for version_entry in after.version_history[len(before.version_history) :]:
+        writer._insert_version_history_entry(cursor, candidate_id, version_entry)
+    for offset, lifecycle_entry in enumerate(
         after.lifecycle_history[len(before.lifecycle_history) :],
         start=len(before.lifecycle_history) + 1,
     ):
-        writer._insert_lifecycle_history_entry(cursor, candidate_id, entry, offset)
+        writer._insert_lifecycle_history_entry(
+            cursor,
+            candidate_id,
+            lifecycle_entry,
+            offset,
+        )
     for offset, event in enumerate(
         after.audit_events[len(before.audit_events) :],
         start=len(before.audit_events) + 1,

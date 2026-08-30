@@ -8,6 +8,7 @@ from pydantic import Field
 from app.api.access_scope_models import ReviewAccessScopeRequest as ReviewAccessScopeRequest
 from app.api.base_model import CamelModel
 from app.domain import (
+    CandidateIdentity,
     EvidenceFreshness,
     IdeaCandidate,
     SignalEvaluationResult,
@@ -104,8 +105,34 @@ class SourceRefResponse(CamelModel):
         )
 
 
+class CandidateIdentityResponse(CamelModel):
+    business_identity_id: str = Field(..., alias="businessIdentityId")
+    policy_version: str = Field(..., alias="policyVersion")
+    material_fingerprint: str = Field(..., alias="materialFingerprint")
+    material_version: int = Field(..., alias="materialVersion")
+    evidence_version: int = Field(..., alias="evidenceVersion")
+    change_reason: str = Field(..., alias="changeReason")
+    supersedes_material_version: int | None = Field(
+        default=None,
+        alias="supersedesMaterialVersion",
+    )
+
+    @classmethod
+    def from_domain(cls, identity: CandidateIdentity) -> "CandidateIdentityResponse":
+        return cls(
+            businessIdentityId=identity.business_identity_id,
+            policyVersion=identity.policy_version,
+            materialFingerprint=identity.material_fingerprint,
+            materialVersion=identity.material_version,
+            evidenceVersion=identity.evidence_version,
+            changeReason=identity.change_reason.value,
+            supersedesMaterialVersion=identity.supersedes_material_version,
+        )
+
+
 class IdeaCandidateSummaryResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
+    identity: CandidateIdentityResponse
     family: str
     lifecycle_status: str = Field(..., alias="lifecycleStatus")
     review_posture: str = Field(..., alias="reviewPosture")
@@ -120,6 +147,7 @@ class IdeaCandidateSummaryResponse(CamelModel):
     def from_domain(cls, candidate: IdeaCandidate) -> "IdeaCandidateSummaryResponse":
         return cls(
             candidateId=candidate.candidate_id,
+            identity=CandidateIdentityResponse.from_domain(candidate.identity),
             family=candidate.family.value,
             lifecycleStatus=candidate.lifecycle_status.value,
             reviewPosture=candidate.review_posture.value,
