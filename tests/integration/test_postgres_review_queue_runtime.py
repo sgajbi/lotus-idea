@@ -114,7 +114,7 @@ def _high_cash_payload(
         "accessScope": {
             "tenantId": "tenant-private-bank-sg",
             "bookId": "book-advisor-001",
-            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "portfolioId": f"PB_SG_GLOBAL_BAL_001{suffix}",
             "clientId": "client-001",
         },
     }
