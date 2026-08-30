@@ -99,29 +99,15 @@ def test_mandate_restriction_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("mode", "expected_outcome", "expected_reason"),
-    (
-        ("suppressed", "suppressed", "duplicate_suppressed"),
-        ("not_eligible", "not_eligible", "below_materiality"),
-    ),
-)
-def test_mandate_restriction_signal_api_exposes_non_candidate_success_modes(
-    mode: str,
-    expected_outcome: str,
-    expected_reason: str,
-) -> None:
+def test_mandate_restriction_signal_api_reports_not_eligible() -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     payload = mandate_restriction_payload()
-    if mode == "suppressed":
-        payload["duplicateOfCandidateId"] = "idea_mandate_restriction_existing"
-    else:
-        payload.update(
-            restrictionStatus="CLEAR",
-            changedSinceLastReview=False,
-            actionabilityBlocked=False,
-        )
+    payload.update(
+        restrictionStatus="CLEAR",
+        changedSinceLastReview=False,
+        actionabilityBlocked=False,
+    )
 
     response = client.post(
         "/api/v1/idea-signals/mandate-restriction/evaluate",
@@ -131,9 +117,9 @@ def test_mandate_restriction_signal_api_exposes_non_candidate_success_modes(
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "mandate_restriction",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",
@@ -296,28 +282,12 @@ def test_mandate_restriction_signal_from_source_api_returns_review_candidate(
     assert advise_source.close_count == 1
 
 
-@pytest.mark.parametrize(
-    ("advise_diagnostic", "duplicate_candidate_id", "expected_outcome", "expected_reason"),
-    (
-        (
-            "mandate_restriction_review_required",
-            "idea_mandate_restriction_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        ("policy_current", None, "not_eligible", "below_materiality"),
-    ),
-)
-def test_mandate_restriction_signal_from_source_exposes_non_candidate_success_modes(
+def test_mandate_restriction_signal_from_source_reports_not_eligible(
     monkeypatch: pytest.MonkeyPatch,
-    advise_diagnostic: str,
-    duplicate_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
-    advise_source = RecordingAdvisePolicyEvaluationSource(advise_diagnostic=advise_diagnostic)
+    advise_source = RecordingAdvisePolicyEvaluationSource(advise_diagnostic="policy_current")
     monkeypatch.setattr(
         idea_signals_api,
         "_build_advise_policy_evaluation_source_runtime_from_environment",
@@ -326,21 +296,17 @@ def test_mandate_restriction_signal_from_source_exposes_non_candidate_success_mo
             advise_base_url_configured=True,
         ),
     )
-    payload = mandate_restriction_source_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/mandate-restriction/evaluate-from-source",
-        json=payload,
+        json=mandate_restriction_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "mandate_restriction",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",

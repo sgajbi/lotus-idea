@@ -32,7 +32,6 @@ MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 MISSING_RISK_PROFILE_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "A missing or stale client risk profile creates an advisor-review candidate",
     "blocked": "Stale, incomplete, denied, or unavailable Advise evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "A current client risk profile creates no candidate",
 }
 
@@ -46,9 +45,6 @@ def build_missing_risk_profile_evaluation_response_examples() -> dict[str, dict[
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_risk_profile_existing"
-        ),
         "notEligible": _caller_evaluation_response(
             risk_profile_status="CURRENT",
             risk_profile_effective_for_as_of_date=True,
@@ -63,9 +59,6 @@ def build_source_backed_missing_risk_profile_evaluation_response_examples() -> d
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=AdviseSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_risk_profile_existing"
-        ),
         "notEligible": _source_evaluation_response(advise_diagnostic="risk_profile_current"),
     }
 
@@ -100,7 +93,6 @@ def _caller_evaluation_response(
     risk_profile_effective_for_as_of_date: bool = False,
     risk_profile_review_due: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingRiskProfileSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -110,7 +102,6 @@ def _caller_evaluation_response(
         riskProfileEffectiveForAsOfDate=risk_profile_effective_for_as_of_date,
         riskProfileReviewDue=risk_profile_review_due,
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_missing_risk_profile_signal_command(request.to_command()))
 
@@ -118,14 +109,12 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     advise_diagnostic: str = "risk_profile_missing",
-    duplicate_of_candidate_id: str | None = None,
     source_error: AdviseSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingRiskProfileFromSourceRequest(
         evaluationId=_EVALUATION_ID,
         asOfDate=_AS_OF_DATE,
         evaluatedAtUtc=_EVALUATED_AT,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     result = evaluate_missing_risk_profile_signal_from_advise(
         request.to_command(correlation_id="corr-example", trace_id="trace-example"),

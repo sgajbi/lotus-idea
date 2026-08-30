@@ -20,7 +20,6 @@ class SignalEvaluationOutcome(StrEnum):
     CANDIDATE_CREATED = "candidate_created"
     NOT_ELIGIBLE = "not_eligible"
     BLOCKED = "blocked"
-    SUPPRESSED = "suppressed"
 
 
 @dataclass(frozen=True)
@@ -134,7 +133,6 @@ class HighCashSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -147,7 +145,6 @@ class ConcentrationRiskSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -159,7 +156,6 @@ class UnderperformanceSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -175,7 +171,6 @@ class MandateHealthSignalInput:
     mandate_risk_health_ref: SourceRef | None = None
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -187,7 +182,6 @@ class HighVolatilitySignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -199,7 +193,6 @@ class DrawdownReviewSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)

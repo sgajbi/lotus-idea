@@ -45,7 +45,6 @@ def test_source_ingestion_worker_contract_gate_blocks_source_sensitive_fields() 
                 "itemIndex": 0,
                 "asOfDate": "2026-06-21",
                 "hasExplicitIdempotencyKey": False,
-                "hasDuplicateOfCandidateId": False,
                 "portfolioId": "PB_SG_GLOBAL_BAL_001",
                 "idempotencyKey": "signal-ingestion:high-cash:lotus-core:raw",
             }
@@ -67,7 +66,7 @@ def test_source_ingestion_worker_contract_gate_blocks_source_sensitive_fields() 
     ) in errors
 
 
-def test_source_ingestion_worker_contract_gate_blocks_candidate_ids_in_check_only() -> None:
+def test_source_ingestion_worker_contract_gate_blocks_candidate_identity_in_check_only() -> None:
     module = _load_gate()
     errors: list[str] = []
 
@@ -77,6 +76,7 @@ def test_source_ingestion_worker_contract_gate_blocks_candidate_ids_in_check_onl
                 {
                     "itemIndex": 0,
                     "candidateId": "idea_high_cash_candidate",
+                    "duplicateOfCandidateId": "idea_high_cash_existing",
                 }
             ]
         },
@@ -84,6 +84,9 @@ def test_source_ingestion_worker_contract_gate_blocks_candidate_ids_in_check_onl
     )
 
     assert "$.workItems[0].candidateId: forbidden source-sensitive key is present" in errors
+    assert (
+        "$.workItems[0].duplicateOfCandidateId: forbidden source-sensitive key is present" in errors
+    )
 
 
 def test_source_ingestion_worker_contract_gate_reports_key_shape_drift(
@@ -105,7 +108,6 @@ def test_source_ingestion_worker_contract_gate_reports_key_shape_drift(
                     {
                         "itemIndex": 0,
                         "asOfDate": "2026-06-21",
-                        "hasExplicitIdempotencyKey": False,
                     }
                 ],
             }
@@ -119,7 +121,6 @@ def test_source_ingestion_worker_contract_gate_reports_key_shape_drift(
     errors = module.validate_source_ingestion_worker_contract()
 
     assert (
-        "workItems[0] keys must be ['asOfDate', 'hasDuplicateOfCandidateId', "
-        "'hasExplicitIdempotencyKey', 'itemIndex']; got "
-        "['asOfDate', 'hasExplicitIdempotencyKey', 'itemIndex']"
+        "workItems[0] keys must be ['asOfDate', 'hasExplicitIdempotencyKey', 'itemIndex']; "
+        "got ['asOfDate', 'itemIndex']"
     ) in errors

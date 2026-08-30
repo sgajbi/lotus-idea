@@ -54,7 +54,6 @@ def risk_profile_input(
     risk_profile_review_due: bool | None = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> MissingRiskProfileSignalInput:
     return MissingRiskProfileSignalInput(
@@ -65,7 +64,6 @@ def risk_profile_input(
         risk_profile_review_due=risk_profile_review_due,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -194,18 +192,12 @@ def test_missing_risk_profile_blocks_missing_posture_fields() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
-def test_missing_risk_profile_duplicate_and_entitlement_are_guarded() -> None:
-    duplicate = evaluate_missing_risk_profile_signal(
-        risk_profile_input(duplicate_of_candidate_id="idea_missing_risk_profile_existing"),
-        policy(),
-    )
+def test_missing_risk_profile_entitlement_denial_blocks_positive_claim() -> None:
     denied = evaluate_missing_risk_profile_signal(
         risk_profile_input(entitlement_allowed=False),
         policy(),
     )
 
-    assert duplicate.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert duplicate.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
     assert denied.outcome is SignalEvaluationOutcome.BLOCKED
     assert denied.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
 

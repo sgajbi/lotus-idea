@@ -198,7 +198,7 @@ def _response_is_valid(response: Mapping[str, Any], *, case: ApiProofCase) -> bo
     return (
         response.get("family") == case.family
         and response.get("sourceAuthority") == case.source_authority
-        and outcome in {"candidate_created", "not_eligible", "suppressed", "blocked"}
+        and outcome in {"candidate_created", "not_eligible", "blocked"}
         and isinstance(response.get("reasonCodes"), list)
         and isinstance(response.get("unsupportedReasons"), list)
         and response.get("supportedFeaturePromoted") is False

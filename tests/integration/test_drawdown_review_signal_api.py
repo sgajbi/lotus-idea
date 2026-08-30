@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch, mark
+from pytest import MonkeyPatch
 
 import app.api.drawdown_review_signals as drawdown_review_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -93,31 +93,6 @@ def test_drawdown_review_signal_api_reports_below_threshold_not_eligible() -> No
         "outcome": "not_eligible",
         "family": "high_volatility",
         "reasonCodes": ["below_materiality"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-risk",
-        "supportedFeaturePromoted": False,
-    }
-    assert len(get_idea_repository().snapshot().candidate_records) == 0
-
-
-def test_drawdown_review_signal_api_reports_duplicate_suppressed() -> None:
-    reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = managed_test_client(app)
-    payload = drawdown_review_payload()
-    payload["duplicateOfCandidateId"] = "idea_drawdown_review_existing"
-
-    response = client.post(
-        "/api/v1/idea-signals/drawdown-review/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "high_volatility",
-        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",
@@ -373,40 +348,12 @@ def test_drawdown_review_signal_from_source_closes_runtime_on_source_blocker(
     assert risk_source.close_count == 1
 
 
-@mark.parametrize(
-    (
-        "source_reported_max_drawdown",
-        "duplicate_of_candidate_id",
-        "expected_outcome",
-        "expected_reason",
-    ),
-    (
-        (
-            Decimal("-0.1245"),
-            "idea_drawdown_review_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (
-            Decimal("-0.025"),
-            None,
-            "not_eligible",
-            "below_materiality",
-        ),
-    ),
-)
-def test_drawdown_review_signal_from_source_exposes_non_candidate_success_modes(
+def test_drawdown_review_signal_from_source_reports_not_eligible(
     monkeypatch: MonkeyPatch,
-    source_reported_max_drawdown: Decimal,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
-    risk_source = RecordingRiskDrawdownSource(
-        source_reported_max_drawdown=source_reported_max_drawdown
-    )
+    risk_source = RecordingRiskDrawdownSource(source_reported_max_drawdown=Decimal("-0.025"))
     monkeypatch.setattr(
         drawdown_review_api,
         "_build_risk_drawdown_source_runtime_from_environment",
@@ -415,21 +362,17 @@ def test_drawdown_review_signal_from_source_exposes_non_candidate_success_modes(
             risk_base_url_configured=True,
         ),
     )
-    request_payload = drawdown_source_payload()
-    if duplicate_of_candidate_id is not None:
-        request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/drawdown-review/evaluate-from-source",
-        json=request_payload,
+        json=drawdown_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "high_volatility",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",

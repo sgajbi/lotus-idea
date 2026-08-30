@@ -30,9 +30,9 @@ MISSING_BENCHMARK_CALLER_BLOCKED_TEST = (
     "tests/integration/test_missing_benchmark_signal_api.py::"
     "test_missing_benchmark_signal_api_reports_stale_source_blocker"
 )
-MISSING_BENCHMARK_CALLER_NON_CANDIDATE_TEST = (
+MISSING_BENCHMARK_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_missing_benchmark_signal_api.py::"
-    "test_missing_benchmark_signal_api_exposes_non_candidate_success_modes"
+    "test_missing_benchmark_signal_api_non_candidate_path_remains_not_eligible"
 )
 MISSING_BENCHMARK_SOURCE_CANDIDATE_TEST = (
     "tests/integration/test_missing_benchmark_signal_api.py::"
@@ -42,9 +42,9 @@ MISSING_BENCHMARK_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_missing_benchmark_signal_api.py::"
     "test_missing_benchmark_source_api_returns_blocked_posture_for_core_unavailable"
 )
-MISSING_BENCHMARK_SOURCE_NON_CANDIDATE_TEST = (
+MISSING_BENCHMARK_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_missing_benchmark_signal_api.py::"
-    "test_missing_benchmark_source_api_exposes_non_candidate_success_modes"
+    "test_missing_benchmark_source_api_reports_not_eligible"
 )
 MISSING_BENCHMARK_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_missing_benchmark_signal_examples.py::"
@@ -70,8 +70,8 @@ def validate_missing_benchmark_evaluation_success_contract(
             (MISSING_BENCHMARK_CALLER_CANDIDATE_TEST, "candidate-created HTTP behavior test"),
             (MISSING_BENCHMARK_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
             (
-                MISSING_BENCHMARK_CALLER_NON_CANDIDATE_TEST,
-                "suppressed and not-eligible HTTP behavior test",
+                MISSING_BENCHMARK_CALLER_NOT_ELIGIBLE_TEST,
+                "not-eligible HTTP behavior test",
             ),
             (
                 MISSING_BENCHMARK_SUCCESS_CONTRACT_TEST,
@@ -105,8 +105,8 @@ def validate_source_backed_missing_benchmark_evaluation_success_contract(
                 "source-backed blocked behavior test",
             ),
             (
-                MISSING_BENCHMARK_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                MISSING_BENCHMARK_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 MISSING_BENCHMARK_SUCCESS_CONTRACT_TEST,

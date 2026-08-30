@@ -98,37 +98,17 @@ def test_missing_suitability_signal_api_reports_uncertified_publication_blocker(
     }
 
 
-@pytest.mark.parametrize(
-    ("duplicate_candidate_id", "ready_workflow", "expected_outcome", "expected_reason"),
-    (
-        (
-            "idea_missing_suitability_context_existing",
-            False,
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (None, True, "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_suitability_signal_api_exposes_non_candidate_success_modes(
-    duplicate_candidate_id: str | None,
-    ready_workflow: bool,
-    expected_outcome: str,
-    expected_reason: str,
-) -> None:
+def test_missing_suitability_signal_api_reports_not_eligible() -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     payload = missing_suitability_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-    if ready_workflow:
-        payload.update(
-            {
-                "evaluationStatus": "COMPLETED",
-                "openRequirementCount": 0,
-                "signOffStatus": "APPROVED",
-                "signOffBlockerCount": 0,
-            }
-        )
+    payload.update(
+        {
+            "evaluationStatus": "COMPLETED",
+            "openRequirementCount": 0,
+            "signOffStatus": "APPROVED",
+            "signOffBlockerCount": 0,
+        }
+    )
 
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/missing-suitability/evaluate",
@@ -138,9 +118,9 @@ def test_missing_suitability_signal_api_exposes_non_candidate_success_modes(
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_suitability_context",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",
@@ -351,32 +331,16 @@ def test_missing_suitability_signal_from_source_closes_runtime_on_source_blocker
     assert advise_source.close_count == 1
 
 
-@pytest.mark.parametrize(
-    ("duplicate_candidate_id", "ready_workflow", "expected_outcome", "expected_reason"),
-    (
-        (
-            "idea_missing_suitability_context_existing",
-            False,
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (None, True, "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_suitability_signal_from_source_exposes_non_candidate_success_modes(
+def test_missing_suitability_signal_from_source_reports_not_eligible(
     monkeypatch: pytest.MonkeyPatch,
-    duplicate_candidate_id: str | None,
-    ready_workflow: bool,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     advise_source = RecordingAdvisePolicyEvaluationSource(
         evidence=_advise_policy_evidence(
-            evaluation_status="COMPLETED" if ready_workflow else "PENDING_REVIEW",
-            open_requirement_count=0 if ready_workflow else 2,
-            sign_off_status="APPROVED" if ready_workflow else "PENDING_REVIEW",
-            sign_off_blocker_count=0 if ready_workflow else 1,
+            evaluation_status="COMPLETED",
+            open_requirement_count=0,
+            sign_off_status="APPROVED",
+            sign_off_blocker_count=0,
         )
     )
     monkeypatch.setattr(
@@ -387,21 +351,17 @@ def test_missing_suitability_signal_from_source_exposes_non_candidate_success_mo
             advise_base_url_configured=True,
         ),
     )
-    payload = missing_suitability_source_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/missing-suitability/evaluate-from-source",
-        json=payload,
+        json=missing_suitability_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_suitability_context",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",

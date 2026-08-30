@@ -63,7 +63,6 @@ def high_cash_input(
     cash_weight: Decimal | None = Decimal("0.18"),
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_cashflow_projection: bool = True,
 ) -> HighCashSignalInput:
     return HighCashSignalInput(
@@ -81,7 +80,6 @@ def high_cash_input(
         ),
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -234,17 +232,6 @@ def test_high_cash_missing_cash_weight_blocks_positive_claim() -> None:
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
-
-
-def test_high_cash_duplicate_source_is_suppressed() -> None:
-    result = evaluate_high_cash_signal(
-        high_cash_input(duplicate_of_candidate_id="idea_high_cash_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_high_cash_entitlement_denial_blocks_positive_claim() -> None:

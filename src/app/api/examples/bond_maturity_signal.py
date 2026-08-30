@@ -39,7 +39,6 @@ BOND_MATURITY_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 BOND_MATURITY_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "An upcoming bond maturity creates an advisor-review candidate",
     "blocked": "Stale, denied, incomplete, or unavailable Core evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "No maturity inside the review window creates no candidate",
 }
 
@@ -61,10 +60,6 @@ def build_bond_maturity_evaluation_response_examples() -> dict[str, dict[str, An
             next_maturity_date=_QUALIFYING_MATURITY_DATE,
             freshness=EvidenceFreshness.STALE,
         ),
-        "suppressed": _caller_evaluation_response(
-            next_maturity_date=_QUALIFYING_MATURITY_DATE,
-            duplicate_of_candidate_id="idea_bond_maturity_existing",
-        ),
         "notEligible": _caller_evaluation_response(
             next_maturity_date=_NON_QUALIFYING_MATURITY_DATE,
         ),
@@ -77,10 +72,6 @@ def build_source_backed_bond_maturity_evaluation_response_examples() -> dict[str
             next_maturity_date=_QUALIFYING_MATURITY_DATE,
         ),
         "blocked": _source_evaluation_response(source_error=CoreSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            next_maturity_date=_QUALIFYING_MATURITY_DATE,
-            duplicate_of_candidate_id="idea_bond_maturity_existing",
-        ),
         "notEligible": _source_evaluation_response(
             next_maturity_date=_NON_QUALIFYING_MATURITY_DATE,
         ),
@@ -115,7 +106,6 @@ def _caller_evaluation_response(
     *,
     next_maturity_date: date,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateBondMaturitySignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -128,7 +118,6 @@ def _caller_evaluation_response(
             freshness=freshness,
         ),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_bond_maturity_signal_command(request.to_command()))
 
@@ -136,7 +125,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     next_maturity_date: date = _QUALIFYING_MATURITY_DATE,
-    duplicate_of_candidate_id: str | None = None,
     source_error: CoreSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_bond_maturity_signal_from_core(
@@ -145,7 +133,6 @@ def _source_evaluation_response(
             tenant_id=_TENANT_ID,
             as_of_date=_AS_OF_DATE,
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         core_source=_ExampleCoreBondMaturitySource(
             evidence=_core_evidence(next_maturity_date),

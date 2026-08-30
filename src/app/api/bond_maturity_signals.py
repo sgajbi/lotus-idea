@@ -95,12 +95,6 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
         alias="entitlementAllowed",
         description="Whether upstream caller/source entitlement already allowed this evidence for evaluation.",
     )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_bond_maturity_existing"],
-    )
 
     @field_validator("evaluated_at_utc")
     @classmethod
@@ -119,7 +113,6 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
             evaluated_at_utc=self.evaluated_at_utc,
             entitlement_allowed=self.entitlement_allowed,
             access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
         )
 
 
@@ -151,12 +144,6 @@ class EvaluateBondMaturityFromSourceRequest(CamelModel):
         description="Bounded look-forward window passed to Core maturity evidence retrieval.",
         examples=[45],
     )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_bond_maturity_existing"],
-    )
 
     @field_validator("portfolio_id")
     @classmethod
@@ -184,7 +171,6 @@ class EvaluateBondMaturityFromSourceRequest(CamelModel):
             as_of_date=self.as_of_date,
             evaluated_at_utc=self.evaluated_at_utc,
             maturity_window_days=self.maturity_window_days,
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
             correlation_id=correlation_id,
             trace_id=trace_id,
         )
@@ -286,7 +272,7 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "Bond maturity signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "Bond maturity signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {

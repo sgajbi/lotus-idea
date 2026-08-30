@@ -32,7 +32,6 @@ MISSING_SUITABILITY_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 MISSING_SUITABILITY_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Open suitability or sign-off requirements create a compliance-review candidate",
     "blocked": "Stale, incomplete, denied, or unavailable Advise evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "A completed, signed-off workflow with no open requirements creates no candidate",
 }
 
@@ -46,9 +45,6 @@ def build_missing_suitability_evaluation_response_examples() -> dict[str, dict[s
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_suitability_context_existing"
-        ),
         "notEligible": _caller_evaluation_response(
             evaluation_status="COMPLETED",
             open_requirement_count=0,
@@ -64,9 +60,6 @@ def build_source_backed_missing_suitability_evaluation_response_examples() -> di
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=AdviseSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_suitability_context_existing"
-        ),
         "notEligible": _source_evaluation_response(
             evaluation_status="COMPLETED",
             open_requirement_count=0,
@@ -107,7 +100,6 @@ def _caller_evaluation_response(
     sign_off_status: str = "PENDING_REVIEW",
     sign_off_blocker_count: int = 1,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingSuitabilitySignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -120,7 +112,6 @@ def _caller_evaluation_response(
         signOffBlockerCount=sign_off_blocker_count,
         clientReadyPublication="BLOCKED",
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_missing_suitability_context_signal_command(request.to_command()))
 
@@ -131,14 +122,12 @@ def _source_evaluation_response(
     open_requirement_count: int = 2,
     sign_off_status: str = "PENDING_REVIEW",
     sign_off_blocker_count: int = 1,
-    duplicate_of_candidate_id: str | None = None,
     source_error: AdviseSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingSuitabilityFromSourceRequest(
         evaluationId=_EVALUATION_ID,
         asOfDate=_AS_OF_DATE,
         evaluatedAtUtc=_EVALUATED_AT,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     result = evaluate_missing_suitability_context_signal_from_advise(
         request.to_command(correlation_id="corr-example", trace_id="trace-example"),

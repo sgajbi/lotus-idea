@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch, mark
+from pytest import MonkeyPatch
 
 import app.api.concentration_risk_signals as concentration_risk_api
 from app.api.caller_headers import INVALID_CALLER_SCOPE_DETAIL
@@ -92,29 +92,6 @@ def test_concentration_risk_signal_api_reports_below_threshold_not_eligible() ->
         "outcome": "not_eligible",
         "family": "concentration",
         "reasonCodes": ["below_materiality"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-risk",
-        "supportedFeaturePromoted": False,
-    }
-
-
-def test_concentration_risk_signal_api_reports_duplicate_suppressed() -> None:
-    client = managed_test_client(app)
-    payload = concentration_payload()
-    payload["duplicateOfCandidateId"] = "idea_concentration_existing"
-
-    response = client.post(
-        "/api/v1/idea-signals/concentration-risk/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "concentration",
-        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",
@@ -425,43 +402,13 @@ def test_concentration_risk_signal_from_source_closes_runtime_on_source_blocker(
     assert risk_source.close_count == 1
 
 
-@mark.parametrize(
-    (
-        "top_position_weight",
-        "top_issuer_weight",
-        "duplicate_of_candidate_id",
-        "expected_outcome",
-        "expected_reason",
-    ),
-    (
-        (
-            Decimal("0.22"),
-            Decimal("0.27"),
-            "idea_concentration_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (
-            Decimal("0.05"),
-            Decimal("0.08"),
-            None,
-            "not_eligible",
-            "below_materiality",
-        ),
-    ),
-)
-def test_concentration_risk_signal_from_source_exposes_non_candidate_success_modes(
+def test_concentration_risk_signal_from_source_reports_not_eligible(
     monkeypatch: MonkeyPatch,
-    top_position_weight: Decimal,
-    top_issuer_weight: Decimal,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     risk_source = RecordingRiskSource(
-        evidence=_risk_evidence_with_weights(top_position_weight, top_issuer_weight)
+        evidence=_risk_evidence_with_weights(Decimal("0.05"), Decimal("0.08"))
     )
     monkeypatch.setattr(
         concentration_risk_api,
@@ -471,20 +418,17 @@ def test_concentration_risk_signal_from_source_exposes_non_candidate_success_mod
             risk_base_url_configured=True,
         ),
     )
-    request_payload = concentration_source_payload()
-    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
-        json=request_payload,
+        json=concentration_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "concentration",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",

@@ -35,7 +35,6 @@ MISSING_BENCHMARK_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 MISSING_BENCHMARK_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "A missing, inactive, ineffective, or unversioned benchmark creates an advisor-review candidate",
     "blocked": "Stale, incomplete, denied, or unavailable Core evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "A current, active, effective, versioned benchmark creates no candidate",
 }
 
@@ -67,9 +66,6 @@ def build_missing_benchmark_evaluation_response_examples() -> dict[str, dict[str
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_benchmark_existing"
-        ),
         "notEligible": _caller_evaluation_response(
             benchmark_identity_resolved=True,
             assignment_effective_for_as_of_date=True,
@@ -85,9 +81,6 @@ def build_source_backed_missing_benchmark_evaluation_response_examples() -> dict
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=CoreSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_missing_benchmark_existing"
-        ),
         "notEligible": _source_evaluation_response(
             benchmark_identity_resolved=True,
             assignment_effective_for_as_of_date=True,
@@ -128,7 +121,6 @@ def _caller_evaluation_response(
     assignment_status: str = "ACTIVE",
     assignment_version_present: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingBenchmarkSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -139,7 +131,6 @@ def _caller_evaluation_response(
         assignmentStatus=assignment_status,
         assignmentVersionPresent=assignment_version_present,
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_missing_benchmark_signal_command(request.to_command()))
 
@@ -150,7 +141,6 @@ def _source_evaluation_response(
     assignment_effective_for_as_of_date: bool = False,
     assignment_status: str = "ACTIVE",
     assignment_version_present: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     source_error: CoreSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMissingBenchmarkFromSourceRequest(
@@ -158,7 +148,6 @@ def _source_evaluation_response(
         asOfDate=_AS_OF_DATE,
         evaluatedAtUtc=_EVALUATED_AT,
         reportingCurrency="USD",
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     result = evaluate_missing_benchmark_signal_from_core(
         request.to_command(

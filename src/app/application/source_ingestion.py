@@ -43,7 +43,6 @@ class HighCashSourceIngestionDecision(StrEnum):
     DUPLICATE_CANDIDATE = "duplicate_candidate"
     SKIPPED_NOT_ELIGIBLE = "skipped_not_eligible"
     BLOCKED = "blocked"
-    SUPPRESSED = "suppressed"
 
 
 @dataclass(frozen=True)
@@ -54,7 +53,6 @@ class IngestHighCashSourceSignalCommand:
     evaluated_at_utc: datetime
     actor_subject: str = SOURCE_INGESTION_ACTOR
     idempotency_key: str | None = None
-    duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
 
@@ -72,7 +70,6 @@ class HighCashSourceIngestionWorkItem:
     portfolio_id: str
     as_of_date: date
     idempotency_key: str | None = None
-    duplicate_of_candidate_id: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.portfolio_id, "portfolio_id")
@@ -174,7 +171,6 @@ def ingest_high_cash_signal_from_core(
                 tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
             ),
@@ -208,7 +204,6 @@ def run_high_cash_source_ingestion_batch(
                 evaluated_at_utc=command.evaluated_at_utc,
                 actor_subject=command.actor_subject,
                 idempotency_key=item.idempotency_key,
-                duplicate_of_candidate_id=item.duplicate_of_candidate_id,
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
             ),
@@ -243,8 +238,6 @@ def _source_ingestion_decision(
         return HighCashSourceIngestionDecision.BLOCKED
     if signal_result.evaluation.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE:
         return HighCashSourceIngestionDecision.SKIPPED_NOT_ELIGIBLE
-    if signal_result.evaluation.outcome is SignalEvaluationOutcome.SUPPRESSED:
-        return HighCashSourceIngestionDecision.SUPPRESSED
     raise RuntimeError("candidate-created source ingestion result was not persisted")
 
 

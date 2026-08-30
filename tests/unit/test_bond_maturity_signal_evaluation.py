@@ -63,7 +63,6 @@ def maturity_input(
     maturing_position_count: int | None = 2,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_maturity_fact_ref: bool = True,
 ) -> BondMaturitySignalInput:
     return BondMaturitySignalInput(
@@ -82,7 +81,6 @@ def maturity_input(
         ),
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -226,16 +224,6 @@ def test_bond_maturity_entitlement_denial_blocks_positive_claim() -> None:
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
-
-
-def test_bond_maturity_duplicate_source_is_suppressed() -> None:
-    result = evaluate_bond_maturity_signal(
-        maturity_input(duplicate_of_candidate_id="idea_bond_maturity_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_bond_maturity_rejects_negative_maturing_position_count() -> None:

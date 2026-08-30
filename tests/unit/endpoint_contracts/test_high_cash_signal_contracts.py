@@ -42,7 +42,7 @@ def test_high_cash_evaluation_contract_blocks_openapi_drift() -> None:
         "test_evidence": [
             module.HIGH_CASH_CALLER_CANDIDATE_TEST,
             module.HIGH_CASH_CALLER_BLOCKED_TEST,
-            module.HIGH_CASH_CALLER_NON_CANDIDATE_TEST,
+            module.HIGH_CASH_CALLER_NOT_ELIGIBLE_TEST,
             module.HIGH_CASH_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -50,7 +50,7 @@ def test_high_cash_evaluation_contract_blocks_openapi_drift() -> None:
     examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
         "application/json"
     ]["examples"]
-    examples.pop("suppressed")
+    examples.pop("notEligible")
 
     errors = module.validate_high_cash_evaluation_success_contract(endpoint, openapi_spec)
 
@@ -73,7 +73,7 @@ def test_source_backed_high_cash_contract_blocks_ledger_drift() -> None:
         "test_evidence": [
             module.HIGH_CASH_SOURCE_CANDIDATE_TEST,
             module.HIGH_CASH_SOURCE_BLOCKED_TEST,
-            module.HIGH_CASH_SOURCE_NON_CANDIDATE_TEST,
+            module.HIGH_CASH_SOURCE_NOT_ELIGIBLE_TEST,
             module.HIGH_CASH_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -100,7 +100,7 @@ def test_high_cash_persistence_contract_blocks_missing_behavior_evidence() -> No
             module.HIGH_CASH_PERSIST_ACCEPTED_TEST,
             module.HIGH_CASH_PERSIST_REPLAYED_TEST,
             module.HIGH_CASH_PERSIST_BLOCKED_TEST,
-            module.HIGH_CASH_PERSIST_NON_CANDIDATE_TEST,
+            module.HIGH_CASH_PERSIST_NOT_ELIGIBLE_TEST,
             module.HIGH_CASH_SUCCESS_CONTRACT_TEST,
         ],
     }

@@ -7,7 +7,6 @@ from typing import Any
 
 from tests.support.http import managed_test_client
 import psycopg
-import pytest
 
 import app.api.idea_signals as idea_signals_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
@@ -81,7 +80,6 @@ def high_cash_payload(
     freshness: str = "current",
     entitlement_allowed: bool = True,
     cash_weight: str | None = "0.18",
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     payload = {
         "asOfDate": "2026-06-21",
@@ -97,8 +95,6 @@ def high_cash_payload(
         },
         "entitlementAllowed": entitlement_allowed,
     }
-    if duplicate_of_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
     return payload
 
 
@@ -130,15 +126,12 @@ def source_evaluation_headers(
 def high_cash_source_payload(
     *,
     portfolio_id: str = PORTFOLIO_ID,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, str]:
     payload = {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
     }
-    if duplicate_of_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
     return payload
 
 
@@ -227,7 +220,7 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
     assert "contentHash" not in response.text
 
 
-def test_high_cash_source_api_exposes_suppressed_and_not_eligible_success_modes(
+def test_high_cash_source_api_reports_not_eligible(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource(evidence=_core_evidence(cash_weight=Decimal("0.05")))
@@ -244,24 +237,11 @@ def test_high_cash_source_api_exposes_suppressed_and_not_eligible_success_modes(
         json=high_cash_source_payload(),
         headers=source_evaluation_headers(),
     )
-    source.evidence = _core_evidence()
-    suppressed = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-from-source",
-        json=high_cash_source_payload(
-            duplicate_of_candidate_id="idea_high_cash_existing",
-        ),
-        headers=source_evaluation_headers(),
-    )
-
     assert not_eligible.status_code == 200
     assert not_eligible.json()["outcome"] == "not_eligible"
     assert not_eligible.json()["reasonCodes"] == ["below_materiality"]
     assert not_eligible.json()["candidate"] is None
-    assert suppressed.status_code == 200
-    assert suppressed.json()["outcome"] == "suppressed"
-    assert suppressed.json()["reasonCodes"] == ["duplicate_suppressed"]
-    assert suppressed.json()["candidate"] is None
-    assert source.close_count == 2
+    assert source.close_count == 1
 
 
 def test_high_cash_source_api_blocks_temporally_mismatched_adapter_evidence(
@@ -602,39 +582,39 @@ def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
     assert "contentHash" not in payload["candidate"]["sourceRefs"][0]
 
 
-@pytest.mark.parametrize(
-    ("request_payload", "expected_outcome", "expected_reason_code"),
-    (
-        (
-            high_cash_payload(cash_weight="0.05"),
-            "not_eligible",
-            "below_materiality",
-        ),
-        (
-            high_cash_payload(
-                duplicate_of_candidate_id="idea_high_cash_existing",
-            ),
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-    ),
-)
-def test_high_cash_api_exposes_non_candidate_success_modes(
-    request_payload: dict[str, Any],
-    expected_outcome: str,
-    expected_reason_code: str,
-) -> None:
+def test_high_cash_api_reports_not_eligible() -> None:
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate",
-        json=request_payload,
+        json=high_cash_payload(cash_weight="0.05"),
         headers=authorized_headers(),
     )
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == expected_outcome
-    assert response.json()["reasonCodes"] == [expected_reason_code]
+    assert response.json()["outcome"] == "not_eligible"
+    assert response.json()["reasonCodes"] == ["below_materiality"]
     assert response.json()["candidate"] is None
     assert response.json()["supportedFeaturePromoted"] is False
+
+
+def test_high_cash_api_rejects_caller_asserted_duplicate_authority() -> None:
+    payload = high_cash_payload()
+    payload["duplicateOfCandidateId"] = "idea_high_cash_caller_assertion"
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=payload,
+        headers=authorized_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Request validation failed. Correct the request fields and retry.",
+    }
+    assert "idea_high_cash_caller_assertion" not in response.text
 
 
 def test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial() -> None:
@@ -1120,32 +1100,17 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
     assert payload["durableStorageBacked"] is False
 
 
-@pytest.mark.parametrize(
-    ("request_payload", "expected_outcome"),
-    (
-        (high_cash_payload(cash_weight="0.05"), "not_eligible"),
-        (
-            high_cash_payload(
-                duplicate_of_candidate_id="idea_high_cash_existing",
-            ),
-            "suppressed",
-        ),
-    ),
-)
-def test_high_cash_persist_api_skips_non_candidate_success_modes(
-    request_payload: dict[str, Any],
-    expected_outcome: str,
-) -> None:
+def test_high_cash_persist_api_skips_not_eligible_evaluation() -> None:
     reset_idea_repository_for_tests()
 
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=request_payload,
-        headers=persistence_headers(f"persist-high-cash-api-{expected_outcome}"),
+        json=high_cash_payload(cash_weight="0.05"),
+        headers=persistence_headers("persist-high-cash-api-not-eligible"),
     )
 
     assert response.status_code == 200
-    assert response.json()["evaluation"]["outcome"] == expected_outcome
+    assert response.json()["evaluation"]["outcome"] == "not_eligible"
     assert response.json()["evaluation"]["candidate"] is None
     assert response.json()["persistence"] is None
     assert response.json()["supportedFeaturePromoted"] is False

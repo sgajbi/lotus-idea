@@ -43,7 +43,6 @@ class EvaluateHighCashSignalCommand:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -52,7 +51,6 @@ class EvaluateHighCashFromCoreCommand:
     tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
-    duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
 
@@ -101,7 +99,6 @@ def evaluate_high_cash_signal_command(
         evaluated_at_utc=command.evaluated_at_utc,
         entitlement_allowed=command.entitlement_allowed,
         access_scope=command.access_scope,
-        duplicate_of_candidate_id=command.duplicate_of_candidate_id,
     )
     return evaluate_high_cash_signal(source_input, policy)
 
@@ -138,7 +135,6 @@ def evaluate_high_cash_signal_from_core(
                     tenant_id=command.tenant_id,
                     portfolio_id=command.portfolio_id,
                 ),
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -211,7 +207,6 @@ def evaluate_and_persist_high_cash_signal_from_core(
                     tenant_id=command.evaluation.tenant_id,
                     portfolio_id=command.evaluation.portfolio_id,
                 ),
-                duplicate_of_candidate_id=command.evaluation.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -276,7 +271,6 @@ def _evaluate_high_cash_core_evidence(
                 tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
             ),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
     )
@@ -321,7 +315,6 @@ def _idempotency_payload_for_high_cash(
 ) -> dict[str, Any]:
     return {
         "as_of_date": command.as_of_date.isoformat(),
-        "duplicate_of_candidate_id": command.duplicate_of_candidate_id,
         "entitlement_allowed": command.entitlement_allowed,
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.HIGH_CASH.value,

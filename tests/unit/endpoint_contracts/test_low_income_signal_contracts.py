@@ -41,7 +41,6 @@ def test_low_income_evaluation_contract_blocks_openapi_drift() -> None:
         "test_evidence": [
             module.LOW_INCOME_CALLER_CANDIDATE_TEST,
             module.LOW_INCOME_CALLER_BLOCKED_TEST,
-            module.LOW_INCOME_CALLER_SUPPRESSED_TEST,
             module.LOW_INCOME_CALLER_NOT_ELIGIBLE_TEST,
             module.LOW_INCOME_SUCCESS_CONTRACT_TEST,
         ],
@@ -50,7 +49,7 @@ def test_low_income_evaluation_contract_blocks_openapi_drift() -> None:
     examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
         "application/json"
     ]["examples"]
-    examples.pop("suppressed")
+    examples.pop("notEligible")
 
     errors = module.validate_low_income_evaluation_success_contract(endpoint, openapi_spec)
 
@@ -73,7 +72,7 @@ def test_source_backed_low_income_contract_blocks_ledger_drift() -> None:
         "test_evidence": [
             module.LOW_INCOME_SOURCE_CANDIDATE_TEST,
             module.LOW_INCOME_SOURCE_BLOCKED_TEST,
-            module.LOW_INCOME_SOURCE_NON_CANDIDATE_TEST,
+            module.LOW_INCOME_SOURCE_NOT_ELIGIBLE_TEST,
             module.LOW_INCOME_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -99,7 +98,6 @@ def test_low_income_contract_blocks_missing_behavior_evidence() -> None:
         "test_evidence": [
             module.LOW_INCOME_CALLER_CANDIDATE_TEST,
             module.LOW_INCOME_CALLER_BLOCKED_TEST,
-            module.LOW_INCOME_CALLER_NOT_ELIGIBLE_TEST,
             module.LOW_INCOME_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -109,6 +107,6 @@ def test_low_income_contract_blocks_missing_behavior_evidence() -> None:
     assert errors == [
         (
             "('POST', '/api/v1/idea-signals/low-income/evaluate'): "
-            "test_evidence must cite the suppressed HTTP behavior test"
+            "test_evidence must cite the not-eligible HTTP behavior test"
         )
     ]

@@ -86,7 +86,6 @@ class ReasonCode(StrEnum):
     SOURCE_DATE_MISMATCH = "source_date_mismatch"
     SOURCE_GENERATED_AFTER_EVALUATION = "source_generated_after_evaluation"
     SOURCE_PARTIAL = "source_partial"
-    DUPLICATE_SUPPRESSED = "duplicate_suppressed"
     BELOW_MATERIALITY = "below_materiality"
     REVIEW_REQUIRED = "review_required"
     MATERIALITY_SCORE = "materiality_score"

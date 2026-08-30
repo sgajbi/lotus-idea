@@ -105,7 +105,6 @@ def core_evidence(
 def command(
     *,
     idempotency_key: str | None = None,
-    duplicate_of_candidate_id: str | None = None,
 ) -> IngestHighCashSourceSignalCommand:
     return IngestHighCashSourceSignalCommand(
         portfolio_id=PORTFOLIO_ID,
@@ -113,7 +112,6 @@ def command(
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         idempotency_key=idempotency_key,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
         correlation_id="corr-source-ingestion",
         trace_id="trace-source-ingestion",
     )
@@ -446,20 +444,30 @@ def test_skips_below_threshold_source_ingestion_without_persisting() -> None:
     assert len(repository.snapshot().candidate_records) == 0
 
 
-def test_suppresses_duplicate_source_candidate_without_persisting() -> None:
+def test_economic_duplicate_source_candidate_resolves_through_repository_identity() -> None:
     repository = InMemoryIdeaRepository()
     source = RecordingCoreSource(evidence=core_evidence())
 
-    result = ingest_high_cash_signal_from_core(
-        command(duplicate_of_candidate_id="idea_high_cash_existing"),
+    first = ingest_high_cash_signal_from_core(
+        command(idempotency_key="source-ingestion-economic-identity-first"),
+        core_source=source,
+        repository=repository,
+    )
+    duplicate = ingest_high_cash_signal_from_core(
+        command(idempotency_key="source-ingestion-economic-identity-second"),
         core_source=source,
         repository=repository,
     )
 
-    assert result.decision is HighCashSourceIngestionDecision.SUPPRESSED
-    assert result.signal_result.evaluation.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.signal_result.persistence is None
-    assert len(repository.snapshot().candidate_records) == 0
+    assert first.decision is HighCashSourceIngestionDecision.ACCEPTED
+    assert duplicate.decision is HighCashSourceIngestionDecision.DUPLICATE_CANDIDATE
+    assert duplicate.signal_result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert duplicate.signal_result.persistence is not None
+    assert (
+        duplicate.signal_result.persistence.decision
+        is CandidatePersistenceDecision.DUPLICATE_CANDIDATE
+    )
+    assert len(repository.snapshot().candidate_records) == 1
 
 
 def test_validates_run_once_batch_boundaries() -> None:

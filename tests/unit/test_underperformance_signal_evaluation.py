@@ -54,7 +54,6 @@ def underperformance_input(
     benchmark_context_available: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> UnderperformanceSignalInput:
     return UnderperformanceSignalInput(
@@ -64,7 +63,6 @@ def underperformance_input(
         performance_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -202,17 +200,6 @@ def test_underperformance_rejects_out_of_range_source_return() -> None:
             underperformance_input(active_return=Decimal("-1.01")),
             policy(),
         )
-
-
-def test_underperformance_duplicate_source_is_suppressed() -> None:
-    result = evaluate_underperformance_signal(
-        underperformance_input(duplicate_of_candidate_id="idea_underperformance_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_underperformance_entitlement_denial_blocks_positive_claim() -> None:

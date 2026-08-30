@@ -30,10 +30,6 @@ UNDERPERFORMANCE_CALLER_BLOCKED_TEST = (
     "tests/integration/test_underperformance_signal_api.py::"
     "test_underperformance_signal_api_reports_stale_source_blocker"
 )
-UNDERPERFORMANCE_CALLER_SUPPRESSED_TEST = (
-    "tests/integration/test_underperformance_signal_api.py::"
-    "test_underperformance_signal_api_reports_duplicate_suppressed"
-)
 UNDERPERFORMANCE_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_underperformance_signal_api.py::"
     "test_underperformance_signal_api_reports_above_threshold_not_eligible"
@@ -46,9 +42,9 @@ UNDERPERFORMANCE_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_underperformance_signal_api.py::"
     "test_underperformance_signal_from_source_closes_runtime_on_source_blocker"
 )
-UNDERPERFORMANCE_SOURCE_NON_CANDIDATE_TEST = (
+UNDERPERFORMANCE_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_underperformance_signal_api.py::"
-    "test_underperformance_signal_from_source_exposes_non_candidate_success_modes"
+    "test_underperformance_signal_from_source_reports_not_eligible"
 )
 UNDERPERFORMANCE_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_underperformance_signal_examples.py::"
@@ -73,7 +69,6 @@ def validate_underperformance_evaluation_success_contract(
         required_test_evidence=(
             (UNDERPERFORMANCE_CALLER_CANDIDATE_TEST, "candidate-created HTTP behavior test"),
             (UNDERPERFORMANCE_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
-            (UNDERPERFORMANCE_CALLER_SUPPRESSED_TEST, "suppressed HTTP behavior test"),
             (UNDERPERFORMANCE_CALLER_NOT_ELIGIBLE_TEST, "not-eligible HTTP behavior test"),
             (
                 UNDERPERFORMANCE_SUCCESS_CONTRACT_TEST,
@@ -104,8 +99,8 @@ def validate_source_backed_underperformance_evaluation_success_contract(
             ),
             (UNDERPERFORMANCE_SOURCE_BLOCKED_TEST, "source-backed blocked behavior test"),
             (
-                UNDERPERFORMANCE_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                UNDERPERFORMANCE_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 UNDERPERFORMANCE_SUCCESS_CONTRACT_TEST,

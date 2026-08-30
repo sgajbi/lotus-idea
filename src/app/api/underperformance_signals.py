@@ -95,12 +95,6 @@ class EvaluateUnderperformanceSignalRequest(CamelModel):
         alias="entitlementAllowed",
         description="Whether upstream caller/source entitlement already allowed this evidence for evaluation.",
     )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_underperformance_existing"],
-    )
 
     @field_validator("evaluated_at_utc")
     @classmethod
@@ -118,7 +112,6 @@ class EvaluateUnderperformanceSignalRequest(CamelModel):
             evaluated_at_utc=self.evaluated_at_utc,
             entitlement_allowed=self.entitlement_allowed,
             access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
         )
 
 
@@ -161,12 +154,6 @@ class EvaluateUnderperformanceFromSourceRequest(CamelModel):
         max_length=3,
         description="Optional ISO currency code forwarded to Lotus Performance.",
         examples=["USD"],
-    )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_underperformance_existing"],
     )
 
     @field_validator("portfolio_id")
@@ -211,7 +198,6 @@ class EvaluateUnderperformanceFromSourceRequest(CamelModel):
             as_of_date=self.as_of_date,
             period_name=self.period_name,
             evaluated_at_utc=self.evaluated_at_utc,
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
             reporting_currency=self.reporting_currency,
             correlation_id=correlation_id,
             trace_id=trace_id,
@@ -302,7 +288,7 @@ UNDERPERFORMANCE_EVALUATE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "Underperformance signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "Underperformance signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {

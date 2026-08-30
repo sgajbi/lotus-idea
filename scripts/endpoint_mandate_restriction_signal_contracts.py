@@ -30,9 +30,9 @@ MANDATE_RESTRICTION_CALLER_BLOCKED_TEST = (
     "tests/integration/test_mandate_restriction_signal_api.py::"
     "test_mandate_restriction_signal_api_reports_stale_source_blocker"
 )
-MANDATE_RESTRICTION_CALLER_NON_CANDIDATE_TEST = (
+MANDATE_RESTRICTION_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_mandate_restriction_signal_api.py::"
-    "test_mandate_restriction_signal_api_exposes_non_candidate_success_modes"
+    "test_mandate_restriction_signal_api_reports_not_eligible"
 )
 MANDATE_RESTRICTION_SOURCE_CANDIDATE_TEST = (
     "tests/integration/test_mandate_restriction_signal_api.py::"
@@ -42,9 +42,9 @@ MANDATE_RESTRICTION_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_mandate_restriction_signal_api.py::"
     "test_mandate_restriction_signal_from_source_closes_runtime_on_source_blocker"
 )
-MANDATE_RESTRICTION_SOURCE_NON_CANDIDATE_TEST = (
+MANDATE_RESTRICTION_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_mandate_restriction_signal_api.py::"
-    "test_mandate_restriction_signal_from_source_exposes_non_candidate_success_modes"
+    "test_mandate_restriction_signal_from_source_reports_not_eligible"
 )
 MANDATE_RESTRICTION_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_mandate_restriction_signal_examples.py::"
@@ -73,8 +73,8 @@ def validate_mandate_restriction_evaluation_success_contract(
             ),
             (MANDATE_RESTRICTION_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
             (
-                MANDATE_RESTRICTION_CALLER_NON_CANDIDATE_TEST,
-                "suppressed and not-eligible HTTP behavior test",
+                MANDATE_RESTRICTION_CALLER_NOT_ELIGIBLE_TEST,
+                "not-eligible HTTP behavior test",
             ),
             (
                 MANDATE_RESTRICTION_SUCCESS_CONTRACT_TEST,
@@ -108,8 +108,8 @@ def validate_source_backed_mandate_restriction_evaluation_success_contract(
                 "source-backed blocked behavior test",
             ),
             (
-                MANDATE_RESTRICTION_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                MANDATE_RESTRICTION_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 MANDATE_RESTRICTION_SUCCESS_CONTRACT_TEST,

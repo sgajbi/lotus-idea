@@ -41,7 +41,6 @@ def test_bond_maturity_evaluation_contract_blocks_openapi_drift() -> None:
         "test_evidence": [
             module.BOND_MATURITY_CALLER_CANDIDATE_TEST,
             module.BOND_MATURITY_CALLER_BLOCKED_TEST,
-            module.BOND_MATURITY_CALLER_SUPPRESSED_TEST,
             module.BOND_MATURITY_CALLER_NOT_ELIGIBLE_TEST,
             module.BOND_MATURITY_SUCCESS_CONTRACT_TEST,
         ],
@@ -50,7 +49,7 @@ def test_bond_maturity_evaluation_contract_blocks_openapi_drift() -> None:
     examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
         "application/json"
     ]["examples"]
-    examples.pop("suppressed")
+    examples.pop("notEligible")
 
     errors = module.validate_bond_maturity_evaluation_success_contract(endpoint, openapi_spec)
 
@@ -73,7 +72,7 @@ def test_source_backed_bond_maturity_contract_blocks_ledger_drift() -> None:
         "test_evidence": [
             module.BOND_MATURITY_SOURCE_CANDIDATE_TEST,
             module.BOND_MATURITY_SOURCE_BLOCKED_TEST,
-            module.BOND_MATURITY_SOURCE_NON_CANDIDATE_TEST,
+            module.BOND_MATURITY_SOURCE_NOT_ELIGIBLE_TEST,
             module.BOND_MATURITY_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -99,7 +98,6 @@ def test_bond_maturity_contract_blocks_missing_behavior_evidence() -> None:
         "test_evidence": [
             module.BOND_MATURITY_CALLER_CANDIDATE_TEST,
             module.BOND_MATURITY_CALLER_BLOCKED_TEST,
-            module.BOND_MATURITY_CALLER_NOT_ELIGIBLE_TEST,
             module.BOND_MATURITY_SUCCESS_CONTRACT_TEST,
         ],
     }
@@ -109,6 +107,6 @@ def test_bond_maturity_contract_blocks_missing_behavior_evidence() -> None:
     assert errors == [
         (
             "('POST', '/api/v1/idea-signals/bond-maturity/evaluate'): "
-            "test_evidence must cite the suppressed HTTP behavior test"
+            "test_evidence must cite the not-eligible HTTP behavior test"
         )
     ]

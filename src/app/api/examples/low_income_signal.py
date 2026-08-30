@@ -40,7 +40,6 @@ LOW_INCOME_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 LOW_INCOME_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Projected liquidity shortfall creates an advisor-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable Core evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Projected cashflow above the materiality threshold creates no candidate",
 }
 
@@ -62,10 +61,6 @@ def build_low_income_evaluation_response_examples() -> dict[str, dict[str, Any]]
             projected_cumulative_cashflow=_QUALIFYING_CASHFLOW,
             freshness=EvidenceFreshness.STALE,
         ),
-        "suppressed": _caller_evaluation_response(
-            projected_cumulative_cashflow=_QUALIFYING_CASHFLOW,
-            duplicate_of_candidate_id="idea_low_income_existing",
-        ),
         "notEligible": _caller_evaluation_response(
             projected_cumulative_cashflow=_NON_QUALIFYING_CASHFLOW,
         ),
@@ -78,10 +73,6 @@ def build_source_backed_low_income_evaluation_response_examples() -> dict[str, d
             projected_cumulative_cashflow=_QUALIFYING_CASHFLOW,
         ),
         "blocked": _source_evaluation_response(source_error=CoreSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            projected_cumulative_cashflow=_QUALIFYING_CASHFLOW,
-            duplicate_of_candidate_id="idea_low_income_existing",
-        ),
         "notEligible": _source_evaluation_response(
             projected_cumulative_cashflow=_NON_QUALIFYING_CASHFLOW,
         ),
@@ -116,12 +107,10 @@ def _caller_evaluation_response(
     *,
     projected_cumulative_cashflow: Decimal,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = _evaluation_request(
         projected_cumulative_cashflow=projected_cumulative_cashflow,
         freshness=freshness,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_low_income_signal_command(request.to_command()))
 
@@ -129,7 +118,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     projected_cumulative_cashflow: Decimal = _QUALIFYING_CASHFLOW,
-    duplicate_of_candidate_id: str | None = None,
     source_error: CoreSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_low_income_signal_from_core(
@@ -138,7 +126,6 @@ def _source_evaluation_response(
             tenant_id=_TENANT_ID,
             as_of_date=_AS_OF_DATE,
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         core_source=_ExampleCoreLowIncomeSource(
             evidence=_core_evidence(projected_cumulative_cashflow),
@@ -152,7 +139,6 @@ def _evaluation_request(
     *,
     projected_cumulative_cashflow: Decimal,
     freshness: EvidenceFreshness,
-    duplicate_of_candidate_id: str | None,
 ) -> EvaluateLowIncomeSignalRequest:
     return EvaluateLowIncomeSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -168,7 +154,6 @@ def _evaluation_request(
             freshness=freshness,
         ),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
 
 

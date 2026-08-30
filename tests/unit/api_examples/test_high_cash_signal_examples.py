@@ -28,14 +28,12 @@ def test_high_cash_evaluation_examples_cover_every_domain_outcome() -> None:
     assert tuple(caller_examples) == (
         "candidateCreated",
         "blocked",
-        "suppressed",
         "notEligible",
     )
     assert tuple(source_examples) == tuple(caller_examples)
     assert _outcomes(caller_examples) == {
         "candidate_created",
         "blocked",
-        "suppressed",
         "not_eligible",
     }
     assert _outcomes(source_examples) == _outcomes(caller_examples)
@@ -46,7 +44,6 @@ def test_high_cash_evaluation_examples_cover_every_domain_outcome() -> None:
     assert caller_examples["candidateCreated"]["candidate"] is not None
     assert source_examples["candidateCreated"]["candidate"]["sourceRefs"]
     assert caller_examples["blocked"]["unsupportedReasons"] == ["stale_source"]
-    assert caller_examples["suppressed"]["candidate"] is None
     assert caller_examples["notEligible"]["candidate"] is None
     assert all(
         example["supportedFeaturePromoted"] is False
@@ -62,7 +59,6 @@ def test_high_cash_persistence_examples_cover_retry_and_no_write_modes() -> None
         "replayed",
         "duplicateCandidate",
         "blocked",
-        "suppressed",
         "notEligible",
     )
     assert all(
@@ -77,7 +73,6 @@ def test_high_cash_persistence_examples_cover_retry_and_no_write_modes() -> None
         "replayed": "replayed",
         "duplicateCandidate": "duplicate_candidate",
         "blocked": None,
-        "suppressed": None,
         "notEligible": None,
     }
     assert (
@@ -89,7 +84,6 @@ def test_high_cash_persistence_examples_cover_retry_and_no_write_modes() -> None
         == examples["duplicateCandidate"]["persistence"]["candidateId"]
     )
     assert examples["blocked"]["evaluation"]["outcome"] == "blocked"
-    assert examples["suppressed"]["evaluation"]["outcome"] == "suppressed"
     assert examples["notEligible"]["evaluation"]["outcome"] == "not_eligible"
     assert all(example["durableStorageBacked"] is False for example in examples.values())
     assert all(example["supportedFeaturePromoted"] is False for example in examples.values())

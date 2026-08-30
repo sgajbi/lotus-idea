@@ -529,7 +529,7 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "High-cash signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "High-cash signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {
@@ -593,7 +593,7 @@ HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "Core-backed high-cash signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "Core-backed high-cash signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {
@@ -660,7 +660,7 @@ MANDATE_RESTRICTION_EVALUATE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "Mandate/restriction signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "Mandate/restriction signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {

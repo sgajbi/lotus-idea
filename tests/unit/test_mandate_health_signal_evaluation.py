@@ -63,7 +63,6 @@ def mandate_input(
     portfolio_scope_confirmed: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
     include_mandate_health_refs: bool = False,
 ) -> MandateHealthSignalInput:
@@ -94,7 +93,6 @@ def mandate_input(
             else None
         ),
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -296,17 +294,6 @@ def test_mandate_health_rejects_negative_source_counts() -> None:
             mandate_input(lineage_edge_count=-1),
             policy(),
         )
-
-
-def test_mandate_health_duplicate_source_is_suppressed() -> None:
-    result = evaluate_mandate_health_signal(
-        mandate_input(duplicate_of_candidate_id="idea_allocation_drift_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_mandate_health_entitlement_denial_blocks_positive_claim() -> None:

@@ -100,7 +100,6 @@ class MissingRiskProfileSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 def evaluate_missing_risk_profile_signal(
@@ -125,12 +124,6 @@ def evaluate_missing_risk_profile_signal(
     blocked = _blocking_result(source_input)
     if blocked is not None:
         return blocked
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.MISSING_RISK_PROFILE,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if _risk_profile_is_current(source_input):
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,

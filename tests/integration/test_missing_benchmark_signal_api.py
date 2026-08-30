@@ -365,38 +365,18 @@ def test_missing_benchmark_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("duplicate_candidate_id", "ready_assignment", "expected_outcome", "expected_reason"),
-    (
-        (
-            "idea_missing_benchmark_existing",
-            False,
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (None, True, "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_benchmark_signal_api_exposes_non_candidate_success_modes(
-    duplicate_candidate_id: str | None,
-    ready_assignment: bool,
-    expected_outcome: str,
-    expected_reason: str,
-) -> None:
+def test_missing_benchmark_signal_api_non_candidate_path_remains_not_eligible() -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     payload = missing_benchmark_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-    if ready_assignment:
-        payload.update(
-            {
-                "benchmarkIdentityResolved": True,
-                "assignmentEffectiveForAsOfDate": True,
-                "assignmentStatus": "ACTIVE",
-                "assignmentVersionPresent": True,
-            }
-        )
+    payload.update(
+        {
+            "benchmarkIdentityResolved": True,
+            "assignmentEffectiveForAsOfDate": True,
+            "assignmentStatus": "ACTIVE",
+            "assignmentVersionPresent": True,
+        }
+    )
 
     response = client.post(
         "/api/v1/idea-signals/missing-benchmark/evaluate",
@@ -406,9 +386,9 @@ def test_missing_benchmark_signal_api_exposes_non_candidate_success_modes(
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_benchmark",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",
@@ -417,30 +397,14 @@ def test_missing_benchmark_signal_api_exposes_non_candidate_success_modes(
     assert len(get_idea_repository().snapshot().candidate_records) == 0
 
 
-@pytest.mark.parametrize(
-    ("duplicate_candidate_id", "ready_assignment", "expected_outcome", "expected_reason"),
-    (
-        (
-            "idea_missing_benchmark_existing",
-            False,
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (None, True, "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_benchmark_source_api_exposes_non_candidate_success_modes(
+def test_missing_benchmark_source_api_reports_not_eligible(
     monkeypatch: pytest.MonkeyPatch,
-    duplicate_candidate_id: str | None,
-    ready_assignment: bool,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     source = RecordingCoreBenchmarkAssignmentSource(
         evidence=_core_benchmark_assignment_evidence(
-            benchmark_identity_resolved=ready_assignment,
-            assignment_effective_for_as_of_date=ready_assignment,
+            benchmark_identity_resolved=True,
+            assignment_effective_for_as_of_date=True,
         )
     )
     runtime = CoreBenchmarkAssignmentSourceRuntime(
@@ -454,22 +418,19 @@ def test_missing_benchmark_source_api_exposes_non_candidate_success_modes(
         "_build_core_benchmark_assignment_source_runtime_from_environment",
         lambda: runtime,
     )
-    payload: dict[str, str] = missing_benchmark_source_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
     client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/missing-benchmark/evaluate-from-source",
-        json=payload,
+        json=missing_benchmark_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_benchmark",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",

@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch, mark
+from pytest import MonkeyPatch
 
 import app.api.underperformance_signals as underperformance_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -90,29 +90,6 @@ def test_underperformance_signal_api_reports_above_threshold_not_eligible() -> N
         "outcome": "not_eligible",
         "family": "underperformance",
         "reasonCodes": ["below_materiality"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-performance",
-        "supportedFeaturePromoted": False,
-    }
-
-
-def test_underperformance_signal_api_reports_duplicate_suppressed() -> None:
-    client = managed_test_client(app)
-    payload = underperformance_payload()
-    payload["duplicateOfCandidateId"] = "idea_underperformance_existing"
-
-    response = client.post(
-        "/api/v1/idea-signals/underperformance/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "underperformance",
-        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-performance",
@@ -388,29 +365,13 @@ def test_underperformance_signal_from_source_closes_runtime_on_source_blocker(
     assert performance_source.close_count == 1
 
 
-@mark.parametrize(
-    ("active_return", "duplicate_of_candidate_id", "expected_outcome", "expected_reason"),
-    (
-        (
-            Decimal("-0.0125"),
-            "idea_underperformance_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (Decimal("-0.001"), None, "not_eligible", "below_materiality"),
-    ),
-)
-def test_underperformance_signal_from_source_exposes_non_candidate_success_modes(
+def test_underperformance_signal_from_source_reports_not_eligible(
     monkeypatch: MonkeyPatch,
-    active_return: Decimal,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     performance_source = RecordingPerformanceUnderperformanceSource(
-        evidence=_performance_underperformance_evidence(active_return=active_return)
+        evidence=_performance_underperformance_evidence(active_return=Decimal("-0.001"))
     )
     monkeypatch.setattr(
         underperformance_api,
@@ -420,20 +381,17 @@ def test_underperformance_signal_from_source_exposes_non_candidate_success_modes
             performance_base_url_configured=True,
         ),
     )
-    request_payload = underperformance_source_payload()
-    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/underperformance/evaluate-from-source",
-        json=request_payload,
+        json=underperformance_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "underperformance",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-performance",

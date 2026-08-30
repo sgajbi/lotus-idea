@@ -66,7 +66,6 @@ def low_income_input(
     cash_movement_count: int | None = 3,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_cashflow_projection: bool = True,
     access_scope: ReviewAccessScope | None = None,
 ) -> LowIncomeSignalInput:
@@ -85,7 +84,6 @@ def low_income_input(
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
         access_scope=access_scope,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -225,16 +223,6 @@ def test_low_income_blocks_stale_source() -> None:
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.reason_codes == (ReasonCode.SOURCE_STALE,)
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.STALE_SOURCE,)
-
-
-def test_low_income_duplicate_source_is_suppressed() -> None:
-    result = evaluate_low_income_signal(
-        low_income_input(duplicate_of_candidate_id="idea_low_income_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_low_income_entitlement_denial_blocks_positive_claim() -> None:

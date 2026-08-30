@@ -47,8 +47,8 @@ def validate_missing_suitability_evaluation_success_contract(
                 "blocked HTTP behavior test",
             ),
             (
-                _TEST + "test_missing_suitability_signal_api_exposes_non_candidate_success_modes",
-                "suppressed and not-eligible HTTP behavior test",
+                _TEST + "test_missing_suitability_signal_api_reports_not_eligible",
+                "not-eligible HTTP behavior test",
             ),
             (_UNIT, "complete missing-suitability success publication contract test"),
         ),
@@ -80,9 +80,8 @@ def validate_source_backed_missing_suitability_evaluation_success_contract(
                 "source-backed blocked behavior test",
             ),
             (
-                _TEST
-                + "test_missing_suitability_signal_from_source_exposes_non_candidate_success_modes",
-                "source-backed suppressed and not-eligible behavior test",
+                _TEST + "test_missing_suitability_signal_from_source_reports_not_eligible",
+                "source-backed not-eligible behavior test",
             ),
             (_UNIT, "complete missing-suitability success publication contract test"),
         ),

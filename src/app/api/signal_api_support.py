@@ -315,8 +315,6 @@ def operation_outcome_from_signal_evaluation(
     outcome = result.outcome.value
     if outcome == "candidate_created":
         return OperationOutcome.ACCEPTED
-    if outcome == "suppressed":
-        return OperationOutcome.SUPPRESSED
     if outcome == "not_eligible":
         return OperationOutcome.NOT_ELIGIBLE
     return OperationOutcome.BLOCKED

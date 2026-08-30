@@ -97,28 +97,6 @@ def test_allocation_drift_signal_api_reports_below_threshold_not_eligible() -> N
     }
 
 
-def test_allocation_drift_signal_api_reports_duplicate_suppressed() -> None:
-    payload = allocation_drift_payload()
-    payload["duplicateOfCandidateId"] = "idea_allocation_drift_existing"
-
-    response = managed_test_client(app).post(
-        "/api/v1/idea-signals/allocation-drift/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "allocation_drift",
-        "reasonCodes": ["duplicate_suppressed"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-manage",
-        "supportedFeaturePromoted": False,
-    }
-
-
 def test_allocation_drift_signal_api_blocks_store_wide_manage_posture() -> None:
     client = managed_test_client(app)
     payload = allocation_drift_payload()
@@ -450,22 +428,12 @@ def test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker(
     assert manage_source.close_count == 1
 
 
-@pytest.mark.parametrize(
-    ("workflow_decision_count", "duplicate_of_candidate_id", "expected_outcome"),
-    (
-        (2, "idea_allocation_drift_existing", "suppressed"),
-        (0, None, "not_eligible"),
-    ),
-)
-def test_allocation_drift_signal_from_source_exposes_non_candidate_success_modes(
+def test_allocation_drift_signal_from_source_reports_not_eligible(
     monkeypatch: MonkeyPatch,
-    workflow_decision_count: int,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     manage_source = RecordingManageMandateHealthSource(
-        evidence=_manage_mandate_health_evidence(workflow_decision_count=workflow_decision_count)
+        evidence=_manage_mandate_health_evidence(workflow_decision_count=0)
     )
     monkeypatch.setattr(
         allocation_drift_api,
@@ -475,22 +443,17 @@ def test_allocation_drift_signal_from_source_exposes_non_candidate_success_modes
             manage_base_url_configured=True,
         ),
     )
-    request_payload = allocation_drift_source_payload()
-    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
-        json=request_payload,
+        json=allocation_drift_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "allocation_drift",
-        "reasonCodes": [
-            "duplicate_suppressed" if expected_outcome == "suppressed" else "below_materiality"
-        ],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-manage",

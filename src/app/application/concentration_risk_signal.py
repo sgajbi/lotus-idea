@@ -41,7 +41,6 @@ class EvaluateConcentrationRiskSignalCommand:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -49,7 +48,6 @@ class EvaluateConcentrationRiskFromRiskCommand:
     portfolio_id: str
     as_of_date: date
     evaluated_at_utc: datetime
-    duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
 
@@ -97,7 +95,6 @@ def evaluate_concentration_risk_signal_command(
         evaluated_at_utc=command.evaluated_at_utc,
         entitlement_allowed=command.entitlement_allowed,
         access_scope=command.access_scope,
-        duplicate_of_candidate_id=command.duplicate_of_candidate_id,
     )
     return evaluate_concentration_risk_signal(source_input, policy)
 
@@ -129,7 +126,6 @@ def evaluate_concentration_risk_signal_from_risk(
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
                 access_scope=portfolio_only_scope(command.portfolio_id),
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -199,7 +195,6 @@ def evaluate_and_persist_concentration_risk_signal_from_risk(
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 entitlement_allowed=False,
                 access_scope=portfolio_only_scope(command.evaluation.portfolio_id),
-                duplicate_of_candidate_id=command.evaluation.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -260,7 +255,6 @@ def _evaluate_concentration_risk_evidence(
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
             access_scope=portfolio_only_scope(command.portfolio_id),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
     )
@@ -304,7 +298,6 @@ def _idempotency_payload_for_concentration(
 ) -> dict[str, Any]:
     return {
         "as_of_date": command.as_of_date.isoformat(),
-        "duplicate_of_candidate_id": command.duplicate_of_candidate_id,
         "entitlement_allowed": command.entitlement_allowed,
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.CONCENTRATION.value,
