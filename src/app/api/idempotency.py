@@ -10,6 +10,7 @@ REQUIRED_OPENAPI_IDEMPOTENCY_OPERATIONS = (
     ("post", "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"),
     ("post", "/api/v1/idea-candidates/{candidateId}/review-actions"),
     ("post", "/api/v1/idea-candidates/{candidateId}/feedback"),
+    ("post", "/api/v1/idea-candidates/{candidateId}/presentation-receipts"),
     ("post", "/api/v1/idea-candidates/{candidateId}/conversion-intents"),
     ("post", "/api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"),
     ("post", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),

@@ -52,7 +52,7 @@ class OpportunityEffectivenessDataError(ValueError):
 
 
 class PresentationMeasurementStatus(StrEnum):
-    UNAVAILABLE_NO_GOVERNED_PRESENTATION_RECEIPTS = "unavailable_no_governed_presentation_receipts"
+    UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING = "unavailable_consumer_certification_pending"
 
 
 class DownstreamOutcomePosture(StrEnum):
@@ -283,7 +283,7 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         recurrent_detection_count=summary.recurrent_detection_count,
         reconciled_submission_count=summary.reconciled_submission_count,
         presentation_measurement_status=(
-            PresentationMeasurementStatus.UNAVAILABLE_NO_GOVERNED_PRESENTATION_RECEIPTS
+            PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
         ),
         presented_opportunity_count=None,
         top_ranked_accepted_opportunity_count=None,
@@ -855,7 +855,7 @@ def _snapshot_payload_without_digest(
         },
         "certificationStatus": "not_certified",
         "certificationBlockers": [
-            "governed_presentation_receipts_missing",
+            "governed_presentation_receipt_consumer_proof_missing",
             "gateway_workbench_end_to_end_proof_missing",
         ],
         "supportedFeaturePromoted": False,

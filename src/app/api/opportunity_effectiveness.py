@@ -211,7 +211,8 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
         "response excludes raw tenant, client, portfolio, candidate, actor, correlation, and "
         "free-text data. PostgreSQL runtime execution uses repository-side aggregates. "
         "Presentation and rank-at-show measures remain explicitly unavailable until governed "
-        "Workbench receipts are persisted; queue retrieval is not treated as presentation."
+        "Gateway and Workbench receipt consumers are certified; queue retrieval is not treated "
+        "as presentation."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": OpportunityEffectivenessResponse,
@@ -249,7 +250,7 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                             "reconciledSubmissionCount": 1,
                         },
                         "presentation": {
-                            "measurementStatus": ("unavailable_no_governed_presentation_receipts"),
+                            "measurementStatus": ("unavailable_consumer_certification_pending"),
                             "presentedOpportunityCount": None,
                             "topRankedAcceptedOpportunityCount": None,
                         },
@@ -313,7 +314,7 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                         },
                         "certificationStatus": "not_certified",
                         "certificationBlockers": [
-                            "governed_presentation_receipts_missing",
+                            "governed_presentation_receipt_consumer_proof_missing",
                             "gateway_workbench_end_to_end_proof_missing",
                         ],
                         "supportedFeaturePromoted": False,

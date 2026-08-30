@@ -40,7 +40,7 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
         "zeroDenominatorBehavior": "null",
     }
     assert payload["presentation"] == {
-        "measurementStatus": "unavailable_no_governed_presentation_receipts",
+        "measurementStatus": "unavailable_consumer_certification_pending",
         "presentedOpportunityCount": None,
         "topRankedAcceptedOpportunityCount": None,
     }

@@ -128,6 +128,17 @@ PROTECTED_OPERATION_REQUIREMENTS = (
     ),
     CallerContextOpenApiRequirement(
         method="POST",
+        path="/api/v1/idea-candidates/{candidateId}/presentation-receipts",
+        required_capabilities=("idea.presentation-receipt.record",),
+        alternative_roles=("advisor", "operator"),
+        entitlement_scope=(
+            "tenantId must exactly match one tenant in X-Caller-Tenant-Ids, and any "
+            "additional caller scope must match the candidate. Missing or broader scope "
+            "fails closed."
+        ),
+    ),
+    CallerContextOpenApiRequirement(
+        method="POST",
         path="/api/v1/idea-candidates/{candidateId}/conversion-intents",
         required_capabilities=("idea.conversion.intent.record",),
     ),
