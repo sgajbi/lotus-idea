@@ -19,17 +19,17 @@ dependency map, and closure rules without relying on chat memory.
 
 | Evidence | Current value |
 | --- | --- |
-| As-of date | 2026-08-30 |
+| As-of date | 2026-08-31 |
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Live drift gate | `make rfc0002-issue-posture-live-gate`; scheduled and manually dispatchable through `RFC-0002 Issue Posture Audit` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 242 |
+| Total RFC-0002 issues | 247 |
 | Closed RFC-0002 issues | 204 |
-| Open RFC-0002 issues | 38 |
+| Open RFC-0002 issues | 43 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof for governed economic candidate identity and evidence versioning. `#1155` has its Idea-owned feedback taxonomy and offline evaluation on exact main while consumer proof remains open; `#1156` is actively implementing opportunity effectiveness and governed visible-render receipts. Neither issue promotes a supported feature or completes final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1155` has its Idea-owned feedback taxonomy and offline evaluation on exact main while consumer proof remains open. `#1156` has its Idea-owned opportunity-effectiveness and visible-render receipt contracts on exact main while consumer proof remains open. PR #1163 placed the independently authored opportunity-quality golden evaluation on exact main; `#1162` remains `status/in-progress` until wiki publication and branch hygiene complete. None promotes a supported feature or completes final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -37,11 +37,6 @@ redistribution inside the seven-day freshness window while requiring exact
 repository and total-issue cardinality, a no-new-or-reopened open-issue set,
 non-increasing blocker counts, complete governed lifecycle coverage, and exact
 title-only references.
-
-Execution has advanced since that immutable baseline: `#1155` and `#1156` are
-currently `status/in-progress`. The baseline counts below remain unchanged
-until the governed cross-repository snapshot is regenerated; GitHub issue
-labels remain the live execution truth.
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -52,8 +47,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>242 label-backed RFC-0002 issues<br/>as of 2026-08-30"]
-    Open["204 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9 `status/tracker`"]
+    Issues["GitHub issue posture<br/>247 label-backed RFC-0002 issues<br/>as of 2026-08-31"]
+    Open["204 closed and 43 open<br/>25 `status/blocked`, 8 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -71,22 +66,21 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 1 | `sgajbi/lotus-idea#681` remains in progress as the Slice 18 source-truth synchronization tracker. |
-| `status/pr-open` | 0 | No RFC-0002 issue is PR-open in this synchronized baseline. |
+| `status/in-progress` | 8 | Idea #681/#1155/#1156/#1162, Gateway #691/#692, and Workbench #953/#954. The consumer issues are active writable work, not blockers; #1162 is completing post-merge wiki and hygiene evidence. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
-| `status/ready` | 2 | `sgajbi/lotus-idea#1155` is the next governed feedback/evaluation slice; `#1156` follows for effectiveness measurement. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: the dated 2026-08-30 GitHub baseline has 242
-label-backed RFC-0002 issues, 204 closed and 38 open, with 25 `status/blocked`,
-1 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9
-`status/tracker`, and 0
-app-actionable blocked issues. As of
-2026-08-30, the Idea source ledger tracks 151 RFC-0002 issues: 124 closed and 27
-open. `#681` remains in progress for Slice 18 synchronization, `#1154` is
-closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof,
-and `#1155` and `#1156`
-are ready in that implementation order. `#1150` is
+Latest synchronization evidence: the dated 2026-08-31 GitHub baseline has 247
+label-backed RFC-0002 issues, 204 closed and 43 open, with 25 `status/blocked`,
+8 `status/in-progress`, 1 `status/merged-main`, 9
+`status/tracker`, and 0 app-actionable blocked issues. As
+of 2026-08-31, the Idea source ledger tracks 152 RFC-0002 issues: 124 closed and
+28 open. `#681`, `#1155`, `#1156`, and `#1162` remain in progress. PR #1163
+placed the #1162 evaluation implementation on exact main
+`f3aa9f1ddc76181d8e642cbba3712114be09254c`; Main Releasability run
+`33322378418` and CodeQL run `33322371179` passed, while wiki publication and
+branch-hygiene closure remain. `#1154` is closed after PR #1157 exact-main, release-image,
+wiki, and branch-hygiene proof. `#1150` is
 closed after PR #1152 exact-main, release-image, wiki, and branch-hygiene proof,
 `#1145` remains closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof, and `#1139` is closed after PR
 #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
