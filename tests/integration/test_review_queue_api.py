@@ -110,13 +110,14 @@ def operator_exception_headers(
     *,
     role: str = "operator",
     capability: str = "idea.review.queue.exceptions.read",
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
 ) -> dict[str, str]:
     headers = role_queue_headers(role=role, capability=capability)
     headers.update(
         {
             "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
             "X-Caller-Book-Ids": "book-advisor-001",
-            "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+            "X-Caller-Portfolio-Ids": portfolio_ids,
             "X-Caller-Client-Ids": "client-001",
         }
     )
@@ -179,12 +180,14 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         cash_weight="0.18",
         suffix="-first",
         idempotency_key="seed-review-queue-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_QUEUE_001"),
     )
     second = persist_candidate(
         client,
         cash_weight="0.20",
         suffix="-second",
         idempotency_key="seed-review-queue-002",
+        candidate_scope=access_scope(portfolio_id="PB_SG_QUEUE_002"),
     )
 
     response = client.get(
@@ -229,18 +232,21 @@ def test_business_review_queue_apis_route_only_the_responsible_audience() -> Non
         cash_weight="0.18",
         suffix="-advisor-audience",
         idempotency_key="seed-review-queue-advisor-audience-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_AUDIENCE_001"),
     )
     pm_candidate = persist_candidate(
         client,
         cash_weight="0.19",
         suffix="-pm-audience",
         idempotency_key="seed-review-queue-pm-audience-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_AUDIENCE_002"),
     )
     compliance_candidate = persist_candidate(
         client,
         cash_weight="0.20",
         suffix="-compliance-audience",
         idempotency_key="seed-review-queue-compliance-audience-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_AUDIENCE_003"),
     )
     route_persisted_candidates_by_posture(
         {
@@ -326,7 +332,7 @@ def test_operator_exception_queue_reports_support_posture_by_audience() -> None:
             cash_weight=f"0.{18 + index}",
             suffix=f"-operator-exception-{index}",
             idempotency_key=f"seed-review-queue-operator-exception-{index}",
-            candidate_scope=access_scope(),
+            candidate_scope=access_scope(portfolio_id=f"PB_SG_EXCEPTION_{index:03d}"),
         )
         for index in range(3)
     )
@@ -352,7 +358,11 @@ def test_operator_exception_queue_reports_support_posture_by_audience() -> None:
 
     response = client.get(
         "/api/v1/review-queues/operator/exceptions?evaluatedAtUtc=2026-06-21T10:10:00Z",
-        headers=operator_exception_headers(),
+        headers=operator_exception_headers(
+            portfolio_ids=",".join(
+                f"PB_SG_EXCEPTION_{index:03d}" for index in range(len(candidate_ids))
+            )
+        ),
     )
 
     assert response.status_code == 200
@@ -449,6 +459,7 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
             cash_weight=f"0.2{index}",
             suffix=f"-page-{index}",
             idempotency_key=f"seed-review-queue-page-{index}",
+            candidate_scope=access_scope(portfolio_id=f"PB_SG_PAGE_{index:03d}"),
         )
         for index in range(3)
     ]
@@ -557,6 +568,7 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() 
             cash_weight=f"0.2{index}",
             suffix=f"-snapshot-visible-{index}",
             idempotency_key=f"seed-review-queue-snapshot-visible-{index}",
+            candidate_scope=access_scope(portfolio_id=f"PB_SG_VISIBLE_{index:03d}"),
         )
         for index in range(2)
     ]
@@ -570,6 +582,7 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() 
         cash_weight="0.29",
         suffix="-snapshot-future",
         idempotency_key="seed-review-queue-snapshot-future",
+        candidate_scope=access_scope(portfolio_id="PB_SG_FUTURE_001"),
         evaluated_at_utc="2026-06-21T10:11:00Z",
     )
 
@@ -837,12 +850,14 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
         cash_weight="0.18",
         suffix="-readiness-first",
         idempotency_key="seed-review-queue-readiness-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_READINESS_001"),
     )
     second = persist_candidate(
         client,
         cash_weight="0.20",
         suffix="-readiness-second",
         idempotency_key="seed-review-queue-readiness-002",
+        candidate_scope=access_scope(portfolio_id="PB_SG_READINESS_002"),
     )
 
     response = client.get(

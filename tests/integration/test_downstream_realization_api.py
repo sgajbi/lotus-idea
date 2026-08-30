@@ -241,6 +241,7 @@ def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
         client,
         suffix="-advise-downstream-conflict-second",
         idempotency_prefix="advise-downstream-conflict-second",
+        portfolio_id="PB_SG_ALT_BAL_002",
     )
     record_conversion_intent(
         client,
@@ -248,6 +249,7 @@ def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
         conversion_intent_id="conversion-advise-conflict-api-002",
         target="advise_proposal",
         idempotency_key="conversion-advise-conflict-api-002",
+        portfolio_id="PB_SG_ALT_BAL_002",
     )
 
     first = client.post(
@@ -427,6 +429,7 @@ def test_report_downstream_submission_api_rejects_idempotency_conflict(
 def test_downstream_submission_api_fails_closed_without_adapter_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    reset_idea_repository_for_tests()
     reset_downstream_realization_clients_for_tests(conversion_clients=None, report_client=None)
     for env_name in (
         ADVISE_BASE_URL_ENV,
@@ -835,6 +838,7 @@ def test_report_downstream_submission_api_returns_durable_uncertain_posture(
 def test_report_downstream_submission_api_fails_closed_without_adapter_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    reset_idea_repository_for_tests()
     reset_downstream_realization_clients_for_tests(conversion_clients=None, report_client=None)
     monkeypatch.delenv(REPORT_BASE_URL_ENV, raising=False)
     monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-intake")
@@ -930,10 +934,11 @@ def seed_approved_candidate(
     *,
     suffix: str,
     idempotency_prefix: str,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
 ) -> str:
     persist_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(suffix=suffix),
+        json=high_cash_payload(suffix=suffix, portfolio_id=portfolio_id),
         headers=persist_headers(f"{idempotency_prefix}-persist-001"),
     )
     assert persist_response.status_code == 200
@@ -955,7 +960,10 @@ def seed_approved_candidate(
     review_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
         json=approve_review_payload(f"{idempotency_prefix}-review-001"),
-        headers=review_headers(f"{idempotency_prefix}-review-001"),
+        headers=review_headers(
+            f"{idempotency_prefix}-review-001",
+            portfolio_id=portfolio_id,
+        ),
     )
     assert review_response.status_code == 200
     return candidate_id
@@ -968,6 +976,7 @@ def record_conversion_intent(
     conversion_intent_id: str,
     target: str,
     idempotency_key: str,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
 ) -> None:
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
@@ -977,7 +986,7 @@ def record_conversion_intent(
             "reasonCodes": ["review_approved_for_conversion"],
             "requestedAtUtc": "2026-06-21T10:15:00Z",
         },
-        headers=conversion_intent_headers(idempotency_key),
+        headers=conversion_intent_headers(idempotency_key, portfolio_id=portfolio_id),
     )
     assert response.status_code == 200
 
@@ -1018,7 +1027,11 @@ def source_ref(product_id: str, suffix: str) -> dict[str, str]:
     }
 
 
-def high_cash_payload(*, suffix: str) -> dict[str, Any]:
+def high_cash_payload(
+    *,
+    suffix: str,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, Any]:
     return {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
@@ -1036,7 +1049,7 @@ def high_cash_payload(*, suffix: str) -> dict[str, Any]:
             ),
         },
         "entitlementAllowed": True,
-        "accessScope": access_scope(),
+        "accessScope": access_scope(portfolio_id=portfolio_id),
     }
 
 
@@ -1058,27 +1071,35 @@ def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def review_headers(idempotency_key: str) -> dict[str, str]:
+def review_headers(
+    idempotency_key: str,
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
         "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-review-downstream-api",
         "Idempotency-Key": idempotency_key,
     }
 
 
-def conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
+def conversion_intent_headers(
+    idempotency_key: str,
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.conversion.intent.record",
         "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-conversion-downstream-api",
         "Idempotency-Key": idempotency_key,
@@ -1127,10 +1148,10 @@ def approve_review_payload(review_id: str) -> dict[str, Any]:
     }
 
 
-def access_scope() -> dict[str, str]:
+def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:
     return {
         "tenantId": "tenant-private-bank-sg",
         "bookId": "book-advisor-001",
-        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "portfolioId": portfolio_id,
         "clientId": "client-001",
     }
