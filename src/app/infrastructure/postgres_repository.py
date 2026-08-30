@@ -550,6 +550,7 @@ class PostgresIdeaRepository(
                     "idea_outbox_event",
                     "idea_audit_event",
                     "idea_lifecycle_history",
+                    "idea_candidate_presentation_receipt",
                     "idea_candidate_version_history",
                     "idea_idempotency_record",
                     "idea_candidate_record",

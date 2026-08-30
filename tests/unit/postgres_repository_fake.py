@@ -567,6 +567,7 @@ class FakePostgresConnection:
     ) -> None:
         self.rows: dict[str, list[dict[str, Any]]] = {
             "idea_candidate_record": [],
+            "idea_candidate_presentation_receipt": [],
             "idea_candidate_version_history": [],
             "idea_idempotency_record": [],
             "idea_lifecycle_history": [],
@@ -612,6 +613,7 @@ class FakePostgresConnection:
 
 def _table_from_select(query: str) -> str:
     for table_name in (
+        "idea_candidate_presentation_receipt",
         "idea_candidate_version_history",
         "idea_candidate_record",
         "idea_idempotency_record",
