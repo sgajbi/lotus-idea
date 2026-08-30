@@ -103,6 +103,11 @@ session, token, or claim-minting component.
 Presentation receipts deliberately exclude client content, candidate rationale,
 actor identity, correlation/trace identifiers, and raw queue data. Operation
 telemetry emits only governed labels plus a bounded visible-count bucket.
+The bounded receipt is classified as regulated advisory evidence under the
+seven-year Idea policy. Legal hold freezes expiry, erasure, and purge; erasure
+preserves the source-safe immutable receipt because it contains neither actor
+identity nor client content. This is evidence retention, not permission to
+retain any excluded payload.
 
 The capability does not:
 
@@ -134,10 +139,14 @@ python scripts/openapi_quality_gate.py
 python scripts/endpoint_certification_gate.py
 python scripts/operation_metric_contract_gate.py
 python scripts/migration_contract_gate.py
+python scripts/data_lifecycle_contract_gate.py
+python scripts/disaster_recovery_contract_gate.py
 ```
 
 `make postgres-integration-gate` includes restart-safe real-PostgreSQL receipt
-proof. Full release validation remains `make ci-release`.
+proof. The disaster-recovery integration suite also seeds the receipt and
+rejects restored version-lineage, tenant, or chronology corruption. Full
+release validation remains `make ci-release`.
 
 ## Certification Posture
 

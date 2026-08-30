@@ -86,6 +86,21 @@ REFERENTIAL_CHECKS: dict[str, tuple[frozenset[str], str]] = {
            LEFT JOIN idea_outbox_event parent ON parent.outbox_event_id = child.outbox_event_id
            WHERE parent.outbox_event_id IS NULL""",
     ),
+    "presentation_receipt_candidate": (
+        frozenset({"idea_candidate_presentation_receipt", "idea_candidate_record"}),
+        """SELECT COUNT(*) FROM idea_candidate_presentation_receipt child
+           LEFT JOIN idea_candidate_record parent ON parent.candidate_id = child.candidate_id
+           WHERE parent.candidate_id IS NULL""",
+    ),
+    "presentation_receipt_version_history": (
+        frozenset({"idea_candidate_presentation_receipt", "idea_candidate_version_history"}),
+        """SELECT COUNT(*) FROM idea_candidate_presentation_receipt receipt
+           LEFT JOIN idea_candidate_version_history version
+             ON version.candidate_id = receipt.candidate_id
+            AND version.material_version = receipt.candidate_material_version
+            AND version.evidence_version = receipt.candidate_evidence_version
+           WHERE version.candidate_version_history_id IS NULL""",
+    ),
     "report_candidate": (
         frozenset({"idea_report_evidence_pack_request", "idea_candidate_record"}),
         """SELECT COUNT(*) FROM idea_report_evidence_pack_request child
@@ -144,6 +159,27 @@ SEMANTIC_CHECKS: dict[str, tuple[frozenset[str], str]] = {
                WHERE idempotency_fingerprint IS NOT NULL
                GROUP BY idempotency_fingerprint HAVING COUNT(*) > 1
            ) duplicates""",
+    ),
+    "presentation_receipt_tenant_and_chronology": (
+        frozenset(
+            {
+                "idea_candidate_presentation_receipt",
+                "idea_candidate_record",
+                "idea_candidate_version_history",
+            }
+        ),
+        """SELECT COUNT(*) FROM idea_candidate_presentation_receipt receipt
+           JOIN idea_candidate_record candidate
+             ON candidate.candidate_id = receipt.candidate_id
+           JOIN idea_candidate_version_history version
+             ON version.candidate_id = receipt.candidate_id
+            AND version.material_version = receipt.candidate_material_version
+            AND version.evidence_version = receipt.candidate_evidence_version
+           WHERE (
+                   candidate.candidate_json ? 'access_scope'
+                   AND candidate.candidate_json->'access_scope'->>'tenant_id' <> receipt.tenant_id
+                 )
+              OR receipt.presented_at_utc < version.recorded_at_utc""",
     ),
     "outbox_failure_state": (
         frozenset({"idea_outbox_event"}),

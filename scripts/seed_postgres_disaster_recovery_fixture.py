@@ -32,11 +32,13 @@ from app.domain import (  # noqa: E402
     AIExplanationCommand,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
+    CandidatePresentationReceipt,
     ConversionTarget,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    PresentationReceiptDecision,
     ReviewPosture,
     SourceSystem,
     apply_review_action,
@@ -86,6 +88,7 @@ def seed_disaster_recovery_fixture(
         _assert_empty_migrated_database(typed_connection)
         repository = PostgresIdeaRepository(typed_connection)
         review_ready, approved = _seed_workflow_records(repository)
+        _seed_presentation_receipt(repository, review_ready)
         _seed_data_lifecycle_operation(repository, review_ready)
         _seed_ai_lineage(repository, review_ready)
         _seed_downstream_submissions(repository)
@@ -102,7 +105,7 @@ def _assert_empty_migrated_database(connection: PostgresConnection) -> None:
             """SELECT COUNT(*) AS table_count FROM pg_catalog.pg_tables
                WHERE schemaname = 'public' AND tablename LIKE 'idea\\_%' ESCAPE '\\'"""
         )
-        if int(database_cursor.fetchone()["table_count"]) != 17:
+        if int(database_cursor.fetchone()["table_count"]) != 19:
             raise ValueError("all current Lotus Idea migrations must be applied before seeding")
         database_cursor.execute(
             """SELECT
@@ -118,13 +121,14 @@ def _seed_workflow_records(
     repository: PostgresIdeaRepository,
 ) -> tuple[IdeaCandidate, IdeaCandidate]:
     base = high_cash_candidate()
+    conversion_base = high_cash_candidate(portfolio_id="portfolio-dr-fixture-conversion")
     review_ready = replace(
         base,
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_review",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     approved = replace(
-        base,
+        conversion_base,
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -191,6 +195,29 @@ def _seed_workflow_records(
         payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
     )
     return review_ready, approved
+
+
+def _seed_presentation_receipt(
+    repository: PostgresIdeaRepository,
+    candidate: IdeaCandidate,
+) -> None:
+    result = repository.record_presentation_receipt(
+        CandidatePresentationReceipt(
+            receipt_id="dr-fixture-presentation-receipt-001",
+            candidate_id=candidate.candidate_id,
+            tenant_id="tenant-dr-fixture",
+            presented_at_utc=FIXTURE_TIME + timedelta(minutes=15),
+            rank_at_presentation=1,
+            visible_candidate_count=2,
+            queue_snapshot_digest=f"sha256:{'c' * 64}",
+            queue_policy_version="idea-review-queue-v1",
+            ranking_policy_version="idea-score-v2",
+            candidate_material_version=candidate.identity.material_version,
+            candidate_evidence_version=candidate.identity.evidence_version,
+        )
+    )
+    if result.decision is not PresentationReceiptDecision.ACCEPTED:
+        raise RuntimeError("fixture presentation receipt was not persisted")
 
 
 def _persist_candidate(

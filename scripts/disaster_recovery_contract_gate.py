@@ -60,6 +60,7 @@ REQUIRED_INVARIANTS = {
     "required_operational_indexes",
     "cross_table_referential_integrity",
     "candidate_evidence_and_audit_lineage_integrity",
+    "presentation_receipt_candidate_version_and_tenant_integrity",
     "idempotency_key_replay_and_conflict_integrity",
     "outbox_status_lease_retry_dead_letter_and_publication_integrity",
     "downstream_submission_status_lease_and_realization_integrity",

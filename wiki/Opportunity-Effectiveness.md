@@ -42,6 +42,10 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
 The receipt is fenced by tenant, candidate material/evidence versions, UTC
 chronology, rank, visible count, and SHA-256 queue snapshot digest. It stores no
 client content, candidate rationale, actor identity, or raw queue payload.
+It is included in the complete data-lifecycle inventory and disaster-recovery
+representative fixture. Restore inspection fails on missing candidate/version
+lineage, tenant mismatch, or presentation time preceding the referenced
+candidate version.
 
 ## Decision Boundary
 

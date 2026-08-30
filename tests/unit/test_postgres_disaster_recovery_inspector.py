@@ -73,6 +73,8 @@ def test_restore_inspector_covers_linked_workflow_and_resume_safety() -> None:
         "conversion_outcome_intent",
         "outbox_candidate_aggregate",
         "outbox_recovery_event",
+        "presentation_receipt_candidate",
+        "presentation_receipt_version_history",
         "report_conversion_intent",
         "submission_conversion_intent",
         "submission_report_pack",
@@ -82,6 +84,7 @@ def test_restore_inspector_covers_linked_workflow_and_resume_safety() -> None:
         "outbox_failure_state",
         "outbox_lease_state",
         "outbox_publication_state",
+        "presentation_receipt_tenant_and_chronology",
         "submission_lease_state",
     }.issubset(SEMANTIC_CHECKS)
 
