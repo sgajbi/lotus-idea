@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -82,6 +83,45 @@ def test_high_volatility_positive_case_creates_reproducible_candidate() -> None:
     assert first.reason_codes == (
         ReasonCode.VOLATILITY_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
+    )
+
+
+def test_high_volatility_source_correction_preserves_candidate_and_versions_evidence() -> None:
+    source_input = volatility_input()
+    assert source_input.risk_ref is not None
+    corrected_input = replace(
+        source_input,
+        risk_ref=replace(
+            source_input.risk_ref,
+            content_hash="sha256:risk-metrics-report:correction-2",
+        ),
+    )
+
+    original = evaluate_high_volatility_signal(source_input, policy())
+    corrected = evaluate_high_volatility_signal(corrected_input, policy())
+
+    assert original.signal is not None
+    assert corrected.signal is not None
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert original.signal.signal_id != corrected.signal.signal_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
     )
 
 

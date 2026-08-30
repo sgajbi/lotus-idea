@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-import hashlib
-import json
 
 from app.domain.ideas import (
     EvidenceFreshness,
@@ -22,6 +20,7 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_family_compatibility import DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY
+from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -168,19 +167,19 @@ def _drawdown_review_candidate_result(
         source_reported_max_drawdown=candidate_inputs.source_reported_max_drawdown,
     )
     signal = OpportunitySignal(
-        signal_id=f"signal_drawdown_review_{identity}",
+        signal_id=identity.signal_id,
         family=family,
         source_refs=source_refs,
         reason_codes=(ReasonCode.DRAWDOWN_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:drawdown-review:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
     evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_drawdown_review_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -191,7 +190,7 @@ def _drawdown_review_candidate_result(
         created_at_utc=source_input.evaluated_at_utc,
     )
     candidate = IdeaCandidate(
-        candidate_id=f"idea_drawdown_review_{identity}",
+        candidate_id=identity.candidate_id,
         family=family,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -221,27 +220,20 @@ def _stable_drawdown_review_identity(
     source_refs: tuple[SourceRef, ...],
     *,
     source_reported_max_drawdown: Decimal,
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "family": DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family.value,
-        "policy_version": policy.policy_version,
-        "risk_supportability_state": source_input.risk_supportability_state,
-        "source_reported_max_drawdown": str(source_reported_max_drawdown),
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family,
+        opportunity_kind="drawdown_review",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "policy_version": policy.policy_version,
+            "risk_supportability_state": source_input.risk_supportability_state,
+            "source_reported_max_drawdown": str(source_reported_max_drawdown),
+        },
+        source_refs=source_refs,
+    )
 
 
 __all__ = [
