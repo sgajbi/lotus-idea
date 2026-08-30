@@ -361,19 +361,19 @@ def _concentration_risk_candidate_created_result(
 ) -> SignalEvaluationResult:
     identity = _stable_concentration_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
-        signal_id=f"signal_concentration_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.CONCENTRATION,
         source_refs=source_refs,
         reason_codes=(ReasonCode.CONCENTRATION_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:concentration:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
     evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_concentration_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -384,7 +384,7 @@ def _concentration_risk_candidate_created_result(
         created_at_utc=source_input.evaluated_at_utc,
     )
     candidate = IdeaCandidate(
-        candidate_id=f"idea_concentration_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.CONCENTRATION,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -858,36 +858,29 @@ def _stable_concentration_identity(
     source_input: ConcentrationRiskSignalInput,
     policy: ConcentrationRiskSignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "family": OpportunityFamily.CONCENTRATION.value,
-        "issuer_coverage_status": source_input.issuer_coverage_status,
-        "policy_version": policy.policy_version,
-        "top_issuer_weight_current": (
-            str(source_input.top_issuer_weight_current)
-            if source_input.top_issuer_weight_current is not None
-            else None
-        ),
-        "top_position_weight_current": (
-            str(source_input.top_position_weight_current)
-            if source_input.top_position_weight_current is not None
-            else None
-        ),
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.CONCENTRATION,
+        opportunity_kind="concentration",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "issuer_coverage_status": source_input.issuer_coverage_status,
+            "policy_version": policy.policy_version,
+            "top_issuer_weight_current": (
+                str(source_input.top_issuer_weight_current)
+                if source_input.top_issuer_weight_current is not None
+                else None
+            ),
+            "top_position_weight_current": (
+                str(source_input.top_position_weight_current)
+                if source_input.top_position_weight_current is not None
+                else None
+            ),
+        },
+        source_refs=source_refs,
+    )
 
 
 def _stable_underperformance_identity(

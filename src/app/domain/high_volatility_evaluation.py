@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-import hashlib
-import json
 
 from app.domain.ideas import (
     EvidenceFreshness,
@@ -20,6 +18,7 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
+from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -38,7 +37,7 @@ class _HighVolatilityCandidateInputs:
     source_input: HighVolatilitySignalInput
     policy: HighVolatilitySignalPolicy
     source_refs: tuple[SourceRef, ...]
-    identity: str
+    identity: OpportunityIdentity
 
 
 def evaluate_high_volatility_signal(
@@ -156,7 +155,7 @@ def _candidate_result(inputs: _HighVolatilityCandidateInputs) -> SignalEvaluatio
     signal = _opportunity_signal(inputs)
     evidence_packet = _evidence_packet(inputs)
     candidate = IdeaCandidate(
-        candidate_id=f"idea_high_volatility_{inputs.identity}",
+        candidate_id=inputs.identity.candidate_id,
         family=OpportunityFamily.HIGH_VOLATILITY,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -182,7 +181,7 @@ def _candidate_result(inputs: _HighVolatilityCandidateInputs) -> SignalEvaluatio
 
 def _opportunity_signal(inputs: _HighVolatilityCandidateInputs) -> OpportunitySignal:
     return OpportunitySignal(
-        signal_id=f"signal_high_volatility_{inputs.identity}",
+        signal_id=inputs.identity.signal_id,
         family=OpportunityFamily.HIGH_VOLATILITY,
         source_refs=inputs.source_refs,
         reason_codes=(ReasonCode.VOLATILITY_ATTENTION,),
@@ -192,12 +191,12 @@ def _opportunity_signal(inputs: _HighVolatilityCandidateInputs) -> OpportunitySi
 
 def _evidence_packet(inputs: _HighVolatilityCandidateInputs) -> IdeaEvidencePacket:
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:high-volatility:{inputs.identity}",
+        lineage_id=inputs.identity.lineage_id,
         source_refs=inputs.source_refs,
-        content_hash=f"sha256:{inputs.identity}",
+        content_hash=inputs.identity.evidence_fingerprint,
     )
     return IdeaEvidencePacket(
-        evidence_packet_id=f"iep_high_volatility_{inputs.identity}",
+        evidence_packet_id=inputs.identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=inputs.source_refs,
         lineage_ref=lineage,
@@ -213,27 +212,20 @@ def _stable_high_volatility_identity(
     source_input: HighVolatilitySignalInput,
     policy: HighVolatilitySignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "family": OpportunityFamily.HIGH_VOLATILITY.value,
-        "policy_version": policy.policy_version,
-        "risk_supportability_state": source_input.risk_supportability_state,
-        "source_reported_volatility": str(source_input.source_reported_volatility),
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.HIGH_VOLATILITY,
+        opportunity_kind="high_volatility",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "policy_version": policy.policy_version,
+            "risk_supportability_state": source_input.risk_supportability_state,
+            "source_reported_volatility": str(source_input.source_reported_volatility),
+        },
+        source_refs=source_refs,
+    )
 
 
 __all__ = ["evaluate_high_volatility_signal"]
