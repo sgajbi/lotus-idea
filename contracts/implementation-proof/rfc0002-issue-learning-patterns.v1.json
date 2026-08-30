@@ -338,6 +338,10 @@
           "ref": "tests/unit/test_opportunity_quality_golden_set.py"
         },
         {
+          "type": "docs",
+          "ref": "docs/architecture/opportunity-quality-golden-evaluation.md"
+        },
+        {
           "type": "issue",
           "ref": "sgajbi/lotus-idea#1162"
         }

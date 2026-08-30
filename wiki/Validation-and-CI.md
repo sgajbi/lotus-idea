@@ -15,6 +15,7 @@ clean branch hygiene.
 | Situation | Run | Result needed |
 | --- | --- | --- |
 | Small code or docs edit | `make lint`, focused tests | Fast local proof before commit. |
+| Opportunity eligibility, score, queue, identity, suppression, expiry, or reopen policy | `make opportunity-quality-golden-set`, family-local tests | Independently authored cross-family outcome, explanation, rank, abstention, and lifecycle expectations remain true. |
 | API contract change | `make openapi-gate`, `make endpoint-certification-gate`, focused API tests | Runtime/OpenAPI/certification agreement. |
 | Supported-feature claim | `make supported-features-gate`, `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make blueprint-scope-coverage-gate` | No unproved support or certification language; every proof blocker and blueprint capability has issue, evidence, slice, and non-promotion truth. |
 | Dependency or container vulnerability posture change | `make dependency-vulnerability-posture-gate`, `make security-audit`, release lane for image scan/SBOM/signing/provenance | Exact stable runtime, CI, and build-system dependency pins; lock mirror truth; governed Python vulnerability audit; Trivy/release hook wiring; issue-backed exceptions; and platform exception-register linkage. |

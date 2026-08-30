@@ -13,6 +13,7 @@
 - [API Surface](API-Surface)
 - [Feedback Evaluation](Feedback-Evaluation)
 - [Opportunity Effectiveness](Opportunity-Effectiveness)
+- [Opportunity Quality Evaluation](Opportunity-Quality-Evaluation)
 - [Integrations](Integrations)
 - [Demo Readiness](Demo-Readiness)
 
