@@ -48,5 +48,40 @@ def test_source_temporal_contract_gate_blocks_signal_without_shared_policy(
     helper_errors = [
         error for error in errors if "must call `temporal_blocked_signal_result`" in error
     ]
+    identity_errors = [
+        error for error in errors if "must call `build_opportunity_identity`" in error
+    ]
     assert len(helper_errors) == len(module.SIGNAL_DOMAIN_MODULES)
+    assert len(identity_errors) == len(module.SIGNAL_DOMAIN_MODULES)
     assert any("SOURCE_TEMPORAL_CONTRACT_VERSION" in error for error in errors)
+
+
+def test_source_temporal_contract_gate_blocks_source_hash_business_identity(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    for relative_path in module.SIGNAL_DOMAIN_MODULES:
+        path = tmp_path / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "def evaluate_signal():\n"
+            "    temporal_blocked_signal_result()\n"
+            "    build_opportunity_identity()\n"
+            "    source_hashes = []\n",
+            encoding="utf-8",
+        )
+    source_temporal_path = tmp_path / module.SOURCE_TEMPORAL_MODULE
+    source_temporal_path.parent.mkdir(parents=True, exist_ok=True)
+    source_temporal_path.write_text(
+        "SOURCE_TEMPORAL_CONTRACT_VERSION = 'test'\n"
+        "# for family in OpportunityFamily\n"
+        "# CONTENT_HASH_VERSIONS_EVIDENCE_PRESERVES_BUSINESS_IDENTITY\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_source_temporal_contract(tmp_path)
+
+    source_hash_errors = [
+        error for error in errors if "must not define business candidate identity" in error
+    ]
+    assert len(source_hash_errors) == len(module.SIGNAL_DOMAIN_MODULES)

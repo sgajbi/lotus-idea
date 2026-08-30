@@ -705,7 +705,8 @@ All signal families share the versioned
 2. source evidence must not be generated after `evaluated_at_utc`,
 3. every included source ref is checked, including optional cross-domain refs,
 4. caller-supplied DTO and source-adapter paths use the same domain policy,
-5. a changed source content hash creates new lineage-bound candidate identity,
+5. a changed source content hash preserves business candidate identity and the
+   material version while creating a new evidence packet and lineage version,
 6. source-specific effective windows require a new explicit contract version
    and must never be inferred locally.
 

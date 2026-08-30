@@ -14,7 +14,7 @@ from app.domain.ideas import (
 )
 
 
-SOURCE_TEMPORAL_CONTRACT_VERSION = "idea-source-temporal-v1"
+SOURCE_TEMPORAL_CONTRACT_VERSION = "idea-source-temporal-v2"
 
 
 class SourceBusinessDateRule(StrEnum):
@@ -26,8 +26,8 @@ class SourceGeneratedTimeRule(StrEnum):
 
 
 class SourceCorrectionIdentityRule(StrEnum):
-    NEW_CONTENT_HASH_CREATES_NEW_CANDIDATE_IDENTITY = (
-        "new_content_hash_creates_new_candidate_identity"
+    CONTENT_HASH_VERSIONS_EVIDENCE_PRESERVES_BUSINESS_IDENTITY = (
+        "content_hash_versions_evidence_preserves_business_identity"
     )
 
 
@@ -48,7 +48,7 @@ SOURCE_TEMPORAL_CONTRACTS: Mapping[OpportunityFamily, SourceTemporalContract] = 
             business_date_rule=SourceBusinessDateRule.EXACT_REQUEST_DATE,
             generated_time_rule=SourceGeneratedTimeRule.NOT_AFTER_EVALUATION,
             correction_identity_rule=(
-                SourceCorrectionIdentityRule.NEW_CONTENT_HASH_CREATES_NEW_CANDIDATE_IDENTITY
+                SourceCorrectionIdentityRule.CONTENT_HASH_VERSIONS_EVIDENCE_PRESERVES_BUSINESS_IDENTITY
             ),
         )
         for family in OpportunityFamily

@@ -95,7 +95,7 @@ def test_every_opportunity_family_declares_the_versioned_exact_date_contract() -
         assert contract.generated_time_rule is SourceGeneratedTimeRule.NOT_AFTER_EVALUATION
         assert (
             contract.correction_identity_rule
-            is SourceCorrectionIdentityRule.NEW_CONTENT_HASH_CREATES_NEW_CANDIDATE_IDENTITY
+            is SourceCorrectionIdentityRule.CONTENT_HASH_VERSIONS_EVIDENCE_PRESERVES_BUSINESS_IDENTITY
         )
 
 

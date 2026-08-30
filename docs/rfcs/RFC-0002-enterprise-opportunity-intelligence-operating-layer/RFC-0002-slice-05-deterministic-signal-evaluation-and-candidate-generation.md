@@ -1096,7 +1096,7 @@ Current source-ingestion orchestration validation:
     preserving one-process runtime topology and source-specific failure
     semantics.
 
-11. `idea-source-temporal-v1` now explicitly declares the temporal policy for
+11. `idea-source-temporal-v2` now explicitly declares the temporal policy for
     every RFC-0002 opportunity family. Every included source business date
     must equal evaluation `asOfDate`, and source evidence generated after
     `evaluatedAtUtc` is blocked with stable `source_date_mismatch` or
@@ -1107,11 +1107,11 @@ Current source-ingestion orchestration validation:
     mandate-health refs are now included in temporal and freshness checks with
     the required Manage action-register ref. A stale or conflicting optional
     ref can no longer enter a ready evidence packet.
-13. `idea-source-temporal-v1` declares source correction behavior explicitly:
-    changed source content hashes are preserved in evidence/lineage and create
-    new candidate identity. They do not silently rewrite the prior candidate.
-    A nonzero effective-date window remains unsupported until a source-specific
-    contract version defines and tests it.
+13. `idea-source-temporal-v2` declares source correction behavior explicitly:
+    changed source content hashes preserve the business candidate and material
+    version while creating a new evidence packet and lineage version. A nonzero
+    effective-date window remains unsupported until a source-specific contract
+    version defines and tests it.
 
 Current Core cash-weight adapter validation:
 
