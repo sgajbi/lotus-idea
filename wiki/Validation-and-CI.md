@@ -1395,7 +1395,7 @@ fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues. #681 remains in progress
 for Slice 18 synchronization, #1145 is closed after PR #1149 exact-main,
-release-image, wiki, and branch-hygiene proof, and #1150 is ready for adjacent review-decision
+release-image, wiki, and branch-hygiene proof, and #1150 is in progress for adjacent review-decision
 reason ownership hardening. #1139 is closed after PR #1147 reached exact main
 with Main Releasability, CodeQL, live posture, wiki parity, and branch-hygiene
 evidence.

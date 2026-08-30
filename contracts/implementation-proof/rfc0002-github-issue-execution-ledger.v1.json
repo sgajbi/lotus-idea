@@ -1421,9 +1421,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1150",
       "rfcSlices": ["slice-08"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1150 open for Slice 08 review-decision correctness hardening. Canonicalize the action-owned review reason exactly once and reuse the same stable source-first sequence for mutation identity, persistence, replay, API response, audit, outbox, and owner evidence. Tests must cover caller omission, single inclusion, and repeated inclusion while proving that changed raw content remains a transport conflict. Add no Gateway/Workbench rewriting, compatibility alias, speculative abstraction, supported-feature promotion, production identity claim, or final RFC-0002 closure claim."
+      "closureInstruction": "Keep #1150 open and status/in-progress for Slice 08 review-decision correctness hardening. Canonicalize the action-owned review reason exactly once and reuse the same stable source-first sequence for mutation identity, persistence, replay, API response, audit, outbox, and owner evidence. Tests must cover caller omission, single inclusion, and repeated inclusion while proving that changed raw content remains a transport conflict. Add no Gateway/Workbench rewriting, compatibility alias, speculative abstraction, supported-feature promotion, production identity claim, or final RFC-0002 closure claim."
     }
   ]
 }
