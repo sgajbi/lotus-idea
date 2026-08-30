@@ -1029,12 +1029,12 @@ Its Markdown output also renders each blocked issue with issue URL,
 actionability, blocker class, and remaining authority, so the current
 Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
-The dated 2026-08-30 baseline covers 237 label-backed RFC-0002 issues. Its 25
+The dated 2026-08-30 baseline covers 238 label-backed RFC-0002 issues. Its 25
 open `status/blocked` issues are classified and 0 are app-actionable blocked
-issues. The baseline is 200 closed and 37 open across 13 repositories, with 25
+issues. The baseline is 201 closed and 37 open across 13 repositories, with 25
 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
-`status/tracker`; at that baseline, `sgajbi/lotus-idea#681` and `#1139` were in
-progress. The current source ledger records #681 in progress and #1139 closed
+`status/tracker`; `sgajbi/lotus-idea#681` and `#1145` are in progress. The
+current source ledger records #1139 closed
 after PR #1147 reached exact main `0fd885bbc0542e7df697756f8035bfcb4b5484f4`;
 Main Releasability `33289306863`, CodeQL `33289301162`, live posture audit
 `33289301314`, wiki publication `f806488`, strict parity, and branch cleanup

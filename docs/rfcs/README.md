@@ -8,8 +8,8 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-The dated 2026-08-30 RFC-0002 snapshot baseline has 237 label-backed RFC-0002
-issues across 13 repositories: 200 closed and 37 open, with 25
+The dated 2026-08-30 RFC-0002 snapshot baseline has 238 label-backed RFC-0002
+issues across 13 repositories: 201 closed and 37 open, with 25
 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
 `status/tracker`, and 0
 app-actionable blocked issues.
@@ -19,9 +19,10 @@ hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
 #1132. They harden immutable merged-PR releasability dispatch, structural
 lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
 semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
-dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 146
-RFC-0002 issues, 121 closed and 25 open. `#681` remains in progress and `#1139`
-is closed after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
+dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 147
+RFC-0002 issues, 121 closed and 26 open. `#681` remains in progress, `#1145`
+is in progress for Slice 08 feedback reason ownership, and `#1139` is closed
+after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
 PR #1146 merged the first Slice 18 live-posture tranche to exact main
 `6f92b8c6888bae33e5d7a08cb40763054924bbc4`. PR #1147 merged the post-merge
 non-regression correction to `0fd885bbc0542e7df697756f8035bfcb4b5484f4`,

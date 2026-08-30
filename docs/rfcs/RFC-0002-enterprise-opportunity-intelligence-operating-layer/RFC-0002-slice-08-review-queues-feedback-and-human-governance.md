@@ -108,6 +108,13 @@ Implemented in this slice:
     `src/app/application/review_queue_exceptions.py`. These are design
     modularity improvements inside the existing deployable service, not a new
     queue process or service.
+26. GitHub issue `#1145` hardens feedback reason ownership. Idea now
+    canonicalizes its source-owned `feedback_recorded` reason exactly once and
+    uses the same stable source-first sequence for business-resource identity,
+    persistence, replay, API response, and owner evidence. Supplying or omitting
+    that source reason under a new transport key is the same feedback resource;
+    reusing one transport key with changed payload remains a truthful conflict.
+    Gateway and Workbench do not rewrite persisted Idea feedback events.
 
 Validation evidence from the implementation slice:
 
