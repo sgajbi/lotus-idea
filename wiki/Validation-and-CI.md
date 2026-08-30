@@ -1385,8 +1385,8 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The dated 2026-08-30 baseline
 is 238 label-backed RFC-0002 issues across 13 repositories: 201 closed and 37
-open. The open set is 25 `status/blocked`, 2 `status/in-progress`, 1
-`status/merged-main`, 9 `status/tracker`, and 0
+open. The open set is 25 `status/blocked`, 1 `status/in-progress`, 1
+`status/merged-main`, 1 `status/pr-open`, 9 `status/tracker`, and 0
 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
@@ -1394,8 +1394,8 @@ closed after signal API contract-gate hardening; #1104 is closed after supported
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues. #681 remains in progress
-for Slice 18 synchronization and #1145 is in progress for Slice 08 feedback
-reason ownership. #1139 is closed after PR #1147 reached exact main
+for Slice 18 synchronization and #1145 is PR-open through PR #1149 for Slice 08
+feedback reason ownership. #1139 is closed after PR #1147 reached exact main
 with Main Releasability, CodeQL, live posture, wiki parity, and branch-hygiene
 evidence.
 
