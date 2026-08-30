@@ -56,7 +56,7 @@ def test_postgres_effectiveness_projection_fails_closed_on_invalid_durable_facts
     row = _summary_row()
     row[column] = 1
 
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(RuntimeError, match=message):
         load_opportunity_effectiveness_summary(
             _Connection(row),
             tenant_id="tenant-a",

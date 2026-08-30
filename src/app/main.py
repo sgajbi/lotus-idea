@@ -29,6 +29,7 @@ from app.api.low_income_signals import register_low_income_signal_routes
 from app.api.missing_benchmark_signals import register_missing_benchmark_signal_routes
 from app.api.missing_risk_profile_signals import register_missing_risk_profile_signal_routes
 from app.api.missing_suitability_signals import register_missing_suitability_signal_routes
+from app.api.opportunity_effectiveness import register_opportunity_effectiveness_routes
 from app.api.outbox.delivery import register_outbox_delivery_readiness_routes
 from app.api.outbox.recovery import register_outbox_recovery_routes
 from app.api.report_evidence import register_report_evidence_routes
@@ -178,6 +179,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_data_mesh_readiness_routes(application)
     register_data_lifecycle_routes(application)
     register_runtime_trust_telemetry_routes(application)
+    register_opportunity_effectiveness_routes(application)
     register_source_ingestion_readiness_routes(application)
     register_outbox_delivery_readiness_routes(application)
     register_outbox_recovery_routes(application)

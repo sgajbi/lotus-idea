@@ -218,6 +218,12 @@
           "supportability_status": "not_certified"
         },
         {
+          "operation": "opportunity_effectiveness_read",
+          "scope": "Bounded privacy-safe opportunity effectiveness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
           "operation": "source_ingestion_run_once",
           "scope": "Internal source-ingestion run-once operator action",
           "source_authority": "lotus-core",

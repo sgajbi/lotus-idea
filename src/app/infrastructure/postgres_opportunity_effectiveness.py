@@ -37,10 +37,10 @@ def load_opportunity_effectiveness_summary(
     row = rows[0]
     invalid_temporal_fact_count = _integer(row, "invalid_temporal_fact_count")
     if invalid_temporal_fact_count:
-        raise ValueError("opportunity effectiveness contains temporally invalid durable facts")
+        raise RuntimeError("opportunity effectiveness contains temporally invalid durable facts")
     invalid_outcome_history_count = _integer(row, "invalid_outcome_history_count")
     if invalid_outcome_history_count:
-        raise ValueError("opportunity effectiveness contains quarantined conversion outcomes")
+        raise RuntimeError("opportunity effectiveness contains quarantined conversion outcomes")
     return OpportunityEffectivenessRepositorySummary(
         generated_opportunity_count=_integer(row, "generated_opportunity_count"),
         reviewed_opportunity_count=_integer(row, "reviewed_opportunity_count"),

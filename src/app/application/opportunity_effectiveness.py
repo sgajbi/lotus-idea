@@ -209,6 +209,23 @@ def build_opportunity_effectiveness_snapshot(
     )
 
 
+def validate_opportunity_effectiveness_scope(
+    *,
+    tenant_id: str,
+    window_start_utc: datetime,
+    window_end_utc: datetime,
+    evaluated_at_utc: datetime,
+    max_opportunities: int = MAX_EFFECTIVENESS_OPPORTUNITIES,
+) -> None:
+    _validate_scope(
+        tenant_id=tenant_id,
+        window_start_utc=window_start_utc,
+        window_end_utc=window_end_utc,
+        evaluated_at_utc=evaluated_at_utc,
+        max_opportunities=max_opportunities,
+    )
+
+
 def build_opportunity_effectiveness_snapshot_from_summary(
     summary: OpportunityEffectivenessRepositorySummary,
     *,
@@ -836,6 +853,12 @@ def _snapshot_payload_without_digest(
             "containsCorrelationOrTraceIdentifier": False,
             "containsFreeText": False,
         },
+        "certificationStatus": "not_certified",
+        "certificationBlockers": [
+            "governed_presentation_receipts_missing",
+            "gateway_workbench_end_to_end_proof_missing",
+        ],
+        "supportedFeaturePromoted": False,
         "productionMutationAuthority": "none_read_only_effectiveness_evidence",
     }
 
@@ -859,4 +882,5 @@ __all__ = [
     "PresentationMeasurementStatus",
     "build_opportunity_effectiveness_snapshot",
     "build_opportunity_effectiveness_snapshot_from_summary",
+    "validate_opportunity_effectiveness_scope",
 ]
