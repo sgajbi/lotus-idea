@@ -252,6 +252,28 @@ def test_postgres_repository_rolls_back_failed_snapshot_replacement() -> None:
     assert target_connection.rollbacks == 1
 
 
+def test_postgres_repository_snapshot_replacement_clears_presentation_receipts_first() -> None:
+    connection = FakePostgresConnection()
+    connection.rows["idea_candidate_presentation_receipt"].append(
+        {"receipt_id": "receipt-before-snapshot-replacement"}
+    )
+
+    PostgresIdeaRepository(connection).replace_snapshot(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+        )
+    )
+
+    assert connection.rows["idea_candidate_presentation_receipt"] == []
+    receipt_delete = connection.executed_sql.index(
+        "delete from idea_candidate_presentation_receipt"
+    )
+    candidate_delete = connection.executed_sql.index("delete from idea_candidate_record")
+    assert receipt_delete < candidate_delete
+
+
 def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)

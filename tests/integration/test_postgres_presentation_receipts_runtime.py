@@ -66,6 +66,38 @@ def test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced(
     assert persisted["receipt_with_recorded_time_count"] == 1
 
 
+def test_postgres_snapshot_replacement_clears_receipts_before_candidates(
+    postgres_database_url: str,
+) -> None:
+    candidate = candidate_fixture(
+        "candidate-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
+        tenant_id="tenant-a",
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        repository.replace_snapshot(snapshot_fixture(record_fixture(candidate)))
+        repository.record_presentation_receipt(_receipt())
+
+        repository.replace_snapshot(snapshot_fixture())
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT
+                       (SELECT COUNT(*) FROM idea_candidate_presentation_receipt)
+                           AS receipt_count,
+                       (SELECT COUNT(*) FROM idea_candidate_record) AS candidate_count"""
+            )
+            remaining = cursor.fetchone()
+
+    assert remaining is not None
+    assert remaining["receipt_count"] == 0
+    assert remaining["candidate_count"] == 0
+
+
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
     values: dict[str, Any] = {
         "receipt_id": "receipt-presentation-001",
