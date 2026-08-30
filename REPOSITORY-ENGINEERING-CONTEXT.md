@@ -1053,6 +1053,17 @@ in `app.api.review_workflow_operations` as design modularity inside the
 existing `lotus-idea` process. Do not split this into a separate runtime
 service, worker, or queue boundary without measured workload, failure-isolation,
 ownership, security, or operability evidence.
+Feedback semantics are domain-owned in `app.domain.feedback_taxonomy`.
+Preserve the explicit taxonomy version, usefulness outcome, and reason through
+mutation identity, persistence, replay/conflict, audit, API/OpenAPI, candidate
+detail, and outbox v2. Review actions remain separate lifecycle facts. Offline
+quality evaluation belongs in the application layer as a bounded,
+single-tenant, deterministic aggregate over immutable feedback-time policy and
+evidence context. It must omit raw scope/actor/downstream identifiers, free
+text, prompts, and model content and must expose no production mutation
+authority. Do not add online learning, Workbench-owned taxonomy, compatibility
+aliases, or a generic analytics runtime. Run
+`make feedback-evaluation-contract-gate` after changing this capability.
 Materially distinct normal API outcomes must be published from DTO-validated,
 code-owned examples and checked against both OpenAPI and the endpoint
 certification ledger. For feedback, accepted and business-resource replay are

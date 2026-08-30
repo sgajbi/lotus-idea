@@ -233,11 +233,13 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `016_candidate_economic_identity`. It adds
-tenant-scoped business identity, material/evidence version, material
-fingerprint, change-reason, and superseded-version columns; deterministic
-legacy backfill and rollback preserve candidate/evidence lineage without
-silently merging rows.
+The current schema head is `017_governed_feedback_taxonomy`. Migration `016`
+adds tenant-scoped business identity, material/evidence version, material
+fingerprint, change-reason, and superseded-version columns. Migration `017`
+adds the versioned feedback outcome/reason taxonomy and immutable offline
+evaluation context, migrates feedback outbox events to v2, preserves lossless
+legacy rollback evidence, and refuses rollback after new governed feedback has
+been accepted.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and

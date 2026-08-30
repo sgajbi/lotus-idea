@@ -1006,6 +1006,26 @@ split has no workload, failure-isolation, ownership, or operability evidence.
 Gateway/Workbench functionality and supported review-product promotion remain
 planned.
 
+### Governed Feedback Evaluation
+
+Feedback uses a domain-owned, versioned outcome/reason taxonomy rather than a
+generic reason-code tuple. The same canonical values bind mutation identity,
+persistence, replay/conflict, audit, API/OpenAPI, candidate detail, and
+`idea.feedback.recorded.v2` outbox evidence. Review actions remain separate and
+feedback grants no lifecycle or conversion authority.
+
+The application can derive a deterministic, bounded, single-tenant offline
+evaluation snapshot from durable records. It cohorts immutable candidate
+family, identity/scoring/ranking policy versions, rank context, evidence
+supportability, preceding review action, feedback outcome/reason, and
+source-safe subsequent downstream posture. The snapshot excludes raw tenant,
+client, portfolio, actor, and downstream resource identifiers plus free text,
+prompts, and model content. It is read-only evidence: any production-policy
+change requires a separately approved, versioned implementation change.
+
+See [Feedback Evaluation](Feedback-Evaluation) for the audience and control
+view.
+
 ### Conversion Outcome Identity And Current Posture
 
 `conversionOutcomeId` is a source-event resource identity; `Idempotency-Key`
