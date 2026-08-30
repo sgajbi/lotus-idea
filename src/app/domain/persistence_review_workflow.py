@@ -192,13 +192,15 @@ class InMemoryReviewWorkflowRepositoryMixin:
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate_id
         self._append_outbox_event(
-            event_type="idea.feedback.recorded.v1",
+            event_type="idea.feedback.recorded.v2",
             aggregate_id=candidate_id,
             occurred_at_utc=result.feedback_event.feedback.recorded_at_utc,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload={
                 "feedback_outcome": result.feedback_event.feedback.outcome.value,
+                "feedback_reason": result.feedback_event.feedback.reason.value,
+                "feedback_taxonomy_version": (result.feedback_event.feedback.taxonomy_version),
                 "actor_role": result.feedback_event.actor_role.value,
             },
         )

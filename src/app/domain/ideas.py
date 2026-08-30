@@ -13,6 +13,11 @@ from app.domain.candidate_state import (
 )
 
 from app.domain.access_scope import ReviewAccessScope
+from app.domain.feedback_taxonomy import (
+    FeedbackOutcome,
+    FeedbackReason,
+    validate_feedback_taxonomy,
+)
 
 
 class OpportunityFamily(StrEnum):
@@ -149,15 +154,6 @@ class CandidateChangeReason(StrEnum):
     MATERIAL_CHANGE = "material_change"
     RECURRENT_CONDITION = "recurrent_condition"
     MIGRATION_BACKFILL = "migration_backfill"
-
-
-class FeedbackOutcome(StrEnum):
-    USEFUL = "useful"
-    NOT_USEFUL = "not_useful"
-    DUPLICATE = "duplicate"
-    TOO_LATE = "too_late"
-    MISSING_CONTEXT = "missing_context"
-    UNSUPPORTED_CLAIM = "unsupported_claim"
 
 
 class ConversionTarget(StrEnum):
@@ -341,15 +337,21 @@ class ReviewDecision:
 class IdeaFeedback:
     feedback_id: str
     outcome: FeedbackOutcome
+    reason: FeedbackReason
+    taxonomy_version: str
     actor_role: str
-    reason_codes: tuple[ReasonCode, ...]
     recorded_at_utc: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self) -> None:
         _require_text(self.feedback_id, "feedback_id")
         _require_text(self.actor_role, "actor_role")
+        _require_text(self.taxonomy_version, "taxonomy_version")
         _require_aware_utc(self.recorded_at_utc, "recorded_at_utc")
-        object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
+        validate_feedback_taxonomy(
+            taxonomy_version=self.taxonomy_version,
+            outcome=self.outcome,
+            reason=self.reason,
+        )
 
 
 @dataclass(frozen=True)

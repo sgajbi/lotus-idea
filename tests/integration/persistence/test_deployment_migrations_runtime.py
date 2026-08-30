@@ -76,9 +76,9 @@ def test_existing_schema_requires_validated_adoption_and_rejects_drift(
         )
         replay = executor.execute(_command(DeploymentMigrationOperation.APPLY, run_id="123457"))
 
-    assert adoption.adopted_versions == tuple(f"{index:03d}" for index in range(1, 17))
+    assert adoption.adopted_versions == tuple(f"{index:03d}" for index in range(1, 18))
     assert replay.applied_versions == ()
-    assert replay.current_version == "016"
+    assert replay.current_version == "017"
 
 
 def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
@@ -95,18 +95,18 @@ def test_fresh_apply_is_atomic_and_rollback_reapply_updates_history(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT operation, migration_version FROM lotus_idea_schema_migration_event "
-                "WHERE migration_version = '016' ORDER BY migration_event_id"
+                "WHERE migration_version = '017' ORDER BY migration_event_id"
             )
             events = cursor.fetchall()
 
-    assert applied.applied_versions == tuple(f"{index:03d}" for index in range(1, 17))
-    assert rolled_back.rolled_back_versions == ("016",)
-    assert rolled_back.current_version == "015"
-    assert reapplied.applied_versions == ("016",)
+    assert applied.applied_versions == tuple(f"{index:03d}" for index in range(1, 18))
+    assert rolled_back.rolled_back_versions == ("017",)
+    assert rolled_back.current_version == "016"
+    assert reapplied.applied_versions == ("017",)
     assert [tuple(row) for row in events] == [
-        ("apply", "016"),
-        ("rollback", "016"),
-        ("apply", "016"),
+        ("apply", "017"),
+        ("rollback", "017"),
+        ("apply", "017"),
     ]
 
 

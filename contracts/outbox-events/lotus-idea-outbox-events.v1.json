@@ -99,9 +99,9 @@
       "description": "Advisor review decision recorded with caller and entitlement checks upstream of suitability authority; source-safe reason_codes preserve the canonical action-owned-first decision sequence."
     },
     {
-      "eventType": "idea.feedback.recorded.v1",
+      "eventType": "idea.feedback.recorded.v2",
       "aggregateType": "idea_candidate",
-      "description": "Advisor feedback recorded for learning, triage, and review-cycle telemetry."
+      "description": "Advisor usefulness feedback recorded with the canonical taxonomy version, outcome, reason, and source-safe actor role for governed offline evaluation."
     },
     {
       "eventType": "idea.conversion.intent_requested.v1",

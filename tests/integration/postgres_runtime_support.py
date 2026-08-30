@@ -9,6 +9,7 @@ from collections.abc import Collection
 from typing import Any, Callable, TypeVar, cast
 
 import psycopg
+from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
@@ -32,6 +33,28 @@ def execute_migrations(database_url: str, direction: MigrationDirection) -> None
     plan = build_migration_plan(MIGRATIONS_DIR, direction)
     with psycopg.connect(database_url, row_factory=dict_row) as connection:
         execute_migration_plan(cast(MigrationConnection, connection), plan)
+
+
+def clear_disposable_database_rows(database_url: str) -> None:
+    """Remove test rows without asking production rollbacks to discard governed data."""
+
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT tablename
+            FROM pg_catalog.pg_tables
+            WHERE schemaname = current_schema()
+            ORDER BY tablename
+            """
+        )
+        table_names = [str(row[0]) for row in cursor.fetchall()]
+        if not table_names:
+            return
+        cursor.execute(
+            sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
+                sql.SQL(", ").join(sql.Identifier(name) for name in table_names)
+            )
+        )
 
 
 def table_count(

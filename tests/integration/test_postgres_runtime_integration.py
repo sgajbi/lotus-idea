@@ -19,7 +19,9 @@ from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
     EvidenceFreshness,
     FeedbackCommand,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     ReasonCode,
     ReviewAction,
     ReviewActorContext,
@@ -542,7 +544,7 @@ def _expected_workflow_lineage() -> dict[str, tuple[str, str]]:
             "corr-postgres-runtime-proof-review",
             "trace-postgres-runtime-proof-review",
         ),
-        "idea.feedback.recorded.v1": (
+        "idea.feedback.recorded.v2": (
             "corr-postgres-runtime-proof-feedback",
             "trace-postgres-runtime-proof-feedback",
         ),
@@ -687,7 +689,8 @@ def _assert_concurrent_feedback_resource_identity(
             feedback_id="postgres-concurrent-feedback-identity-001",
             actor=actor,
             outcome=FeedbackOutcome.USEFUL,
-            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            reason=FeedbackReason.RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
         ),
     )
@@ -1077,8 +1080,9 @@ def _approve_review_payload() -> dict[str, Any]:
 def _feedback_payload() -> dict[str, Any]:
     return {
         "feedbackId": "feedback-useful-001",
+        "taxonomyVersion": "idea-feedback-taxonomy-v1",
         "outcome": "useful",
-        "reasonCodes": ["review_required"],
+        "reason": "relevant",
         "recordedAtUtc": "2026-06-21T10:06:00Z",
     }
 

@@ -137,7 +137,11 @@ def test_candidate_identity_migration_backfills_existing_rows_deterministically(
     candidate_payload = idea_candidate_to_json(candidate)
     candidate_payload.pop("identity")
     evidence_hash = evidence_hash_for_candidate(candidate)
-    migration = discover_migrations(Path(__file__).resolve().parents[3] / "migrations")[-1]
+    migration = next(
+        step
+        for step in discover_migrations(Path(__file__).resolve().parents[3] / "migrations")
+        if step.version == "016"
+    )
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         with connection.cursor() as cursor:

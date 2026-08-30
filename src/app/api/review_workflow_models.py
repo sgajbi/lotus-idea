@@ -14,9 +14,11 @@ from app.application.review_workflow import (
     RecordFeedbackToRepositoryCommand,
 )
 from app.domain import (
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackCommand,
     EventLineageContext,
     FeedbackOutcome,
+    FeedbackReason,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     ReasonCode,
@@ -94,13 +96,17 @@ class ReviewActionRequest(CamelModel):
 
 class FeedbackRequest(CamelModel):
     feedback_id: str = Field(..., alias="feedbackId")
-    outcome: FeedbackOutcome
-    reason_codes: tuple[ReasonCode, ...] = Field(
+    taxonomy_version: str = Field(
         ...,
-        alias="reasonCodes",
+        alias="taxonomyVersion",
+        description=f"Governed Lotus Idea feedback taxonomy; must be {FEEDBACK_TAXONOMY_VERSION}.",
+    )
+    outcome: FeedbackOutcome
+    reason: FeedbackReason = Field(
+        ...,
         description=(
-            "Feedback reasons supplied by the caller. Lotus Idea records the source-owned "
-            "feedback_recorded reason exactly once, whether or not the caller includes it."
+            "Governed reason for the adviser usefulness judgment. The outcome/reason "
+            "combination is validated by Lotus Idea and fails closed when invalid."
         ),
     )
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
@@ -117,10 +123,6 @@ class FeedbackRequest(CamelModel):
     def _recorded_at_must_be_aware(cls, value: datetime) -> datetime:
         return require_timezone_aware(value, field_name="recordedAtUtc")
 
-    _reason_codes_must_not_be_empty = field_validator("reason_codes")(
-        require_non_empty_reason_codes
-    )
-
     def to_command(
         self,
         *,
@@ -136,7 +138,8 @@ class FeedbackRequest(CamelModel):
                 feedback_id=self.feedback_id,
                 actor=build_review_actor_context(caller=caller, role=role),
                 outcome=self.outcome,
-                reason_codes=self.reason_codes,
+                reason=self.reason,
+                taxonomy_version=self.taxonomy_version,
                 recorded_at_utc=self.recorded_at_utc,
             ),
             idempotency_key=idempotency_key,
@@ -178,9 +181,10 @@ class FeedbackEventResponse(CamelModel):
     feedback_id: str = Field(..., alias="feedbackId")
     candidate_id: str = Field(..., alias="candidateId")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
+    taxonomy_version: str = Field(..., alias="taxonomyVersion")
     outcome: FeedbackOutcome
+    reason: FeedbackReason
     actor_role: ReviewActorRole = Field(..., alias="actorRole")
-    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
 
     @classmethod
@@ -189,9 +193,10 @@ class FeedbackEventResponse(CamelModel):
             feedbackId=event.feedback.feedback_id,
             candidateId=event.candidate_id,
             evidencePacketId=event.evidence_packet_id,
+            taxonomyVersion=event.feedback.taxonomy_version,
             outcome=event.feedback.outcome,
+            reason=event.feedback.reason,
             actorRole=event.actor_role,
-            reasonCodes=tuple(reason.value for reason in event.feedback.reason_codes),
             recordedAtUtc=event.feedback.recorded_at_utc,
         )
 

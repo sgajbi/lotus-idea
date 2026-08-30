@@ -195,8 +195,9 @@ def approve_review_payload() -> dict[str, Any]:
 def feedback_payload() -> dict[str, Any]:
     return {
         "feedbackId": "detail-feedback-useful-001",
+        "taxonomyVersion": "idea-feedback-taxonomy-v1",
         "outcome": "useful",
-        "reasonCodes": ["review_required"],
+        "reason": "relevant",
         "recordedAtUtc": "2026-06-21T10:06:00Z",
     }
 

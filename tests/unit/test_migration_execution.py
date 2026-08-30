@@ -13,6 +13,7 @@ from app.infrastructure.migrations import (
     dry_run_migration_plan,
     execute_migration_plan,
     execute_tracked_migration_plan,
+    migration_statements,
 )
 
 
@@ -121,6 +122,7 @@ def test_discover_migrations_requires_rollbacks() -> None:
         "014",
         "015",
         "016",
+        "017",
     ]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
@@ -138,6 +140,26 @@ def test_dry_run_reports_apply_and_rollback_statement_counts() -> None:
     assert apply_records[0].statement_count > 0
     assert rollback_records[0].direction is MigrationDirection.ROLLBACK
     assert rollback_records[0].statement_count > 0
+
+
+def test_migration_splitter_preserves_postgres_dollar_quoted_blocks() -> None:
+    step = next(
+        migration
+        for migration in discover_migrations(ROOT / "migrations")
+        if migration.version == "017"
+    )
+
+    apply_statements = migration_statements(step, MigrationDirection.APPLY)
+    rollback_statements = migration_statements(step, MigrationDirection.ROLLBACK)
+
+    apply_guard = next(statement for statement in apply_statements if statement.startswith("DO $$"))
+    rollback_guard = next(
+        statement for statement in rollback_statements if statement.startswith("DO $$")
+    )
+    assert "legacy feedback outbox event must match exactly one" in apply_guard
+    assert "cannot roll back governed feedback taxonomy" in rollback_guard
+    assert apply_guard.endswith("$$;")
+    assert rollback_guard.endswith("$$;")
 
 
 def test_candidate_state_rollback_is_safe_when_the_foundation_table_is_absent() -> None:
@@ -192,6 +214,7 @@ def test_execute_migration_plan_commits_after_all_statements() -> None:
         "014",
         "015",
         "016",
+        "017",
     ]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements

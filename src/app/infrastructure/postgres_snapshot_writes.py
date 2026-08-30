@@ -320,9 +320,10 @@ class PostgresSnapshotWriteRepositoryMixin:
         cursor.execute(
             """
             INSERT INTO idea_feedback_event (
-                feedback_event_id, candidate_id, actor_subject, feedback_json,
-                recorded_at_utc
-            ) VALUES (%s, %s, %s, %s, %s)
+                feedback_event_id, candidate_id, actor_subject,
+                feedback_taxonomy_version, feedback_outcome, feedback_reason,
+                feedback_json, recorded_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (feedback_event_id) DO NOTHING
             RETURNING feedback_event_id
             """,
@@ -330,6 +331,9 @@ class PostgresSnapshotWriteRepositoryMixin:
                 feedback.feedback.feedback_id,
                 candidate_id,
                 feedback.actor_subject,
+                feedback.feedback.taxonomy_version,
+                feedback.feedback.outcome.value,
+                feedback.feedback.reason.value,
                 Jsonb(feedback_event_to_json(feedback)),
                 feedback.feedback.recorded_at_utc,
             ),

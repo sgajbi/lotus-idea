@@ -190,18 +190,20 @@ class ReviewDecisionSummaryResponse(CamelModel):
 
 class FeedbackSummaryResponse(CamelModel):
     feedback_id: str = Field(..., alias="feedbackId")
+    taxonomy_version: str = Field(..., alias="taxonomyVersion")
     outcome: str
+    reason: str
     actor_role: str = Field(..., alias="actorRole")
-    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
 
     @classmethod
     def from_domain(cls, event: GovernedFeedbackEvent) -> "FeedbackSummaryResponse":
         return cls(
             feedbackId=event.feedback.feedback_id,
+            taxonomyVersion=event.feedback.taxonomy_version,
             outcome=event.feedback.outcome.value,
+            reason=event.feedback.reason.value,
             actorRole=event.actor_role.value,
-            reasonCodes=tuple(reason.value for reason in event.feedback.reason_codes),
             recordedAtUtc=event.feedback.recorded_at_utc,
         )
 

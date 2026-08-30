@@ -15,7 +15,9 @@ from app.domain import (
     DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES,
     EvidenceFreshness,
     EvidenceSupportability,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     IdeaCandidate,
     IdeaConversionIntent,
     IdeaConversionOutcome,
@@ -371,20 +373,23 @@ def test_feedback_records_are_typed_and_time_aware() -> None:
     feedback = IdeaFeedback(
         feedback_id="feedback_001",
         outcome=FeedbackOutcome.USEFUL,
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         actor_role="advisor",
-        reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
         recorded_at_utc=datetime(2026, 6, 21, 9, 4, tzinfo=UTC),
     )
 
     assert feedback.outcome is FeedbackOutcome.USEFUL
-    assert feedback.reason_codes == (ReasonCode.HIGH_CASH_RATIO,)
+    assert feedback.reason is FeedbackReason.RELEVANT
+    assert feedback.taxonomy_version == FEEDBACK_TAXONOMY_VERSION
 
     with pytest.raises(ValueError, match="actor_role is required"):
         IdeaFeedback(
             feedback_id="feedback_001",
             outcome=FeedbackOutcome.USEFUL,
+            reason=FeedbackReason.RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             actor_role=" ",
-            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
             recorded_at_utc=datetime(2026, 6, 21, 9, 4, tzinfo=UTC),
         )
 
@@ -392,8 +397,9 @@ def test_feedback_records_are_typed_and_time_aware() -> None:
         IdeaFeedback(
             feedback_id="feedback_001",
             outcome=FeedbackOutcome.USEFUL,
+            reason=FeedbackReason.RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             actor_role="advisor",
-            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
             recorded_at_utc=datetime(2026, 6, 21, 9, 4),
         )
 

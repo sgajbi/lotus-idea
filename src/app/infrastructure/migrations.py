@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import hashlib
 from pathlib import Path
+import re
 from typing import Any, Protocol, Sequence
 
 
@@ -251,15 +252,60 @@ def _validate_tracked_history(
 
 
 def _sql_statements(sql: str) -> tuple[str, ...]:
-    cleaned_lines = []
-    for line in sql.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("--"):
+    statements: list[str] = []
+    current: list[str] = []
+    quote: str | None = None
+    index = 0
+    while index < len(sql):
+        if quote is not None:
+            if sql.startswith(quote, index):
+                current.append(quote)
+                index += len(quote)
+                if quote in {"'", '"'} and sql.startswith(quote, index):
+                    current.append(quote)
+                    index += len(quote)
+                else:
+                    quote = None
+                continue
+            current.append(sql[index])
+            index += 1
             continue
-        cleaned_lines.append(line)
-    cleaned_sql = "\n".join(cleaned_lines)
-    statements = [statement.strip() for statement in cleaned_sql.split(";")]
-    return tuple(f"{statement};" for statement in statements if statement)
+
+        if sql.startswith("--", index):
+            newline = sql.find("\n", index)
+            index = len(sql) if newline == -1 else newline + 1
+            current.append("\n")
+            continue
+
+        character = sql[index]
+        if character in {"'", '"'}:
+            quote = character
+            current.append(character)
+            index += 1
+            continue
+        if character == "$":
+            dollar_quote = re.match(r"\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$", sql[index:])
+            if dollar_quote is not None:
+                quote = dollar_quote.group(0)
+                current.append(quote)
+                index += len(quote)
+                continue
+        if character == ";":
+            statement = "".join(current).strip()
+            if statement:
+                statements.append(f"{statement};")
+            current = []
+            index += 1
+            continue
+        current.append(character)
+        index += 1
+
+    if quote is not None:
+        raise ValueError(f"Unterminated SQL quote {quote}")
+    statement = "".join(current).strip()
+    if statement:
+        statements.append(f"{statement};")
+    return tuple(statements)
 
 
 _CREATE_LOCAL_MIGRATION_HISTORY_SQL = """

@@ -11,8 +11,10 @@ from tests.support.candidate_identity import initial_candidate_identity
 from app.domain import (
     EvidenceFreshness,
     EvidenceSupportability,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackCommand,
     FeedbackOutcome,
+    FeedbackReason,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     IdeaCandidate,
@@ -24,6 +26,7 @@ from app.domain import (
     LineageRef,
     OpportunityFamily,
     QueueExclusionReason,
+    QueuePriorityBucket,
     ReasonCode,
     ReviewAccessScope,
     ReviewAction,
@@ -285,22 +288,14 @@ def test_review_action_reason_canonicalization_covers_omission_and_caller_inclus
     assert result.decision.reason_codes == expected_reason_codes
 
 
-@pytest.mark.parametrize(
-    "caller_reason_codes",
-    (
-        (ReasonCode.REVIEW_REQUIRED,),
-        (ReasonCode.FEEDBACK_RECORDED, ReasonCode.REVIEW_REQUIRED),
-    ),
-)
-def test_feedback_resource_identity_matches_the_canonical_persisted_event(
-    caller_reason_codes: tuple[ReasonCode, ...],
-) -> None:
+def test_feedback_resource_identity_matches_the_canonical_persisted_event() -> None:
     source_candidate = candidate()
     command = FeedbackCommand(
         feedback_id="feedback-identity-001",
         actor=advisor_context(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=caller_reason_codes,
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=DECIDED_AT,
     )
     result = record_feedback(source_candidate, command)
@@ -308,10 +303,9 @@ def test_feedback_resource_identity_matches_the_canonical_persisted_event(
     assert feedback_mutation_identity_from_command(source_candidate, command) == (
         result.feedback_event.mutation_identity
     )
-    assert result.feedback_event.feedback.reason_codes == (
-        ReasonCode.FEEDBACK_RECORDED,
-        ReasonCode.REVIEW_REQUIRED,
-    )
+    assert result.feedback_event.feedback.reason is FeedbackReason.RELEVANT
+    assert result.feedback_event.feedback.taxonomy_version == FEEDBACK_TAXONOMY_VERSION
+    assert result.feedback_event.mutation_identity.reason_codes == (ReasonCode.FEEDBACK_RECORDED,)
 
 
 def test_review_entitlement_fails_closed_for_wrong_portfolio_scope() -> None:
@@ -424,7 +418,8 @@ def test_feedback_event_is_source_provenanced_and_audited_without_sensitive_scop
             feedback_id="feedback-001",
             actor=advisor_context(),
             outcome=FeedbackOutcome.USEFUL,
-            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            reason=FeedbackReason.RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=DECIDED_AT,
         ),
     )
@@ -434,6 +429,8 @@ def test_feedback_event_is_source_provenanced_and_audited_without_sensitive_scop
     assert result.feedback_event.evidence_content_hash == "sha256:review-lineage"
     assert result.feedback_event.source_signal_ids == ("signal-review-001",)
     assert result.audit_event.event_type == "idea.feedback.recorded"
+    assert result.audit_event.attributes["feedback_reason"] == "relevant"
+    assert result.audit_event.attributes["feedback_taxonomy_version"] == FEEDBACK_TAXONOMY_VERSION
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
 
@@ -524,12 +521,13 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             decided_at_utc=DECIDED_AT,
         )
 
-    with pytest.raises(ValueError, match="reason_codes is required"):
+    with pytest.raises(ValueError, match="Invalid feedback outcome/reason combination"):
         FeedbackCommand(
             feedback_id="feedback-no-reason",
             actor=advisor_context(),
-            outcome=FeedbackOutcome.NOT_USEFUL,
-            reason_codes=(),
+            outcome=FeedbackOutcome.USEFUL,
+            reason=FeedbackReason.NOT_RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=DECIDED_AT,
         )
 
@@ -537,9 +535,10 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
         GovernedFeedbackEvent(
             feedback=IdeaFeedback(
                 feedback_id="feedback-no-source",
-                outcome=FeedbackOutcome.MISSING_CONTEXT,
+                outcome=FeedbackOutcome.NOT_USEFUL,
+                reason=FeedbackReason.INSUFFICIENT_EVIDENCE,
+                taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
                 actor_role=ReviewActorRole.ADVISOR.value,
-                reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
                 recorded_at_utc=DECIDED_AT,
             ),
             candidate_id="idea-review-001",
@@ -548,6 +547,13 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             source_signal_ids=(),
             actor_subject="advisor-001",
             actor_role=ReviewActorRole.ADVISOR,
+            candidate_family=OpportunityFamily.HIGH_CASH,
+            candidate_identity_policy_version="idea-opportunity-identity-v2",
+            score_policy_version="idle-liquidity-v1",
+            score=Decimal("82"),
+            evidence_supportability=EvidenceSupportability.READY,
+            ranking_policy_version="idea-deterministic-ranking-v1",
+            queue_priority_bucket=QueuePriorityBucket.HIGH,
         )
 
 

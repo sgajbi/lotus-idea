@@ -154,8 +154,9 @@ def _feedback_payload(command: RecordFeedbackToRepositoryCommand) -> dict[str, A
         "actor_subject": feedback.actor.actor_subject,
         "candidate_id": command.candidate_id,
         "feedback_id": feedback.feedback_id,
+        "feedback_taxonomy_version": feedback.taxonomy_version,
         "outcome": feedback.outcome.value,
-        "reason_codes": [reason.value for reason in feedback.reason_codes],
+        "reason": feedback.reason.value,
         "recorded_at_utc": feedback.recorded_at_utc.isoformat(),
     }
 

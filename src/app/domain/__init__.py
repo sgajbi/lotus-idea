@@ -31,6 +31,14 @@ from app.domain.ai_lineage_persistence import (
     ai_explanation_lineage_record_from_result,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
+from app.domain.feedback_taxonomy import (
+    ALLOWED_FEEDBACK_REASONS,
+    FEEDBACK_TAXONOMY_VERSION,
+    FeedbackOutcome,
+    FeedbackReason,
+    InvalidFeedbackTaxonomyCombination,
+    validate_feedback_taxonomy,
+)
 from app.domain.candidate_state import (
     ALLOWED_REVIEW_POSTURES_BY_LIFECYCLE,
     CANDIDATE_STATE_POLICY_VERSION,
@@ -114,7 +122,6 @@ from app.domain.ideas import (
     ConversionTarget,
     EvidenceFreshness,
     EvidenceSupportability,
-    FeedbackOutcome,
     IdeaCandidate,
     IdeaConversionIntent,
     IdeaConversionOutcome,
@@ -409,6 +416,8 @@ __all__ = [
     "ALLOWED_LIFECYCLE_TRANSITIONS",
     "CALLER_SETTABLE_LIFECYCLE_STATUSES",
     "DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES",
+    "ALLOWED_FEEDBACK_REASONS",
+    "FEEDBACK_TAXONOMY_VERSION",
     "CandidateChangeReason",
     "CandidateIdentity",
     "ConversionOutcomeStatus",
@@ -416,6 +425,8 @@ __all__ = [
     "EvidenceFreshness",
     "EvidenceSupportability",
     "FeedbackOutcome",
+    "FeedbackReason",
+    "InvalidFeedbackTaxonomyCombination",
     "IdeaCandidate",
     "IdeaConversionIntent",
     "IdeaConversionOutcome",
@@ -437,6 +448,7 @@ __all__ = [
     "UnsupportedEvidenceReason",
     "transition_candidate",
     "validate_caller_settable_lifecycle_status",
+    "validate_feedback_taxonomy",
     "candidate_state_is_compatible",
     "validate_candidate_state",
     "BondMaturitySignalInput",

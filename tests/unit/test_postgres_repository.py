@@ -21,7 +21,9 @@ from app.domain import (
     DownstreamSubmissionPosture,
     EvidenceFreshness,
     FeedbackCommand,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
@@ -1039,7 +1041,8 @@ def feedback_command() -> FeedbackCommand:
         feedback_id="feedback-useful-001",
         actor=actor(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=EVALUATED_AT + timedelta(minutes=3),
     )
 

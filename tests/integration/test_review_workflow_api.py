@@ -174,12 +174,14 @@ def feedback_payload(
     *,
     feedback_id: str = "feedback-useful-001",
     outcome: str = "useful",
-    reason_codes: list[str] | None = None,
+    reason: str = "relevant",
+    taxonomy_version: str = "idea-feedback-taxonomy-v1",
 ) -> dict[str, Any]:
     return {
         "feedbackId": feedback_id,
+        "taxonomyVersion": taxonomy_version,
         "outcome": outcome,
-        "reasonCodes": ["review_required"] if reason_codes is None else reason_codes,
+        "reason": reason,
         "recordedAtUtc": "2026-06-21T10:06:00Z",
     }
 
@@ -652,14 +654,16 @@ def test_feedback_api_persists_source_provenanced_feedback() -> None:
     assert response.headers["X-Correlation-Id"] == "corr-feedback-api"
     payload = response.json()
     assert payload["feedbackEvent"]["candidateId"] == candidate_id
+    assert payload["feedbackEvent"]["taxonomyVersion"] == "idea-feedback-taxonomy-v1"
     assert payload["feedbackEvent"]["outcome"] == "useful"
+    assert payload["feedbackEvent"]["reason"] == "relevant"
     assert payload["persistence"]["decision"] == "accepted"
     assert payload["persistence"]["auditEventType"] == "idea.feedback.recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_feedback_api_canonicalizes_a_caller_supplied_source_reason_and_replays() -> None:
+def test_feedback_api_replays_the_same_canonical_taxonomy() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
@@ -668,7 +672,6 @@ def test_feedback_api_canonicalizes_a_caller_supplied_source_reason_and_replays(
     )
     request = feedback_payload(
         feedback_id="feedback-canonical-reason-001",
-        reason_codes=["feedback_recorded", "review_required"],
     )
 
     accepted = client.post(
@@ -678,15 +681,13 @@ def test_feedback_api_canonicalizes_a_caller_supplied_source_reason_and_replays(
     )
     replayed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/feedback",
-        json=request | {"reasonCodes": ["review_required"]},
+        json=request,
         headers=feedback_headers("feedback-canonical-reason-replayed-001"),
     )
 
     assert accepted.status_code == 200
-    assert accepted.json()["feedbackEvent"]["reasonCodes"] == [
-        "feedback_recorded",
-        "review_required",
-    ]
+    assert accepted.json()["feedbackEvent"]["reason"] == "relevant"
+    assert accepted.json()["feedbackEvent"]["taxonomyVersion"] == ("idea-feedback-taxonomy-v1")
     assert replayed.status_code == 200
     assert replayed.json()["feedbackEvent"] is None
     assert replayed.json()["persistence"]["decision"] == "replayed"
@@ -872,6 +873,37 @@ def test_feedback_api_rejects_invalid_identity_time_and_idempotency() -> None:
     assert blank_feedback_response.status_code == 400
     assert naive_time_response.status_code == 400
     assert blank_idempotency_response.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        feedback_payload(outcome="useful", reason="not_relevant"),
+        feedback_payload(outcome="not_useful", reason="relevant"),
+        feedback_payload(taxonomy_version="idea-feedback-taxonomy-v2"),
+    ),
+)
+def test_feedback_api_rejects_invalid_taxonomy_combinations_with_stable_error(
+    payload: dict[str, Any],
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key=f"seed-feedback-taxonomy-{payload['reason']}",
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/feedback",
+        json=payload,
+        headers=feedback_headers(f"feedback-taxonomy-{payload['reason']}"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "feedback_taxonomy_combination_invalid"
+    assert response.json()["detail"] == (
+        "Use an allowed outcome and reason from the declared feedback taxonomy version."
+    )
 
 
 def test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority() -> (

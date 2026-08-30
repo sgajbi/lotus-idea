@@ -19,7 +19,9 @@ from app.domain import (
     ConversionTarget,
     EvidenceFreshness,
     FeedbackCommand,
+    FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
+    FeedbackReason,
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
@@ -79,7 +81,8 @@ def feedback_command() -> FeedbackCommand:
         feedback_id="dr-fixture-feedback-001",
         actor=_actor(),
         outcome=FeedbackOutcome.USEFUL,
-        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
         recorded_at_utc=FIXTURE_TIME + timedelta(minutes=3),
     )
 
