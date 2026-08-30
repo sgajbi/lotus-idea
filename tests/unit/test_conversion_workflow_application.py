@@ -10,6 +10,7 @@ from tests.support.candidate_identity import initial_candidate_identity
 
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
+    ConversionIntentWorkflowResult,
     RequestConversionIntentToRepositoryCommand,
     request_conversion_intent_to_repository,
 )
@@ -94,6 +95,45 @@ def test_conversion_intent_replay_fails_closed_when_persisted_intent_is_missing(
     with pytest.raises(
         PersistedActionEvidenceUnavailable,
         match="exactly one persisted action",
+    ):
+        request_conversion_intent_to_repository(
+            RequestConversionIntentToRepositoryCommand(
+                candidate_id="idea-conversion-workflow-001",
+                conversion=conversion_command(),
+                idempotency_key="conversion-workflow-request-001",
+                access_scope_filter=authorized_scope_filter(),
+            ),
+            repository=replay_repository,
+        )
+
+
+def test_success_result_guard_rejects_missing_conversion_intent_evidence() -> None:
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="no persisted conversion intent",
+    ):
+        ConversionIntentWorkflowResult(
+            conversion_intent=None,
+            persistence=ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.REPLAYED,
+                record=None,
+            ),
+        ).require_conversion_intent()
+
+
+def test_successful_conversion_replay_requires_matching_candidate_record() -> None:
+    repository = repository_with_approved_candidate()
+    replay_repository = PrecheckedConversionWorkflowRepository(
+        repository,
+        ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=None,
+        ),
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="conversion mutation has no matching candidate record",
     ):
         request_conversion_intent_to_repository(
             RequestConversionIntentToRepositoryCommand(

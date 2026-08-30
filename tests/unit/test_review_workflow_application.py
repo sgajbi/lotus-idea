@@ -11,7 +11,9 @@ from tests.support.candidate_identity import initial_candidate_identity
 
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
+    FeedbackWorkflowResult,
     RecordFeedbackToRepositoryCommand,
+    ReviewWorkflowResult,
     apply_review_action_to_repository,
     record_feedback_to_repository,
 )
@@ -303,6 +305,68 @@ def test_review_replay_fails_closed_when_persisted_decision_is_missing() -> None
                 candidate_id="idea-review-001",
                 review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
                 idempotency_key="review-action:missing-evidence:001",
+            ),
+            repository=replay_repository,
+        )
+
+
+def test_success_result_guards_reject_missing_review_and_feedback_evidence() -> None:
+    persistence = ReviewPersistenceResult(
+        decision=ReviewPersistenceDecision.REPLAYED,
+        record=None,
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="no persisted review decision",
+    ):
+        ReviewWorkflowResult(
+            review_decision=None,
+            persistence=persistence,
+        ).require_review_decision()
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="no persisted feedback event",
+    ):
+        FeedbackWorkflowResult(
+            feedback_event=None,
+            persistence=persistence,
+        ).require_feedback_event()
+
+
+def test_successful_review_and_feedback_replays_require_matching_candidate_records() -> None:
+    repository = repository_with_candidate()
+    replay_repository = PrecheckedReviewWorkflowRepository(
+        repository,
+        ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.REPLAYED,
+            record=None,
+        ),
+    )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="review mutation has no matching candidate record",
+    ):
+        apply_review_action_to_repository(
+            ApplyReviewActionToRepositoryCommand(
+                candidate_id="idea-review-001",
+                review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+                idempotency_key="review-action:missing-record:001",
+            ),
+            repository=replay_repository,
+        )
+
+    with pytest.raises(
+        PersistedActionEvidenceUnavailable,
+        match="feedback mutation has no matching candidate record",
+    ):
+        record_feedback_to_repository(
+            RecordFeedbackToRepositoryCommand(
+                candidate_id="idea-review-001",
+                feedback=feedback_command(),
+                idempotency_key="review-feedback:missing-record:001",
             ),
             repository=replay_repository,
         )
