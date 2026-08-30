@@ -30,18 +30,23 @@ def _assert_instruction_contains(issue: dict[str, Any], *fragments: str) -> None
 def test_execution_backlog_tracks_economic_candidate_identity() -> None:
     issue = _current_issues()[1154]
 
-    assert issue["githubState"] == "open"
-    assert issue["executionStatus"] == "open_pr_raised"
-    assert issue["allowPullRequestAutoClose"] is False
+    assert issue["githubState"] == "closed"
+    assert issue["executionStatus"] == "closed_complete"
+    assert issue["allowPullRequestAutoClose"] is True
     assert issue["rfcSlices"] == ["slice-03", "slice-05", "slice-06", "slice-07"]
     _assert_instruction_contains(
         issue,
-        "Keep #1154 open",
+        "Closed #1154",
+        "PR #1157",
+        "Main Releasability run 33305344556",
+        "CodeQL run 33305341663",
+        "lotus-idea.wiki commit 189632a",
+        "Branch cleanup",
         "businessIdentityId",
         "source content hashes as evidence lineage",
         "migration 016",
         "PostgreSQL concurrency proof",
-        "remove caller duplicateOfCandidateId authority",
+        "removes caller duplicateOfCandidateId authority",
         "foundation_only with zero promoted features",
     )
 
