@@ -11,6 +11,24 @@ from app.domain import QueueExclusion, ReviewQueueAudience, ReviewQueueItem
 
 class ReviewQueueCandidateResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
+    material_version: int = Field(
+        ...,
+        alias="materialVersion",
+        ge=1,
+        description=(
+            "Current Idea-owned material version required to bind visible-render evidence "
+            "to the economic opportunity state shown to the adviser."
+        ),
+    )
+    evidence_version: int = Field(
+        ...,
+        alias="evidenceVersion",
+        ge=1,
+        description=(
+            "Current Idea-owned evidence version required to bind visible-render evidence "
+            "to the exact source-evidence refresh shown to the adviser."
+        ),
+    )
     family: str
     lifecycle_status: str = Field(..., alias="lifecycleStatus")
     review_posture: str = Field(..., alias="reviewPosture")
@@ -25,6 +43,8 @@ class ReviewQueueCandidateResponse(CamelModel):
         assert candidate.score is not None
         return cls(
             candidateId=candidate.candidate_id,
+            materialVersion=candidate.identity.material_version,
+            evidenceVersion=candidate.identity.evidence_version,
             family=candidate.family.value,
             lifecycleStatus=candidate.lifecycle_status.value,
             reviewPosture=candidate.review_posture.value,

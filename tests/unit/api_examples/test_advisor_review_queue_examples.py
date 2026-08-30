@@ -30,6 +30,8 @@ def test_advisor_review_queue_examples_execute_real_projection_and_preserve_boun
     assert examples["itemsAvailable"]["items"][0]["candidate"]["reviewPosture"] == (
         "advisor_review_required"
     )
+    assert examples["itemsAvailable"]["items"][0]["candidate"]["materialVersion"] == 1
+    assert examples["itemsAvailable"]["items"][0]["candidate"]["evidenceVersion"] == 1
     assert examples["itemsAvailable"]["page"]["totalReviewableItemCount"] == 1
     assert examples["noItemsAvailable"]["items"] == []
     assert examples["noItemsAvailable"]["page"]["totalReviewableItemCount"] == 0

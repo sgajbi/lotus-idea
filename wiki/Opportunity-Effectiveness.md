@@ -42,6 +42,10 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
 The receipt is fenced by tenant, candidate material/evidence versions, UTC
 chronology, rank, visible count, and SHA-256 queue snapshot digest. It stores no
 client content, candidate rationale, actor identity, or raw queue payload.
+The advisor queue supplies the current Idea-owned material/evidence versions
+for every candidate. A Workbench receipt must copy them from the exact rendered
+item rather than reconstructing source version state; Workbench remains
+responsible for digesting the exact ordered identities that were visible.
 It is included in the complete data-lifecycle inventory and disaster-recovery
 representative fixture. Restore inspection fails on missing candidate/version
 lineage, tenant mismatch, or presentation time preceding the referenced

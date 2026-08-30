@@ -76,6 +76,11 @@ truthful measurement posture, not a missing-value default.
 
 `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts` records one
 visible-render observation. `Idempotency-Key` is the stable receipt identity.
+The advisor queue publishes the current Idea-owned candidate material and
+evidence versions on each item. A receipt producer must copy those versions
+from the exact rendered item; it must not infer them from candidate content or
+reconstruct Idea-owned version state. Workbench still owns construction of the
+digest over the exact ordered candidate identities that were visibly rendered.
 The request contains only:
 
 | Field | Control |

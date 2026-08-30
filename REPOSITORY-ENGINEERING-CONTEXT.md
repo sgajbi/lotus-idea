@@ -1039,6 +1039,14 @@ internal read-only contract only; it does not promote a supported feature or
 transfer suitability, compliance, mandate, execution, or client-publication
 authority to Idea.
 
+Each queue item publishes the current Idea-owned candidate `materialVersion`
+and `evidenceVersion`. A visible-render receipt producer must copy them from the
+exact rendered queue item and must not infer them from candidate content,
+candidate detail, or consumer state. Workbench owns the digest of the exact
+ordered visible candidate identities; Idea owns candidate version truth and
+rejects stale receipt versions. Keep this producer/source boundary explicit
+when changing queue projections, Gateway transport, or Workbench rendering.
+
 Candidate scoring and queue ranking are distinct versioned policies:
 
 1. `app.domain.scoring` owns weighted score calculation and the closed current
