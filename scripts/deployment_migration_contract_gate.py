@@ -36,10 +36,15 @@ _REQUIRED_BLOCKERS = (
     "production_change_approval_missing",
 )
 _REQUIRED_WORKFLOW_FRAGMENTS = (
+    "execution_mode:",
+    "request-validation-only",
+    '[[ "$INPUT_CONFIRMATION" == "VALIDATE lotus-idea workflow-request" ]]',
     "permissions:\n  contents: read\n  packages: read\n  attestations: write\n  id-token: write",
     "group: lotus-idea-deployment-migrations-${{ inputs.environment_class }}",
     "cancel-in-progress: false",
     "runs-on: ubuntu-latest",
+    "needs: request-validation",
+    "inputs.execution_mode == 'protected-execution'",
     "environment: lotus-idea-${{ inputs.environment_class }}",
     "LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_DATABASE_URL }}",
     'gh attestation verify "oci://${IMAGE_DIGEST_REFERENCE}" -R "$GITHUB_REPOSITORY"',

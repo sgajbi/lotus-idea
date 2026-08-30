@@ -64,6 +64,18 @@ def test_deployment_migration_workflow_rejects_unavailable_self_hosted_runner() 
     assert any("lotus-deployment" in error for error in errors)
 
 
+def test_deployment_migration_workflow_requires_non_mutating_validation_mode_guard() -> None:
+    module = _load_gate()
+    workflow = WORKFLOW_PATH.read_text(encoding="utf-8").replace(
+        "inputs.execution_mode == 'protected-execution'",
+        "inputs.execution_mode == 'request-validation-only'",
+    )
+
+    errors = module.validate_deployment_migration_workflow(workflow)
+
+    assert any("inputs.execution_mode == 'protected-execution'" in error for error in errors)
+
+
 def test_contract_gate_rejects_direct_migration_in_other_workflows() -> None:
     module = _load_gate()
 
