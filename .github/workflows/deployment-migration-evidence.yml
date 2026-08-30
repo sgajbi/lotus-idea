@@ -3,6 +3,14 @@ name: Deployment Migration Evidence
 on:
   workflow_dispatch:
     inputs:
+      execution_mode:
+        description: Validate request wiring only, or execute against the protected environment
+        required: true
+        default: protected-execution
+        type: choice
+        options:
+          - protected-execution
+          - request-validation-only
       environment_class:
         description: Protected target environment class
         required: true
@@ -27,7 +35,7 @@ on:
         required: true
         type: string
       change_reference:
-        description: Approved uppercase change identifier, for example CHG-123456
+        description: Approved change identifier for protected execution, or audit identifier for request validation
         required: true
         type: string
       rollback_count:
@@ -36,7 +44,7 @@ on:
         default: "0"
         type: string
       confirmation:
-        description: Enter MIGRATE lotus-idea <environment> <operation>
+        description: Enter MIGRATE lotus-idea <environment> <operation>, or VALIDATE lotus-idea workflow-request for request-validation-only
         required: true
         type: string
 
@@ -51,8 +59,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  request-validation:
+    name: Validate governed migration request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      IMAGE_DIGEST_REFERENCE: ${{ inputs.image_digest_reference }}
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      CHANGE_REFERENCE: ${{ inputs.change_reference }}
+      INPUT_ENVIRONMENT_CLASS: ${{ inputs.environment_class }}
+      INPUT_EXECUTION_MODE: ${{ inputs.execution_mode }}
+      INPUT_OPERATION: ${{ inputs.operation }}
+      INPUT_ROLLBACK_COUNT: ${{ inputs.rollback_count }}
+      INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+    steps:
+      - name: Validate immutable request shape without protected execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/main" ]]
+          [[ "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$IMAGE_DIGEST_REFERENCE" =~ ^ghcr\.io/sgajbi/lotus-idea@sha256:[0-9a-f]{64}$ ]]
+          [[ "$CHANGE_REFERENCE" =~ ^[A-Z0-9][A-Z0-9._/-]{5,63}$ ]]
+          [[ "$INPUT_ROLLBACK_COUNT" =~ ^[0-9]+$ ]]
+          if [[ "$INPUT_OPERATION" == "rollback" ]]; then
+            (( INPUT_ROLLBACK_COUNT >= 1 && INPUT_ROLLBACK_COUNT <= 15 ))
+          else
+            [[ "$INPUT_ROLLBACK_COUNT" == "0" ]]
+          fi
+          if [[ "$INPUT_EXECUTION_MODE" == "request-validation-only" ]]; then
+            [[ "$INPUT_CONFIRMATION" == "VALIDATE lotus-idea workflow-request" ]]
+          else
+            expected_confirmation="MIGRATE lotus-idea ${INPUT_ENVIRONMENT_CLASS} ${INPUT_OPERATION}"
+            [[ "$INPUT_CONFIRMATION" == "$expected_confirmation" ]]
+          fi
+
   migrate:
     name: Execute exact-image deployment migrations
+    needs: request-validation
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.execution_mode == 'protected-execution'
     runs-on: ubuntu-latest
     environment: lotus-idea-${{ inputs.environment_class }}
     timeout-minutes: 30
