@@ -4,6 +4,8 @@ from copy import deepcopy
 
 from tests.support.opportunity_quality_golden import evaluate_golden_set, load_golden_set
 
+from app.domain.scoring import CandidateScorePolicyVersion
+
 
 def test_independently_authored_opportunity_quality_golden_set_passes() -> None:
     golden_set = load_golden_set()
@@ -31,6 +33,17 @@ def test_golden_set_covers_every_implemented_signal_policy() -> None:
         ("missing_suitability_context", "missing_suitability_context"),
         ("underperformance", "underperformance"),
     }
+    covered_score_policy_versions = {
+        case["expected"]["scorePolicyVersion"]
+        for case in golden_set["cases"]
+        if case["expected"]["outcome"] == "candidate_created"
+    }
+    registered_signal_policy_versions = {
+        version.value
+        for version in CandidateScorePolicyVersion
+        if version is not CandidateScorePolicyVersion.WEIGHTED_EVIDENCE
+    }
+    assert covered_score_policy_versions == registered_signal_policy_versions
 
 
 def test_golden_set_detects_outcome_regression() -> None:
