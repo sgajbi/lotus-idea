@@ -1131,9 +1131,11 @@ Current source-ingestion orchestration validation:
 4. All 24 caller/source request DTOs are closed schemas and reject
    `duplicateOfCandidateId`. Duplicate reconciliation is repository-owned,
    not caller-directed.
-5. This is implementation-backed local branch truth for issue `#1154` until
-   the PR reaches `main`. It does not promote a supported feature or transfer
-   source-fact authority from Core, Risk, Performance, Advise, or Manage.
+5. PR `#1157` merged this implementation to exact main
+   `96ad27259f77803570f1b4a507287d103396d7fd`; Main Releasability run
+   `33305344556` and CodeQL run `33305341663` passed. This does not promote a
+   supported feature or transfer source-fact authority from Core, Risk,
+   Performance, Advise, or Manage.
 
 Current Core cash-weight adapter validation:
 

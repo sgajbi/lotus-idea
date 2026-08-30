@@ -25,11 +25,11 @@ dependency map, and closure rules without relying on chat memory.
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
 | Repositories checked | 13 |
 | Total RFC-0002 issues | 242 |
-| Closed RFC-0002 issues | 203 |
-| Open RFC-0002 issues | 39 |
+| Closed RFC-0002 issues | 204 |
+| Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is PR-open in PR #1157 for governed economic candidate identity and evidence versioning. `#1155` is ready next for governed review-feedback taxonomy and offline quality evaluation; `#1156` follows for opportunity-effectiveness measurement. These issues do not promote a supported feature or complete final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof for governed economic candidate identity and evidence versioning. `#1155` is ready next for governed review-feedback taxonomy and offline quality evaluation; `#1156` follows for opportunity-effectiveness measurement. These issues do not promote a supported feature or complete final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -48,7 +48,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>242 label-backed RFC-0002 issues<br/>as of 2026-08-30"]
-    Open["203 closed and 39 open<br/>25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9 `status/tracker`"]
+    Open["204 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -66,20 +66,21 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 2 | Dated baseline count; live lifecycle state now retains `sgajbi/lotus-idea#681` in progress while `#1154` has advanced to `status/pr-open`. |
-| `status/pr-open` | 0 | Dated baseline count; live lifecycle state is now 1 because `#1154` is in PR #1157. |
+| `status/in-progress` | 1 | `sgajbi/lotus-idea#681` remains in progress as the Slice 18 source-truth synchronization tracker. |
+| `status/pr-open` | 0 | No RFC-0002 issue is PR-open in this synchronized baseline. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/ready` | 2 | `sgajbi/lotus-idea#1155` is the next governed feedback/evaluation slice; `#1156` follows for effectiveness measurement. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: the dated 2026-08-30 GitHub baseline has 242
-label-backed RFC-0002 issues, 203 closed and 39 open, with 25 `status/blocked`,
-2 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9
+label-backed RFC-0002 issues, 204 closed and 38 open, with 25 `status/blocked`,
+1 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9
 `status/tracker`, and 0
 app-actionable blocked issues. As of
-2026-08-30, the Idea source ledger tracks 151 RFC-0002 issues: 123 closed and 28
+2026-08-30, the Idea source ledger tracks 151 RFC-0002 issues: 124 closed and 27
 open. `#681` remains in progress for Slice 18 synchronization, `#1154` is
-PR-open in PR #1157 for economic candidate identity, and `#1155` and `#1156`
+closed after PR #1157 exact-main, release-image, wiki, and branch-hygiene proof,
+and `#1155` and `#1156`
 are ready in that implementation order. `#1150` is
 closed after PR #1152 exact-main, release-image, wiki, and branch-hygiene proof,
 `#1145` remains closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof, and `#1139` is closed after PR
