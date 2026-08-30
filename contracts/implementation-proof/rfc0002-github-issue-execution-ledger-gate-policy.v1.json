@@ -154,7 +154,8 @@
     1150,
     1154,
     1155,
-    1156
+    1156,
+    1162
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -485,28 +486,45 @@
       "final RFC-0002 closure"
     ],
     "1155": [
-      "Keep #1155 open and status/ready",
-      "versioned adviser-feedback outcome/reason taxonomy",
-      "fail-closed combination policy",
+      "Keep #1155 open and status/in-progress",
+      "PR #1159",
+      "idea-feedback-taxonomy-v1",
       "tenant-scoped source-safe offline evaluation projection",
+      "Main Releasability run 33310758263",
+      "CodeQL run 33310752467",
+      "wiki publication reached commit fc96116",
+      "Gateway sgajbi/lotus-gateway#691",
+      "Workbench sgajbi/lotus-workbench#953",
       "no automatic policy",
       "online-learning mutation",
-      "Workbench may consume the canonical taxonomy",
-      "independently authored multi-family fixtures",
       "No supported-feature promotion",
       "final RFC-0002 closure"
     ],
     "1156": [
-      "Keep #1156 open and status/ready",
-      "opportunity-effectiveness read model",
-      "Define every numerator, denominator, window",
-      "correction/reopen behavior",
-      "bounded index-supported PostgreSQL aggregates",
-      "low-cardinality",
-      "PostgreSQL scale and tenant-isolation proof",
-      "metric-label inspection",
+      "Keep #1156 open and status/in-progress",
+      "PR #1160",
+      "PR #1161",
+      "opportunity-effectiveness-v1",
+      "candidate-presentation-receipt-v1",
+      "Main Releasability is run 33319584650",
+      "Gateway sgajbi/lotus-gateway#692",
+      "Workbench sgajbi/lotus-workbench#954",
+      "unavailable_consumer_certification_pending",
+      "Queue retrieval must never be used as a presentation proxy",
       "Metrics alone do not promote a supported feature",
       "complete RFC-0002"
+    ],
+    "1162": [
+      "Keep #1162 open and status/in-progress",
+      "independently authored opportunity-quality golden evaluation set",
+      "production domain policy, scoring, queue, and lifecycle paths",
+      "at least four distinct opportunity families",
+      "multi-family rank order",
+      "no-opportunity portfolio",
+      "Expected outputs must be handwritten",
+      "do not create a generic signal framework",
+      "deliberate expected-output tampering fails",
+      "supported-feature claim"
     ]
   },
   "requiredClosedIssueEvidence": {
