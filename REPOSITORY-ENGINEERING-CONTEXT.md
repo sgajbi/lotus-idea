@@ -120,8 +120,10 @@ evidence plus Core handoff posture to exact main
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, as of 2026-08-30 the
-current Idea ledger posture has 148 tracked RFC-0002 issues, 123 closed and 25
-open. #681 remains in progress for Slice 18 synchronization and #1145 is closed
+current Idea ledger posture has 151 tracked RFC-0002 issues, 123 closed and 28
+open. #681 remains the Slice 18 synchronization tracker, #1154 is in progress
+for governed economic candidate identity, and #1155 then #1156 are ready for
+feedback-quality evaluation and opportunity-effectiveness measurement. #1145 is closed
 after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1150 is closed after
 PR #1152 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed
 after PR #1147 merged the non-regressive live posture correction to exact main
@@ -138,12 +140,12 @@ supported-feature gate fixture hardening, and #1101, #1098, #1094, #1091,
 hardening issues. #1110 reached Idea main
 `1208330a4fba9914307d4df84c5f84afcb54c417`; Main Releasability
 `31843321791`, push-on-main CodeQL `31843316096`, and branch hygiene passed.
-The dated 2026-08-30 cross-repo RFC-0002 snapshot baseline is 239 label-backed
-RFC-0002 issues across 13 repositories: 203 closed and 36 open. The open set is
-25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 9
-`status/tracker` issues; at that baseline, #681 is the active Idea issue and
-#1150 is the latest closed Idea Slice 08 issue. As of 2026-08-30, the current
-Idea source ledger tracks 148 RFC-0002 issues, 123 closed and 25 open.
+The dated 2026-08-30 cross-repo RFC-0002 snapshot baseline is 242 label-backed
+RFC-0002 issues across 13 repositories: 203 closed and 39 open. The open set is
+25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2
+`status/ready`, 9 `status/tracker` issues; at that baseline, #681 and #1154 are
+active Idea issues, while #1155 and #1156 are ready next. As of 2026-08-30, the current
+Idea source ledger tracks 151 RFC-0002 issues, 123 closed and 28 open.
 Blocked actionability remains 0 app-actionable blocked issues.
 
 Slice 18 live-posture enforcement is owned by
@@ -461,8 +463,9 @@ classifier because it is no longer an open `status/blocked` issue.
 fixed the post-merge QA hash-compatibility defects on main
 `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` with Main Releasability run
 `31268949391` passing.
-As of 2026-08-30, current Idea ledger posture has 148 tracked RFC-0002 issues,
-123 closed and 25 open. `sgajbi/lotus-idea#681` remains in progress, `#1145`
+As of 2026-08-30, current Idea ledger posture has 151 tracked RFC-0002 issues,
+123 closed and 28 open. `sgajbi/lotus-idea#681` remains the synchronization
+tracker, `#1154` is in progress, and `#1155` then `#1156` are ready. `#1145`
 is closed after PR #1149 exact-main and wiki proof, and `#1150` is closed after
 PR #1152 exact-main and wiki proof;
 `#1139` is closed after PR #1147 reached exact main with required main,
@@ -484,10 +487,10 @@ PR #1136 is the latest Slice 18 source-truth synchronization on main
 `97e7641a49b882d05e5583675a7881df0d89db63`; exact-main Main Releasability
 `32429389622`, wiki publication `8d2fc0b`, strict wiki parity, and branch
 hygiene passed.
-The dated 2026-08-30 governed cross-repo RFC-0002 baseline is 239 label-backed
-RFC-0002 issues across 13 repositories: 203 closed and 36 open. The open split
-is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 9
-`status/tracker`. The
+The dated 2026-08-30 governed cross-repo RFC-0002 baseline is 242 label-backed
+RFC-0002 issues across 13 repositories: 203 closed and 39 open. The open split
+is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2
+`status/ready`, 9 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
 evidence blockers. Title-only
 RFC-0002 references remain reported separately
@@ -1073,33 +1076,33 @@ and invocation pair to the central endpoint certification gate. The registry
 keeps capability ownership explicit while the central gate remains a stable,
 maintainable orchestrator. Allocation-drift caller and Manage-backed
 evaluation follows this contract under issue `#557`: both routes publish
-candidate-created, blocked, suppressed, and not-eligible modes from their real
+candidate-created, blocked, and not-eligible modes from their real
 application paths. Source-backed candidates retain supporting Manage,
 Performance, and Risk product lineage without granting Idea drift-calculation,
 mandate, performance, risk, rebalance, or order authority. Twenty multi-shape
 operations remained under issue `#542` after that family. Underperformance
 caller and Performance-backed evaluation now follow the same contract under
-issue `#559`. Both routes publish candidate-created, blocked, suppressed, and
+issue `#559`. Both routes publish candidate-created, blocked, and
 not-eligible modes from their real application paths while preserving
 `ReturnsSeriesBundle:v1` as Performance-owned evidence. Idea must not infer
 returns, benchmark assignment, benchmark methodology, or investment-action
 authority from these examples. Eighteen multi-shape operations remain under
 issue `#542` after this family. Concentration-risk caller and Risk-backed
 evaluation now follow the same contract under issue `#561`. Both routes
-publish candidate-created, blocked, suppressed, and not-eligible modes from
+publish candidate-created, blocked, and not-eligible modes from
 their real application paths while preserving `ConcentrationRiskReport:v1` as
 Risk-owned evidence. Idea must not infer concentration calculations,
 methodology approval, trade recommendations, rebalance, or execution authority
 from these examples. Sixteen multi-shape operations remain under issue `#542`
 after this family. High-volatility caller and Risk-backed evaluation now follow
 the same contract under issue `#563`. Both routes publish candidate-created,
-blocked, suppressed, and not-eligible modes from their real application paths
+blocked, and not-eligible modes from their real application paths
 while preserving `RiskMetricsReport:v1` as Risk-owned evidence. Idea must not
 infer volatility, VaR, tracking-error calculations, methodology approval,
 trade recommendations, rebalance, or execution authority from these examples.
 Fourteen multi-shape operations remain under issue `#542` after this family.
 Drawdown-review caller and Risk-backed evaluation now follow the same contract
-under issue `#565`. Both routes publish candidate-created, blocked, suppressed,
+under issue `#565`. Both routes publish candidate-created, blocked,
 and not-eligible modes from their real application paths while preserving
 `DrawdownAnalyticsReport:v1` as Risk-owned evidence. Idea must not infer
 drawdown calculation, period selection, methodology approval, trade
@@ -1107,7 +1110,7 @@ recommendations, rebalance, or execution authority from these examples. Twelve
 multi-shape operations remain under issue `#542` after this family.
 Mandate-restriction caller and Advise-backed evaluation now follow the same
 contract under issue `#567`. Both routes publish candidate-created, blocked,
-suppressed, and not-eligible modes from their real application paths. The
+and not-eligible modes from their real application paths. The
 caller route preserves the actual governed Core, Manage, or Advise source
 authority; the source-backed route retains Advise
 `AdvisoryPolicyEvaluationRecord:v1` identity. Idea must not infer restriction
@@ -1116,7 +1119,7 @@ rebalance, order, or execution authority from these examples. Ten multi-shape
 operations remain under issue `#542` after this family.
 Missing-risk-profile caller and Advise-backed evaluation now follow the same
 contract under issue `#569`. Both routes publish candidate-created, blocked,
-suppressed, and not-eligible modes from their real application paths. The
+and not-eligible modes from their real application paths. The
 source-backed route uses only the Advise source port and retains
 `AdvisoryPolicyEvaluationRecord:v1` identity. Idea detects review posture only;
 it must not approve or create a client risk profile, determine risk capacity,
@@ -1125,7 +1128,7 @@ from these examples. Eight multi-shape operations remain under issue `#542`
 after this family.
 Missing-benchmark caller and Core-backed evaluation now follow the same
 contract under issue `#571`. Both routes publish candidate-created, blocked,
-suppressed, and not-eligible modes from their real application paths. The
+and not-eligible modes from their real application paths. The
 source-backed route uses only `CoreBenchmarkAssignmentSourcePort` and retains
 `BenchmarkAssignment:v1` identity. Idea detects review posture only; it must
 not assign a benchmark, approve benchmark methodology, calculate performance,
@@ -1135,7 +1138,7 @@ this family. The existing platform named-success skill and validator guardrail
 already cover this recurrence, so no new skill/context change is required.
 Missing-suitability caller and Advise-backed evaluation now follow the same
 contract under issue `#573`. Both routes publish candidate-created, blocked,
-suppressed, and not-eligible modes from their real application paths. Advise
+and not-eligible modes from their real application paths. Advise
 retains `AdvisoryPolicyEvaluationRecord:v1`, suitability, policy, proposal,
 sign-off, and client-publication authority; Idea only detects deterministic
 evidence-gap posture and routes compliance review. Four multi-shape operations
@@ -1774,13 +1777,14 @@ RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
 writable Lotus app branch cannot truthfully produce. As of 2026-08-30, current
-Idea ledger posture has 148 tracked RFC-0002 issues, 123 closed and 25 open.
+Idea ledger posture has 151 tracked RFC-0002 issues, 123 closed and 28 open.
 The dated snapshot baseline as of 2026-08-30 is
 25 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
-external/protected/canonical-proof evidence blockers, 1 in-progress Idea
-RFC-0002 issues, no PR-open or ready Idea RFC-0002 issues, 1 merged-main RFC-0002 issue
+external/protected/canonical-proof evidence blockers, 2 in-progress Idea
+RFC-0002 issues, no PR-open issues, 2 ready Idea RFC-0002 issues, 1 merged-main RFC-0002 issue
 outside the Idea ledger, and no merged-main QA-pending Idea RFC-0002 issues,
-with `sgajbi/lotus-idea#681` in progress, `#1150` closed after PR #1152 exact-main,
+with `sgajbi/lotus-idea#681` and `#1154` in progress, `#1155` and `#1156`
+ready in that order, `#1150` closed after PR #1152 exact-main,
 release-image, wiki, and branch-hygiene proof, `#1145` closed after PR #1149
 exact-main and wiki proof, and `#1139` closed,
 `sgajbi/lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
@@ -1792,10 +1796,10 @@ hardening, `sgajbi/lotus-idea#1101` closed after AI workflow evaluator hardening
 closed after release-CI hardening, and `sgajbi/lotus-idea#1094`,
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as recent QA-closed maintainability hardening
-issues. As of 2026-08-30, the full live posture is 239 label-backed RFC-0002
-issues across 13 repositories: 203 closed and 36 open. The dated baseline open
-split is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`,
-9 `status/tracker`.
+issues. As of 2026-08-30, the full live posture is 242 label-backed RFC-0002
+issues across 13 repositories: 203 closed and 39 open. The dated baseline open
+split is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`,
+2 `status/ready`, 9 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
@@ -3211,10 +3215,10 @@ operability evidence.
 
 Issue `#548` applies the contract to the high-cash signal family. The caller
 and source-backed evaluation routes must each publish candidate-created,
-blocked, suppressed, and not-eligible modes from application-backed,
+blocked, and not-eligible modes from application-backed,
 DTO-serialized factories. Evaluate-and-persist must additionally distinguish
-accepted, replayed, and duplicate-candidate decisions, while blocked,
-suppressed, and not-eligible outcomes retain `persistence=null`. Keep the
+accepted, replayed, and duplicate-candidate decisions, while blocked and
+not-eligible outcomes retain `persistence=null`. Keep the
 factory under `app.api.examples.high_cash_signal`, keep the endpoint gate as a
 thin parity adapter, and cite HTTP behavior for every mode. Do not hand-code
 cash weight, candidate identity, evidence hash, retry decisions, or response
@@ -3223,7 +3227,7 @@ this contract proof does not certify live source runtime or promote support.
 
 Issue `#551` applies the same contract to the low-income /
 liquidity-shortfall signal family. Keep caller and Core-backed
-`candidate_created`, `blocked`, `suppressed`, and `not_eligible` modes in
+`candidate_created`, `blocked`, and `not_eligible` modes in
 `app.api.examples.low_income_signal`; build them through the existing
 application use cases and serialize the real response DTO. Candidate examples
 must retain both governed Core cash-movement and cashflow-projection source
@@ -3237,8 +3241,8 @@ modularity, not evidence for a signal microservice or supported-feature
 promotion.
 
 Issue `#555` applies the same contract to the bond-maturity / reinvestment
-review family. Keep caller and Core-backed `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` modes in
+review family. Keep caller and Core-backed `candidate_created`, `blocked`, and
+`not_eligible` modes in
 `app.api.examples.bond_maturity_signal`; build them through the application
 use cases and serialize the real response DTO. Preserve both Core holdings and
 maturity-summary lineage in candidate examples while redacting source routes
@@ -3247,6 +3251,30 @@ must not infer schedules, recommend replacement products, decide suitability,
 or claim execution authority. Require exact factory/OpenAPI/ledger/test parity
 and HTTP proof for every mode. This is internal design modularity and does not
 justify a signal microservice or supported-feature promotion.
+
+## Candidate Identity And Evidence Versioning
+
+Issue `#1154` establishes `idea-opportunity-identity-v2` as the single
+Idea-owned business-candidate identity authority. Derive `businessIdentityId`
+from tenant, portfolio, opportunity family, and governed economic scope. Do
+not include source content hashes, source routes, transport idempotency keys,
+reason-code order, or representation-only fields in business identity.
+
+Preserve source content hashes and source-effective identity in evidence
+packets and lineage. Reconcile equivalent refreshes as evidence versions,
+material economic changes as material versions, and resolved-then-recurrent
+conditions as explicit reopens with a why-back reason. Fail closed on identity
+collision or unsupported transition, and perform reconciliation atomically in
+the repository so concurrent evaluations cannot create duplicate active
+candidates.
+
+All caller and source evaluation DTOs are closed schemas and must reject
+`duplicateOfCandidateId`; the source-ingestion worker manifest must do the
+same. Persistence may return `duplicate_candidate` from authoritative economic
+identity reconciliation. Manual review suppression and snooze remain separate
+review-posture actions and must not be reintroduced as evaluator-level
+duplicate outcomes. Preserve the foundation-only supported-feature posture
+until the normal promotion evidence is complete.
 
 ## Supported-Feature Promotion Rule
 

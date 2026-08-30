@@ -31,9 +31,9 @@ readiness, live proof, documentation, hardening, and closure.
 
 The live issue-backed status map is maintained in
 [RFC-0002 Execution Status](RFC-0002-Execution-Status). Its dated 2026-08-30
-baseline records 239 label-backed RFC-0002 issues across 13 repositories: 203
-closed and 36 open, with 25 `status/blocked`, 1 `status/in-progress`, 1
-`status/merged-main`, 9 `status/tracker`, and 0
+baseline records 242 label-backed RFC-0002 issues across 13 repositories: 203
+closed and 39 open, with 25 `status/blocked`, 2 `status/in-progress`, 1
+`status/merged-main`, 2 `status/ready`, 9 `status/tracker`, and 0
 app-actionable blocked issues. The page
 also records the latest canonical front-office QA failure and the issue-specific
 proof still required before QA-pending merged-main issues can close.
@@ -213,7 +213,7 @@ Current RFC-0002 implementation-start baseline:
    complete executable HTTP 200 mode matrices from one application-backed,
    DTO-serialized factory, with exact endpoint-ledger and OpenAPI parity.
    Low-income caller and Core-backed APIs now publish the same complete
-   candidate-created, blocked, suppressed, and not-eligible matrix from
+   candidate-created, blocked, and not-eligible matrix from
    capability-owned application-backed factories, with both required Core
    source products retained in source-safe candidate examples.
    Bond-maturity caller and Core-backed APIs now publish that complete matrix

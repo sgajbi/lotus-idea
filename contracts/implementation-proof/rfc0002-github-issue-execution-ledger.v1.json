@@ -1424,6 +1424,33 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #1150 after QA passed for RFC-0002 Slice 08 review-decision reason ownership. PR #1152 rebase-merged branch head 8169e03d92c78675f0411e895b1d7122876934ab to Idea main 782f8596ed56efc42cb5b901e94c42d25f9c7c3c. Exact-head focused proof passed 110 tests plus Ruff and MyPy; the preceding full repository check passed 5,585 unit tests, and PR checks passed Feature Lane, PR Merge Gate workflow/static/security/unit/integration/E2E/PostgreSQL/coverage/Docker/CI-signal lanes and CodeQL. Exact-main Main Releasability run 33295063677, Push-on-main CodeQL run 33295060112, and RFC posture audit run 33295060269 passed. Release image ghcr.io/sgajbi/lotus-idea@sha256:e010376b8a257522ea83c3ca4a25ae0dafec7d4d0e33b8dbacac9319fc1500e4 was published-digest validated, scanned, signed, SBOM/provenance attested, and release/license identity bound. Wiki publication bd8e41e reached strict DiffCount 0. The implementation records the action-owned review reason first and exactly once across business-resource identity, persistence, replay, API projection, audit, and source-safe outbox evidence while preserving non-owner reason order and multiplicity and raw same-key transport idempotency conflict behavior. No assertion or failure was weakened, no Gateway/Workbench rewrite or compatibility layer was added, no speculative abstraction was introduced, no supported feature was promoted, and no final RFC-0002 closure is claimed. Final branch cleanup removed the remote and local implementation branches, retained one clean Idea worktree on main, and found no unmerged remote branch."
+    },
+    {
+      "issueNumber": 1154,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1154",
+      "rfcSlices": ["slice-03", "slice-05", "slice-06", "slice-07"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1154 open while the economic-candidate identity implementation is validated and merged. Local commits 650a0e3e through 1066bd5d introduce one tenant-scoped, family-scoped businessIdentityId authority across all opportunity families; preserve source content hashes as evidence lineage; reconcile equivalent evidence refresh, material version, recurrent reopen, and identity conflict at the persistence boundary; add deterministic migration 016 backfill/rollback and PostgreSQL concurrency proof; and remove caller duplicateOfCandidateId authority from all 24 caller/source request contracts. Current focused evidence includes 318 passing boundary/API tests, repository-native Ruff, MyPy over 1,085 source files, endpoint certification, OpenAPI, and source-ingestion worker gates. Remaining closure evidence is full repository CI, PR review and merge, exact-main Main Releasability and CodeQL, release-image validation, wiki publication and strict parity, issue closure, and branch/worktree hygiene. The supported-feature registry remains foundation_only with zero promoted features. No upstream financial calculation, production identity/session authority, Gateway/Workbench compensation layer, generic alert framework, or final RFC-0002 closure is claimed."
+    },
+    {
+      "issueNumber": 1155,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1155",
+      "rfcSlices": ["slice-08", "slice-16", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_ready",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1155 open and status/ready. Implement a bounded versioned adviser-feedback outcome/reason taxonomy, fail-closed combination policy, durable mutation/API/OpenAPI parity, and a tenant-scoped source-safe offline evaluation projection. Preserve review actions as separate lifecycle facts and keep every evaluation output read-only: no automatic policy, eligibility, scoring, ranking, suppression, lifecycle, AI-training, or online-learning mutation. Workbench may consume the canonical taxonomy but must not invent or rewrite it. Close only after independently authored multi-family fixtures, persistence restart, replay/conflict, entitlement, full CI, exact-main, wiki parity, and branch-hygiene evidence pass. No supported-feature promotion or final RFC-0002 closure is claimed."
+    },
+    {
+      "issueNumber": 1156,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1156",
+      "rfcSlices": ["slice-08", "slice-12", "slice-15", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_ready",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1156 open and status/ready. Implement a versioned, tenant-scoped opportunity-effectiveness read model over durable candidate, queue, review, feedback, conversion-intent, and source-safe downstream-outcome facts. Define every numerator, denominator, window, inclusion/exclusion rule, correction/reopen behavior, and zero-denominator result; use bounded index-supported PostgreSQL aggregates with in-memory/query parity. Keep Prometheus labels low-cardinality and exclude raw client, portfolio, candidate, actor, correlation, and reason identifiers. Close only after independently authored funnel/rank/timing fixtures, PostgreSQL scale and tenant-isolation proof, metric-label inspection, full CI, exact-main, wiki parity, and branch hygiene pass. Metrics alone do not promote a supported feature or complete RFC-0002."
     }
   ]
 }

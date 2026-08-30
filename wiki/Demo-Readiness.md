@@ -43,7 +43,7 @@ promotion.
 Concentration-risk review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/concentration-risk/evaluate` consumes
 caller-supplied Lotus Risk `ConcentrationRiskReport:v1` evidence to create
-advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
+advisor-review posture or blocked/not-eligible outcomes. It does not
 calculate concentration, approve risk methodology, recommend trades, create
 rebalance actions, certify data mesh, prove Workbench behavior, authorize
 client publication, or promote support.
@@ -51,7 +51,7 @@ client publication, or promote support.
 Underperformance review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/underperformance/evaluate` consumes caller-supplied
 Lotus Performance `ReturnsSeriesBundle:v1` active-return and benchmark-context
-evidence to create advisor-review posture or blocked/not-eligible/suppressed
+evidence to create advisor-review posture or blocked/not-eligible
 outcomes. It does not calculate portfolio returns, calculate benchmark returns,
 assign benchmarks, certify methodology, recommend trades, create rebalance
 actions, prove Workbench behavior, authorize client publication, certify data
@@ -61,7 +61,7 @@ Allocation-drift / mandate-review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/allocation-drift/evaluate` consumes
 caller-supplied Lotus Manage `PortfolioActionRegister:v1` action-register
 posture and mandate-health source refs to create portfolio-manager review
-posture or blocked/not-eligible/suppressed outcomes. The opportunity archetype
+posture or blocked/not-eligible outcomes. The opportunity archetype
 contract gate pins the API module, endpoint, and integration test as evidence,
 so demo-readiness proof cannot rely on policy-only allocation-drift evidence.
 It does not fetch Manage sources, calculate allocation drift, approve mandate
@@ -72,7 +72,7 @@ promote support.
 High-volatility review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/high-volatility/evaluate` consumes caller-supplied
 Lotus Risk `RiskMetricsReport:v1` volatility evidence to create
-advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
+advisor-review posture or blocked/not-eligible outcomes. It does not
 fetch Risk sources, calculate volatility, approve Risk methodology, recommend
 trades, create rebalance actions, prove Workbench behavior, authorize client
 publication, certify data mesh, or promote support. The opportunity archetype
@@ -83,7 +83,7 @@ high-volatility evidence.
 Drawdown review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/drawdown-review/evaluate` consumes caller-supplied
 Lotus Risk `DrawdownAnalyticsReport:v1` maximum-drawdown evidence to create
-advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
+advisor-review posture or blocked/not-eligible outcomes. It does not
 fetch Risk sources, calculate drawdown, approve Risk methodology, recommend
 trades, create rebalance actions, prove Workbench behavior, authorize client
 publication, certify data mesh, or promote support. The opportunity archetype

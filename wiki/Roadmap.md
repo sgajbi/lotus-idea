@@ -95,7 +95,7 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     high-cash route. Named OpenAPI contracts now cover all executable
     evaluation, retry, duplicate-candidate, and no-write modes. Low-income
     caller and Core-backed routes likewise publish complete candidate-created,
-    blocked, suppressed, and not-eligible mode matrices with exact executable
+    blocked and not-eligible mode matrices with exact executable
     contract parity. Bond-maturity caller and Core-backed routes now meet the
     same contract while retaining Core maturity-data authority. Allocation-drift
     caller and Manage-backed routes also meet the same contract while retaining

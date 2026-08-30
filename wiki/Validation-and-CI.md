@@ -1384,17 +1384,19 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The dated 2026-08-30 baseline
-is 239 label-backed RFC-0002 issues across 13 repositories: 203 closed and 36
-open. The open set is 25 `status/blocked`, 1 `status/in-progress`, 1
-`status/merged-main`, 9 `status/tracker`, and 0
+is 242 label-backed RFC-0002 issues across 13 repositories: 203 closed and 39
+open. The open set is 25 `status/blocked`, 2 `status/in-progress`, 1
+`status/merged-main`, 2 `status/ready`, 9 `status/tracker`, and 0
 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
 closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
-latest closed Idea maintainability hardening issues. #681 remains in progress
-for Slice 18 synchronization, #1150 is closed after PR #1152 exact-main,
+latest closed Idea maintainability hardening issues. #681 remains the Slice 18
+synchronization tracker, #1154 is in progress for governed economic candidate
+identity, and #1155 then #1156 are ready for feedback-quality evaluation and
+effectiveness measurement. #1150 is closed after PR #1152 exact-main,
 release-image, wiki, and branch-hygiene proof, and #1145 is closed after PR
 #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed after PR #1147 reached exact main
 with Main Releasability, CodeQL, live posture, wiki parity, and branch-hygiene

@@ -51,7 +51,7 @@ accepted from caller-supplied success booleans or summary counts.
 | --- | --- |
 | Worker scope | The tenant and portfolio are hashed into a source-safe scope fingerprint. Raw identifiers are excluded. |
 | Core authority | Exactly the four governed high-cash Core products must be current, same-date `lotus-core` references. |
-| Domain outcome | Every work item must finish as `accepted` or `replayed`; mixed blocked, conflict, duplicate, suppressed, or ineligible runs do not qualify. |
+| Domain outcome | Every work item must finish as `accepted`, `evidence_refreshed`, `material_version_created`, `recurrent_condition_reopened`, or `replayed`; blocked, conflict, identity-conflict, duplicate-candidate, or ineligible runs do not qualify. |
 | Persistence | Every qualifying item must carry the actual persisted record timestamp, source-evidence hash, and a digest over the receipt. |
 | Durability | `durableStorageBacked` must be true. An in-memory execution remains useful test evidence but cannot qualify. |
 | Aggregate provenance | The consumed artifact ref, digest, source revision, clean-tree posture, and freshness must match at evaluation time. |

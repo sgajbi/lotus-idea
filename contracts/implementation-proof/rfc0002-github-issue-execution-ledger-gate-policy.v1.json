@@ -151,7 +151,10 @@
     1131,
     1139,
     1145,
-    1150
+    1150,
+    1154,
+    1155,
+    1156
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -456,6 +459,49 @@
       "data-mesh certification",
       "supported-feature promotion",
       "final RFC-0002 closure"
+    ],
+    "1154": [
+      "Keep #1154 open",
+      "businessIdentityId",
+      "source content hashes as evidence lineage",
+      "equivalent evidence refresh",
+      "material version",
+      "recurrent reopen",
+      "identity conflict",
+      "migration 016",
+      "PostgreSQL concurrency proof",
+      "remove caller duplicateOfCandidateId authority",
+      "24 caller/source request contracts",
+      "full repository CI",
+      "exact-main Main Releasability and CodeQL",
+      "wiki publication and strict parity",
+      "foundation_only with zero promoted features",
+      "No upstream financial calculation",
+      "final RFC-0002 closure"
+    ],
+    "1155": [
+      "Keep #1155 open and status/ready",
+      "versioned adviser-feedback outcome/reason taxonomy",
+      "fail-closed combination policy",
+      "tenant-scoped source-safe offline evaluation projection",
+      "no automatic policy",
+      "online-learning mutation",
+      "Workbench may consume the canonical taxonomy",
+      "independently authored multi-family fixtures",
+      "No supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "1156": [
+      "Keep #1156 open and status/ready",
+      "opportunity-effectiveness read model",
+      "Define every numerator, denominator, window",
+      "correction/reopen behavior",
+      "bounded index-supported PostgreSQL aggregates",
+      "low-cardinality",
+      "PostgreSQL scale and tenant-isolation proof",
+      "metric-label inspection",
+      "Metrics alone do not promote a supported feature",
+      "complete RFC-0002"
     ]
   },
   "requiredClosedIssueEvidence": {
