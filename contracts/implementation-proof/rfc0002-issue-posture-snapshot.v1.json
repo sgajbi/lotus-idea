@@ -22,25 +22,26 @@
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
     "totalTrackedIssues": 146,
-    "openIssues": 26,
-    "closedIssues": 120,
+    "openIssues": 25,
+    "closedIssues": 121,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
       "open_in_progress": 1,
       "open_merged_main_qa_pending": 0,
-      "open_pr_raised": 1,
+      "open_pr_raised": 0,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
     "fixedLocalIssues": [],
-    "prOpenIssues": ["sgajbi/lotus-idea#1139"],
+    "prOpenIssues": [],
     "inProgressIssues": [
       "sgajbi/lotus-idea#681"
     ],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
+      "sgajbi/lotus-idea#1139",
       "sgajbi/lotus-idea#1131",
       "sgajbi/lotus-idea#1129",
       "sgajbi/lotus-idea#1127",

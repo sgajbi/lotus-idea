@@ -29,7 +29,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active Slice 18 work | `sgajbi/lotus-idea#681` remains the synchronization tracker and `#1139` is under protected review in PR #1147 for non-regressive live posture enforcement. PR #1146 merged the repository-total inventory, blocker-state audit, workflow, and validation-only migration request path to main `6f92b8c6888bae33e5d7a08cb40763054924bbc4`; Main Releasability `33287018872`, CodeQL `33287014532`, migration request validation `33287345077`, wiki publication `133889a`, strict parity, and branch cleanup passed. #1139 stays active because its required post-merge lifecycle transition exposed brittle exact status-count equality. This sync updates durable posture only; it does not promote a supported feature or complete final RFC-0002 blockers. |
+| Active Slice 18 work | `sgajbi/lotus-idea#681` remains the synchronization tracker. `#1139` is closed after PR #1147 merged non-regressive live posture enforcement to exact main `0fd885bbc0542e7df697756f8035bfcb4b5484f4`; Main Releasability `33289306863`, CodeQL `33289301162`, live posture audit `33289301314`, release image identity evidence, wiki publication `f806488`, strict parity, and branch cleanup passed. This sync updates durable posture only; it does not promote a supported feature or complete final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -66,7 +66,7 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 2 | Slice 18 tracker `sgajbi/lotus-idea#681` and live-posture hardening issue `#1139` remain active. |
+| `status/in-progress` | 2 | At the dated baseline, Slice 18 tracker `sgajbi/lotus-idea#681` and live-posture hardening issue `#1139` were active. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
@@ -74,9 +74,9 @@ Latest synchronization evidence: the dated 2026-08-30 GitHub baseline has 237
 label-backed RFC-0002 issues, 200 closed and 37 open, with 25 `status/blocked`,
 2 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`, and 0
 app-actionable blocked issues. As of
-2026-08-30, the Idea source ledger tracks 146 RFC-0002 issues: 120 closed and 26
+2026-08-30, the Idea source ledger tracks 146 RFC-0002 issues: 121 closed and 25
 open. `#681` remains in progress for Slice 18 synchronization and `#1139` is
-under protected review in PR #1147 for non-regressive live posture enforcement.
+closed after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
 `lotus-idea#1119`,
 `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and `#1131` are closed after
 Slice 17 release-governance hardening; `lotus-idea#1110` is closed after PR #1114/#1115/#1116 for

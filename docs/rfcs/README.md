@@ -20,12 +20,12 @@ hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
 lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
 semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
 dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 146
-RFC-0002 issues, 120 closed and 26 open, with `#681` in progress and `#1139`
-under protected review in PR #1147.
+RFC-0002 issues, 121 closed and 25 open. `#681` remains in progress and `#1139`
+is closed after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
 PR #1146 merged the first Slice 18 live-posture tranche to exact main
-`6f92b8c6888bae33e5d7a08cb40763054924bbc4`; #1139 remains active for the
-post-merge non-regression correction that prevents normal lifecycle progress
-from invalidating its own dated snapshot;
+`6f92b8c6888bae33e5d7a08cb40763054924bbc4`. PR #1147 merged the post-merge
+non-regression correction to `0fd885bbc0542e7df697756f8035bfcb4b5484f4`,
+preventing normal lifecycle progress from invalidating its own dated snapshot;
 `#1110`, `#1109`,
 `#1104`, `#1101`, `#1098`, `#1094`, `#1091`,
 `#1088`, and `#1084` remain recent QA-closed Idea maintainability issues.
