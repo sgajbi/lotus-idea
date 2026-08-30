@@ -22,7 +22,7 @@ dependency map, and closure rules without relying on chat memory.
 | As-of date | 2026-08-30 |
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Live drift gate | `make rfc0002-issue-posture-live-gate`; scheduled and manually dispatchable through `RFC-0002 Issue Posture Audit` |
-| Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
+| Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
 | Repositories checked | 13 |
 | Total RFC-0002 issues | 237 |
 | Closed RFC-0002 issues | 200 |

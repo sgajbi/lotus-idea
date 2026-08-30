@@ -142,11 +142,55 @@ def _ledger_issue_numbers(path: Path) -> frozenset[int]:
     return frozenset(entry.issue_number for entry in _entries(_load_json(path)))
 
 
+def _ledger_current_blocker_issue_refs(path: Path) -> frozenset[str]:
+    return frozenset(
+        issue_ref
+        for entry in _entries(_load_json(path))
+        for issue_ref in entry.current_blocker_issue_refs
+    )
+
+
+def fetch_github_issue_reference_states(
+    issue_refs: Sequence[str],
+) -> dict[str, GitHubIssueState]:
+    states: dict[str, GitHubIssueState] = {}
+    for issue_ref in sorted(set(issue_refs)):
+        repository, raw_issue_number = issue_ref.rsplit("#", maxsplit=1)
+        issue_number = int(raw_issue_number)
+        states[issue_ref] = next(
+            iter(
+                _fetch_github_issue_state(
+                    repository=repository,
+                    issue_number=issue_number,
+                ).values()
+            )
+        )
+    return states
+
+
+def load_github_issue_reference_states(path: Path) -> dict[str, GitHubIssueState]:
+    raw_payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw_payload, list):
+        raise ValueError("GitHub blocker issue state input must be a JSON list")
+
+    states: dict[str, GitHubIssueState] = {}
+    for index, raw_issue in enumerate(raw_payload):
+        if not isinstance(raw_issue, Mapping):
+            raise ValueError(f"GitHub blocker issue state item {index} must be an object")
+        issue_ref = raw_issue.get("reference")
+        if not isinstance(issue_ref, str) or not issue_ref:
+            raise ValueError(f"GitHub blocker issue state item {index} has invalid reference")
+        parsed = _parse_github_issue_states([raw_issue])
+        states[issue_ref] = next(iter(parsed.values()))
+    return states
+
+
 def audit_github_issue_execution_state(
     *,
     ledger_path: Path = LEDGER_PATH,
     policy_path: Path = POLICY_PATH,
     github_issues: Mapping[int, GitHubIssueState],
+    current_blocker_issues: Mapping[str, GitHubIssueState] | None = None,
 ) -> list[str]:
     try:
         ledger_payload = _load_json(ledger_path)
@@ -180,6 +224,29 @@ def audit_github_issue_execution_state(
         )
 
     errors.extend(_audit_rfc_label_coverage(ledger_entries, github_issues))
+    if current_blocker_issues is not None:
+        errors.extend(_audit_current_blocker_issue_states(ledger_entries, current_blocker_issues))
+    return errors
+
+
+def _audit_current_blocker_issue_states(
+    ledger_entries: Sequence[IssueEntry],
+    current_blocker_issues: Mapping[str, GitHubIssueState],
+) -> list[str]:
+    errors: list[str] = []
+    for entry in ledger_entries:
+        for issue_ref in entry.current_blocker_issue_refs:
+            blocker_issue = current_blocker_issues.get(issue_ref)
+            if blocker_issue is None:
+                errors.append(
+                    f"#{entry.issue_number}: current blocker {issue_ref} is missing from "
+                    "GitHub blocker issue state"
+                )
+            elif blocker_issue.state != "OPEN":
+                errors.append(
+                    f"#{entry.issue_number}: current blocker {issue_ref} is "
+                    f"{blocker_issue.state.lower()} on GitHub"
+                )
     return errors
 
 
@@ -326,6 +393,14 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         type=Path,
         help="Offline gh issue list JSON fixture. If omitted, the script calls gh.",
     )
+    parser.add_argument(
+        "--github-blocker-issues-json",
+        type=Path,
+        help=(
+            "Offline GitHub state fixture for currentBlockerIssueRefs. Required with "
+            "--github-issues-json when the ledger declares current blockers."
+        ),
+    )
     parser.add_argument("--repo", default="sgajbi/lotus-idea")
     return parser.parse_args(argv)
 
@@ -339,6 +414,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         except (FileNotFoundError, json.JSONDecodeError, ValueError):
             required_issue_numbers = None
     try:
+        current_blocker_issue_refs = _ledger_current_blocker_issue_refs(args.ledger)
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        current_blocker_issue_refs = frozenset()
+    try:
         github_issues = (
             load_github_issue_states(args.github_issues_json)
             if args.github_issues_json is not None
@@ -347,6 +426,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 required_issue_numbers=required_issue_numbers,
             )
         )
+        if args.github_blocker_issues_json is not None:
+            current_blocker_issues = load_github_issue_reference_states(
+                args.github_blocker_issues_json
+            )
+        elif args.github_issues_json is not None and current_blocker_issue_refs:
+            raise ValueError(
+                "--github-blocker-issues-json is required when offline ledger state "
+                "declares currentBlockerIssueRefs"
+            )
+        else:
+            current_blocker_issues = fetch_github_issue_reference_states(
+                tuple(current_blocker_issue_refs)
+            )
     except (json.JSONDecodeError, OSError, RuntimeError, ValueError) as exc:
         print(str(exc))
         return 1
@@ -354,6 +446,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     errors = audit_github_issue_execution_state(
         ledger_path=args.ledger,
         github_issues=github_issues,
+        current_blocker_issues=current_blocker_issues,
     )
     if errors:
         print("\n".join(errors))

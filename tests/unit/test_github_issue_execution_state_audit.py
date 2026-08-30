@@ -84,12 +84,76 @@ def _github_issue_payload(ledger: dict[str, Any]) -> list[dict[str, Any]]:
     return issues
 
 
+def _current_blocker_states(module: ModuleType, ledger: dict[str, Any]) -> dict[str, Any]:
+    issue_refs = {
+        issue_ref
+        for entry in ledger["issues"]
+        if isinstance(entry, dict)
+        for issue_ref in entry.get("currentBlockerIssueRefs", [])
+    }
+    return {
+        issue_ref: module.GitHubIssueState(
+            issue_number=int(issue_ref.rsplit("#", maxsplit=1)[1]),
+            state="OPEN",
+            labels=frozenset({"status/blocked", "rfc/RFC-0002"}),
+            title=f"Current blocker {issue_ref}",
+            url=f"https://github.com/{issue_ref.replace('#', '/issues/')}",
+        )
+        for issue_ref in issue_refs
+    }
+
+
 def test_github_issue_execution_state_audit_passes_matching_issue_state() -> None:
     module = _load_audit()
     ledger = _load_ledger()
     github_issues = module._parse_github_issue_states(_github_issue_payload(ledger))
 
-    assert module.audit_github_issue_execution_state(github_issues=github_issues) == []
+    assert (
+        module.audit_github_issue_execution_state(
+            github_issues=github_issues,
+            current_blocker_issues=_current_blocker_states(module, ledger),
+        )
+        == []
+    )
+
+
+def test_github_issue_execution_state_audit_rejects_closed_current_blocker() -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    github_issues = module._parse_github_issue_states(_github_issue_payload(ledger))
+    blocker_issues = _current_blocker_states(module, ledger)
+    blocker_issues["sgajbi/lotus-workbench#904"] = module.GitHubIssueState(
+        issue_number=904,
+        state="CLOSED",
+        labels=frozenset({"status/merged-main"}),
+        title="Resolved Workbench blocker",
+        url="https://github.com/sgajbi/lotus-workbench/issues/904",
+    )
+
+    errors = module.audit_github_issue_execution_state(
+        github_issues=github_issues,
+        current_blocker_issues=blocker_issues,
+    )
+
+    assert "#814: current blocker sgajbi/lotus-workbench#904 is closed on GitHub" in errors
+
+
+def test_github_issue_execution_state_audit_rejects_missing_current_blocker() -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    github_issues = module._parse_github_issue_states(_github_issue_payload(ledger))
+    blocker_issues = _current_blocker_states(module, ledger)
+    blocker_issues.pop("sgajbi/lotus-advise#557")
+
+    errors = module.audit_github_issue_execution_state(
+        github_issues=github_issues,
+        current_blocker_issues=blocker_issues,
+    )
+
+    assert (
+        "#814: current blocker sgajbi/lotus-advise#557 is missing from GitHub blocker issue state"
+        in errors
+    )
 
 
 def test_github_issue_execution_state_audit_rejects_missing_github_issue(
@@ -178,6 +242,55 @@ def test_fetch_github_issue_states_recovers_required_issue_outside_list_window(
             "340",
             "--repo",
             "sgajbi/lotus-idea",
+            "--json",
+            module.GITHUB_ISSUE_FIELDS,
+        ]
+    ]
+
+
+def test_fetch_github_issue_reference_states_queries_owning_repository(
+    monkeypatch: Any,
+) -> None:
+    module = _load_audit()
+    commands: list[list[str]] = []
+
+    def fake_run(
+        command: list[str],
+        *,
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> SimpleNamespace:
+        commands.append(command)
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "number": 904,
+                    "state": "OPEN",
+                    "title": "Workbench blocker",
+                    "url": "https://github.com/sgajbi/lotus-workbench/issues/904",
+                    "labels": [{"name": "status/blocked"}],
+                }
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    states = module.fetch_github_issue_reference_states(
+        ["sgajbi/lotus-workbench#904", "sgajbi/lotus-workbench#904"]
+    )
+
+    assert states["sgajbi/lotus-workbench#904"].state == "OPEN"
+    assert commands == [
+        [
+            "gh",
+            "issue",
+            "view",
+            "904",
+            "--repo",
+            "sgajbi/lotus-workbench",
             "--json",
             module.GITHUB_ISSUE_FIELDS,
         ]

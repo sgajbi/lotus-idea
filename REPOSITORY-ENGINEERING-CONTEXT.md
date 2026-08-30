@@ -149,7 +149,11 @@ title-only-reference, or seven-day freshness drift. The shared GitHub issue
 inventory used by both the local Idea issue-state audit and cross-repository
 posture command first queries each repository issue total and rejects incomplete
 cardinality, so a newly RFC-labeled issue beyond a fixed list window cannot be
-hidden by ledger-only backfill or a larger fixed cap. On 2026-08-30, protected evidence runs
+hidden by ledger-only backfill or a larger fixed cap. Open blocked ledger entries
+now use canonical `currentBlockerIssueRefs` values when they assert a specific
+external issue as current; the live state audit fails if a declared blocker is
+missing or closed, preventing historical Core or dependency narratives from
+remaining enforced as current truth. On 2026-08-30, protected evidence runs
 `33283746668`, `33283753824`, and `33283761340` proved dispatch/queue wiring for
 PostgreSQL capacity, dependency recovery, and load/soak, but started zero steps
 because the governed self-hosted runner was unavailable; all three were
