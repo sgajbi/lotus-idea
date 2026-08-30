@@ -100,6 +100,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
             event_lineage=event_lineage,
             payload={
                 "action": result.decision.action.value,
+                "reason_codes": ",".join(reason.value for reason in result.decision.reason_codes),
                 "resulting_posture": result.decision.resulting_posture.value,
             },
         )

@@ -81,7 +81,7 @@
     {
       "eventType": "idea.review.decision_recorded.v1",
       "aggregateType": "idea_candidate",
-      "description": "Advisor review decision recorded with caller and entitlement checks upstream of suitability authority."
+      "description": "Advisor review decision recorded with caller and entitlement checks upstream of suitability authority; source-safe reason_codes preserve the canonical action-owned-first decision sequence."
     },
     {
       "eventType": "idea.feedback.recorded.v1",

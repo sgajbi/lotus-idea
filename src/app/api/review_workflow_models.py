@@ -33,7 +33,14 @@ from app.security.caller_context import CallerContext
 class ReviewActionRequest(CamelModel):
     review_id: str = Field(..., alias="reviewId")
     action: ReviewAction
-    reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
+    reason_codes: tuple[ReasonCode, ...] = Field(
+        ...,
+        alias="reasonCodes",
+        description=(
+            "Review reasons supplied by the caller. Lotus Idea records the action-owned reason "
+            "for the requested review action exactly once, whether or not the caller includes it."
+        ),
+    )
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
     suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
     snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")

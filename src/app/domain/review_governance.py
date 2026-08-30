@@ -364,7 +364,10 @@ def review_mutation_identity_from_command(
         actor_role=command.actor.role,
         event_name=command.action.value,
         resulting_posture=_REVIEW_ACTION_POSTURES[command.action],
-        reason_codes=(_REVIEW_ACTION_REASON_CODES[command.action], *command.reason_codes),
+        reason_codes=_canonical_source_reason_codes(
+            source_reason=_REVIEW_ACTION_REASON_CODES[command.action],
+            caller_reason_codes=command.reason_codes,
+        ),
         occurred_at_utc=command.decided_at_utc,
         suppression_reason=command.suppression_reason,
         snoozed_until_utc=command.snoozed_until_utc,
@@ -404,7 +407,10 @@ def feedback_mutation_identity_from_command(
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
         event_name=command.outcome.value,
-        reason_codes=_canonical_feedback_reason_codes(command.reason_codes),
+        reason_codes=_canonical_source_reason_codes(
+            source_reason=ReasonCode.FEEDBACK_RECORDED,
+            caller_reason_codes=command.reason_codes,
+        ),
         occurred_at_utc=command.recorded_at_utc,
         source_signal_ids=candidate.source_signal_ids,
     )
@@ -445,9 +451,9 @@ def apply_review_action(
         resulting_posture=_REVIEW_ACTION_POSTURES[command.action],
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
-        reason_codes=(
-            _REVIEW_ACTION_REASON_CODES[command.action],
-            *command.reason_codes,
+        reason_codes=_canonical_source_reason_codes(
+            source_reason=_REVIEW_ACTION_REASON_CODES[command.action],
+            caller_reason_codes=command.reason_codes,
         ),
         decided_at_utc=command.decided_at_utc,
         suppression_reason=command.suppression_reason,
@@ -493,7 +499,10 @@ def record_feedback(
         feedback_id=command.feedback_id,
         outcome=command.outcome,
         actor_role=command.actor.role.value,
-        reason_codes=_canonical_feedback_reason_codes(command.reason_codes),
+        reason_codes=_canonical_source_reason_codes(
+            source_reason=ReasonCode.FEEDBACK_RECORDED,
+            caller_reason_codes=command.reason_codes,
+        ),
         recorded_at_utc=command.recorded_at_utc,
     )
     feedback_event = GovernedFeedbackEvent(
@@ -520,13 +529,15 @@ def record_feedback(
     return FeedbackResult(feedback_event=feedback_event, audit_event=audit_event)
 
 
-def _canonical_feedback_reason_codes(
+def _canonical_source_reason_codes(
+    *,
+    source_reason: ReasonCode,
     caller_reason_codes: tuple[ReasonCode, ...],
 ) -> tuple[ReasonCode, ...]:
-    """Place the source-owned feedback reason first and persist it exactly once."""
+    """Place a source-owned reason first and persist it exactly once."""
     return (
-        ReasonCode.FEEDBACK_RECORDED,
-        *(reason for reason in caller_reason_codes if reason is not ReasonCode.FEEDBACK_RECORDED),
+        source_reason,
+        *(reason for reason in caller_reason_codes if reason is not source_reason),
     )
 
 
@@ -678,6 +689,7 @@ def _review_audit_event(
             "prior_lifecycle_status": candidate_before.lifecycle_status.value,
             "prior_review_posture": candidate_before.review_posture.value,
             "requested_action": decision.action.value,
+            "reason_codes": ",".join(reason.value for reason in decision.reason_codes),
             "review_action": decision.action.value,
             "review_posture": candidate_after.review_posture.value,
         },
