@@ -859,6 +859,30 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
     assert payload["supportedFeaturePromoted"] is False
 
 
+def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    headers = persistence_headers("persist-high-cash-api-unsafe-causation-001")
+    headers["X-Causation-Id"] = "bearer-secret-token"
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Correct the event lineage headers and retry.",
+    }
+    assert "bearer-secret-token" not in response.text
+    assert get_idea_repository().snapshot().candidate_records == {}
+
+
 def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)

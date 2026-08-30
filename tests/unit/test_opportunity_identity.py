@@ -142,6 +142,12 @@ def test_unscoped_diagnostics_are_bounded_by_evaluation_date() -> None:
         ("opportunity_kind", " ", ValueError, "opportunity_kind is required"),
         ("material_facts", {}, ValueError, "material_facts is required"),
         ("source_refs", (), ValueError, "source_refs is required"),
+        (
+            "material_facts",
+            {1: "0.18"},
+            ValueError,
+            "material fact names must be non-blank strings",
+        ),
         ("material_facts", {"cash_weight": 0.18}, TypeError, "canonical scalar"),
     ),
 )
