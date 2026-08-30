@@ -312,6 +312,10 @@ Implementation evidence:
     identity. Domain and PostgreSQL boundaries fence candidate, tenant,
     material/evidence versions, UTC chronology, rank, visible count, and queue
     digest. Operation telemetry exposes no candidate or tenant identifier.
+    The advisor queue now publishes the current Idea-owned material/evidence
+    versions per item, allowing the consumer to copy source truth from the
+    exact rendered candidate while leaving visible-set digest ownership in
+    Workbench. Stale versions fail closed; consumers must not reconstruct them.
 37. Presentation counts remain
     `unavailable_consumer_certification_pending`; queue reads are not treated as
     shown evidence. Gateway issue `#692` and Workbench issue `#954` remain the

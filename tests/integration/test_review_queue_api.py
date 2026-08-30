@@ -209,6 +209,13 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     assert {item["candidate"]["scorePolicyVersion"] for item in payload["items"]} == {
         "idle-liquidity-v1"
     }
+    assert {
+        (
+            item["candidate"]["materialVersion"],
+            item["candidate"]["evidenceVersion"],
+        )
+        for item in payload["items"]
+    } == {(1, 1)}
     assert payload["exclusions"] == []
     assert payload["page"] | {"snapshotToken": None} == {
         "limit": 25,
@@ -222,6 +229,74 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         "snapshotToken": None,
     }
     assert payload["page"]["snapshotToken"].startswith("rqs1_")
+
+
+def test_advisor_queue_versions_bind_visible_render_receipt_to_current_evidence() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    scope = access_scope(portfolio_id="PB_SG_QUEUE_VERSIONED_001")
+    first_candidate_id = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-source-version-1",
+        idempotency_key="seed-review-queue-source-version-001",
+        candidate_scope=scope,
+    )
+    refreshed_candidate_id = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-source-version-2",
+        idempotency_key="seed-review-queue-source-version-002",
+        candidate_scope=scope,
+    )
+    assert refreshed_candidate_id == first_candidate_id
+
+    queue_response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=scoped_queue_headers(portfolio_ids="PB_SG_QUEUE_VERSIONED_001"),
+    )
+
+    assert queue_response.status_code == 200
+    queue = queue_response.json()
+    assert len(queue["items"]) == 1
+    item = queue["items"][0]
+    candidate = item["candidate"]
+    assert candidate["candidateId"] == first_candidate_id
+    assert (candidate["materialVersion"], candidate["evidenceVersion"]) == (1, 2)
+
+    presentation_headers = {
+        "X-Caller-Subject": "workbench-visible-render-producer",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.presentation-receipt.record",
+        "X-Caller-Tenant-Ids": scope["tenantId"],
+        "Idempotency-Key": "receipt-review-queue-source-version-001",
+    }
+    presentation_payload = {
+        "tenantId": scope["tenantId"],
+        "presentedAtUtc": "2026-06-21T10:11:00Z",
+        "rankAtPresentation": item["rank"],
+        "visibleCandidateCount": len(queue["items"]),
+        "queueSnapshotDigest": f"sha256:{'a' * 64}",
+        "queuePolicyVersion": queue["policyVersion"],
+        "rankingPolicyVersion": item["policyVersion"],
+        "candidateMaterialVersion": candidate["materialVersion"],
+        "candidateEvidenceVersion": candidate["evidenceVersion"],
+    }
+    accepted = client.post(
+        f"/api/v1/idea-candidates/{first_candidate_id}/presentation-receipts",
+        json=presentation_payload,
+        headers=presentation_headers,
+    )
+    stale = client.post(
+        f"/api/v1/idea-candidates/{first_candidate_id}/presentation-receipts",
+        json={**presentation_payload, "candidateEvidenceVersion": 1},
+        headers={**presentation_headers, "Idempotency-Key": "receipt-stale-source-version-001"},
+    )
+
+    assert accepted.status_code == 201
+    assert accepted.json()["receipt"]["candidateEvidenceVersion"] == 2
+    assert stale.status_code == 409
+    assert stale.json()["code"] == "presentation_receipt_candidate_state_conflict"
 
 
 def test_business_review_queue_apis_route_only_the_responsible_audience() -> None:

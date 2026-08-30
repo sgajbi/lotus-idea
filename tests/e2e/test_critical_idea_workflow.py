@@ -175,6 +175,8 @@ def _assert_advisor_queue_contains_candidate(client: Any, candidate_id: str) -> 
     assert queue_payload["page"]["returnedItemCount"] == 1
     assert queue_payload["page"]["hasNextPage"] is False
     assert queue_payload["items"][0]["candidate"]["candidateId"] == candidate_id
+    assert queue_payload["items"][0]["candidate"]["materialVersion"] == 1
+    assert queue_payload["items"][0]["candidate"]["evidenceVersion"] == 1
     assert queue_payload["items"][0]["rank"] == 1
     assert queue_payload["items"][0]["candidate"]["reviewPosture"] == "advisor_review_required"
     assert queue_payload["supportedFeaturePromoted"] is False
