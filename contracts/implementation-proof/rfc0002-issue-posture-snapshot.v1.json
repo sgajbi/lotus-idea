@@ -2,7 +2,8 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-08-31",
+  "asOfDate": "2026-08-30",
+  "asOfTimezone": "UTC",
   "comparisonPolicy": {
     "mode": "dated_non_regression_v1",
     "allowedOpenStatusLabels": [
@@ -150,7 +151,7 @@
     "ideaLedger": [
       "152 tracked RFC-0002 issues",
       "125 closed and 27 open",
-      "2026-08-31",
+      "2026-08-30",
       "#681",
       "#1145",
       "#1150",
@@ -180,7 +181,7 @@
     "crossRepo": [
       "247 label-backed RFC-0002 issues",
       "205 closed and 42 open",
-      "2026-08-31",
+      "2026-08-30",
       "25 `status/blocked`, 7 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`",
       "0 app-actionable blocked"
     ]

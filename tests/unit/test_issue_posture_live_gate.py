@@ -91,6 +91,7 @@ def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
             {
                 "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
                 "asOfDate": "2026-08-30",
+                "asOfTimezone": "UTC",
                 "comparisonPolicy": {
                     "mode": "dated_non_regression_v1",
                     "allowedOpenStatusLabels": [
@@ -369,6 +370,23 @@ def test_live_posture_gate_rejects_future_snapshot_date(tmp_path: Path) -> None:
     )
 
     assert errors == ["RFC-0002 posture snapshot asOfDate 2026-08-31 is in the future"]
+
+
+def test_live_posture_gate_requires_explicit_utc_snapshot_timezone(tmp_path: Path) -> None:
+    module = _load_gate()
+    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
+    payload = json.loads(snapshot.read_text(encoding="utf-8"))
+    payload["asOfTimezone"] = "Asia/Singapore"
+    snapshot.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="asOfTimezone must be UTC"):
+        module.live_posture_errors(
+            snapshot_path=snapshot,
+            repositories=(REPOSITORY,),
+            fixture_path=fixture,
+            blocker_classification_path=blocker_classification,
+            today=date(2026, 8, 30),
+        )
 
 
 def test_live_posture_workflow_runs_on_schedule_dispatch_and_main_snapshot_change() -> None:

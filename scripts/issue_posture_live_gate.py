@@ -7,7 +7,7 @@ import json
 import re
 import sys
 from collections.abc import Mapping, Sequence
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +45,7 @@ def live_posture_errors(
     )
     errors = _snapshot_age_errors(
         snapshot,
-        today=today or date.today(),
+        today=today or datetime.now(UTC).date(),
         max_snapshot_age_days=max_snapshot_age_days,
     )
     errors.extend(_cross_repo_count_errors(snapshot=snapshot, live=live))
@@ -58,6 +58,8 @@ def _load_snapshot(path: Path) -> dict[str, Any]:
         raise ValueError(f"{path}: snapshot must be a JSON object")
     if payload.get("schemaVersion") != EXPECTED_SCHEMA_VERSION:
         raise ValueError(f"{path}: schemaVersion must be {EXPECTED_SCHEMA_VERSION}")
+    if payload.get("asOfTimezone") != "UTC":
+        raise ValueError(f"{path}: asOfTimezone must be UTC")
     return payload
 
 
