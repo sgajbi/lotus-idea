@@ -233,7 +233,7 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `019_candidate_presentation_receipts`. Migration `016`
+The current schema head is `020_independent_presentation_rank`. Migration `016`
 adds tenant-scoped business identity, material/evidence version, material
 fingerprint, change-reason, and superseded-version columns. Migration `017`
 adds the versioned feedback outcome/reason taxonomy and immutable offline
@@ -242,7 +242,11 @@ legacy rollback evidence, and refuses rollback after new governed feedback has
 been accepted. Migration `018` adds bounded opportunity-effectiveness query
 indexes and a source-generation timestamp. Migration `019` adds immutable,
 tenant-scoped candidate presentation receipts with rank/count, digest, policy,
-version, chronology, and replay fencing.
+version, chronology, and replay fencing. Migration `020` replaces its legacy
+rank-within-visible-count constraint with a validated positive-global-rank
+constraint while retaining the independent visible-set bound. The replacement
+constraint is validated before the legacy constraint is removed; rollback fails
+closed if stored receipts rely on the independent rank semantics.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
@@ -469,7 +473,7 @@ Repository validation:
 make deployment-migration-contract-gate
 ```
 
-The contract pins PostgreSQL 18, all 16 migration files and rollback content,
+The contract pins PostgreSQL 18, all 20 versioned migration pairs and rollback content,
 the legacy structural fingerprint, Docker image closure, protected workflow,
 evidence schema, and non-certification blockers. Direct migration execution in
 other GitHub workflows is rejected except for the two explicit disposable

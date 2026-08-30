@@ -39,9 +39,12 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   `unavailable_consumer_certification_pending` until Gateway issue `#692` and
   Workbench issue `#954` are merged and validated.
 
-The receipt is fenced by tenant, candidate material/evidence versions, UTC
-chronology, rank, visible count, and SHA-256 queue snapshot digest. It stores no
-client content, candidate rationale, actor identity, or raw queue payload.
+The receipt is fenced by tenant, strict-integer candidate material/evidence versions, UTC
+chronology, strict positive global rank, independently bounded integer visible-set count, and
+SHA-256 queue snapshot digest. A globally lower-ranked candidate may be the only
+item visible after scrolling or filtering, so Workbench must neither renumber
+Idea rank nor inflate visible count. It stores no client content, candidate
+rationale, actor identity, or raw queue payload.
 The advisor queue supplies the current Idea-owned material/evidence versions
 for every candidate. A Workbench receipt must copy them from the exact rendered
 item rather than reconstructing source version state; Workbench remains

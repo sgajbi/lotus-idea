@@ -310,8 +310,13 @@ Implementation evidence:
 36. `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts` records
     immutable visible-render evidence using `Idempotency-Key` as receipt
     identity. Domain and PostgreSQL boundaries fence candidate, tenant,
-    material/evidence versions, UTC chronology, rank, visible count, and queue
-    digest. Operation telemetry exposes no candidate or tenant identifier.
+    material/evidence versions, UTC chronology, positive global queue rank,
+    independently bounded visible-set count, and queue digest. Global rank is
+    never renumbered or compared with the size of a different visible
+    population. Migration `020_independent_presentation_rank` validates the
+    replacement PostgreSQL constraint before removing the legacy relation and
+    fails closed on incompatible rollback. Operation telemetry exposes no
+    candidate or tenant identifier.
     The advisor queue now publishes the current Idea-owned material/evidence
     versions per item, allowing the consumer to copy source truth from the
     exact rendered candidate while leaving visible-set digest ownership in

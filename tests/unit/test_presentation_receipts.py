@@ -35,6 +35,13 @@ def test_candidate_presentation_receipt_accepts_governed_visible_queue_evidence(
     assert receipt.visible_candidate_count == 7
 
 
+def test_candidate_presentation_receipt_keeps_global_rank_separate_from_visible_count() -> None:
+    receipt = _receipt(rank_at_presentation=25, visible_candidate_count=1)
+
+    assert receipt.rank_at_presentation == 25
+    assert receipt.visible_candidate_count == 1
+
+
 @pytest.mark.parametrize(
     ("field_name", "value", "message"),
     (
@@ -53,9 +60,8 @@ def test_candidate_presentation_receipt_accepts_governed_visible_queue_evidence(
             datetime(2026, 8, 30, tzinfo=timezone(timedelta(hours=1))),
             "must be UTC",
         ),
-        ("rank_at_presentation", 0, "within the visible candidate count"),
-        ("rank_at_presentation", 8, "within the visible candidate count"),
-        ("rank_at_presentation", True, "within the visible candidate count"),
+        ("rank_at_presentation", 0, "must be a positive integer"),
+        ("rank_at_presentation", True, "must be a positive integer"),
         ("visible_candidate_count", 0, "must be between"),
         ("visible_candidate_count", MAX_PRESENTED_CANDIDATE_COUNT + 1, "must be between"),
         ("visible_candidate_count", True, "must be between"),

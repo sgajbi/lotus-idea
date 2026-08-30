@@ -87,11 +87,22 @@ The request contains only:
 | --- | --- |
 | `tenantId` | Must match caller entitlement and persisted candidate scope |
 | `presentedAtUtc` | UTC and not before the referenced candidate version |
-| `rankAtPresentation` | One-based and no greater than the visible count |
-| `visibleCandidateCount` | Bounded to 1–100 |
+| `rankAtPresentation` | Strict positive integer; Idea-owned global queue rank copied from the rendered item |
+| `visibleCandidateCount` | Strict integer; independent Workbench-owned visible-set size, bounded to 1–100 |
 | `queueSnapshotDigest` | SHA-256 digest; raw queue payload is excluded |
 | Queue/ranking policy versions | Governed source-safe references |
-| Candidate material/evidence versions | Must equal the persisted current versions |
+| Candidate material/evidence versions | Strict positive integers; must equal the persisted current versions |
+
+Global queue rank and visible-set size describe different populations. A candidate ranked 25th may
+be the only item visible after scrolling or filtering, so `rankAtPresentation=25` and
+`visibleCandidateCount=1` is valid. Producers must neither renumber Idea rank nor inflate the
+visible count to manufacture a cross-field relationship.
+
+Migration `020_independent_presentation_rank` enforces the same rule in PostgreSQL. It validates
+the positive-rank replacement constraint before removing the legacy cross-population constraint.
+Rollback fails closed if stored receipts rely on an Idea global rank greater than the Workbench
+visible-set size; operators must reconcile those governed records before reinstating the legacy
+schema.
 
 Exact retries return `replayed`. Reusing the key with changed evidence returns
 `presentation_receipt_identity_conflict`. Candidate, tenant, version, or

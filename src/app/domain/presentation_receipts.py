@@ -71,10 +71,8 @@ class CandidatePresentationReceipt:
             raise ValueError(
                 f"visible_candidate_count must be between 1 and {MAX_PRESENTED_CANDIDATE_COUNT}"
             )
-        if not _is_integer(self.rank_at_presentation) or not (
-            1 <= self.rank_at_presentation <= self.visible_candidate_count
-        ):
-            raise ValueError("rank_at_presentation must be within the visible candidate count")
+        if not _is_integer(self.rank_at_presentation) or self.rank_at_presentation <= 0:
+            raise ValueError("rank_at_presentation must be a positive integer")
         if not isinstance(self.queue_snapshot_digest, str) or (
             _DIGEST_PATTERN.fullmatch(self.queue_snapshot_digest) is None
         ):

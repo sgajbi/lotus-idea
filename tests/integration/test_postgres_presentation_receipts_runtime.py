@@ -14,7 +14,9 @@ from app.domain import (
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
 )
+from app.infrastructure.migrations import MigrationDirection
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.integration.postgres_runtime_support import execute_migrations
 from tests.support.opportunity_effectiveness_fixture import (
     candidate_fixture,
     record_fixture,
@@ -22,7 +24,7 @@ from tests.support.opportunity_effectiveness_fixture import (
 )
 
 
-def test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced(
+def test_postgres_presentation_receipt_preserves_global_rank_and_is_tenant_fenced(
     postgres_database_url: str,
 ) -> None:
     candidate = candidate_fixture(
@@ -32,7 +34,7 @@ def test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced(
         created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
         tenant_id="tenant-a",
     )
-    receipt = _receipt()
+    receipt = _receipt(rank_at_presentation=25, visible_candidate_count=1)
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         repository = PostgresIdeaRepository(cast(Any, connection))
@@ -51,7 +53,9 @@ def test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced(
             cursor.execute(
                 """
                 SELECT COUNT(*) AS receipt_count,
-                       COUNT(recorded_at_utc) AS receipt_with_recorded_time_count
+                       COUNT(recorded_at_utc) AS receipt_with_recorded_time_count,
+                       MAX(rank_at_presentation) AS rank_at_presentation,
+                       MAX(visible_candidate_count) AS visible_candidate_count
                 FROM idea_candidate_presentation_receipt
                 """
             )
@@ -64,6 +68,8 @@ def test_postgres_presentation_receipt_is_durable_idempotent_and_tenant_fenced(
     assert conflict.receipt == receipt
     assert persisted["receipt_count"] == 1
     assert persisted["receipt_with_recorded_time_count"] == 1
+    assert persisted["rank_at_presentation"] == 25
+    assert persisted["visible_candidate_count"] == 1
 
 
 def test_postgres_snapshot_replacement_clears_receipts_before_candidates(
@@ -96,6 +102,47 @@ def test_postgres_snapshot_replacement_clears_receipts_before_candidates(
     assert remaining is not None
     assert remaining["receipt_count"] == 0
     assert remaining["candidate_count"] == 0
+
+
+def test_postgres_rank_migration_rollback_fails_closed_for_independent_rank(
+    postgres_database_url: str,
+) -> None:
+    candidate = candidate_fixture(
+        "candidate-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
+        tenant_id="tenant-a",
+    )
+    receipt = _receipt(rank_at_presentation=25, visible_candidate_count=1)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        repository.replace_snapshot(snapshot_fixture(record_fixture(candidate)))
+        repository.record_presentation_receipt(receipt)
+
+    with pytest.raises(psycopg.errors.CheckViolation):
+        execute_migrations(postgres_database_url, MigrationDirection.ROLLBACK)
+
+    with psycopg.connect(postgres_database_url) as connection:
+        persisted = connection.execute(
+            """
+            SELECT rank_at_presentation, visible_candidate_count
+            FROM idea_candidate_presentation_receipt
+            WHERE receipt_id = %s
+            """,
+            (receipt.receipt_id,),
+        ).fetchone()
+        active_constraint = connection.execute(
+            """
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = 'idea_candidate_presentation_receipt'::regclass
+              AND conname = 'ck_idea_candidate_presentation_receipt_values_v2'
+            """
+        ).fetchone()
+
+    assert persisted == (25, 1)
+    assert active_constraint == ("ck_idea_candidate_presentation_receipt_values_v2",)
 
 
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:

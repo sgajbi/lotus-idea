@@ -218,7 +218,8 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
         "Records immutable, bounded evidence that a specific candidate version was visibly "
         "rendered in the governed advisor review queue. Idempotency-Key is the stable receipt "
         "identity. The write is fenced by candidate, exact tenant, material version, evidence "
-        "version, and UTC chronology. Queue retrieval is not presentation evidence. This route "
+        "version, and UTC chronology. Idea global rank and Workbench visible-set size remain "
+        "independent facts. Queue retrieval is not presentation evidence. This route "
         "does not promote effectiveness certification until Gateway pass-through and Workbench "
         "visible-render production are independently certified on main."
     ),
@@ -237,8 +238,8 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
                             "candidateId": "candidate-presentation-001",
                             "tenantId": "tenant-private-bank-sg",
                             "presentedAtUtc": "2026-08-30T12:00:00Z",
-                            "rankAtPresentation": 2,
-                            "visibleCandidateCount": 7,
+                            "rankAtPresentation": 25,
+                            "visibleCandidateCount": 1,
                             "queueSnapshotDigest": f"sha256:{'a' * 64}",
                             "queuePolicyVersion": "idea-review-queue-v1",
                             "rankingPolicyVersion": "idea-score-v2",
