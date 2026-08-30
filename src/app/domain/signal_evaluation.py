@@ -553,12 +553,12 @@ def _bounded_underperformance_active_return(active_return: Decimal) -> Decimal:
 
 
 def _underperformance_signal(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: UnderperformanceSignalInput,
     source_refs: tuple[SourceRef, ...],
 ) -> OpportunitySignal:
     return OpportunitySignal(
-        signal_id=f"signal_underperformance_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.UNDERPERFORMANCE,
         source_refs=source_refs,
         reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION,),
@@ -567,24 +567,24 @@ def _underperformance_signal(
 
 
 def _underperformance_lineage(
-    identity: str,
+    identity: OpportunityIdentity,
     source_refs: tuple[SourceRef, ...],
 ) -> LineageRef:
     return LineageRef(
-        lineage_id=f"lineage:lotus-idea:underperformance:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
 
 
 def _underperformance_evidence_packet(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: UnderperformanceSignalInput,
     source_refs: tuple[SourceRef, ...],
     lineage: LineageRef,
 ) -> IdeaEvidencePacket:
     return IdeaEvidencePacket(
-        evidence_packet_id=f"iep_underperformance_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -597,14 +597,14 @@ def _underperformance_evidence_packet(
 
 
 def _underperformance_candidate(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: UnderperformanceSignalInput,
     policy: UnderperformanceSignalPolicy,
     signal: OpportunitySignal,
     evidence_packet: IdeaEvidencePacket,
 ) -> IdeaCandidate:
     return IdeaCandidate(
-        candidate_id=f"idea_underperformance_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.UNDERPERFORMANCE,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -887,27 +887,20 @@ def _stable_underperformance_identity(
     source_input: UnderperformanceSignalInput,
     policy: UnderperformanceSignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "active_return": str(source_input.source_reported_active_return),
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "benchmark_context_available": source_input.benchmark_context_available,
-        "family": OpportunityFamily.UNDERPERFORMANCE.value,
-        "policy_version": policy.policy_version,
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        opportunity_kind="underperformance",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "active_return": str(source_input.source_reported_active_return),
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "benchmark_context_available": source_input.benchmark_context_available,
+            "policy_version": policy.policy_version,
+        },
+        source_refs=source_refs,
+    )
 
 
 def _stable_mandate_health_identity(

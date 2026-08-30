@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -121,6 +122,45 @@ def test_missing_benchmark_gap_creates_reproducible_review_candidate() -> None:
     assert first.candidate.score.policy_version == "missing-benchmark-review-v1"
     assert first.candidate.score.score == Decimal("68")
     assert first.candidate.score.reason_codes == first.reason_codes
+
+
+def test_missing_benchmark_source_correction_preserves_candidate_and_versions_evidence() -> None:
+    source_input = missing_benchmark_input()
+    assert source_input.benchmark_assignment_ref is not None
+    corrected_input = replace(
+        source_input,
+        benchmark_assignment_ref=replace(
+            source_input.benchmark_assignment_ref,
+            content_hash="sha256:benchmark-assignment-gap:correction-2",
+        ),
+    )
+
+    original = evaluate_missing_benchmark_signal(source_input, policy())
+    corrected = evaluate_missing_benchmark_signal(corrected_input, policy())
+
+    assert original.signal is not None
+    assert corrected.signal is not None
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert original.signal.signal_id != corrected.signal.signal_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
+    )
 
 
 def test_missing_benchmark_ready_assignment_is_not_eligible() -> None:
