@@ -10,7 +10,8 @@ map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 The dated 2026-08-30 RFC-0002 snapshot baseline has 238 label-backed RFC-0002
 issues across 13 repositories: 201 closed and 37 open, with 25
-`status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 9
+`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1
+`status/pr-open`, 9
 `status/tracker`, and 0
 app-actionable blocked issues.
 The latest Idea implementation-backed closures are Slice 17 release-governance
@@ -21,7 +22,7 @@ lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
 semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
 dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 147
 RFC-0002 issues, 121 closed and 26 open. `#681` remains in progress, `#1145`
-is in progress for Slice 08 feedback reason ownership, and `#1139` is closed
+is PR-open through PR #1149 for Slice 08 feedback reason ownership, and `#1139` is closed
 after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
 PR #1146 merged the first Slice 18 live-posture tranche to exact main
 `6f92b8c6888bae33e5d7a08cb40763054924bbc4`. PR #1147 merged the post-merge

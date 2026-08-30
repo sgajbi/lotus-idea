@@ -1412,9 +1412,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1145",
       "rfcSlices": ["slice-08"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1145 open while Slice 08 feedback correctness hardening is in progress. Idea must canonicalize its source-owned feedback_recorded reason exactly once before mutation identity, persistence, replay, API response, and downstream evidence projection. Caller-supplied and omitted source reasons require explicit tests; equivalent business-resource retries under new transport keys must replay, changed content must conflict truthfully, and no Gateway/Workbench compatibility rewrite or supported-feature promotion is permitted."
+      "closureInstruction": "Keep #1145 open while PR #1149 carries the Slice 08 feedback correctness hardening through merge, exact-main validation, wiki publication, and branch hygiene. The branch canonicalizes the source-owned feedback_recorded reason exactly once before mutation identity, persistence, replay, API response, and downstream evidence projection. Caller-supplied and omitted source reasons are covered explicitly; equivalent business-resource retries under new transport keys replay, changed content must conflict truthfully, and no Gateway/Workbench compatibility rewrite or supported-feature promotion is permitted. Local make check and make ci passed with 5,574 unit tests, 502 integration tests, 4 E2E tests, 99.03% combined coverage, and no known dependency vulnerabilities."
     }
   ]
 }
