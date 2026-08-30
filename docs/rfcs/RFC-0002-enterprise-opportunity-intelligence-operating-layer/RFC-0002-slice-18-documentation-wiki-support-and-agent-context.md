@@ -1032,9 +1032,10 @@ chat-only explanation.
 As of 2026-08-30, for the current 237 label-backed RFC-0002 issue program
 posture, 25 open `status/blocked` issues are classified; 0 are app-actionable
 blocked issues. The current cross-repo posture is 200 closed and 37 open across
-13 repositories, with 25 `status/blocked`, 2 `status/in-progress`, 1
-`status/merged-main`, 9 `status/tracker`; `sgajbi/lotus-idea#681` and
-`#1139` are the in-progress Slice 18 tracker and live-posture hardening issue.
+13 repositories, with 25 `status/blocked`, 1 `status/in-progress`, 1
+`status/merged-main`, 1 `status/pr-open`, 9 `status/tracker`;
+`sgajbi/lotus-idea#681` remains the in-progress Slice 18 tracker and `#1139` is
+PR-open in PR #1146 for live-posture hardening.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
 `lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,

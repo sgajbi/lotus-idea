@@ -1385,16 +1385,17 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. As of 2026-08-30, the current
 governed posture is 237 label-backed RFC-0002 issues across 13 repositories:
-200 closed and 37 open. The open set is 25 `status/blocked`, 2
-`status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`, and 0
+200 closed and 37 open. The open set is 25 `status/blocked`, 1
+`status/in-progress`, 1 `status/merged-main`, 1 `status/pr-open`, 9
+`status/tracker`, and 0
 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
 and #1131 are closed after Slice 17 release-governance hardening; #1110 is
 closed after PR #1116 synchronized final QA closure source truth; #1109 is
 closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
-latest closed Idea maintainability hardening issues, while #681 remains open
-after PR #1097 merged and #1139 remains in progress for live posture hardening.
+latest closed Idea maintainability hardening issues, while #681 remains in
+progress and #1139 is PR-open in PR #1146 for live posture hardening.
 
 ### Live RFC-0002 Posture And Protected-Lane Liveness
 
