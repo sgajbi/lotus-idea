@@ -244,17 +244,13 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
                             "rankingPolicyVersion": "idea-score-v2",
                             "candidateMaterialVersion": 1,
                             "candidateEvidenceVersion": 1,
-                            "schemaVersion": (
-                                "lotus-idea.candidate-presentation-receipt.v1"
-                            ),
+                            "schemaVersion": ("lotus-idea.candidate-presentation-receipt.v1"),
                             "surface": "advisor_review_queue",
                             "producer": "lotus-workbench",
                         },
                         "persistenceDecision": "accepted",
                         "durableStorageBacked": True,
-                        "effectivenessMeasurementStatus": (
-                            "stored_consumer_certification_pending"
-                        ),
+                        "effectivenessMeasurementStatus": ("stored_consumer_certification_pending"),
                         "certificationStatus": "not_certified",
                         "certificationBlockers": [
                             "gateway_presentation_receipt_pass_through_not_certified",
