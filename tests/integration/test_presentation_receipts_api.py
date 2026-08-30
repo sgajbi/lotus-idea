@@ -6,7 +6,14 @@ from decimal import Decimal
 import pytest
 
 import app.api.presentation_receipts as presentation_receipts_api
-from app.domain import InMemoryIdeaRepository, OpportunityFamily
+from app.api.durable_write_guard import durable_repository_not_configured_problem
+from app.api.presentation_receipt_models import PresentationReceiptResponse
+from app.domain import (
+    InMemoryIdeaRepository,
+    OpportunityFamily,
+    PresentationReceiptDecision,
+    PresentationReceiptResult,
+)
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.support.http import managed_test_client
@@ -205,3 +212,59 @@ def test_presentation_receipt_api_emits_only_bounded_operation_event_evidence(
     ]
     assert "candidate-presentation-001" not in str(events)
     assert "tenant-a" not in str(events)
+
+
+def test_presentation_receipt_api_fails_closed_when_writes_are_not_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        presentation_receipts_api,
+        "durable_write_problem",
+        lambda repository: durable_repository_not_configured_problem(),
+    )
+
+    response = managed_test_client(app).post(_path(), json=_payload(), headers=_headers())
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "durable_repository_not_configured"
+
+
+def test_presentation_receipt_api_rejects_repository_without_receipt_capability(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(presentation_receipts_api, "durable_write_problem", lambda repository: None)
+    monkeypatch.setattr(presentation_receipts_api, "get_idea_repository", object)
+
+    response = managed_test_client(app).post(_path(), json=_payload(), headers=_headers())
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "presentation_receipt_unavailable"
+
+
+def test_presentation_receipt_api_fails_closed_on_repository_outage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def raise_repository_outage(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(
+        InMemoryIdeaRepository,
+        "record_presentation_receipt",
+        raise_repository_outage,
+    )
+
+    response = managed_test_client(app).post(_path(), json=_payload(), headers=_headers())
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "presentation_receipt_unavailable"
+
+
+def test_presentation_receipt_response_rejects_missing_evidence() -> None:
+    with pytest.raises(ValueError, match="missing receipt evidence"):
+        PresentationReceiptResponse.from_result(
+            PresentationReceiptResult(
+                decision=PresentationReceiptDecision.ACCEPTED,
+                receipt=None,
+            ),
+            durable_storage_backed=True,
+        )

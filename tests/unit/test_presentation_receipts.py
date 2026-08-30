@@ -16,6 +16,7 @@ from app.domain import (
     OpportunityFamily,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
+    validate_presentation_receipt_candidate,
 )
 from tests.support.opportunity_effectiveness_fixture import (
     candidate_fixture,
@@ -46,6 +47,7 @@ def test_candidate_presentation_receipt_accepts_governed_visible_queue_evidence(
         ("surface", "search_results", "unsupported"),
         ("producer", "lotus-gateway", "unsupported"),
         ("presented_at_utc", datetime(2026, 8, 30), "timezone-aware"),
+        ("presented_at_utc", "2026-08-30T12:00:00Z", "must be a datetime"),
         (
             "presented_at_utc",
             datetime(2026, 8, 30, tzinfo=timezone(timedelta(hours=1))),
@@ -123,6 +125,22 @@ def test_in_memory_repository_rejects_receipt_that_does_not_match_candidate(
 ) -> None:
     with pytest.raises(PresentationReceiptCandidateStateError):
         _repository().record_presentation_receipt(_receipt(**overrides))
+
+
+def test_candidate_validation_rejects_mismatched_identity_before_other_claims() -> None:
+    candidate = candidate_fixture(
+        "candidate-0001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 12, tzinfo=UTC),
+        tenant_id="tenant-0001",
+    )
+
+    with pytest.raises(PresentationReceiptCandidateStateError, match="identity does not match"):
+        validate_presentation_receipt_candidate(
+            _receipt(candidate_id="candidate-other"),
+            candidate,
+        )
 
 
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
