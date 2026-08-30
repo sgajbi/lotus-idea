@@ -235,19 +235,42 @@ def test_review_action_reason_is_canonical_in_identity_and_persisted_decision(
 
 
 @pytest.mark.parametrize(
-    "caller_reason_codes",
+    ("caller_reason_codes", "expected_reason_codes"),
     (
-        (ReasonCode.REVIEW_REQUIRED,),
-        (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
         (
-            ReasonCode.REVIEW_SUPPRESSED,
-            ReasonCode.REVIEW_REQUIRED,
-            ReasonCode.REVIEW_SUPPRESSED,
+            (ReasonCode.REVIEW_REQUIRED,),
+            (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
+        ),
+        (
+            (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
+            (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
+        ),
+        (
+            (
+                ReasonCode.REVIEW_SUPPRESSED,
+                ReasonCode.REVIEW_REQUIRED,
+                ReasonCode.REVIEW_SUPPRESSED,
+            ),
+            (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
+        ),
+        (
+            (
+                ReasonCode.REVIEW_REQUIRED,
+                ReasonCode.HIGH_CASH_RATIO,
+                ReasonCode.REVIEW_REQUIRED,
+            ),
+            (
+                ReasonCode.REVIEW_SUPPRESSED,
+                ReasonCode.REVIEW_REQUIRED,
+                ReasonCode.HIGH_CASH_RATIO,
+                ReasonCode.REVIEW_REQUIRED,
+            ),
         ),
     ),
 )
 def test_review_action_reason_canonicalization_covers_omission_and_caller_inclusion(
     caller_reason_codes: tuple[ReasonCode, ...],
+    expected_reason_codes: tuple[ReasonCode, ...],
 ) -> None:
     command = replace(
         valid_decision_command(ReviewAction.SUPPRESS),
@@ -256,10 +279,7 @@ def test_review_action_reason_canonicalization_covers_omission_and_caller_inclus
 
     result = apply_review_action(candidate(), command)
 
-    assert result.decision.reason_codes == (
-        ReasonCode.REVIEW_SUPPRESSED,
-        ReasonCode.REVIEW_REQUIRED,
-    )
+    assert result.decision.reason_codes == expected_reason_codes
 
 
 @pytest.mark.parametrize(
