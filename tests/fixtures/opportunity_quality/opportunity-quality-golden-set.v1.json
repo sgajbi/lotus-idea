@@ -1,0 +1,234 @@
+{
+  "schemaVersion": "lotus-idea-opportunity-quality-golden-set.v1",
+  "authorship": {
+    "method": "independently_authored",
+    "expectedResultsDerivedFromProductionCode": false,
+    "classification": "synthetic_non_client_data"
+  },
+  "evaluationContext": {
+    "asOfDate": "2026-06-21",
+    "evaluatedAtUtc": "2026-06-21T10:00:00Z"
+  },
+  "cases": [
+    {
+      "caseId": "active-high-cash",
+      "portfolio": "active-opportunities",
+      "family": "high_cash",
+      "facts": {"cashWeight": "0.18", "freshness": "current"},
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["high_cash_ratio", "cash_source_ready", "review_required"],
+        "unsupportedReasons": [],
+        "score": "82",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": [
+          "lotus-core:PortfolioStateSnapshot:v1",
+          "lotus-core:HoldingsAsOf:v1",
+          "lotus-core:PortfolioCashMovementSummary:v1",
+          "lotus-core:PortfolioCashflowProjection:v1"
+        ]
+      }
+    },
+    {
+      "caseId": "active-concentration",
+      "portfolio": "active-opportunities",
+      "family": "concentration",
+      "facts": {
+        "topPositionWeight": "0.23",
+        "topIssuerWeight": "0.245",
+        "issuerCoverageStatus": "complete",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["concentration_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "78",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-risk:ConcentrationRiskReport:v1"]
+      }
+    },
+    {
+      "caseId": "active-underperformance",
+      "portfolio": "active-opportunities",
+      "family": "underperformance",
+      "facts": {
+        "activeReturn": "-0.0125",
+        "benchmarkContextAvailable": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["underperformance_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "74",
+        "reviewPosture": "advisor_review_required",
+        "sourceProducts": ["lotus-performance:ReturnsSeriesBundle:v1"]
+      }
+    },
+    {
+      "caseId": "active-allocation-drift",
+      "portfolio": "active-opportunities",
+      "family": "allocation_drift",
+      "facts": {
+        "workflowDecisionCount": 2,
+        "lineageEdgeCount": 4,
+        "supportabilityState": "ready",
+        "portfolioScopeConfirmed": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "candidate_created",
+        "reasonCodes": ["allocation_drift_attention", "review_required"],
+        "unsupportedReasons": [],
+        "score": "70",
+        "reviewPosture": "pm_review_required",
+        "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
+      }
+    },
+    {
+      "caseId": "quiet-high-cash",
+      "portfolio": "quiet-portfolio",
+      "family": "high_cash",
+      "facts": {"cashWeight": "0.05", "freshness": "current"},
+      "expected": {
+        "outcome": "not_eligible",
+        "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": []
+      }
+    },
+    {
+      "caseId": "quiet-concentration",
+      "portfolio": "quiet-portfolio",
+      "family": "concentration",
+      "facts": {
+        "topPositionWeight": "0.08",
+        "topIssuerWeight": "0.12",
+        "issuerCoverageStatus": "complete",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "not_eligible",
+        "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": []
+      }
+    },
+    {
+      "caseId": "quiet-underperformance",
+      "portfolio": "quiet-portfolio",
+      "family": "underperformance",
+      "facts": {
+        "activeReturn": "0.004",
+        "benchmarkContextAvailable": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "not_eligible",
+        "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": []
+      }
+    },
+    {
+      "caseId": "quiet-allocation-drift",
+      "portfolio": "quiet-portfolio",
+      "family": "allocation_drift",
+      "facts": {
+        "workflowDecisionCount": 0,
+        "lineageEdgeCount": 0,
+        "supportabilityState": "ready",
+        "portfolioScopeConfirmed": true,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "not_eligible",
+        "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": []
+      }
+    },
+    {
+      "caseId": "blocked-stale-high-cash",
+      "portfolio": "unsupported-evidence",
+      "family": "high_cash",
+      "facts": {"cashWeight": "0.18", "freshness": "stale"},
+      "expected": {
+        "outcome": "blocked",
+        "reasonCodes": ["source_stale"],
+        "unsupportedReasons": ["stale_source"]
+      }
+    },
+    {
+      "caseId": "blocked-incomplete-issuer-coverage",
+      "portfolio": "unsupported-evidence",
+      "family": "concentration",
+      "facts": {
+        "topPositionWeight": "0.23",
+        "topIssuerWeight": "0.245",
+        "issuerCoverageStatus": "partial",
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "blocked",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["source_uncertified"]
+      }
+    },
+    {
+      "caseId": "blocked-missing-benchmark",
+      "portfolio": "unsupported-evidence",
+      "family": "underperformance",
+      "facts": {
+        "activeReturn": "-0.0125",
+        "benchmarkContextAvailable": false,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "blocked",
+        "reasonCodes": ["missing_benchmark"],
+        "unsupportedReasons": ["missing_source"]
+      }
+    },
+    {
+      "caseId": "blocked-unconfirmed-portfolio-scope",
+      "portfolio": "unsupported-evidence",
+      "family": "allocation_drift",
+      "facts": {
+        "workflowDecisionCount": 2,
+        "lineageEdgeCount": 4,
+        "supportabilityState": "ready",
+        "portfolioScopeConfirmed": false,
+        "freshness": "current"
+      },
+      "expected": {
+        "outcome": "blocked",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["missing_source"]
+      }
+    }
+  ],
+  "queueExpectations": [
+    {
+      "portfolio": "active-opportunities",
+      "audience": "advisor",
+      "orderedCaseIds": ["active-high-cash", "active-concentration", "active-underperformance"],
+      "priorityBuckets": ["high", "high", "high"]
+    },
+    {
+      "portfolio": "active-opportunities",
+      "audience": "portfolio_manager",
+      "orderedCaseIds": ["active-allocation-drift"],
+      "priorityBuckets": ["high"]
+    },
+    {
+      "portfolio": "quiet-portfolio",
+      "audience": "advisor",
+      "orderedCaseIds": [],
+      "priorityBuckets": []
+    },
+    {
+      "portfolio": "quiet-portfolio",
+      "audience": "portfolio_manager",
+      "orderedCaseIds": [],
+      "priorityBuckets": []
+    }
+  ]
+}

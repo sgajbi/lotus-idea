@@ -330,6 +330,14 @@
           "ref": "src/app/domain/review_queue/policy.py"
         },
         {
+          "type": "contract",
+          "ref": "tests/fixtures/opportunity_quality/opportunity-quality-golden-set.v1.json"
+        },
+        {
+          "type": "test",
+          "ref": "tests/unit/test_opportunity_quality_golden_set.py"
+        },
+        {
           "type": "issue",
           "ref": "sgajbi/lotus-idea#1162"
         }
