@@ -39,9 +39,10 @@ Implemented first-wave scope:
 4. Positive evaluation creates deterministic `OpportunitySignal`,
    `IdeaEvidencePacket`, and `IdeaCandidate` domain objects with stable IDs,
    lineage, source refs, review-required posture, and policy-versioned score.
-5. Missing source, stale source, missing source-reported cash weight,
-   duplicate candidate, and entitlement-denied cases return blocked or
-   suppressed outcomes without candidate creation.
+5. Missing source, stale source, missing source-reported cash weight, and
+   entitlement-denied cases return blocked outcomes without candidate
+   creation. Duplicate authority is not accepted from evaluation callers;
+   the persistence boundary reconciles stable economic candidate identity.
 6. Reason-code vocabulary now includes `cash_source_ready` and
     `below_materiality`.
 7. Caller-supplied signal API routes validate present source refs against the
@@ -85,9 +86,10 @@ Additional implemented source-adapter foundation:
    worker foundation over the Core source port and repository port. It
    generates source-ingestion idempotency keys when a caller does not provide
    one, enforces a bounded batch item count, exposes batch decision counts, and
-   returns explicit accepted, replayed, conflict, blocked, suppressed, and
-   skipped-not-eligible decisions without adding API, Gateway, Workbench, or
-   supported-feature claims.
+   returns explicit accepted, evidence-refreshed, material-version-created,
+   recurrent-condition-reopened, replayed, conflict, identity-conflict,
+   duplicate-candidate, blocked, and skipped-not-eligible decisions without
+   adding API, Gateway, Workbench, or supported-feature claims.
 7. `src/app/application/source_ingestion_worker.py` and
    `scripts/run_source_ingestion_worker.py` now add the versioned
    manifest-backed run-once worker entrypoint. Check-only mode validates
@@ -204,7 +206,7 @@ Additional implemented bond-maturity / reinvestment foundation:
 7. `tests/unit/test_bond_maturity_signal_evaluation.py` and
    `tests/unit/test_bond_maturity_application.py` cover positive,
    outside-window, zero-count, missing-source, missing-maturity-date, stale,
-   duplicate, entitlement-denied, source-unavailable, and invalid-policy cases.
+   entitlement-denied, source-unavailable, and invalid-policy cases.
 8. `tests/integration/test_bond_maturity_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
    outside-window not-eligible posture, stale-source blocking, permission
@@ -238,14 +240,14 @@ Additional implemented concentration-risk foundation:
 5. `tests/unit/test_concentration_risk_signal_evaluation.py`,
    `tests/unit/test_concentration_risk_application.py`, and
    `tests/unit/test_lotus_risk_sources.py` cover positive, below-materiality,
-   stale, partial-coverage, missing-source, duplicate, entitlement-denied,
+   stale, partial-coverage, missing-source, entitlement-denied,
    source-unavailable, malformed-measure, trace-header, and persistence cases.
 6. `src/app/api/concentration_risk_signals.py` exposes
    `POST /api/v1/idea-signals/concentration-risk/evaluate` over
    caller-supplied Lotus Risk `ConcentrationRiskReport:v1` evidence. The route
    uses shared signal API support for permission, source-authority, operation
    event, and RFC-7807 problem-detail behavior, creates only advisor-review
-   concentration candidates or blocked/not-eligible/suppressed posture, and
+   concentration candidates or blocked/not-eligible posture, and
    does not calculate concentration, approve risk methodology, recommend
    trades, create rebalance actions, certify data mesh, prove Workbench
    behavior, authorize client publication, or promote support.
@@ -284,7 +286,7 @@ Additional implemented underperformance foundation:
    `tests/unit/test_underperformance_application.py`, and
    `tests/unit/test_lotus_performance_sources.py` cover positive,
    below-materiality, missing benchmark context, stale source, missing source,
-   duplicate, entitlement-denied, source-unavailable, pending async response,
+   entitlement-denied, source-unavailable, pending async response,
    malformed active-return, and trace-header cases.
 6. `src/app/api/underperformance_signals.py` exposes
    `POST /api/v1/idea-signals/underperformance/evaluate` as a bounded
@@ -376,8 +378,8 @@ Additional implemented missing-benchmark foundation:
 6. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
    `tests/unit/test_missing_benchmark_application.py` cover positive
    evidence-gap creation, ready-assignment suppression, inactive or missing
-   assignment posture, stale/missing source, entitlement denial, duplicate
-   suppression, source-unavailable handling, and source request mapping.
+   assignment posture, stale/missing source, entitlement denial,
+   source-unavailable handling, and source request mapping.
 7. `tests/integration/test_missing_benchmark_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
    ready-assignment not-eligible posture, stale-source blocking,
@@ -442,7 +444,7 @@ Additional implemented allocation-drift / mandate-review foundation:
    operation events under the expected source owner for source-contract
    mismatches, redacts source route/hash fields from candidate responses,
    returns portfolio-manager review candidates or
-   blocked/not-eligible/suppressed posture, and does not fetch
+   blocked/not-eligible posture, and does not fetch
    Manage sources, calculate allocation drift, approve mandate compliance,
    create rebalance actions, create orders, publish client communication,
    certify data products, prove Workbench behavior, or promote support.
@@ -450,7 +452,7 @@ Additional implemented allocation-drift / mandate-review foundation:
    `tests/unit/test_mandate_health_application.py`, and
    `tests/unit/test_lotus_manage_sources.py` cover positive future
    portfolio-scoped evidence, current store-wide-source blocking,
-   non-ready/stale/missing Manage evidence, duplicate suppression,
+   non-ready/stale/missing Manage evidence, stable candidate identity,
    entitlement denial, source unavailability, malformed counts, trace headers,
    and request validation.
 7. `tests/integration/test_allocation_drift_signal_api.py` and
@@ -518,7 +520,7 @@ Additional implemented high-volatility foundation:
 5. `tests/unit/test_high_volatility_signal_evaluation.py`,
    `tests/unit/test_high_volatility_application.py`, and
    `tests/unit/test_lotus_risk_volatility_sources.py` cover positive,
-   below-materiality, stale, non-ready, missing-source, duplicate,
+   below-materiality, stale, non-ready, missing-source,
    entitlement-denied, source-unavailable, malformed-measure, trace-header, and
    request-validation cases.
 6. `src/app/application/high_volatility_runtime_evidence/`,
@@ -579,7 +581,7 @@ Additional implemented drawdown-review foundation:
    `tests/unit/test_drawdown_review_signal_evaluation.py`,
    `tests/unit/test_drawdown_review_application.py`, and
    `tests/unit/test_lotus_risk_drawdown_sources.py` cover positive,
-   below-materiality, stale, non-ready, missing-source, duplicate,
+   below-materiality, stale, non-ready, missing-source,
    entitlement-denied, source-unavailable, family compatibility,
    malformed-measure, trace-header, and request-validation cases.
 7. `src/app/api/drawdown_review_signals.py` exposes
@@ -642,7 +644,7 @@ Additional implemented missing suitability context foundation:
 5. `tests/unit/test_missing_suitability_signal_evaluation.py`,
    `tests/unit/test_missing_suitability_application.py`, and
    `tests/unit/test_lotus_advise_sources.py` cover positive, clear-context,
-   stale, missing-source, missing-status/count, duplicate, entitlement-denied,
+   stale, missing-source, missing-status/count, entitlement-denied,
    source-unavailable, malformed-source, trace-header, and request-validation
    cases.
 6. `src/app/application/advise_missing_suitability_runtime_evidence/`,
@@ -706,7 +708,7 @@ Additional implemented missing risk profile foundation:
 5. `tests/unit/test_missing_risk_profile_signal_evaluation.py` and
    `tests/unit/test_missing_risk_profile_application.py` cover positive,
    current/not-eligible, stale, expired, review-due, missing-source,
-   missing-posture, duplicate, entitlement-denied, source-unavailable, generic
+   missing-posture, entitlement-denied, source-unavailable, generic
    suitability diagnostic suppression, and request-routing cases.
 6. `src/app/application/advise_source_product_evidence/`,
    `scripts/advise_source_product_evidence/`, and
@@ -786,7 +788,7 @@ Additional implemented mandate/restriction review foundation:
 6. `tests/unit/test_mandate_restriction_signal_evaluation.py`,
    `tests/unit/test_mandate_restriction_application.py`, and
    `tests/integration/test_mandate_restriction_signal_api.py` cover positive,
-   not-eligible, stale-source, missing-source, missing-posture, duplicate,
+   not-eligible, stale-source, missing-source, missing-posture,
    entitlement-denied, permission-denied, source-redaction, one-of
    Core/Manage/Advise source-contract acceptance, source-contract mismatch
    rejection, source-safe mismatch errors, explicit Advise diagnostic
@@ -863,12 +865,12 @@ Additional implemented low-income / liquidity-shortfall foundation:
    `/portfolios/{portfolio_id}/cashflow-projection`.
 4. Positive evaluation creates only an advisor-review candidate with
    deterministic IDs and policy-versioned score when projected cumulative
-   cashflow breaches the threshold. Missing, stale, malformed, duplicate, or
+   cashflow breaches the threshold. Missing, stale, malformed, or
    entitlement-blocked source evidence does not create a candidate.
 5. `tests/unit/test_low_income_signal_evaluation.py`,
     `tests/unit/test_low_income_application.py`, and
     `tests/unit/test_lotus_core_sources.py` cover positive, not-eligible,
-    stale, missing-source, duplicate, entitlement-denied, source-unavailable,
+    stale, missing-source, entitlement-denied, source-unavailable,
     malformed-projection, and request-validation cases.
 6. `src/app/api/low_income_signals.py` exposes
    `POST /api/v1/idea-signals/low-income/evaluate` as a bounded
@@ -1014,7 +1016,7 @@ risk calculation authority, or supported-feature promotion.
 3. stale source blocking,
 4. missing source blocking,
 5. missing source-reported cash weight blocking,
-6. duplicate suppression,
+6. stable economic identity under equivalent evidence,
 7. entitlement-denied blocking,
 8. invalid source-reported weight rejection,
 9. invalid policy threshold rejection.
@@ -1112,6 +1114,26 @@ Current source-ingestion orchestration validation:
     version while creating a new evidence packet and lineage version. A nonzero
     effective-date window remains unsupported until a source-specific contract
     version defines and tests it.
+
+### Issue 1154 economic candidate identity checkpoint
+
+1. `idea-opportunity-identity-v2` derives `businessIdentityId` from governed
+   tenant, portfolio, family, and economic scope across every opportunity
+   family. Source content hashes, transport idempotency, source routes, and
+   reason-code ordering are excluded from business identity.
+2. Evidence identity remains explicit: source content hashes are retained in
+   evidence packets and lineage, and an equivalent refresh increments only
+   `evidenceVersion` for the existing business candidate.
+3. Material economic change creates a deterministic material version;
+   recurrence after a resolved condition reopens the same business identity
+   with an explicit why-back change reason. Unsupported identity collisions
+   fail closed.
+4. All 24 caller/source request DTOs are closed schemas and reject
+   `duplicateOfCandidateId`. Duplicate reconciliation is repository-owned,
+   not caller-directed.
+5. This is implementation-backed local branch truth for issue `#1154` until
+   the PR reaches `main`. It does not promote a supported feature or transfer
+   source-fact authority from Core, Risk, Performance, Advise, or Manage.
 
 Current Core cash-weight adapter validation:
 

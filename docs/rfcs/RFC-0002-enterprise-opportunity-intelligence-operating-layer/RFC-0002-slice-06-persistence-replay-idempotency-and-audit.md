@@ -202,8 +202,8 @@ Implemented first-wave internal scope:
 6. `src/app/application/high_cash_signal.py` now adds internal high-cash
    evaluate-and-persist orchestration over the Slice 06 repository contract.
    Created high-cash candidates are persisted with deterministic idempotency
-   payloads, matching requests replay, changed payloads conflict, and blocked,
-   suppressed, or not-eligible evaluations remain non-mutating.
+   payloads, matching requests replay, changed payloads conflict, and blocked
+   or not-eligible evaluations remain non-mutating.
 7. The same orchestration shape exists for the Core source-port flow. Core
    cash-weight authority is now implemented in Core PR #431 and consumed by
    the `lotus-idea` adapter from `totals.source_reported_cash_weight`. Bounded
@@ -214,9 +214,11 @@ Implemented first-wave internal scope:
 8. `src/app/application/source_ingestion.py` now adds an internal
    high-cash source-ingestion orchestration wrapper over the Core source port
    and repository port. It generates source-ingestion idempotency keys, maps
-   repository and evaluator results into explicit accepted, replayed, conflict,
-   duplicate-candidate, blocked, suppressed, and skipped-not-eligible decisions,
-   and keeps blocked, suppressed, and below-threshold evaluations non-mutating.
+   repository and evaluator results into explicit accepted,
+   evidence-refreshed, material-version-created,
+   recurrent-condition-reopened, replayed, conflict, identity-conflict,
+   duplicate-candidate, blocked, and skipped-not-eligible decisions, and keeps
+   blocked and below-threshold evaluations non-mutating.
    Core-backed idempotency payloads now include generated candidate and
    source-signal identity, so same-key source changes conflict instead of being
    treated as an equivalent replay. It also exposes a bounded run-once batch
@@ -288,7 +290,7 @@ Implemented first-wave internal scope:
 18. Accepted internal repository mutations now append pending outbox records for
     candidate persistence, lifecycle transitions, review decisions, feedback,
     conversion intents, conversion outcomes, and report evidence-pack requests.
-    Replayed, conflict, not-found, blocked, suppressed, and not-eligible paths
+    Replayed, conflict, not-found, blocked, and not-eligible paths
     remain non-publishing and do not create duplicate outbox work. This is an
     internal outbox foundation only; no external broker, Gateway event, platform
     mesh event, or downstream publication is claimed.
@@ -557,8 +559,8 @@ Current slice validation:
    coverage.
 2. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py tests\unit\test_high_cash_application.py -q`
    passed with `24 passed` for the internal source-ingestion orchestration,
-   generated idempotency key, replay, conflict, blocked, suppressed, and
-   skipped-not-eligible coverage.
+   generated idempotency key, replay, conflict, stable duplicate-candidate
+   reconciliation, blocked, and skipped-not-eligible coverage.
 3. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py -q`
    passed with `11 passed` after adding bounded run-once batch worker coverage
    for duplicate replay, changed-source conflict, batch decision counts,

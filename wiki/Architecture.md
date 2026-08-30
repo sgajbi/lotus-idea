@@ -270,6 +270,32 @@ evidence. Source corrections preserve the business candidate and material
 version while producing a new evidence packet and lineage version; no
 effective-date window is inferred.
 
+### Economic Candidate Identity
+
+`idea-opportunity-identity-v2` separates advisor-visible economic identity
+from evidence and transport identity. The tenant, portfolio, opportunity
+family, and governed economic scope determine `businessIdentityId`. Source
+content hashes remain in evidence packets and lineage; idempotency keys remain
+transport controls. Neither can create a new business opportunity by itself.
+
+```mermaid
+flowchart LR
+    Evidence["Source-owned evidence"] --> Classify{"Repository reconciliation"}
+    Classify -->|"Equivalent refresh"| EvidenceVersion["Same business/material identity<br/>new evidence version"]
+    Classify -->|"Material economic change"| MaterialVersion["Same business identity<br/>new material version"]
+    Classify -->|"Resolved then recurrent"| Reopen["Same business identity<br/>reopen with why-back reason"]
+    Classify -->|"Identity collision"| Conflict["Fail closed<br/>identity conflict"]
+```
+
+Migration `016_candidate_economic_identity` deterministically backfills the
+identity/version columns, preserves legacy evidence lineage, and supports
+rollback. In-memory and PostgreSQL repositories reconcile before audit/outbox
+side effects; PostgreSQL constraints and concurrency tests prevent duplicate
+active candidates. Caller and worker schemas reject
+`duplicateOfCandidateId`. Manual suppression and snooze remain governed review
+posture, not duplicate-detection inputs. This does not promote a supported
+feature or transfer financial-fact authority into Lotus Idea.
+
 ### Canonical Source-Proof Runner
 
 `scripts/run_canonical_opportunity_source_proofs.py` is an operator automation
@@ -794,7 +820,7 @@ feature.
 The internal application layer can now evaluate high-cash evidence and persist
 created candidates through the Slice 06 idempotency/audit repository contract.
 Repeated requests with the same idempotency payload replay, changed payloads
-conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
+conflict, and blocked or not-eligible evaluations do not mutate
 state. The evaluate-and-persist API exposes this as an internal certified
 foundation and reports repository-backed storage posture from the active
 provider; it is not a supported product workflow.

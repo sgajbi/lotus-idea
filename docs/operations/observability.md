@@ -196,8 +196,9 @@ documented in the operator runbook.
 4. `conflict` means the idempotency key was reused with a different payload.
 5. `not_found` means the referenced candidate, conversion intent, or related foundation record was
    not present.
-6. `duplicate`, `suppressed`, and `not_eligible` describe deterministic signal or persistence
-   outcomes that did not create a new candidate.
+6. `duplicate` and `not_eligible` describe persistence-owned duplicate reconciliation or
+   deterministic threshold posture that did not create a new candidate. `suppressed` is reserved
+   for manual review posture or source-safe cleanup isolation, not evaluator-level deduplication.
 7. `permission_denied` means fail-closed capability policy blocked the caller.
 8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.

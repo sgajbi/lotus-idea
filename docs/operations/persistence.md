@@ -15,8 +15,10 @@ API idempotency, same-key replay, distinct-key request-id conflict, and the firs
 conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
 orchestration now uses generated source-ingestion idempotency keys when needed
-and classifies accepted, replayed, conflict, blocked, suppressed, and
-not-eligible outcomes over the Core source port and repository port. It also
+and classifies accepted, evidence-refreshed, material-version-created,
+recurrent-condition-reopened, replayed, conflict, identity-conflict,
+duplicate-candidate, blocked, and not-eligible outcomes over the Core source
+port and repository port. It also
 has a bounded run-once batch worker foundation with per-item idempotency and
 batch decision counts for scheduling-ready internal execution.
 `scripts/run_source_ingestion_worker.py` now provides a versioned
@@ -228,8 +230,14 @@ flowchart LR
     Manifest --> Gate --> Summary
     Manifest --> Runner
     Runner -->|"configured runtime only"| Core
-    Runner -->|"accepted/replayed/conflict decisions"| Repo
+    Runner -->|"governed reconciliation decisions"| Repo
 ```
+
+The current schema head is `016_candidate_economic_identity`. It adds
+tenant-scoped business identity, material/evidence version, material
+fingerprint, change-reason, and superseded-version columns; deterministic
+legacy backfill and rollback preserve candidate/evidence lineage without
+silently merging rows.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
@@ -255,7 +263,7 @@ flowchart LR
    v1 schema-version guard, fixed candidate aggregate-type guard, published
    transition, failed retry transition, and dead-letter transition. Accepted
    internal mutations append pending events; replay, conflict, not-found,
-   blocked, suppressed, and not-eligible paths do not create duplicate outbox
+   blocked, and not-eligible paths do not create duplicate outbox
    work.
 7. `src/app/infrastructure/postgres_repository.py` implements the governed
    repository port surface over the schema. It materializes candidate,
@@ -289,7 +297,7 @@ flowchart LR
    source-ingestion orchestration and bounded run-once batch worker foundation.
    It standardizes the future scheduler's generated idempotency key shape,
    per-item replay/conflict posture, batch decision counts, and non-mutating
-   behavior for blocked, suppressed, and below-threshold Core source evidence.
+   behavior for blocked and below-threshold Core source evidence.
 13. `src/app/application/source_ingestion_worker.py` and
     `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
     run-once worker entrypoint. Check-only mode returns a product-safe
@@ -456,7 +464,7 @@ Repository validation:
 make deployment-migration-contract-gate
 ```
 
-The contract pins PostgreSQL 18, all 15 migration files and rollback content,
+The contract pins PostgreSQL 18, all 16 migration files and rollback content,
 the legacy structural fingerprint, Docker image closure, protected workflow,
 evidence schema, and non-certification blockers. Direct migration execution in
 other GitHub workflows is rejected except for the two explicit disposable

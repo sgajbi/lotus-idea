@@ -221,10 +221,10 @@ Issue `#548` continues issue `#542` through the high-cash signal family. One
 capability-owned deterministic factory now executes the existing application
 and domain services and serializes their real API DTOs for caller-supplied,
 Core-backed, and evaluate-and-persist contracts. Both evaluation operations
-publish `candidate_created`, `blocked`, `suppressed`, and `not_eligible` as
+publish `candidate_created`, `blocked`, and `not_eligible` as
 named HTTP 200 modes. Evaluate-and-persist additionally publishes `accepted`,
 idempotent `replayed`, and `duplicate_candidate` persistence decisions, while
-blocked, suppressed, and not-eligible evaluations explicitly retain
+blocked and not-eligible evaluations explicitly retain
 `persistence=null`. Focused HTTP tests prove every mode, including source
 runtime cleanup and retry-safe duplicate handling, and the endpoint
 certification gate enforces exact factory, ledger, generated OpenAPI, and cited
@@ -256,11 +256,10 @@ Issue `#551` continues issue `#542` through the low-income /
 liquidity-shortfall signal family. Capability-owned factories execute the
 existing caller-supplied and Core-backed application paths and serialize the
 real API response DTO. Both operations now publish named `candidate_created`,
-`blocked`, `suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples
+`blocked`, and `not_eligible` HTTP 200 modes. Candidate examples
 retain both governed Core source products while omitting source routes and
-content hashes. Focused HTTP tests add the previously missing caller
-suppression and source-backed suppression/not-eligible proof, including source
-runtime cleanup and no candidate persistence. Exact factory, endpoint-ledger,
+content hashes. Focused HTTP tests prove blocked/not-eligible behavior, closed
+request schemas, source runtime cleanup, and no candidate persistence. Exact factory, endpoint-ledger,
 generated OpenAPI, and cited-test parity is blocking. A shared example mapper
 removes duplicate DTO serialization and source-reference fixture construction
 from high-cash and low-income modules without moving policy or source logic out
@@ -296,11 +295,11 @@ Issue `#555` continues issue `#542` through the bond-maturity / reinvestment
 review signal family. Capability-owned factories execute the existing
 caller-supplied and Core-backed application paths and serialize the real API
 response DTO. Both operations publish named `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples retain the
+and `not_eligible` HTTP 200 modes. Candidate examples retain the
 governed Core `HoldingsAsOf:v1` and `PortfolioMaturitySummary:v1` lineage while
-omitting source routes and content hashes. Focused HTTP tests prove the
-previously uncited caller suppression and source-backed suppression and
-not-eligible behavior, including runtime cleanup and no candidate persistence.
+omitting source routes and content hashes. Focused HTTP tests prove blocked and
+not-eligible behavior, closed request schemas, runtime cleanup, and no candidate
+persistence.
 Exact factory, endpoint-ledger, generated OpenAPI, and cited-test parity is a
 blocking endpoint-certification contract.
 
@@ -318,13 +317,12 @@ implemented.
 Issue `#557` continues issue `#542` through the allocation-drift / mandate-review
 signal family. Capability-owned factories execute the existing caller-supplied
 and Manage-backed application paths and serialize the real API response DTO.
-Both operations publish named `candidate_created`, `blocked`, `suppressed`, and
+Both operations publish named `candidate_created`, `blocked`, and
 `not_eligible` HTTP 200 modes. Source-backed candidate examples retain governed
 Manage `PortfolioActionRegister:v1`, Performance
 `MandatePerformanceHealthContext:v1`, and Risk `MandateRiskHealthContext:v1`
 lineage while omitting source routes and content hashes. Focused HTTP tests prove
-caller suppression and source-backed
-suppression and not-eligible behavior, including runtime cleanup and no
+blocked/not-eligible behavior, closed request schemas, runtime cleanup, and no
 candidate persistence. Exact factory, endpoint-ledger, generated OpenAPI, and
 cited-test parity is a blocking endpoint-certification contract.
 
@@ -346,11 +344,11 @@ Issue `#559` continues issue `#542` through the underperformance-review signal
 family. Capability-owned deterministic factories execute the existing
 caller-supplied and Performance-backed application paths and serialize the
 real API response DTO. Both operations publish named `candidate_created`,
-`blocked`, `suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples
+`blocked`, and `not_eligible` HTTP 200 modes. Candidate examples
 retain Lotus Performance `ReturnsSeriesBundle:v1` identity while omitting
-source routes and content hashes. Focused HTTP tests prove caller suppression,
-source-backed suppression and not-eligible behavior, runtime cleanup, and the
-absence of candidate persistence for non-candidate outcomes. Negative contract
+source routes and content hashes. Focused HTTP tests prove blocked/not-eligible
+behavior, closed request schemas, runtime cleanup, and the absence of candidate
+persistence for non-candidate outcomes. Negative contract
 tests prove that missing OpenAPI modes, ledger drift, or absent behavioral
 evidence fail certification.
 
@@ -368,11 +366,11 @@ Issue `#561` continues issue `#542` through the concentration-risk signal
 family. Capability-owned deterministic factories execute the existing
 caller-supplied and Risk-backed application paths and serialize the real API
 response DTO. Both operations publish named `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples retain
+and `not_eligible` HTTP 200 modes. Candidate examples retain
 Lotus Risk `ConcentrationRiskReport:v1` identity while omitting source routes
-and content hashes. Focused HTTP tests prove caller suppression, source-backed
-suppression and not-eligible behavior, source runtime cleanup, and the absence
-of candidate persistence for non-candidate outcomes. Negative contract tests
+and content hashes. Focused HTTP tests prove blocked/not-eligible behavior,
+closed request schemas, source runtime cleanup, and the absence of candidate
+persistence for non-candidate outcomes. Negative contract tests
 prove that missing OpenAPI modes or absent behavioral evidence fail
 certification.
 
@@ -389,12 +387,12 @@ operations under issue `#542`; Slice 10 remains partially implemented.
 Issue `#563` continues issue `#542` through the high-volatility signal family.
 Capability-owned deterministic factories execute the existing caller-supplied
 and Risk-backed application paths and serialize the real API response DTO.
-Both operations publish named `candidate_created`, `blocked`, `suppressed`,
-and `not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
+Both operations publish named `candidate_created`, `blocked`, and
+`not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
 `RiskMetricsReport:v1` identity while omitting source routes and content
-hashes. Focused HTTP tests prove caller suppression, source-backed suppression
-and not-eligible behavior, source runtime cleanup, and the absence of candidate
-persistence for non-candidate outcomes. Negative contract tests prove that
+hashes. Focused HTTP tests prove blocked/not-eligible behavior, closed request
+schemas, source runtime cleanup, and the absence of candidate persistence for
+non-candidate outcomes. Negative contract tests prove that
 missing OpenAPI modes or absent behavioral evidence fail certification.
 
 This is design modularity inside the existing deployable, not a runtime split.
@@ -411,12 +409,12 @@ implemented.
 Issue `#565` continues issue `#542` through the drawdown-review signal family.
 Capability-owned deterministic factories execute the existing caller-supplied
 and Risk-backed application paths and serialize the real API response DTO.
-Both operations publish named `candidate_created`, `blocked`, `suppressed`,
-and `not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
+Both operations publish named `candidate_created`, `blocked`, and
+`not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
 `DrawdownAnalyticsReport:v1` identity while omitting source routes and content
-hashes. Focused HTTP tests prove caller suppression, source-backed suppression
-and not-eligible behavior, source runtime cleanup, and the absence of candidate
-persistence for non-candidate outcomes. Negative contract tests prove that
+hashes. Focused HTTP tests prove blocked/not-eligible behavior, closed request
+schemas, source runtime cleanup, and the absence of candidate persistence for
+non-candidate outcomes. Negative contract tests prove that
 missing OpenAPI modes or absent behavioral evidence fail certification.
 
 This is design modularity inside the existing deployable, not a runtime split.
@@ -434,13 +432,13 @@ Issue `#567` continues issue `#542` through the mandate-restriction signal
 family. Capability-owned deterministic factories execute the existing
 caller-supplied and Advise-backed application paths and serialize the real API
 response DTO. Both operations publish named `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
+and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
 continues to accept only the governed Core `PortfolioStateSnapshot:v1`, Manage
 `PortfolioActionRegister:v1`, or Advise `AdvisoryPolicyEvaluationRecord:v1`
 source pair and reports the selected authority. Source-backed examples replace
 only the Advise source port and retain redacted
-`AdvisoryPolicyEvaluationRecord:v1` identity. Focused HTTP tests prove caller
-and source-backed suppression/not-eligible behavior, source runtime cleanup,
+`AdvisoryPolicyEvaluationRecord:v1` identity. Focused HTTP tests prove
+blocked/not-eligible behavior, closed request schemas, source runtime cleanup,
 and the absence of candidate persistence for non-candidate outcomes. Negative
 contract tests prove that missing OpenAPI modes or absent behavioral evidence
 fail certification.
@@ -462,19 +460,19 @@ Issue `#569` continues issue `#542` through the missing-risk-profile signal
 family. Capability-owned deterministic factories execute the existing
 caller-supplied and Advise-backed application paths and serialize the real API
 response DTO. Both operations publish named `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
+and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
 accepts the governed Advise `AdvisoryPolicyEvaluationRecord:v1` source pair;
 source-backed examples replace only the Advise source port and retain redacted
-source identity. Focused HTTP tests prove caller and source-backed
-suppression/not-eligible behavior, source runtime cleanup, and the absence of
-candidate persistence for non-candidate outcomes. Negative contract tests prove
+source identity. Focused HTTP tests prove blocked/not-eligible behavior, closed
+request schemas, source runtime cleanup, and the absence of candidate
+persistence for non-candidate outcomes. Negative contract tests prove
 that missing OpenAPI modes or absent behavioral evidence fail certification.
 
 This is design modularity inside the existing deployable, not a runtime split.
 Advise retains client risk-profile workflow, effective/current/expired and
 review-due diagnostic truth, risk-capacity, suitability, policy-evaluation, and
-product authority. Lotus Idea owns only deterministic detection, suppression,
-eligibility, source-safe references, and advisor-review posture. No client
+product authority. Lotus Idea owns only deterministic detection, eligibility,
+source-safe references, and advisor-review posture. No client
 risk-profile approval or creation, risk-capacity determination, suitability or
 policy approval, persistence route, client publication, rebalance/order/
 execution authority, live source certification, Gateway/Workbench realization,
@@ -487,18 +485,18 @@ Issue `#571` continues issue `#542` through the missing-benchmark signal
 family. Capability-owned deterministic factories execute the existing
 caller-supplied and Core-backed application paths and serialize the real API
 response DTO. Both operations publish named `candidate_created`, `blocked`,
-`suppressed`, and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
+and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
 accepts only Core `BenchmarkAssignment:v1` evidence; source-backed examples
 replace only `CoreBenchmarkAssignmentSourcePort` and retain redacted source
-identity. Focused HTTP tests prove caller and source-backed
-suppression/not-eligible behavior, source-runtime cleanup, and the absence of
-candidate persistence for non-candidate outcomes. Negative contract tests prove
+identity. Focused HTTP tests prove blocked/not-eligible behavior, closed request
+schemas, source-runtime cleanup, and the absence of candidate persistence for
+non-candidate outcomes. Negative contract tests prove
 that missing OpenAPI modes or absent behavioral evidence fail certification.
 
 This is design modularity inside the existing deployable, not a runtime split.
 Core retains benchmark-assignment, portfolio, and benchmark-methodology
-authority. Lotus Idea owns only deterministic detection, suppression,
-eligibility, source-safe references, and advisor-review posture. No benchmark
+authority. Lotus Idea owns only deterministic detection, eligibility,
+source-safe references, and advisor-review posture. No benchmark
 assignment, methodology approval, performance calculation, persistence route,
 client publication, rebalance/order/execution authority, live source
 certification, Gateway/Workbench realization, data-product promotion, or
@@ -511,13 +509,13 @@ a refreshed deterministic scan leaves six multi-shape operations under issue
 Issue `#573` continues issue `#542` through the missing-suitability signal family.
 Capability-owned factories execute the existing caller-supplied and Advise-backed
 application paths, serialize the real response DTO, and publish named
-`candidate_created`, `blocked`, `suppressed`, and `not_eligible` HTTP 200 modes.
+`candidate_created`, `blocked`, and `not_eligible` HTTP 200 modes.
 Focused HTTP tests prove non-candidate no-persistence and source-runtime cleanup;
 negative contract tests reject missing modes and behavior evidence.
 
 Advise retains suitability, policy, proposal, sign-off, and client-publication
 posture authority. Idea owns only deterministic evidence-gap detection,
-suppression, eligibility, and compliance-review routing. No suitability or policy
+eligibility, and compliance-review routing. No suitability or policy
 approval, persistence route, runtime split, client publication, Gateway/Workbench
 realization, data-product promotion, or supported-feature promotion is introduced.
 README and supported-feature truth remain unchanged. The existing platform
@@ -781,8 +779,8 @@ Implementation files:
     promotion.
 38. `tests/integration/test_concentration_risk_signal_api.py` and
     `tests/integration/test_high_volatility_signal_api.py`: certified API
-    behavior evidence for Risk-backed review candidate creation, duplicate
-    suppression, below-threshold not-eligible posture, incomplete/stale/source
+    behavior evidence for Risk-backed review candidate creation,
+    below-threshold not-eligible posture, incomplete/stale/source
     blocking, source-backed non-candidate outcomes, runtime cleanup, permission
     denial, and no-authority promotion.
 39. `tests/integration/test_drawdown_review_signal_api.py`: certified API
@@ -814,9 +812,14 @@ The evaluate endpoint returns deterministic posture only:
    policy threshold, review window, or evidence-gap policy,
 2. `blocked` for stale/missing source evidence, missing source-reported metric,
    or entitlement denial,
-3. `suppressed` for duplicate candidate evidence,
-4. `not_eligible` when source-reported evidence is current but below the
+3. `not_eligible` when source-reported evidence is current but below the
    relevant policy threshold or outside the review window.
+
+Duplicate detection is persistence-owned. Evaluate-and-persist may return
+`duplicate_candidate` when the stable economic identity already exists under a
+different transport key. Evaluation request schemas reject
+`duplicateOfCandidateId`; manual review suppression and snooze remain separate
+review-posture actions and are not evaluation outcomes.
 
 The evaluate endpoint is permissioned by advisor role and
 `idea.signal.evaluate` capability. The evaluate-and-persist endpoint is permissioned by

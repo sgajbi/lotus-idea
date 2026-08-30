@@ -109,7 +109,9 @@ credentials, or raw driver exception text.
 Internal high-cash source-ingestion orchestration now exists as an application
 foundation over the Core source port and repository port. It generates a
 source-ingestion idempotency key when one is not supplied and classifies
-accepted, replayed, conflict, blocked, suppressed, and not-eligible outcomes,
+accepted, evidence-refreshed, material-version-created,
+recurrent-condition-reopened, replayed, conflict, identity-conflict,
+duplicate-candidate, blocked, and not-eligible outcomes,
 and it now includes a bounded run-once batch worker foundation with per-item
 idempotency, batch decision counts, and maximum item validation.
 `scripts/run_source_ingestion_worker.py` provides the versioned run-once worker
@@ -749,8 +751,10 @@ Current outcomes:
 3. `replayed`: duplicate submission with the same idempotency key and payload.
 4. `conflict`: idempotency key reused with a different payload.
 5. `not_found`: candidate, conversion intent, or related foundation record is absent.
-6. `duplicate`, `suppressed`, and `not_eligible`: deterministic signal or
-   persistence outcomes that did not create a new candidate.
+6. `duplicate` and `not_eligible`: persistence-owned duplicate reconciliation
+   or deterministic threshold posture that did not create a new candidate.
+   `suppressed` is reserved for manual review posture or source-safe cleanup
+   isolation; it is not an evaluator-level duplicate outcome.
 7. `permission_denied`: caller capability failed closed.
 8. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 9. `invalid_state`: lifecycle, review, target authority, report intent, or AI

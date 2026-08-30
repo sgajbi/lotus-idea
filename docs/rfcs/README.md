@@ -8,9 +8,9 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-The dated 2026-08-30 RFC-0002 snapshot baseline has 239 label-backed RFC-0002
-issues across 13 repositories: 203 closed and 36 open, with 25
-`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 9
+The dated 2026-08-30 RFC-0002 snapshot baseline has 242 label-backed RFC-0002
+issues across 13 repositories: 203 closed and 39 open, with 25
+`status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9
 `status/tracker`, and 0
 app-actionable blocked issues.
 The latest Idea implementation-backed closures are Slice 17 release-governance
@@ -19,8 +19,10 @@ hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
 #1132. They harden immutable merged-PR releasability dispatch, structural
 lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
 semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
-dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 148
-RFC-0002 issues, 123 closed and 25 open. `#681` remains in progress, `#1145`
+dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 151
+RFC-0002 issues, 123 closed and 28 open. `#681` remains the Slice 18 tracker,
+`#1154` is in progress for governed economic candidate identity, and `#1155`
+then `#1156` are ready for feedback-quality and effectiveness measurement. `#1145`
 is closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene
 proof, `#1150` is closed after PR #1152 exact-main, release-image, wiki, and
 branch-hygiene proof, and `#1139` is closed

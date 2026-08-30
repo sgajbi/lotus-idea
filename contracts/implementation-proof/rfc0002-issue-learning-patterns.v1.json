@@ -131,6 +131,44 @@
       ]
     },
     {
+      "patternId": "economic_candidate_identity_and_evidence_versioning",
+      "title": "Business candidate identity must remain stable while evidence, material condition, and transport identity evolve independently.",
+      "currentLedgerIssueNumbers": [1154],
+      "relatedIssueNumbers": [326, 330, 333, 382],
+      "rfcSlices": ["slice-03", "slice-05", "slice-06", "slice-07"],
+      "durableControls": [
+        {
+          "type": "domain-policy",
+          "ref": "src/app/domain/opportunity_identity.py"
+        },
+        {
+          "type": "persistence-policy",
+          "ref": "src/app/domain/candidate_reconciliation.py"
+        },
+        {
+          "type": "migration",
+          "ref": "migrations/016_candidate_economic_identity.sql"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/source_temporal_contract_gate.py"
+        },
+        {
+          "type": "test",
+          "ref": "tests/unit/test_candidate_deduplication_boundary.py"
+        },
+        {
+          "type": "context",
+          "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#candidate-identity-and-evidence-versioning"
+        }
+      ],
+      "futureAgentRule": "Derive businessIdentityId only from stable tenant, portfolio, opportunity-family, and governed economic-scope meaning. Keep source content hashes, source routes, transport idempotency keys, reason-code order, and representation-only fields out of business identity while preserving them in evidence lineage. Treat equivalent evidence as an evidence-version refresh, material economic change as a material version, and a resolved condition that later returns as a recurrent reopen with an explicit why-back reason. Reconcile these transitions atomically at the repository boundary, prove concurrent PostgreSQL behavior, and reject caller-supplied duplicate authority at every request and worker-manifest boundary. Preserve manual review suppression and snooze as review posture; do not conflate either with evaluator-level duplicate detection. Update migrations, API/OpenAPI, RFC/docs/wiki/context, and the execution ledger together without promoting a supported feature.",
+      "nonClaimBoundaries": [
+        "Stable Idea business identity does not transfer ownership of source financial facts or calculations from Core, Risk, Performance, Advise, or Manage.",
+        "Repository reconciliation and local PostgreSQL proof do not certify Gateway/Workbench behavior, production identity/session authority, or supported-feature promotion."
+      ]
+    },
+    {
       "patternId": "downstream_owner_runtime_proof_boundary",
       "title": "Core, Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
       "currentLedgerIssueNumbers": [379, 675, 676, 691],
@@ -202,6 +240,66 @@
       "nonClaimBoundaries": [
         "Idea owns opportunity intent and evidence-pack request posture, not suitability approval, rebalance execution, report rendering, archive retention, or client publication.",
         "Quarantined or fixture-backed outcome history is diagnostic and does not certify downstream persistence."
+      ]
+    },
+    {
+      "patternId": "feedback_taxonomy_and_offline_evaluation",
+      "title": "Adviser feedback needs governed product semantics and privacy-safe offline evaluation without automatic policy mutation.",
+      "currentLedgerIssueNumbers": [1155],
+      "relatedIssueNumbers": [532, 686, 998],
+      "rfcSlices": ["slice-08", "slice-16", "slice-17"],
+      "durableControls": [
+        {
+          "type": "domain",
+          "ref": "src/app/domain/review_governance.py"
+        },
+        {
+          "type": "persistence",
+          "ref": "src/app/domain/persistence_models.py"
+        },
+        {
+          "type": "research",
+          "ref": "docs/research/advisor-intelligence-product-differentiation.md"
+        },
+        {
+          "type": "issue",
+          "ref": "sgajbi/lotus-idea#1155"
+        }
+      ],
+      "futureAgentRule": "Keep feedback outcome, feedback reason, and review action as distinct canonical facts. Validate allowed outcome/reason combinations at the domain boundary, carry the same taxonomy through mutation identity, persistence, replay, audit, outbox, API/OpenAPI, and Workbench consumption, and reject free-form or UI-invented policy authority. Build only tenant-scoped, source-safe, reproducible offline evaluation projections with explicit policy/version provenance. Never mutate production eligibility, score, rank, suppression, lifecycle, or AI training automatically from feedback.",
+      "nonClaimBoundaries": [
+        "Durable feedback and offline evaluation evidence are not automatic learning or production policy approval.",
+        "Workbench consumes the Idea-owned taxonomy and does not own or translate its semantics."
+      ]
+    },
+    {
+      "patternId": "opportunity_effectiveness_measurement",
+      "title": "Opportunity quality must be measured through governed funnels, rank quality, timing, and downstream posture rather than raw candidate volume.",
+      "currentLedgerIssueNumbers": [1156],
+      "relatedIssueNumbers": [345, 379, 663, 686, 1155],
+      "rfcSlices": ["slice-08", "slice-12", "slice-15", "slice-17"],
+      "durableControls": [
+        {
+          "type": "observability",
+          "ref": "src/app/observability/service_slo_metrics.py"
+        },
+        {
+          "type": "contract",
+          "ref": "contracts/observability/lotus-idea-operation-metrics.v1.json"
+        },
+        {
+          "type": "application",
+          "ref": "src/app/application/runtime_trust_telemetry/telemetry.py"
+        },
+        {
+          "type": "issue",
+          "ref": "sgajbi/lotus-idea#1156"
+        }
+      ],
+      "futureAgentRule": "Define the effectiveness read model before adding metrics: every rate needs an explicit numerator, denominator, time window, inclusion/exclusion policy, zero-denominator result, current-outcome selection, and correction/reopen rule. Aggregate in the repository with bounded tenant-scoped index-supported queries and independently prove parity against domain fixtures. Separate bounded analytical output from low-cardinality Prometheus metrics; never label metrics with client, portfolio, candidate, actor, correlation, or raw reason identity. Preserve downstream outcome authority and do not interpret uncertain or timeout posture as success.",
+      "nonClaimBoundaries": [
+        "Operational counters and metric availability are not evidence that adviser usefulness improved.",
+        "Effectiveness measurement does not grant suitability, recommendation, downstream outcome, or supported-feature authority."
       ]
     },
     {
