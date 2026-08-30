@@ -1,0 +1,118 @@
+{
+  "contractId": "lotus-idea-feedback-evaluation",
+  "contractVersion": "1.0.0",
+  "schemaVersion": "lotus-idea.feedback-evaluation-contract.v1",
+  "repository": "lotus-idea",
+  "governedByRfcs": [
+    "RFC-0002"
+  ],
+  "implementationIssue": "sgajbi/lotus-idea#1155",
+  "lifecycleStatus": "implemented_contract_not_certified",
+  "supportabilityStatus": "not_certified",
+  "supportedFeaturePromoted": false,
+  "businessOutcome": "Capture adviser usefulness judgments as governed product-quality evidence that can improve opportunity policy and ranking through approved offline evaluation.",
+  "domainBoundary": {
+    "lotusIdeaOwns": [
+      "feedback taxonomy",
+      "feedback mutation identity",
+      "immutable feedback context",
+      "tenant-scoped offline evaluation projection"
+    ],
+    "lotusIdeaDoesNotOwn": [
+      "online learning",
+      "automatic production-policy mutation",
+      "model training",
+      "Workbench-owned feedback semantics"
+    ]
+  },
+  "taxonomy": {
+    "version": "idea-feedback-taxonomy-v1",
+    "allowedCombinations": {
+      "useful": [
+        "relevant"
+      ],
+      "not_useful": [
+        "not_relevant",
+        "already_known",
+        "wrong_timing",
+        "insufficient_evidence",
+        "wrong_priority",
+        "duplicate",
+        "client_specific_constraint"
+      ]
+    },
+    "invalidCombinationErrorCode": "feedback_taxonomy_combination_invalid",
+    "reviewActionsRemainSeparate": true
+  },
+  "mutationIdentity": {
+    "requiredFields": [
+      "feedbackId",
+      "taxonomyVersion",
+      "outcome",
+      "reason",
+      "actorRole",
+      "recordedAtUtc"
+    ],
+    "sameIdentitySamePayloadIsReplay": true,
+    "sameIdentityDifferentPayloadIsConflict": true
+  },
+  "persistence": {
+    "schemaMigration": "017_governed_feedback_taxonomy",
+    "legacyRowsMappedDeterministically": true,
+    "legacyOutboxRowsMigratedTo": "idea.feedback.recorded.v2",
+    "rollbackIsLosslessForMigratedLegacyRows": true,
+    "rollbackFailsClosedForNewGovernedRows": true
+  },
+  "outbox": {
+    "eventType": "idea.feedback.recorded.v2",
+    "requiredPayloadFields": [
+      "actor_role",
+      "feedback_outcome",
+      "feedback_reason",
+      "feedback_taxonomy_version"
+    ]
+  },
+  "offlineEvaluation": {
+    "schemaVersion": "lotus-idea.feedback-evaluation.v1",
+    "policyVersion": "idea-feedback-offline-evaluation-v1",
+    "scope": "single_tenant",
+    "maximumSourceObservations": 10000,
+    "deterministicSnapshotDigest": "sha256",
+    "productionMutationAuthority": "none_read_only_offline_evidence",
+    "cohortDimensions": [
+      "opportunityFamily",
+      "candidateIdentityPolicyVersion",
+      "scorePolicyVersion",
+      "score",
+      "rankingPolicyVersion",
+      "rankContext",
+      "evidenceSupportability",
+      "reviewAction",
+      "feedbackTaxonomyVersion",
+      "feedbackOutcome",
+      "feedbackReason",
+      "downstreamTarget",
+      "downstreamStatus",
+      "downstreamSourceSystem"
+    ],
+    "forbiddenContent": [
+      "raw tenant identifier",
+      "raw client identifier",
+      "raw portfolio identifier",
+      "actor subject",
+      "free text",
+      "prompt or model content",
+      "downstream reference"
+    ]
+  },
+  "sourceOfTruth": {
+    "taxonomy": "src/app/domain/feedback_taxonomy.py",
+    "reviewGovernance": "src/app/domain/review_governance.py",
+    "offlineEvaluation": "src/app/application/feedback_evaluation.py",
+    "apiModels": "src/app/api/review_workflow_models.py",
+    "persistenceMigration": "migrations/017_governed_feedback_taxonomy.sql",
+    "outboxContract": "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
+    "contractGate": "scripts/feedback_evaluation_contract_gate.py",
+    "makeTarget": "make feedback-evaluation-contract-gate"
+  }
+}
