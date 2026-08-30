@@ -125,12 +125,12 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             INSERT INTO idea_candidate_record (
                 candidate_id, family, lifecycle_status, review_posture,
                 evidence_packet_id, evidence_hash, candidate_json,
-                persisted_at_utc, updated_at_utc,
+                generated_at_utc, persisted_at_utc, updated_at_utc,
                 business_identity_id, identity_policy_version,
                 material_fingerprint, material_version, evidence_version,
                 change_reason, supersedes_material_version
             ) VALUES (%s, 'high_cash', 'approved', 'approved_for_conversion',
-                      'evidence-runtime', %s, %s, %s, %s,
+                      'evidence-runtime', %s, %s, %s, %s, %s,
                       %s, 'idea-opportunity-identity-test-v1', %s, 1, 1,
                       'initial_detection', NULL)
             """,
@@ -143,6 +143,7 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
                         "identity": identity,
                     }
                 ),
+                recorded_at,
                 recorded_at,
                 recorded_at,
                 business_identity_id,

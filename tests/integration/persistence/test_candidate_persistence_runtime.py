@@ -152,8 +152,8 @@ def test_candidate_identity_migration_backfills_existing_rows_deterministically(
                 INSERT INTO idea_candidate_record (
                     candidate_id, family, lifecycle_status, review_posture,
                     evidence_packet_id, evidence_hash, candidate_json,
-                    persisted_at_utc, updated_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    generated_at_utc, persisted_at_utc, updated_at_utc
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     candidate.candidate_id,
@@ -163,6 +163,7 @@ def test_candidate_identity_migration_backfills_existing_rows_deterministically(
                     candidate.evidence_packet.evidence_packet_id,
                     evidence_hash,
                     Jsonb(candidate_payload),
+                    candidate.created_at_utc,
                     candidate.created_at_utc,
                     candidate.updated_at_utc,
                 ),

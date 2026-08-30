@@ -206,7 +206,7 @@ def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
                 INSERT INTO idea_candidate_record (
                     candidate_id, family, lifecycle_status, review_posture,
                     evidence_packet_id, evidence_hash, candidate_json,
-                    persisted_at_utc, updated_at_utc,
+                    generated_at_utc, persisted_at_utc, updated_at_utc,
                     business_identity_id, identity_policy_version,
                     material_fingerprint, material_version, evidence_version,
                     change_reason, supersedes_material_version
@@ -227,6 +227,7 @@ def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
                         )
                     ),
                     '2026-06-21T10:00:00Z', '2026-06-21T10:00:00Z',
+                    '2026-06-21T10:00:00Z',
                     'opportunity_legacy_outcome_candidate',
                     'idea-opportunity-identity-test-v1',
                     'sha256:0000000000000000000000000000000000000000000000000000000000000000',
