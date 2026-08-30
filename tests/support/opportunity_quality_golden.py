@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -12,11 +13,15 @@ from app.domain import (
     EvidenceFreshness,
     HighCashSignalInput,
     HighCashSignalPolicy,
+    IdeaCandidate,
     MandateHealthSignalInput,
     MandateHealthSignalPolicy,
+    IdeaLifecycleStatus,
+    ReviewPosture,
     ReviewQueueAudience,
     SourceRef,
     SourceSystem,
+    SuppressionReason,
     UnderperformanceSignalInput,
     UnderperformanceSignalPolicy,
     build_review_queue,
@@ -25,6 +30,7 @@ from app.domain import (
     evaluate_mandate_health_signal,
     evaluate_underperformance_signal,
 )
+from app.domain.candidate_reconciliation import reconcile_candidate
 from app.domain.signal_evaluation_models import SignalEvaluationResult
 
 
@@ -92,6 +98,84 @@ def evaluate_golden_set(golden_set: dict[str, Any]) -> tuple[str, ...]:
                 f"got {actual_buckets!r}"
             )
 
+    for lifecycle_expectation in golden_set["lifecycleExpectations"]:
+        errors.extend(
+            _evaluate_lifecycle_expectation(
+                lifecycle_expectation,
+                as_of_date=as_of_date,
+                evaluated_at=evaluated_at,
+            )
+        )
+
+    return tuple(errors)
+
+
+def _evaluate_lifecycle_expectation(
+    scenario: dict[str, Any],
+    *,
+    as_of_date: date,
+    evaluated_at: datetime,
+) -> tuple[str, ...]:
+    initial_facts = scenario["initial"]
+    incoming_facts = scenario["incoming"]
+    initial = _high_cash_candidate(
+        cash_weight=Decimal(initial_facts["cashWeight"]),
+        cashflow_hash=initial_facts["evidenceHash"],
+        as_of_date=as_of_date,
+        evaluated_at=evaluated_at,
+    )
+    initial = replace(
+        initial,
+        lifecycle_status=IdeaLifecycleStatus(initial_facts["lifecycleStatus"]),
+        review_posture=ReviewPosture(initial_facts["reviewPosture"]),
+        suppression_reason=(
+            SuppressionReason(initial_facts["suppressionReason"])
+            if initial_facts.get("suppressionReason")
+            else None
+        ),
+    )
+    incoming = _high_cash_candidate(
+        cash_weight=Decimal(incoming_facts["cashWeight"]),
+        cashflow_hash=incoming_facts["evidenceHash"],
+        as_of_date=as_of_date,
+        evaluated_at=evaluated_at,
+    )
+    reconciliation = reconcile_candidate(
+        existing=initial,
+        incoming=incoming,
+        existing_evidence_hash=initial.evidence_packet.lineage_ref.content_hash,
+        incoming_evidence_hash=incoming.evidence_packet.lineage_ref.content_hash,
+        occurred_at_utc=evaluated_at,
+    )
+    expected = scenario["expected"]
+    scenario_id = scenario["scenarioId"]
+    errors: list[str] = []
+    if reconciliation.decision.value != expected["decision"]:
+        errors.append(
+            f"{scenario_id} decision expected {expected['decision']!r}, "
+            f"got {reconciliation.decision.value!r}"
+        )
+    candidate = reconciliation.candidate
+    if candidate is None:
+        errors.append(f"{scenario_id} expected a reconciled candidate")
+        return tuple(errors)
+    actual: dict[str, object] = {
+        "candidateIdStable": candidate.candidate_id == initial.candidate_id,
+        "materialVersion": candidate.identity.material_version,
+        "evidenceVersion": candidate.identity.evidence_version,
+        "changeReason": candidate.identity.change_reason.value,
+        "lifecycleStatus": candidate.lifecycle_status.value,
+        "reviewPosture": candidate.review_posture.value,
+        "suppressionReason": (
+            candidate.suppression_reason.value if candidate.suppression_reason else None
+        ),
+    }
+    for field_name, actual_value in actual.items():
+        if actual_value != expected[field_name]:
+            errors.append(
+                f"{scenario_id} {field_name} expected {expected[field_name]!r}, "
+                f"got {actual_value!r}"
+            )
     return tuple(errors)
 
 
@@ -106,6 +190,12 @@ def _validate_contract(golden_set: dict[str, Any]) -> tuple[str, ...]:
         errors.append("expected results must not be derived from production code")
     if authorship.get("classification") != "synthetic_non_client_data":
         errors.append("golden-set data must be classified as synthetic_non_client_data")
+
+    source_authorities = golden_set.get("sourceAuthorities")
+    if not isinstance(source_authorities, list):
+        errors.append("sourceAuthorities must be a list")
+    elif {item.get("family") for item in source_authorities} != REQUIRED_FAMILIES:
+        errors.append("sourceAuthorities must cover every golden-set family exactly once")
 
     cases = golden_set.get("cases")
     if not isinstance(cases, list) or not cases:
@@ -138,7 +228,9 @@ def _evaluate_case(
                 portfolio_state_ref=refs[0],
                 holdings_ref=refs[1],
                 cash_movement_ref=refs[2],
-                cashflow_projection_ref=refs[3],
+                cashflow_projection_ref=(
+                    refs[3] if facts.get("cashflowProjectionAvailable", True) else None
+                ),
                 evaluated_at_utc=evaluated_at,
             ),
             HighCashSignalPolicy("idle-liquidity-v1", Decimal("0.12"), Decimal("82")),
@@ -235,6 +327,15 @@ def _compare_case(case: dict[str, Any], result: SignalEvaluationResult) -> tuple
     actual_products = [ref.product_id for ref in result.candidate.evidence_packet.source_refs]
     candidate_comparisons: dict[str, object] = {
         "score": str(result.candidate.score.score) if result.candidate.score else None,
+        "scorePolicyVersion": (
+            result.candidate.score.policy_version if result.candidate.score else None
+        ),
+        "scoreComponents": {
+            "policyCandidateScore": (
+                str(result.candidate.score.score) if result.candidate.score else None
+            )
+        },
+        "evidenceSupportability": result.candidate.evidence_packet.supportability.value,
         "reviewPosture": result.candidate.review_posture.value,
         "sourceProducts": actual_products,
     }
@@ -276,6 +377,32 @@ def _high_cash_refs(
         for product_id, route in products_and_routes
     )
     return refs[0], refs[1], refs[2], refs[3]
+
+
+def _high_cash_candidate(
+    *,
+    cash_weight: Decimal,
+    cashflow_hash: str,
+    as_of_date: date,
+    evaluated_at: datetime,
+) -> IdeaCandidate:
+    refs = _high_cash_refs(as_of_date, evaluated_at, EvidenceFreshness.CURRENT)
+    refs = refs[0], refs[1], refs[2], replace(refs[3], content_hash=cashflow_hash)
+    result = evaluate_high_cash_signal(
+        HighCashSignalInput(
+            as_of_date=as_of_date,
+            source_reported_cash_weight=cash_weight,
+            portfolio_state_ref=refs[0],
+            holdings_ref=refs[1],
+            cash_movement_ref=refs[2],
+            cashflow_projection_ref=refs[3],
+            evaluated_at_utc=evaluated_at,
+        ),
+        HighCashSignalPolicy("idle-liquidity-v1", Decimal("0.12"), Decimal("82")),
+    )
+    if result.candidate is None:
+        raise AssertionError("lifecycle golden scenario must create a high-cash candidate")
+    return result.candidate
 
 
 def _source_ref(
