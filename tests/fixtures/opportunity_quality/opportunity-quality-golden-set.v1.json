@@ -572,6 +572,81 @@
       }
     }
   ],
+  "scoringExpectations": [
+    {
+      "scenarioId": "weighted-evidence-score",
+      "inputs": {
+        "materiality": "90",
+        "urgency": "80",
+        "confidence": "75",
+        "evidenceQuality": "85",
+        "freshness": "100",
+        "relevance": "70",
+        "downstreamFit": "65",
+        "hasConflictFlags": false
+      },
+      "expected": {
+        "policyVersion": "idea-weighted-evidence-score-v1",
+        "finalScore": "80.75",
+        "conflictPenaltyApplied": "0",
+        "reasonCodes": [
+          "materiality_score",
+          "urgency_score",
+          "confidence_score",
+          "evidence_quality_score",
+          "freshness_score",
+          "relevance_score",
+          "downstream_fit_score"
+        ],
+        "contributions": {
+          "materiality": "18.00",
+          "urgency": "12.00",
+          "confidence": "11.25",
+          "evidence_quality": "12.75",
+          "freshness": "10.00",
+          "relevance": "7.00",
+          "downstream_fit": "9.75"
+        }
+      }
+    },
+    {
+      "scenarioId": "conflicting-evidence-score-penalty",
+      "inputs": {
+        "materiality": "90",
+        "urgency": "80",
+        "confidence": "75",
+        "evidenceQuality": "85",
+        "freshness": "100",
+        "relevance": "70",
+        "downstreamFit": "65",
+        "hasConflictFlags": true
+      },
+      "expected": {
+        "policyVersion": "idea-weighted-evidence-score-v1",
+        "finalScore": "65.75",
+        "conflictPenaltyApplied": "15",
+        "reasonCodes": [
+          "materiality_score",
+          "urgency_score",
+          "confidence_score",
+          "evidence_quality_score",
+          "freshness_score",
+          "relevance_score",
+          "downstream_fit_score",
+          "conflict_penalty"
+        ],
+        "contributions": {
+          "materiality": "18.00",
+          "urgency": "12.00",
+          "confidence": "11.25",
+          "evidence_quality": "12.75",
+          "freshness": "10.00",
+          "relevance": "7.00",
+          "downstream_fit": "9.75"
+        }
+      }
+    }
+  ],
   "lifecycleExpectations": [
     {
       "scenarioId": "evidence-correction-preserves-review",

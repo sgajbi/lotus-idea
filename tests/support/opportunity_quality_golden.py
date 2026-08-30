@@ -20,6 +20,8 @@ from app.domain import (
     HighVolatilitySignalInput,
     HighVolatilitySignalPolicy,
     IdeaCandidate,
+    IdeaScoringInputs,
+    IdeaScoringPolicy,
     LowIncomeSignalInput,
     LowIncomeSignalPolicy,
     MandateHealthSignalInput,
@@ -55,6 +57,7 @@ from app.domain import (
     evaluate_underperformance_signal,
 )
 from app.domain.candidate_reconciliation import reconcile_candidate
+from app.domain.scoring import score_inputs
 from app.domain.signal_evaluation_models import SignalEvaluationResult
 
 
@@ -145,6 +148,45 @@ def evaluate_golden_set(golden_set: dict[str, Any]) -> tuple[str, ...]:
             )
         )
 
+    for scoring_expectation in golden_set["scoringExpectations"]:
+        errors.extend(_evaluate_scoring_expectation(scoring_expectation))
+
+    return tuple(errors)
+
+
+def _evaluate_scoring_expectation(scenario: dict[str, Any]) -> tuple[str, ...]:
+    inputs = scenario["inputs"]
+    breakdown = score_inputs(
+        IdeaScoringInputs(
+            materiality=Decimal(inputs["materiality"]),
+            urgency=Decimal(inputs["urgency"]),
+            confidence=Decimal(inputs["confidence"]),
+            evidence_quality=Decimal(inputs["evidenceQuality"]),
+            freshness=Decimal(inputs["freshness"]),
+            relevance=Decimal(inputs["relevance"]),
+            downstream_fit=Decimal(inputs["downstreamFit"]),
+            has_conflict_flags=inputs["hasConflictFlags"],
+        ),
+        policy=IdeaScoringPolicy(policy_version="idea-weighted-evidence-score-v1"),
+    )
+    actual: dict[str, object] = {
+        "policyVersion": breakdown.policy_version,
+        "finalScore": str(breakdown.final_score),
+        "conflictPenaltyApplied": str(breakdown.conflict_penalty_applied),
+        "reasonCodes": [reason.value for reason in breakdown.reason_codes],
+        "contributions": {
+            contribution.component.value: str(contribution.contribution)
+            for contribution in breakdown.contributions
+        },
+    }
+    expected = scenario["expected"]
+    errors: list[str] = []
+    for field_name, actual_value in actual.items():
+        if actual_value != expected[field_name]:
+            errors.append(
+                f"{scenario['scenarioId']} {field_name} expected {expected[field_name]!r}, "
+                f"got {actual_value!r}"
+            )
     return tuple(errors)
 
 

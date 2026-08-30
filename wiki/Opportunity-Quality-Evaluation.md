@@ -15,6 +15,7 @@ either one.
 | Does a quiet portfolio stay quiet? | Below-materiality cases create no advisor or portfolio-manager queue items. |
 | Does unsupported evidence fail closed? | Stale, unavailable, uncertified, missing-benchmark, and unconfirmed-scope cases abstain with explicit reason codes. |
 | Is review priority deterministic? | Advisor and portfolio-manager queues assert expected score order, rank, and priority bucket independently. |
+| Are score explanations and conflicts governed? | Weighted contributions, the bounded conflict penalty, and their reason codes are independently asserted. |
 | Is candidate identity governed over time? | Evidence correction, material change, suppression clearing, expiry, and recurrence execute the production reconciliation policy. |
 | Would a false expected answer be caught? | Tamper tests alter outcome, explanation, rank, and lifecycle version expectations and require failure. |
 

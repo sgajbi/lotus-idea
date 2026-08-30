@@ -74,14 +74,16 @@ The same dataset also proves:
 2. advisor and portfolio-manager audiences remain separate;
 3. eligibility, fixed family policy score, and queue rank are separately
    asserted;
-4. an evidence correction preserves reviewed state and increments only the
+4. weighted score contributions are independently asserted and conflicting
+   evidence applies the explicit bounded penalty and reason code;
+5. an evidence correction preserves reviewed state and increments only the
    evidence version;
-5. a material change creates a new material version and clears stale
+6. a material change creates a new material version and clears stale
    suppression;
-6. a changed recurring condition after expiry reopens the stable business
+7. a changed recurring condition after expiry reopens the stable business
    identity for human review;
-7. deliberate mutations of expected outcome, reason, rank, or reopen version
-   make the test fail.
+8. deliberate mutations of expected outcome, reason, score component, rank,
+   or reopen version make the test fail.
 
 ## Source Authority And No-Claim Boundaries
 

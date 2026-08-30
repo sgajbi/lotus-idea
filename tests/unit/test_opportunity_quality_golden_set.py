@@ -64,6 +64,15 @@ def test_golden_set_detects_ranking_regression() -> None:
     assert any("active-opportunities:advisor orderedCaseIds" in error for error in errors)
 
 
+def test_golden_set_detects_score_component_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["scoringExpectations"][0]["expected"]["contributions"]["materiality"] = "17.00"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any("weighted-evidence-score contributions" in error for error in errors)
+
+
 def test_golden_set_detects_candidate_reopen_regression() -> None:
     golden_set = deepcopy(load_golden_set())
     golden_set["lifecycleExpectations"][2]["expected"]["evidenceVersion"] = 2
