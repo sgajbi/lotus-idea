@@ -27,10 +27,16 @@ def test_review_action_success_examples_match_ledger_and_openapi() -> None:
     assert decision is not None
     assert decision["snoozedUntilUtc"] is None
     assert decision["grantsDownstreamAuthority"] is False
+    assert decision["reasonCodes"].count("review_suppressed") == 1
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
     assert expected["replayed"]["reviewDecision"] is None
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
+
+    request_schema = app.openapi()["components"]["schemas"]["ReviewActionRequest"]
+    reason_code_description = request_schema["properties"]["reasonCodes"]["description"]
+    assert "records the action-owned reason" in reason_code_description
+    assert "exactly once" in reason_code_description
 
 
 def test_feedback_success_examples_match_ledger_and_openapi() -> None:

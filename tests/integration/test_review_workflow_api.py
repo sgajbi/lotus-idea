@@ -556,6 +556,52 @@ def test_review_action_api_returns_conflict_for_changed_idempotency_payload() ->
     assert response.json()["code"] == "idempotency_conflict"
 
 
+def test_review_action_api_canonicalizes_action_reason_without_hiding_transport_conflicts() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="seed-review-canonical-reason-001",
+    )
+    first_request = suppress_review_payload(review_id="review-canonical-reason-001")
+    equivalent_request = first_request | {
+        "reasonCodes": ["review_suppressed", "review_required", "review_suppressed"]
+    }
+
+    accepted = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=first_request,
+        headers=review_headers("review-canonical-reason-accepted-001"),
+    )
+    same_transport_key_conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=equivalent_request,
+        headers=review_headers("review-canonical-reason-accepted-001"),
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=equivalent_request,
+        headers=review_headers("review-canonical-reason-replayed-001"),
+    )
+    record = get_idea_repository().snapshot().candidate_records[candidate_id]
+
+    assert accepted.status_code == 200
+    assert accepted.json()["reviewDecision"]["reasonCodes"] == [
+        "review_suppressed",
+        "review_required",
+    ]
+    assert same_transport_key_conflict.status_code == 409
+    assert same_transport_key_conflict.json()["code"] == "idempotency_conflict"
+    assert replayed.status_code == 200
+    assert replayed.json()["reviewDecision"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert len(record.review_decisions) == 1
+    assert [reason.value for reason in record.review_decisions[0].reason_codes] == [
+        "review_suppressed",
+        "review_required",
+    ]
+
+
 def test_review_action_api_returns_state_conflict_for_generated_candidate_approval(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

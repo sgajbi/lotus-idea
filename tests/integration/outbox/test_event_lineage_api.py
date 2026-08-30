@@ -68,6 +68,7 @@ def test_review_and_feedback_apis_persist_distinct_request_lineage() -> None:
     assert review_event.trace_id == "trace-review-api"
     assert review_event.causation_id is None
     assert review_event.lineage_origin.value == "request"
+    assert review_event.payload["reason_codes"] == "review_suppressed,review_required"
 
     reset_idea_repository_for_tests()
     feedback_candidate_id = persisted_candidate_id(

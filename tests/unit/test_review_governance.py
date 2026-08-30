@@ -179,6 +179,9 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.audit_event.attributes["prior_lifecycle_status"] == "ready_for_review"
     assert result.audit_event.attributes["prior_review_posture"] == "advisor_review_required"
     assert result.audit_event.attributes["requested_action"] == "approve_for_conversion"
+    assert result.audit_event.attributes["reason_codes"] == (
+        "review_approved_for_conversion,review_required"
+    )
     assert result.audit_event.attributes["policy_version"] == "idea-candidate-state-v1"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
@@ -198,6 +201,65 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     assert identity != replace(identity, actor_subject="advisor-002")
     assert identity != replace(identity, evidence_content_hash="sha256:changed")
     assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
+
+
+@pytest.mark.parametrize(
+    ("action", "source_reason"),
+    (
+        (ReviewAction.APPROVE_FOR_CONVERSION, ReasonCode.REVIEW_APPROVED_FOR_CONVERSION),
+        (ReviewAction.REJECT, ReasonCode.REVIEW_REJECTED),
+        (ReviewAction.NO_ACTION, ReasonCode.REVIEW_NO_ACTION),
+        (ReviewAction.SUPPRESS, ReasonCode.REVIEW_SUPPRESSED),
+        (ReviewAction.SNOOZE, ReasonCode.REVIEW_SNOOZED),
+        (ReviewAction.ESCALATE_TO_PM, ReasonCode.REVIEW_ESCALATED),
+        (ReviewAction.ESCALATE_TO_COMPLIANCE, ReasonCode.REVIEW_ESCALATED),
+    ),
+)
+def test_review_action_reason_is_canonical_in_identity_and_persisted_decision(
+    action: ReviewAction,
+    source_reason: ReasonCode,
+) -> None:
+    source_candidate = candidate()
+    command = replace(
+        valid_decision_command(action),
+        reason_codes=(source_reason, ReasonCode.REVIEW_REQUIRED, source_reason),
+    )
+
+    result = apply_review_action(source_candidate, command)
+
+    assert review_mutation_identity_from_command(source_candidate, command) == (
+        result.decision.mutation_identity
+    )
+    assert result.decision.reason_codes == (source_reason, ReasonCode.REVIEW_REQUIRED)
+    assert result.decision.reason_codes.count(source_reason) == 1
+
+
+@pytest.mark.parametrize(
+    "caller_reason_codes",
+    (
+        (ReasonCode.REVIEW_REQUIRED,),
+        (ReasonCode.REVIEW_SUPPRESSED, ReasonCode.REVIEW_REQUIRED),
+        (
+            ReasonCode.REVIEW_SUPPRESSED,
+            ReasonCode.REVIEW_REQUIRED,
+            ReasonCode.REVIEW_SUPPRESSED,
+        ),
+    ),
+)
+def test_review_action_reason_canonicalization_covers_omission_and_caller_inclusion(
+    caller_reason_codes: tuple[ReasonCode, ...],
+) -> None:
+    command = replace(
+        valid_decision_command(ReviewAction.SUPPRESS),
+        reason_codes=caller_reason_codes,
+    )
+
+    result = apply_review_action(candidate(), command)
+
+    assert result.decision.reason_codes == (
+        ReasonCode.REVIEW_SUPPRESSED,
+        ReasonCode.REVIEW_REQUIRED,
+    )
 
 
 @pytest.mark.parametrize(

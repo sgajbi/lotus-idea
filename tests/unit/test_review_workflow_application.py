@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -356,6 +357,74 @@ def test_apply_review_action_to_repository_detects_idempotency_conflict_without_
     assert conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
     assert conflict.persistence.record is not None
     assert len(conflict.persistence.record.review_decisions) == 1
+
+
+def test_review_action_source_reason_is_canonical_without_weakening_transport_conflicts() -> None:
+    repository = repository_with_candidate()
+    first_review = decision_command(
+        ReviewAction.SUPPRESS,
+        suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
+    )
+    first = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=first_review,
+            idempotency_key="review-action:canonical:first",
+        ),
+        repository=repository,
+    )
+    caller_supplied_source_reason = replace(
+        first_review,
+        reason_codes=(
+            ReasonCode.REVIEW_SUPPRESSED,
+            ReasonCode.REVIEW_REQUIRED,
+            ReasonCode.REVIEW_SUPPRESSED,
+        ),
+    )
+
+    same_transport_key_conflict = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=caller_supplied_source_reason,
+            idempotency_key="review-action:canonical:first",
+        ),
+        repository=repository,
+    )
+    replayed = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=caller_supplied_source_reason,
+            idempotency_key="review-action:canonical:replay",
+        ),
+        repository=repository,
+    )
+
+    assert first.review_result is not None
+    assert first.review_result.decision.reason_codes == (
+        ReasonCode.REVIEW_SUPPRESSED,
+        ReasonCode.REVIEW_REQUIRED,
+    )
+    assert same_transport_key_conflict.review_result is None
+    assert same_transport_key_conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
+    assert replayed.review_result is None
+    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
+    assert replayed.persistence.record == first.persistence.record
+    assert replayed.persistence.record is not None
+    assert len(replayed.persistence.record.review_decisions) == 1
+    assert replayed.persistence.record.review_decisions[0].reason_codes == (
+        ReasonCode.REVIEW_SUPPRESSED,
+        ReasonCode.REVIEW_REQUIRED,
+    )
+    assert replayed.persistence.record.audit_events[-1].attributes["reason_codes"] == (
+        "review_suppressed,review_required"
+    )
+    review_outbox_events = [
+        event
+        for event in repository.snapshot().outbox_events.values()
+        if event.event_type == "idea.review.decision_recorded.v1"
+    ]
+    assert len(review_outbox_events) == 1
+    assert review_outbox_events[0].payload["reason_codes"] == ("review_suppressed,review_required")
 
 
 def test_record_feedback_to_repository_persists_source_provenanced_feedback() -> None:
