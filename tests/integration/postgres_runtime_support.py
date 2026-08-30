@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from hashlib import sha256
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
 from threading import Barrier
@@ -82,6 +83,18 @@ def persistence_headers(idempotency_key: str) -> dict[str, str]:
 
 def seed_active_conversion_resource(database_url: str, conversion_intent_id: str) -> str:
     candidate_id = f"candidate-{conversion_intent_id}"
+    identity_digest = sha256(candidate_id.encode("utf-8")).hexdigest()
+    business_identity_id = f"opportunity_test_{identity_digest}"
+    material_fingerprint = f"sha256:{identity_digest}"
+    identity = {
+        "business_identity_id": business_identity_id,
+        "policy_version": "idea-opportunity-identity-test-v1",
+        "material_fingerprint": material_fingerprint,
+        "material_version": 1,
+        "evidence_version": 1,
+        "change_reason": "initial_detection",
+        "supersedes_material_version": None,
+    }
     recorded_at = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
     with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
         cursor.execute(
@@ -89,15 +102,28 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             INSERT INTO idea_candidate_record (
                 candidate_id, family, lifecycle_status, review_posture,
                 evidence_packet_id, evidence_hash, candidate_json,
-                persisted_at_utc, updated_at_utc
+                persisted_at_utc, updated_at_utc,
+                business_identity_id, identity_policy_version,
+                material_fingerprint, material_version, evidence_version,
+                change_reason, supersedes_material_version
             ) VALUES (%s, 'high_cash', 'approved', 'approved_for_conversion',
-                      'evidence-runtime', 'sha256:runtime', %s, %s, %s)
+                      'evidence-runtime', %s, %s, %s, %s,
+                      %s, 'idea-opportunity-identity-test-v1', %s, 1, 1,
+                      'initial_detection', NULL)
             """,
             (
                 candidate_id,
-                Jsonb({"access_scope": {"tenant_id": "tenant-private-bank-sg"}}),
+                material_fingerprint,
+                Jsonb(
+                    {
+                        "access_scope": {"tenant_id": "tenant-private-bank-sg"},
+                        "identity": identity,
+                    }
+                ),
                 recorded_at,
                 recorded_at,
+                business_identity_id,
+                material_fingerprint,
             ),
         )
         cursor.execute(

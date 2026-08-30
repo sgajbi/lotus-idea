@@ -204,11 +204,31 @@ def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
                 INSERT INTO idea_candidate_record (
                     candidate_id, family, lifecycle_status, review_posture,
                     evidence_packet_id, evidence_hash, candidate_json,
-                    persisted_at_utc, updated_at_utc
+                    persisted_at_utc, updated_at_utc,
+                    business_identity_id, identity_policy_version,
+                    material_fingerprint, material_version, evidence_version,
+                    change_reason, supersedes_material_version
                 ) VALUES (
                     'legacy-outcome-candidate', 'high_cash', 'approved',
                     'approved_for_conversion', 'legacy-evidence', 'legacy-hash',
-                    '{}'::jsonb, '2026-06-21T10:00:00Z', '2026-06-21T10:00:00Z'
+                    jsonb_build_object(
+                        'identity',
+                        jsonb_build_object(
+                            'business_identity_id', 'opportunity_legacy_outcome_candidate',
+                            'policy_version', 'idea-opportunity-identity-test-v1',
+                            'material_fingerprint',
+                            'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+                            'material_version', 1,
+                            'evidence_version', 1,
+                            'change_reason', 'initial_detection',
+                            'supersedes_material_version', NULL
+                        )
+                    ),
+                    '2026-06-21T10:00:00Z', '2026-06-21T10:00:00Z',
+                    'opportunity_legacy_outcome_candidate',
+                    'idea-opportunity-identity-test-v1',
+                    'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+                    1, 1, 'initial_detection', NULL
                 );
                 INSERT INTO idea_conversion_intent (
                     conversion_intent_id, candidate_id, target, actor_subject,
