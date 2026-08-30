@@ -1034,8 +1034,8 @@ open `status/blocked` issues are classified and 0 are app-actionable blocked
 issues. The baseline is 203 closed and 39 open across 13 repositories, with 25
 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2
 `status/ready`, 9 `status/tracker`; `sgajbi/lotus-idea#681` remains the Slice 18
-tracker, `#1154` is in progress for governed economic candidate identity, and
-`#1155` then `#1156` are ready for feedback-quality evaluation and opportunity-
+tracker, `#1154` is PR-open in PR #1157 for governed economic candidate
+identity, and `#1155` then `#1156` are ready for feedback-quality evaluation and opportunity-
 effectiveness measurement. `#1150` is closed
 after PR #1152 exact-main, release-image, wiki, and branch-hygiene proof, and
 `#1145` is closed after PR #1149 exact-main and wiki proof. The

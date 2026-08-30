@@ -29,7 +29,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 39 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is in progress for governed economic candidate identity and evidence versioning. `#1155` is ready next for governed review-feedback taxonomy and offline quality evaluation; `#1156` follows for opportunity-effectiveness measurement. These issues do not promote a supported feature or complete final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker. `#1154` is PR-open in PR #1157 for governed economic candidate identity and evidence versioning. `#1155` is ready next for governed review-feedback taxonomy and offline quality evaluation; `#1156` follows for opportunity-effectiveness measurement. These issues do not promote a supported feature or complete final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -66,7 +66,8 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 2 | Slice 18 synchronization tracker `sgajbi/lotus-idea#681` and economic candidate identity implementation `#1154` remain active. |
+| `status/in-progress` | 2 | Dated baseline count; live lifecycle state now retains `sgajbi/lotus-idea#681` in progress while `#1154` has advanced to `status/pr-open`. |
+| `status/pr-open` | 0 | Dated baseline count; live lifecycle state is now 1 because `#1154` is in PR #1157. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/ready` | 2 | `sgajbi/lotus-idea#1155` is the next governed feedback/evaluation slice; `#1156` follows for effectiveness measurement. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
@@ -77,9 +78,9 @@ label-backed RFC-0002 issues, 203 closed and 39 open, with 25 `status/blocked`,
 `status/tracker`, and 0
 app-actionable blocked issues. As of
 2026-08-30, the Idea source ledger tracks 151 RFC-0002 issues: 123 closed and 28
-open. `#681` remains in progress for Slice 18 synchronization, `#1154` is in
-progress for economic candidate identity, and `#1155` and `#1156` are ready in
-that implementation order. `#1150` is
+open. `#681` remains in progress for Slice 18 synchronization, `#1154` is
+PR-open in PR #1157 for economic candidate identity, and `#1155` and `#1156`
+are ready in that implementation order. `#1150` is
 closed after PR #1152 exact-main, release-image, wiki, and branch-hygiene proof,
 `#1145` remains closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof, and `#1139` is closed after PR
 #1147 exact-main, live-posture, wiki, and branch-hygiene proof.

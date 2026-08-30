@@ -1394,8 +1394,8 @@ closed after signal API contract-gate hardening; #1104 is closed after supported
 fixture hardening; #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues. #681 remains the Slice 18
-synchronization tracker, #1154 is in progress for governed economic candidate
-identity, and #1155 then #1156 are ready for feedback-quality evaluation and
+synchronization tracker, #1154 is PR-open in PR #1157 for governed economic
+candidate identity, and #1155 then #1156 are ready for feedback-quality evaluation and
 effectiveness measurement. #1150 is closed after PR #1152 exact-main,
 release-image, wiki, and branch-hygiene proof, and #1145 is closed after PR
 #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed after PR #1147 reached exact main
