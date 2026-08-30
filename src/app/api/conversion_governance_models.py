@@ -231,10 +231,7 @@ class ConversionPersistenceSummaryResponse(CamelModel):
 
 
 class ConversionIntentApiResponse(CamelModel):
-    conversion_intent: ConversionIntentResponse | None = Field(
-        default=None,
-        alias="conversionIntent",
-    )
+    conversion_intent: ConversionIntentResponse = Field(..., alias="conversionIntent")
     persistence: ConversionPersistenceSummaryResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")

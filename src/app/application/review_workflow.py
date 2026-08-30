@@ -4,13 +4,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.application.candidate_lookup import candidate_record_by_id
+from app.application.persisted_action_evidence import (
+    PersistedActionEvidenceUnavailable,
+    require_single_persisted_action,
+)
 from app.domain import (
     DEFAULT_REVIEW_ACTION_POLICY,
     EventLineageContext,
     FeedbackCommand,
-    FeedbackResult,
+    GovernedFeedbackEvent,
+    GovernedReviewDecision,
     ReviewActionPolicy,
-    ReviewActionResult,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
@@ -48,14 +52,28 @@ class RecordFeedbackToRepositoryCommand:
 
 @dataclass(frozen=True)
 class ReviewWorkflowResult:
-    review_result: ReviewActionResult | None
+    review_decision: GovernedReviewDecision | None
     persistence: ReviewPersistenceResult
+
+    def require_review_decision(self) -> GovernedReviewDecision:
+        if self.review_decision is None:
+            raise PersistedActionEvidenceUnavailable(
+                "Successful review mutation has no persisted review decision"
+            )
+        return self.review_decision
 
 
 @dataclass(frozen=True)
 class FeedbackWorkflowResult:
-    feedback_result: FeedbackResult | None
+    feedback_event: GovernedFeedbackEvent | None
     persistence: ReviewPersistenceResult
+
+    def require_feedback_event(self) -> GovernedFeedbackEvent:
+        if self.feedback_event is None:
+            raise PersistedActionEvidenceUnavailable(
+                "Successful feedback mutation has no persisted feedback event"
+            )
+        return self.feedback_event
 
 
 def apply_review_action_to_repository(
@@ -67,7 +85,7 @@ def apply_review_action_to_repository(
     record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return ReviewWorkflowResult(
-            review_result=None,
+            review_decision=None,
             persistence=ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.NOT_FOUND,
                 record=None,
@@ -81,7 +99,10 @@ def apply_review_action_to_repository(
         identity=review_mutation_identity_from_command(record.candidate, command.review),
     )
     if prechecked is not None:
-        return ReviewWorkflowResult(review_result=None, persistence=prechecked)
+        return ReviewWorkflowResult(
+            review_decision=_persisted_review_decision(command, prechecked),
+            persistence=prechecked,
+        )
 
     review_result = apply_review_action(record.candidate, command.review, policy=policy)
     persistence = repository.record_review_action(
@@ -90,7 +111,10 @@ def apply_review_action_to_repository(
         payload=payload,
         event_lineage=command.event_lineage,
     )
-    return ReviewWorkflowResult(review_result=review_result, persistence=persistence)
+    return ReviewWorkflowResult(
+        review_decision=_persisted_review_decision(command, persistence),
+        persistence=persistence,
+    )
 
 
 def record_feedback_to_repository(
@@ -102,7 +126,7 @@ def record_feedback_to_repository(
     record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return FeedbackWorkflowResult(
-            feedback_result=None,
+            feedback_event=None,
             persistence=ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.NOT_FOUND,
                 record=None,
@@ -116,7 +140,10 @@ def record_feedback_to_repository(
         identity=feedback_mutation_identity_from_command(record.candidate, command.feedback),
     )
     if prechecked is not None:
-        return FeedbackWorkflowResult(feedback_result=None, persistence=prechecked)
+        return FeedbackWorkflowResult(
+            feedback_event=_persisted_feedback_event(command, prechecked),
+            persistence=prechecked,
+        )
 
     feedback_result = record_feedback(record.candidate, command.feedback, policy=policy)
     persistence = repository.record_feedback_event(
@@ -125,7 +152,52 @@ def record_feedback_to_repository(
         payload=payload,
         event_lineage=command.event_lineage,
     )
-    return FeedbackWorkflowResult(feedback_result=feedback_result, persistence=persistence)
+    return FeedbackWorkflowResult(
+        feedback_event=_persisted_feedback_event(command, persistence),
+        persistence=persistence,
+    )
+
+
+def _persisted_review_decision(
+    command: ApplyReviewActionToRepositoryCommand,
+    persistence: ReviewPersistenceResult,
+) -> GovernedReviewDecision | None:
+    if persistence.decision not in {
+        ReviewPersistenceDecision.ACCEPTED,
+        ReviewPersistenceDecision.REPLAYED,
+    }:
+        return None
+    record = persistence.record
+    if record is None or record.candidate.candidate_id != command.candidate_id:
+        raise PersistedActionEvidenceUnavailable(
+            "Successful review mutation has no matching candidate record"
+        )
+    expected_identity = review_mutation_identity_from_command(record.candidate, command.review)
+    return require_single_persisted_action(
+        decision
+        for decision in record.review_decisions
+        if decision.mutation_identity == expected_identity
+    )
+
+
+def _persisted_feedback_event(
+    command: RecordFeedbackToRepositoryCommand,
+    persistence: ReviewPersistenceResult,
+) -> GovernedFeedbackEvent | None:
+    if persistence.decision not in {
+        ReviewPersistenceDecision.ACCEPTED,
+        ReviewPersistenceDecision.REPLAYED,
+    }:
+        return None
+    record = persistence.record
+    if record is None or record.candidate.candidate_id != command.candidate_id:
+        raise PersistedActionEvidenceUnavailable(
+            "Successful feedback mutation has no matching candidate record"
+        )
+    expected_identity = feedback_mutation_identity_from_command(record.candidate, command.feedback)
+    return require_single_persisted_action(
+        event for event in record.feedback_events if event.mutation_identity == expected_identity
+    )
 
 
 def _review_payload(command: ApplyReviewActionToRepositoryCommand) -> dict[str, Any]:

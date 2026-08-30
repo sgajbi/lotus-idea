@@ -29,9 +29,15 @@ def test_review_action_success_examples_match_ledger_and_openapi() -> None:
     assert decision["grantsDownstreamAuthority"] is False
     assert decision["reasonCodes"].count("review_suppressed") == 1
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
-    assert expected["replayed"]["reviewDecision"] is None
+    assert expected["replayed"]["reviewDecision"] == expected["accepted"]["reviewDecision"]
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
+
+    response_schema = app.openapi()["components"]["schemas"]["ReviewActionResponse"]
+    assert "reviewDecision" in response_schema["required"]
+    assert response_schema["properties"]["reviewDecision"] == {
+        "$ref": "#/components/schemas/ReviewDecisionResponse"
+    }
 
     request_schema = app.openapi()["components"]["schemas"]["ReviewActionRequest"]
     reason_code_description = request_schema["properties"]["reasonCodes"]["description"]
@@ -51,9 +57,15 @@ def test_feedback_success_examples_match_ledger_and_openapi() -> None:
     assert expected["accepted"]["feedbackEvent"]["outcome"] == "useful"
     assert expected["accepted"]["feedbackEvent"]["reason"] == "relevant"
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
-    assert expected["replayed"]["feedbackEvent"] is None
+    assert expected["replayed"]["feedbackEvent"] == expected["accepted"]["feedbackEvent"]
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
+
+    response_schema = app.openapi()["components"]["schemas"]["FeedbackResponse"]
+    assert "feedbackEvent" in response_schema["required"]
+    assert response_schema["properties"]["feedbackEvent"] == {
+        "$ref": "#/components/schemas/FeedbackEventResponse"
+    }
 
     request_schema = app.openapi()["components"]["schemas"]["FeedbackRequest"]
     reason_description = request_schema["properties"]["reason"]["description"]

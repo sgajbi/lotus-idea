@@ -7,6 +7,9 @@ from typing import Any
 import pytest
 from tests.support.http import ManagedTestClient, managed_test_client
 
+from app.api import conversion_governance as conversion_governance_api
+from app.api import review_workflow as review_workflow_api
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
 
@@ -532,9 +535,36 @@ def test_review_action_api_replays_same_idempotency_payload() -> None:
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["reviewDecision"] is None
+    assert replayed.json()["reviewDecision"] == first.json()["reviewDecision"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert replayed.json()["persistence"]["candidateId"] == candidate_id
+
+
+def test_review_action_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-evidence-001")
+
+    def raise_unavailable(*args: Any, **kwargs: Any) -> Any:
+        raise PersistedActionEvidenceUnavailable("sensitive persistence detail")
+
+    monkeypatch.setattr(
+        review_workflow_api,
+        "apply_review_action_to_repository",
+        raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=suppress_review_payload(),
+        headers=review_headers("review-action-api-missing-evidence-001"),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_recovery_degraded"
+    assert "sensitive persistence detail" not in response.text
 
 
 def test_review_action_api_returns_conflict_for_changed_idempotency_payload() -> None:
@@ -595,7 +625,7 @@ def test_review_action_api_canonicalizes_action_reason_without_hiding_transport_
     assert same_transport_key_conflict.status_code == 409
     assert same_transport_key_conflict.json()["code"] == "idempotency_conflict"
     assert replayed.status_code == 200
-    assert replayed.json()["reviewDecision"] is None
+    assert replayed.json()["reviewDecision"] == accepted.json()["reviewDecision"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert len(record.review_decisions) == 1
     assert [reason.value for reason in record.review_decisions[0].reason_codes] == [
@@ -689,8 +719,35 @@ def test_feedback_api_replays_the_same_canonical_taxonomy() -> None:
     assert accepted.json()["feedbackEvent"]["reason"] == "relevant"
     assert accepted.json()["feedbackEvent"]["taxonomyVersion"] == ("idea-feedback-taxonomy-v1")
     assert replayed.status_code == 200
-    assert replayed.json()["feedbackEvent"] is None
+    assert replayed.json()["feedbackEvent"] == accepted.json()["feedbackEvent"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
+
+
+def test_feedback_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-evidence-001")
+
+    def raise_unavailable(*args: Any, **kwargs: Any) -> Any:
+        raise PersistedActionEvidenceUnavailable("sensitive persistence detail")
+
+    monkeypatch.setattr(
+        review_workflow_api,
+        "record_feedback_to_repository",
+        raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/feedback",
+        json=feedback_payload(),
+        headers=feedback_headers("feedback-api-missing-evidence-001"),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_recovery_degraded"
+    assert "sensitive persistence detail" not in response.text
 
 
 def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
@@ -962,10 +1019,38 @@ def test_conversion_intent_api_replays_and_conflicts_idempotently() -> None:
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["conversionIntent"] is None
+    assert replayed.json()["conversionIntent"] == first.json()["conversionIntent"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "idempotency_conflict"
+
+
+def test_conversion_intent_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-evidence-001")
+    approve_candidate_for_conversion(client, candidate_id)
+
+    def raise_unavailable(*args: Any, **kwargs: Any) -> Any:
+        raise PersistedActionEvidenceUnavailable("sensitive persistence detail")
+
+    monkeypatch.setattr(
+        conversion_governance_api,
+        "request_conversion_intent_to_repository",
+        raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers("conversion-intent-api-missing-evidence-001"),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_recovery_degraded"
+    assert "sensitive persistence detail" not in response.text
 
 
 def test_conversion_intent_api_requires_approved_state_permission_and_valid_request() -> None:
