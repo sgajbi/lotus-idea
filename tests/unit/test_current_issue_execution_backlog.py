@@ -77,7 +77,7 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
         "presentation proxy",
     )
 
-    assert golden_evaluation["executionStatus"] == "open_in_progress"
+    assert golden_evaluation["executionStatus"] == "open_pr_raised"
     assert golden_evaluation["rfcSlices"] == [
         "slice-05",
         "slice-07",
@@ -86,8 +86,11 @@ def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
     ]
     _assert_instruction_contains(
         golden_evaluation,
+        "PR #1163",
         "independently authored opportunity-quality golden evaluation set",
-        "at least four distinct opportunity families",
+        "all 11 governed opportunity families",
+        "all 12 implemented signal policies",
         "no-opportunity portfolio",
         "Expected outputs must be handwritten",
+        "5,732 unit tests",
     )
