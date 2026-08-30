@@ -1380,9 +1380,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1139",
       "rfcSlices": ["slice-18"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1139 open while the Slice 18 implementation replaces the truncated GitHub issue-state fetch, adds repository-total reconciliation, adds a live RFC-0002 posture-snapshot workflow gate, dates published current-count prose, and records the four protected evidence-lane liveness dispositions. This is execution-governance hardening only; it does not certify protected migration, capacity, dependency-recovery, or load/soak evidence and does not promote supported features."
+      "closureInstruction": "Keep #1139 open while PR #1146 validates the Slice 18 implementation that replaces the truncated GitHub issue-state fetch, adds repository-total reconciliation, adds a live RFC-0002 posture-snapshot workflow gate, dates published current-count prose, and records the four protected evidence-lane liveness dispositions. This is execution-governance hardening only; it does not certify protected migration, capacity, dependency-recovery, or load/soak evidence and does not promote supported features."
     }
   ]
 }
