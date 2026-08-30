@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-import hashlib
-import json
 
 from app.domain.drawdown_review_evaluation import evaluate_drawdown_review_signal
 from app.domain.high_volatility_evaluation import evaluate_high_volatility_signal
@@ -746,19 +744,19 @@ def _mandate_health_candidate_created_result(
 ) -> SignalEvaluationResult:
     identity = _stable_mandate_health_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
-        signal_id=f"signal_allocation_drift_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.ALLOCATION_DRIFT,
         source_refs=source_refs,
         reason_codes=(ReasonCode.ALLOCATION_DRIFT_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
     lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:allocation-drift:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
     evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_allocation_drift_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -769,7 +767,7 @@ def _mandate_health_candidate_created_result(
         created_at_utc=source_input.evaluated_at_utc,
     )
     candidate = IdeaCandidate(
-        candidate_id=f"idea_allocation_drift_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.ALLOCATION_DRIFT,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.PM_REVIEW_REQUIRED,
@@ -907,29 +905,24 @@ def _stable_mandate_health_identity(
     source_input: MandateHealthSignalInput,
     policy: MandateHealthSignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "family": OpportunityFamily.ALLOCATION_DRIFT.value,
-        "lineage_edge_count": source_input.lineage_edge_count,
-        "manage_supportability_state": source_input.manage_supportability_state,
-        "policy_version": policy.policy_version,
-        "portfolio_scope_confirmed": source_input.portfolio_scope_confirmed,
-        "workflow_decision_count": source_input.workflow_decision_count,
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.ALLOCATION_DRIFT,
+        opportunity_kind="allocation_drift",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "lineage_edge_count": source_input.lineage_edge_count,
+            "manage_supportability_state": (source_input.manage_supportability_state or "")
+            .strip()
+            .lower(),
+            "policy_version": policy.policy_version,
+            "portfolio_scope_confirmed": source_input.portfolio_scope_confirmed,
+            "workflow_decision_count": source_input.workflow_decision_count,
+        },
+        source_refs=source_refs,
+    )
 
 
 __all__ = [

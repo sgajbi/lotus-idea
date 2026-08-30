@@ -134,6 +134,45 @@ def test_mandate_health_preserves_source_owned_performance_and_risk_refs() -> No
     }
 
 
+def test_mandate_health_source_correction_preserves_candidate_and_versions_evidence() -> None:
+    source_input = mandate_input(include_mandate_health_refs=True)
+    assert source_input.mandate_risk_health_ref is not None
+    corrected_input = replace(
+        source_input,
+        mandate_risk_health_ref=replace(
+            source_input.mandate_risk_health_ref,
+            content_hash="sha256:mandate-risk-health:correction-2",
+        ),
+    )
+
+    original = evaluate_mandate_health_signal(source_input, policy())
+    corrected = evaluate_mandate_health_signal(corrected_input, policy())
+
+    assert original.signal is not None
+    assert corrected.signal is not None
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id == corrected.candidate.candidate_id
+    assert original.signal.signal_id != corrected.signal.signal_id
+    assert (
+        original.candidate.evidence_packet.evidence_packet_id
+        != corrected.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.lineage_id
+        != corrected.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        original.candidate.evidence_packet.lineage_ref.content_hash
+        != corrected.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert corrected.candidate.evidence_packet.source_refs[2].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
+    )
+
+
 def test_mandate_health_blocks_mismatched_optional_source_business_date() -> None:
     source_input = mandate_input(include_mandate_health_refs=True)
     assert source_input.mandate_performance_health_ref is not None
