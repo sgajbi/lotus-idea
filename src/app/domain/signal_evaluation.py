@@ -21,6 +21,7 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
+from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -153,12 +154,12 @@ def _high_cash_candidate_created_result(
 
 
 def _high_cash_signal(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: HighCashSignalInput,
     source_refs: tuple[SourceRef, ...],
 ) -> OpportunitySignal:
     return OpportunitySignal(
-        signal_id=f"signal_high_cash_{identity}",
+        signal_id=identity.signal_id,
         family=OpportunityFamily.HIGH_CASH,
         source_refs=source_refs,
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.CASH_SOURCE_READY),
@@ -166,22 +167,25 @@ def _high_cash_signal(
     )
 
 
-def _high_cash_lineage(identity: str, source_refs: tuple[SourceRef, ...]) -> LineageRef:
+def _high_cash_lineage(
+    identity: OpportunityIdentity,
+    source_refs: tuple[SourceRef, ...],
+) -> LineageRef:
     return LineageRef(
-        lineage_id=f"lineage:lotus-idea:high-cash:{identity}",
+        lineage_id=identity.lineage_id,
         source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
+        content_hash=identity.evidence_fingerprint,
     )
 
 
 def _high_cash_evidence_packet(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: HighCashSignalInput,
     source_refs: tuple[SourceRef, ...],
     lineage: LineageRef,
 ) -> IdeaEvidencePacket:
     return IdeaEvidencePacket(
-        evidence_packet_id=f"iep_high_cash_{identity}",
+        evidence_packet_id=identity.evidence_packet_id,
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
         lineage_ref=lineage,
@@ -195,14 +199,14 @@ def _high_cash_evidence_packet(
 
 
 def _high_cash_candidate(
-    identity: str,
+    identity: OpportunityIdentity,
     source_input: HighCashSignalInput,
     policy: HighCashSignalPolicy,
     signal: OpportunitySignal,
     evidence_packet: IdeaEvidencePacket,
 ) -> IdeaCandidate:
     return IdeaCandidate(
-        candidate_id=f"idea_high_cash_{identity}",
+        candidate_id=identity.candidate_id,
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
@@ -827,26 +831,19 @@ def _stable_identity(
     source_input: HighCashSignalInput,
     policy: HighCashSignalPolicy,
     source_refs: tuple[SourceRef, ...],
-) -> str:
-    identity_payload = {
-        "as_of_date": source_input.as_of_date.isoformat(),
-        "cash_weight": str(source_input.source_reported_cash_weight),
-        "family": OpportunityFamily.HIGH_CASH.value,
-        "policy_version": policy.policy_version,
-        "access_scope": (
-            {
-                "tenant_id": source_input.access_scope.tenant_id,
-                "book_id": source_input.access_scope.book_id,
-                "portfolio_id": source_input.access_scope.portfolio_id,
-                "client_id": source_input.access_scope.client_id,
-            }
-            if source_input.access_scope is not None
-            else None
-        ),
-        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
-    }
-    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+) -> OpportunityIdentity:
+    return build_opportunity_identity(
+        family=OpportunityFamily.HIGH_CASH,
+        opportunity_kind="high_cash",
+        as_of_date=source_input.as_of_date,
+        access_scope=source_input.access_scope,
+        material_facts={
+            "as_of_date": source_input.as_of_date.isoformat(),
+            "cash_weight": str(source_input.source_reported_cash_weight),
+            "policy_version": policy.policy_version,
+        },
+        source_refs=source_refs,
+    )
 
 
 def _bounded_optional_weight(value: Decimal | None, field_name: str) -> Decimal | None:
