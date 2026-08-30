@@ -11,7 +11,7 @@ either one.
 
 | Product question | Current executable evidence |
 | --- | --- |
-| Do active opportunities appear? | High cash, concentration, underperformance, and allocation-drift cases execute production family policies. |
+| Do active opportunities appear? | Every implemented opportunity family executes its production policy; volatility and drawdown are both covered despite sharing one governed family. |
 | Does a quiet portfolio stay quiet? | Below-materiality cases create no advisor or portfolio-manager queue items. |
 | Does unsupported evidence fail closed? | Stale, unavailable, uncertified, missing-benchmark, and unconfirmed-scope cases abstain with explicit reason codes. |
 | Is review priority deterministic? | Advisor and portfolio-manager queues assert expected score order, rank, and priority bucket independently. |
