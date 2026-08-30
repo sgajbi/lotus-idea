@@ -121,9 +121,10 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, as of 2026-08-30 the
 current Idea ledger posture has 151 tracked RFC-0002 issues, 123 closed and 28
-open. #681 remains the Slice 18 synchronization tracker, #1154 is in progress
-for governed economic candidate identity, and #1155 then #1156 are ready for
-feedback-quality evaluation and opportunity-effectiveness measurement. #1145 is closed
+open. #681 remains the Slice 18 synchronization tracker, #1154 is PR-open in
+PR #1157 for governed economic candidate identity, and #1155 then #1156 are
+ready for feedback-quality evaluation and opportunity-effectiveness
+measurement. #1145 is closed
 after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1150 is closed after
 PR #1152 exact-main, release-image, wiki, and branch-hygiene proof. #1139 is closed
 after PR #1147 merged the non-regressive live posture correction to exact main
@@ -465,7 +466,8 @@ fixed the post-merge QA hash-compatibility defects on main
 `31268949391` passing.
 As of 2026-08-30, current Idea ledger posture has 151 tracked RFC-0002 issues,
 123 closed and 28 open. `sgajbi/lotus-idea#681` remains the synchronization
-tracker, `#1154` is in progress, and `#1155` then `#1156` are ready. `#1145`
+tracker, `#1154` is PR-open in PR #1157, and `#1155` then `#1156` are ready.
+`#1145`
 is closed after PR #1149 exact-main and wiki proof, and `#1150` is closed after
 PR #1152 exact-main and wiki proof;
 `#1139` is closed after PR #1147 reached exact main with required main,

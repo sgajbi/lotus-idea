@@ -21,8 +21,9 @@ lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
 semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
 dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 151
 RFC-0002 issues, 123 closed and 28 open. `#681` remains the Slice 18 tracker,
-`#1154` is in progress for governed economic candidate identity, and `#1155`
-then `#1156` are ready for feedback-quality and effectiveness measurement. `#1145`
+`#1154` is PR-open in PR #1157 for governed economic candidate identity, and
+`#1155` then `#1156` are ready for feedback-quality and effectiveness
+measurement. `#1145`
 is closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene
 proof, `#1150` is closed after PR #1152 exact-main, release-image, wiki, and
 branch-hygiene proof, and `#1139` is closed
