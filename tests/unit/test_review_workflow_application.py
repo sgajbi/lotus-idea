@@ -398,6 +398,17 @@ def test_review_action_source_reason_is_canonical_without_weakening_transport_co
         ),
         repository=repository,
     )
+    changed_caller_reason_conflict = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=replace(
+                first_review,
+                reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            ),
+            idempotency_key="review-action:canonical:changed-reason",
+        ),
+        repository=repository,
+    )
 
     assert first.review_result is not None
     assert first.review_result.decision.reason_codes == (
@@ -408,6 +419,11 @@ def test_review_action_source_reason_is_canonical_without_weakening_transport_co
     assert same_transport_key_conflict.persistence.decision is ReviewPersistenceDecision.CONFLICT
     assert replayed.review_result is None
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
+    assert changed_caller_reason_conflict.review_result is None
+    assert (
+        changed_caller_reason_conflict.persistence.decision
+        is ReviewPersistenceDecision.IDENTITY_CONFLICT
+    )
     assert replayed.persistence.record == first.persistence.record
     assert replayed.persistence.record is not None
     assert len(replayed.persistence.record.review_decisions) == 1
