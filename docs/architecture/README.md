@@ -14,6 +14,12 @@ The initial architecture posture is:
 
 Architecture decisions live under `docs/architecture/adr/`.
 
+The independently authored, cross-family product regression method is
+documented in
+`docs/architecture/opportunity-quality-golden-evaluation.md`. It complements
+family-local policy tests by proving portfolio-level abstention, ranking, and
+candidate reconciliation without becoming runtime or supported-feature proof.
+
 The durable product blueprint lives in `docs/LOTUS_IDEA_BLUEPRINT.md`. Use it
 as the repo-authored anchor for product definition, source-authority boundaries,
 AI/human-governance posture, and non-claim rules before changing architecture

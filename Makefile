@@ -2,7 +2,7 @@
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate feedback-evaluation-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-dependency-recovery-proof-gate postgres-capacity-threshold-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate incident-response-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
 .PHONY: license-compliance-gate license-release-evidence-gate ai-attestation-source-contract ai-attestation-source-contract-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
-.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof downstream-outcome-certification-proof downstream-outcome-certification-proof-gate full-live-opportunity-journey-proof full-live-opportunity-journey-proof-gate opportunity-archetype-evidence-pack-gate
+.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof downstream-outcome-certification-proof downstream-outcome-certification-proof-gate full-live-opportunity-journey-proof full-live-opportunity-journey-proof-gate opportunity-archetype-evidence-pack-gate opportunity-quality-golden-set
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -818,6 +818,9 @@ test:
 
 test-unit:
 	$(VENV_PYTHON) -m pytest $(UNIT_TESTS)
+
+opportunity-quality-golden-set:
+	$(VENV_PYTHON) -m pytest tests/unit/test_opportunity_quality_golden_set.py
 
 test-integration:
 	$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)
