@@ -224,6 +224,16 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         "/api/v1/implementation-proof/readiness",
         "idea.implementation-proof.readiness.read",
     ),
+    CallerContextOpenApiRequirement(
+        method="GET",
+        path="/api/v1/operations/opportunity-effectiveness",
+        required_capabilities=("idea.opportunity-effectiveness.read",),
+        required_roles=("operator",),
+        entitlement_scope=(
+            "tenantId must exactly match one tenant in X-Caller-Tenant-Ids. "
+            "Missing, empty, or broader tenant scope fails closed."
+        ),
+    ),
 )
 
 

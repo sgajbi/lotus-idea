@@ -1907,6 +1907,41 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/operations/opportunity-effectiveness",
+      "certification_status": "implemented_not_certified",
+      "certification_blockers": [
+        "governed_presentation_receipts_missing",
+        "gateway_workbench_end_to_end_proof_missing"
+      ],
+      "owner": "lotus-idea owners",
+      "purpose": "Return a bounded, privacy-safe, single-tenant RFC-0002 effectiveness funnel over economic opportunities generated in a half-open UTC window and governed review, feedback, conversion, source-owned outcome, recurrence, evidence, and reconciliation facts observed by an explicit evaluation time.",
+      "when_to_use": "Use for internal product and operations evaluation when the caller has operator role, idea.opportunity-effectiveness.read capability, and exact tenant entitlement. Use the numerator, denominator, methodology version, cohort window, and snapshot digest together when comparing periods.",
+      "when_not_to_use": "Do not use as client-level surveillance, a recommendation or suitability decision, a source calculation, a mutation authority, supported-feature promotion, or proof that a queue fetch was visibly rendered. Presentation and rank-at-show fields remain unavailable until governed Workbench and Gateway receipt obligations are merged and validated.",
+      "request_examples": [
+        "GET /api/v1/operations/opportunity-effectiveness?tenantId=tenant-a&windowStartUtc=2026-06-21T00:00:00Z&windowEndUtc=2026-06-22T00:00:00Z&evaluatedAtUtc=2026-06-23T00:00:00Z&maxOpportunities=1000 with operator role, idea.opportunity-effectiveness.read capability, and X-Caller-Tenant-Ids: tenant-a"
+      ],
+      "response_examples": [
+        "{\"schemaVersion\":\"lotus-idea.opportunity-effectiveness.v1\",\"methodologyPolicyVersion\":\"idea-opportunity-effectiveness-v1\",\"certificationStatus\":\"not_certified\",\"certificationBlockers\":[\"governed_presentation_receipts_missing\",\"gateway_workbench_end_to_end_proof_missing\"],\"supportedFeaturePromoted\":false,\"presentation\":{\"measurementStatus\":\"unavailable_no_governed_presentation_receipts\",\"presentedOpportunityCount\":null,\"topRankedAcceptedOpportunityCount\":null},\"privacyBoundary\":{\"scope\":\"single_tenant\",\"containsRawTenantIdentifier\":false,\"containsRawClientIdentifier\":false,\"containsRawPortfolioIdentifier\":false,\"containsRawCandidateIdentifier\":false,\"containsBusinessIdentityIdentifier\":false,\"containsActorSubject\":false,\"containsCorrelationOrTraceIdentifier\":false,\"containsFreeText\":false}}"
+      ],
+      "error_examples": [
+        "400 invalid_request for blank scope, naive timestamps, invalid half-open window, evaluation before window end, or maxOpportunities outside 1..10000.",
+        "403 permission_denied when operator role, read capability, or exact tenant entitlement is absent.",
+        "503 opportunity_effectiveness_unavailable when durable chronology, conversion outcome history, or repository aggregate facts fail closed."
+      ],
+      "test_evidence": [
+        "tests/integration/test_opportunity_effectiveness_api.py::test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel",
+        "tests/integration/test_opportunity_effectiveness_api.py::test_opportunity_effectiveness_api_requires_capability_role_and_exact_tenant_scope",
+        "tests/integration/test_opportunity_effectiveness_api.py::test_opportunity_effectiveness_api_emits_bounded_operation_event",
+        "tests/integration/test_opportunity_effectiveness_api.py::test_opportunity_effectiveness_api_rejects_invalid_windows_and_bounds",
+        "tests/integration/test_postgres_opportunity_effectiveness_runtime.py::test_postgres_effectiveness_matches_golden_methodology_and_isolates_tenant",
+        "tests/integration/test_postgres_opportunity_effectiveness_runtime.py::test_postgres_effectiveness_empty_cohort_matches_in_memory_methodology",
+        "tests/unit/test_opportunity_effectiveness.py::test_effectiveness_snapshot_produces_reproducible_source_safe_funnel_math",
+        "tests/unit/test_postgres_opportunity_effectiveness.py::test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates the typed 200 response example plus product-safe 400/403/503 Problem Details; scripts/endpoint_certification_gate.py requires this implementation-backed ledger entry. Presentation receipt and consumer E2E certification remain issue-backed in sgajbi/lotus-gateway#692 and sgajbi/lotus-workbench#954."
+    },
+    {
+      "method": "GET",
       "path": "/health/live",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
