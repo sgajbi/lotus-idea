@@ -18,7 +18,7 @@ def _current_issues() -> dict[int, dict[str, Any]]:
     return {
         cast(int, issue["issueNumber"]): issue
         for issue in payload["issues"]
-        if issue["issueNumber"] in {1154, 1155, 1156}
+        if issue["issueNumber"] in {1154, 1155, 1156, 1162}
     }
 
 
@@ -51,27 +51,43 @@ def test_execution_backlog_tracks_economic_candidate_identity() -> None:
     )
 
 
-def test_execution_backlog_orders_feedback_quality_before_effectiveness() -> None:
+def test_execution_backlog_tracks_product_quality_work_in_progress() -> None:
     issues = _current_issues()
     feedback_quality = issues[1155]
     effectiveness = issues[1156]
+    golden_evaluation = issues[1162]
 
-    assert feedback_quality["executionStatus"] == "open_ready"
+    assert feedback_quality["executionStatus"] == "open_in_progress"
     assert feedback_quality["rfcSlices"] == ["slice-08", "slice-16", "slice-17"]
     _assert_instruction_contains(
         feedback_quality,
-        "versioned adviser-feedback outcome/reason taxonomy",
-        "tenant-scoped source-safe offline evaluation projection",
+        "idea-feedback-taxonomy-v1",
+        "source-safe offline evaluation projection",
         "no automatic policy",
-        "Workbench may consume the canonical taxonomy",
+        "sgajbi/lotus-workbench#953",
     )
 
-    assert effectiveness["executionStatus"] == "open_ready"
+    assert effectiveness["executionStatus"] == "open_in_progress"
     assert effectiveness["rfcSlices"] == ["slice-08", "slice-12", "slice-15", "slice-17"]
     _assert_instruction_contains(
         effectiveness,
-        "opportunity-effectiveness read model",
-        "Define every numerator, denominator, window",
-        "bounded index-supported PostgreSQL aggregates",
-        "low-cardinality",
+        "opportunity-effectiveness-v1",
+        "candidate-presentation-receipt-v1",
+        "sgajbi/lotus-workbench#954",
+        "presentation proxy",
+    )
+
+    assert golden_evaluation["executionStatus"] == "open_in_progress"
+    assert golden_evaluation["rfcSlices"] == [
+        "slice-05",
+        "slice-07",
+        "slice-16",
+        "slice-17",
+    ]
+    _assert_instruction_contains(
+        golden_evaluation,
+        "independently authored opportunity-quality golden evaluation set",
+        "at least four distinct opportunity families",
+        "no-opportunity portfolio",
+        "Expected outputs must be handwritten",
     )

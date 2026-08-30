@@ -1439,18 +1439,32 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1155",
       "rfcSlices": ["slice-08", "slice-16", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1155 open and status/ready. Implement a bounded versioned adviser-feedback outcome/reason taxonomy, fail-closed combination policy, durable mutation/API/OpenAPI parity, and a tenant-scoped source-safe offline evaluation projection. Preserve review actions as separate lifecycle facts and keep every evaluation output read-only: no automatic policy, eligibility, scoring, ranking, suppression, lifecycle, AI-training, or online-learning mutation. Workbench may consume the canonical taxonomy but must not invent or rewrite it. Close only after independently authored multi-family fixtures, persistence restart, replay/conflict, entitlement, full CI, exact-main, wiki parity, and branch-hygiene evidence pass. No supported-feature promotion or final RFC-0002 closure is claimed."
+      "closureInstruction": "Keep #1155 open and status/in-progress. PR #1159 merged the Idea-owned idea-feedback-taxonomy-v1 domain contract, migration 017, canonical mutation/persistence/replay/audit/outbox/API/OpenAPI behavior, and bounded tenant-scoped source-safe offline evaluation projection to exact Idea main b0eca2c291ca5d3046dc47600c4cf32da13d99df. Main Releasability run 33310758263 and CodeQL run 33310752467 passed, repo-authored wiki publication reached commit fc96116 with strict DiffCount 0, and branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#691 must forward the canonical taxonomy without rewriting it and Workbench sgajbi/lotus-workbench#953 must capture the governed adviser reason. Preserve review actions as separate lifecycle facts and keep every evaluation output read-only: no automatic policy, eligibility, scoring, ranking, suppression, lifecycle, AI-training, or online-learning mutation. No supported-feature promotion or final RFC-0002 closure is claimed."
     },
     {
       "issueNumber": 1156,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1156",
       "rfcSlices": ["slice-08", "slice-12", "slice-15", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1156 open and status/ready. Implement a versioned, tenant-scoped opportunity-effectiveness read model over durable candidate, queue, review, feedback, conversion-intent, and source-safe downstream-outcome facts. Define every numerator, denominator, window, inclusion/exclusion rule, correction/reopen behavior, and zero-denominator result; use bounded index-supported PostgreSQL aggregates with in-memory/query parity. Keep Prometheus labels low-cardinality and exclude raw client, portfolio, candidate, actor, correlation, and reason identifiers. Close only after independently authored funnel/rank/timing fixtures, PostgreSQL scale and tenant-isolation proof, metric-label inspection, full CI, exact-main, wiki parity, and branch hygiene pass. Metrics alone do not promote a supported feature or complete RFC-0002."
+      "closureInstruction": "Keep #1156 open and status/in-progress. PR #1160 merged the Idea-owned opportunity-effectiveness-v1 read model, bounded tenant-scoped PostgreSQL aggregate projection, exact API/OpenAPI contract, and immutable candidate-presentation-receipt-v1 domain/API/persistence contract to main 2cbe11c063cd3ed24e460051c2036f65a7a8cf43. PR #1161 then merged PostgreSQL driver-outage containment and projection-read SLI hardening to exact main 0b8a6b09606a2abe57dec9c93653e96865d0f301. PR gates and CodeQL passed; final exact-main Main Releasability is run 33319584650. Repo-authored wiki publication reached c503fd8 with strict DiffCount 0 and all changed pages passed the professional wiki audit; branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#692 must pass the receipt contract through without deriving rank and Workbench sgajbi/lotus-workbench#954 must emit receipts only after visible render. Until then, shown and rank-at-show measures remain null with unavailable_consumer_certification_pending and not_certified posture. Queue retrieval must never be used as a presentation proxy. Metrics alone do not promote a supported feature or complete RFC-0002."
+    },
+    {
+      "issueNumber": 1162,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1162",
+      "rfcSlices": [
+        "slice-05",
+        "slice-07",
+        "slice-16",
+        "slice-17"
+      ],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1162 open and status/in-progress. Build a versioned, independently authored opportunity-quality golden evaluation set over production domain policy, scoring, queue, and lifecycle paths. The first complete set must cover at least four distinct opportunity families, a multi-family rank order, a no-opportunity portfolio, fail-closed stale/partial/conflicting/unavailable evidence, and stable economic identity through evidence refresh, material change, suppression or expiry, and governed reopen. Expected outputs must be handwritten rather than generated from the policy under test. Keep family adapters explicit and readable; do not create a generic signal framework, runtime service, endpoint, compatibility layer, source-owned calculation, AI decision path, production-data capture, or supported-feature claim. Close only after deliberate expected-output tampering fails, repository-native full CI and exact-main validation pass, wiki publication or no-change evidence is recorded, and branch/worktree hygiene is clean."
     }
   ]
 }
