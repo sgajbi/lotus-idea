@@ -40,7 +40,6 @@ class EvaluateMandateHealthSignalCommand:
     mandate_risk_health_ref: SourceRef | None = None
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -49,7 +48,6 @@ class EvaluateMandateHealthFromManageCommand:
     portfolio_id: str
     as_of_date: date
     evaluated_at_utc: datetime
-    duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
 
@@ -87,7 +85,6 @@ def evaluate_mandate_health_signal_command(
         evaluated_at_utc=command.evaluated_at_utc,
         entitlement_allowed=command.entitlement_allowed,
         access_scope=command.access_scope,
-        duplicate_of_candidate_id=command.duplicate_of_candidate_id,
     )
     return evaluate_mandate_health_signal(source_input, policy)
 
@@ -139,7 +136,6 @@ def evaluate_mandate_health_readiness_from_manage(
                     tenant_id=command.tenant_id,
                     portfolio_id=command.portfolio_id,
                 ),
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -191,7 +187,6 @@ def _evaluate_mandate_health_evidence(
                 tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
             ),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
     )

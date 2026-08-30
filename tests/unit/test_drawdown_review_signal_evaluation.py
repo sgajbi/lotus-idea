@@ -55,7 +55,6 @@ def drawdown_input(
     risk_supportability_state: str | None = "ready",
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> DrawdownReviewSignalInput:
     return DrawdownReviewSignalInput(
@@ -65,7 +64,6 @@ def drawdown_input(
         risk_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -173,18 +171,6 @@ def test_drawdown_review_non_ready_source_blocks_positive_claim() -> None:
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,)
-
-
-def test_drawdown_review_duplicate_source_is_suppressed() -> None:
-    result = evaluate_drawdown_review_signal(
-        drawdown_input(duplicate_of_candidate_id="idea_drawdown_review_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_drawdown_review_missing_metric_or_entitlement_blocks_positive_claim() -> None:

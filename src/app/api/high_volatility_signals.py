@@ -94,12 +94,6 @@ class EvaluateHighVolatilitySignalRequest(CamelModel):
         alias="entitlementAllowed",
         description="Whether upstream caller/source entitlement already allowed this evidence for evaluation.",
     )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_high_volatility_existing"],
-    )
 
     @field_validator("evaluated_at_utc")
     @classmethod
@@ -115,7 +109,6 @@ class EvaluateHighVolatilitySignalRequest(CamelModel):
             evaluated_at_utc=self.evaluated_at_utc,
             entitlement_allowed=self.entitlement_allowed,
             access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
         )
 
 
@@ -150,12 +143,6 @@ class EvaluateHighVolatilityFromSourceRequest(CamelModel):
         description="UTC timestamp for deterministic evaluation.",
         examples=["2026-06-21T10:00:00Z"],
     )
-    duplicate_of_candidate_id: str | None = Field(
-        default=None,
-        alias="duplicateOfCandidateId",
-        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
-        examples=["idea_high_volatility_existing"],
-    )
 
     @field_validator("portfolio_id")
     @classmethod
@@ -189,7 +176,6 @@ class EvaluateHighVolatilityFromSourceRequest(CamelModel):
             as_of_date=self.as_of_date,
             period_name=self.period_name,
             evaluated_at_utc=self.evaluated_at_utc,
-            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
             correlation_id=correlation_id,
             trace_id=trace_id,
         )
@@ -274,7 +260,7 @@ HIGH_VOLATILITY_EVALUATE_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "High-volatility signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "description": "High-volatility signal evaluation completed with candidate, blocked, or not-eligible posture.",
             "content": {
                 "application/json": {
                     "example": {

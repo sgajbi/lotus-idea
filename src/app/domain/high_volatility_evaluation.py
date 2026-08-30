@@ -49,13 +49,6 @@ def evaluate_high_volatility_signal(
     if blocking_result is not None:
         return blocking_result
 
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.HIGH_VOLATILITY,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
-
     volatility_result = _source_volatility(source_input)
     if isinstance(volatility_result, SignalEvaluationResult):
         return volatility_result

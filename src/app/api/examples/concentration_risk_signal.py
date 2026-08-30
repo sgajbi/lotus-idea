@@ -40,7 +40,6 @@ CONCENTRATION_RISK_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 CONCENTRATION_RISK_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Material concentration creates an advisor-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable Risk evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Concentration below policy thresholds creates no candidate",
 }
 
@@ -54,9 +53,6 @@ def build_concentration_risk_evaluation_response_examples() -> dict[str, dict[st
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_concentration_existing"
-        ),
         "notEligible": _caller_evaluation_response(
             top_position_weight=Decimal("0.05"),
             top_issuer_weight=Decimal("0.08"),
@@ -70,9 +66,6 @@ def build_source_backed_concentration_risk_evaluation_response_examples() -> dic
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=RiskSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_concentration_existing"
-        ),
         "notEligible": _source_evaluation_response(
             top_position_weight=Decimal("0.05"),
             top_issuer_weight=Decimal("0.08"),
@@ -109,7 +102,6 @@ def _caller_evaluation_response(
     top_position_weight: Decimal = Decimal("0.18"),
     top_issuer_weight: Decimal = Decimal("0.24"),
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateConcentrationRiskSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -119,7 +111,6 @@ def _caller_evaluation_response(
         issuerCoverageStatus="complete",
         concentrationRef=_concentration_ref(freshness=freshness),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_concentration_risk_signal_command(request.to_command()))
 
@@ -128,7 +119,6 @@ def _source_evaluation_response(
     *,
     top_position_weight: Decimal = Decimal("0.22"),
     top_issuer_weight: Decimal = Decimal("0.27"),
-    duplicate_of_candidate_id: str | None = None,
     source_error: RiskSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_concentration_risk_signal_from_risk(
@@ -136,7 +126,6 @@ def _source_evaluation_response(
             portfolio_id=_PORTFOLIO_ID,
             as_of_date=_AS_OF_DATE,
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         risk_source=_ExampleRiskConcentrationSource(
             evidence=_concentration_evidence(

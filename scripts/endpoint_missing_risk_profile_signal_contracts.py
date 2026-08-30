@@ -30,9 +30,9 @@ MISSING_RISK_PROFILE_CALLER_BLOCKED_TEST = (
     "tests/integration/test_missing_risk_profile_signal_api.py::"
     "test_missing_risk_profile_signal_api_reports_stale_source_blocker"
 )
-MISSING_RISK_PROFILE_CALLER_NON_CANDIDATE_TEST = (
+MISSING_RISK_PROFILE_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_missing_risk_profile_signal_api.py::"
-    "test_missing_risk_profile_signal_api_exposes_non_candidate_success_modes"
+    "test_missing_risk_profile_signal_api_reports_not_eligible"
 )
 MISSING_RISK_PROFILE_SOURCE_CANDIDATE_TEST = (
     "tests/integration/test_missing_risk_profile_signal_api.py::"
@@ -42,9 +42,9 @@ MISSING_RISK_PROFILE_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_missing_risk_profile_signal_api.py::"
     "test_missing_risk_profile_signal_from_source_closes_runtime_on_source_blocker"
 )
-MISSING_RISK_PROFILE_SOURCE_NON_CANDIDATE_TEST = (
+MISSING_RISK_PROFILE_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_missing_risk_profile_signal_api.py::"
-    "test_missing_risk_profile_signal_from_source_exposes_non_candidate_success_modes"
+    "test_missing_risk_profile_signal_from_source_reports_not_eligible"
 )
 MISSING_RISK_PROFILE_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_missing_risk_profile_signal_examples.py::"
@@ -73,8 +73,8 @@ def validate_missing_risk_profile_evaluation_success_contract(
             ),
             (MISSING_RISK_PROFILE_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
             (
-                MISSING_RISK_PROFILE_CALLER_NON_CANDIDATE_TEST,
-                "suppressed and not-eligible HTTP behavior test",
+                MISSING_RISK_PROFILE_CALLER_NOT_ELIGIBLE_TEST,
+                "not-eligible HTTP behavior test",
             ),
             (
                 MISSING_RISK_PROFILE_SUCCESS_CONTRACT_TEST,
@@ -108,8 +108,8 @@ def validate_source_backed_missing_risk_profile_evaluation_success_contract(
                 "source-backed blocked behavior test",
             ),
             (
-                MISSING_RISK_PROFILE_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                MISSING_RISK_PROFILE_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 MISSING_RISK_PROFILE_SUCCESS_CONTRACT_TEST,

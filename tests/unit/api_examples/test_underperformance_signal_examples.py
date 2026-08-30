@@ -23,14 +23,12 @@ def test_underperformance_examples_cover_every_domain_outcome_and_authority_boun
     assert tuple(caller_examples) == (
         "candidateCreated",
         "blocked",
-        "suppressed",
         "notEligible",
     )
     assert tuple(source_examples) == tuple(caller_examples)
     assert _outcomes(caller_examples) == {
         "candidate_created",
         "blocked",
-        "suppressed",
         "not_eligible",
     }
     assert _outcomes(source_examples) == _outcomes(caller_examples)
@@ -49,7 +47,6 @@ def test_underperformance_examples_cover_every_domain_outcome_and_authority_boun
         assert all(
             "route" not in ref and "contentHash" not in ref for ref in candidate["sourceRefs"]
         )
-        assert examples["suppressed"]["candidate"] is None
         assert examples["notEligible"]["candidate"] is None
         assert all(
             example["sourceAuthority"] == "lotus-performance" for example in examples.values()

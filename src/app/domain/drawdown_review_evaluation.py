@@ -125,12 +125,6 @@ def _drawdown_review_materiality_or_block(
     policy: DrawdownReviewSignalPolicy,
     family: OpportunityFamily,
 ) -> Decimal | SignalEvaluationResult:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=family,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     source_reported_max_drawdown = source_input.source_reported_max_drawdown
     if source_reported_max_drawdown is None:
         return _missing_drawdown_review_source(family)

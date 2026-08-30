@@ -101,12 +101,6 @@ def _high_cash_materiality_result(
     source_input: HighCashSignalInput,
     policy: HighCashSignalPolicy,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.HIGH_CASH,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if source_input.source_reported_cash_weight is None:
         return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
@@ -304,12 +298,6 @@ def _concentration_risk_materiality_result(
     source_input: ConcentrationRiskSignalInput,
     policy: ConcentrationRiskSignalPolicy,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.CONCENTRATION,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
 
     top_position_weight = _bounded_optional_weight(
         source_input.top_position_weight_current,
@@ -492,12 +480,6 @@ def _underperformance_materiality_result(
     source_input: UnderperformanceSignalInput,
     policy: UnderperformanceSignalPolicy,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.UNDERPERFORMANCE,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if source_input.source_reported_active_return is None:
         return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
@@ -712,12 +694,6 @@ def _mandate_health_materiality_result(
     source_input: MandateHealthSignalInput,
     policy: MandateHealthSignalPolicy,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.ALLOCATION_DRIFT,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if source_input.workflow_decision_count is None or source_input.lineage_edge_count is None:
         return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,

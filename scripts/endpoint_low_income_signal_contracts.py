@@ -30,10 +30,6 @@ LOW_INCOME_CALLER_BLOCKED_TEST = (
     "tests/integration/test_low_income_signal_api.py::"
     "test_low_income_signal_api_reports_stale_source_blocker"
 )
-LOW_INCOME_CALLER_SUPPRESSED_TEST = (
-    "tests/integration/test_low_income_signal_api.py::"
-    "test_low_income_signal_api_reports_duplicate_suppressed"
-)
 LOW_INCOME_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_low_income_signal_api.py::"
     "test_low_income_signal_api_reports_above_threshold_not_eligible"
@@ -46,9 +42,9 @@ LOW_INCOME_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_low_income_signal_api.py::"
     "test_low_income_source_api_returns_blocked_posture_for_core_unavailable"
 )
-LOW_INCOME_SOURCE_NON_CANDIDATE_TEST = (
+LOW_INCOME_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_low_income_signal_api.py::"
-    "test_low_income_source_api_exposes_suppressed_and_not_eligible_success_modes"
+    "test_low_income_source_api_reports_not_eligible"
 )
 LOW_INCOME_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_low_income_signal_examples.py::"
@@ -73,7 +69,6 @@ def validate_low_income_evaluation_success_contract(
         required_test_evidence=(
             (LOW_INCOME_CALLER_CANDIDATE_TEST, "candidate-created HTTP behavior test"),
             (LOW_INCOME_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
-            (LOW_INCOME_CALLER_SUPPRESSED_TEST, "suppressed HTTP behavior test"),
             (LOW_INCOME_CALLER_NOT_ELIGIBLE_TEST, "not-eligible HTTP behavior test"),
             (
                 LOW_INCOME_SUCCESS_CONTRACT_TEST,
@@ -101,8 +96,8 @@ def validate_source_backed_low_income_evaluation_success_contract(
             (LOW_INCOME_SOURCE_CANDIDATE_TEST, "source-backed candidate-created behavior test"),
             (LOW_INCOME_SOURCE_BLOCKED_TEST, "source-backed blocked behavior test"),
             (
-                LOW_INCOME_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                LOW_INCOME_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 LOW_INCOME_SUCCESS_CONTRACT_TEST,

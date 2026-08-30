@@ -44,7 +44,6 @@ REQUIRED_WORK_ITEM_KEYS = {
     "itemIndex",
     "asOfDate",
     "hasExplicitIdempotencyKey",
-    "hasDuplicateOfCandidateId",
 }
 
 FORBIDDEN_KEYS = {
@@ -122,8 +121,6 @@ def validate_source_ingestion_worker_contract(
                 errors.append(f"workItems[{index}].itemIndex must equal {index}")
             if not isinstance(item.get("hasExplicitIdempotencyKey"), bool):
                 errors.append(f"workItems[{index}].hasExplicitIdempotencyKey must be boolean")
-            if not isinstance(item.get("hasDuplicateOfCandidateId"), bool):
-                errors.append(f"workItems[{index}].hasDuplicateOfCandidateId must be boolean")
 
     validate_forbidden_content(summary, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors

@@ -53,7 +53,6 @@ class BondMaturitySignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 def evaluate_bond_maturity_signal(
@@ -126,12 +125,6 @@ def _source_ref_supportability_result(
 def _source_value_supportability_result(
     source_input: BondMaturitySignalInput,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.BOND_MATURITY,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     maturing_position_count = source_input.source_reported_maturing_position_count
     if maturing_position_count is None:
         return _missing_source_block()

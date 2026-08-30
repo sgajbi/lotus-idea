@@ -52,7 +52,6 @@ class MissingBenchmarkSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 def evaluate_missing_benchmark_signal(
@@ -116,12 +115,6 @@ def _missing_benchmark_non_candidate_result(
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
-        )
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.MISSING_BENCHMARK,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if _benchmark_assignment_is_ready(source_input):
         return SignalEvaluationResult(

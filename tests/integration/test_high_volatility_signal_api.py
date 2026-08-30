@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch, mark
+from pytest import MonkeyPatch
 
 import app.api.high_volatility_signals as high_volatility_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -91,31 +91,6 @@ def test_high_volatility_signal_api_reports_below_threshold_not_eligible() -> No
         "outcome": "not_eligible",
         "family": "high_volatility",
         "reasonCodes": ["below_materiality"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-risk",
-        "supportedFeaturePromoted": False,
-    }
-    assert len(get_idea_repository().snapshot().candidate_records) == 0
-
-
-def test_high_volatility_signal_api_reports_duplicate_suppressed() -> None:
-    reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = managed_test_client(app)
-    payload = high_volatility_payload()
-    payload["duplicateOfCandidateId"] = "idea_high_volatility_existing"
-
-    response = client.post(
-        "/api/v1/idea-signals/high-volatility/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "high_volatility",
-        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",
@@ -371,39 +346,13 @@ def test_high_volatility_signal_from_source_closes_runtime_on_source_blocker(
     assert risk_source.close_count == 1
 
 
-@mark.parametrize(
-    (
-        "source_reported_volatility",
-        "duplicate_of_candidate_id",
-        "expected_outcome",
-        "expected_reason",
-    ),
-    (
-        (
-            Decimal("14.25"),
-            "idea_high_volatility_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        (
-            Decimal("8.50"),
-            None,
-            "not_eligible",
-            "below_materiality",
-        ),
-    ),
-)
-def test_high_volatility_signal_from_source_exposes_non_candidate_success_modes(
+def test_high_volatility_signal_from_source_reports_not_eligible(
     monkeypatch: MonkeyPatch,
-    source_reported_volatility: Decimal,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     risk_source = RecordingRiskVolatilitySource(
-        evidence=_risk_volatility_evidence(source_reported_volatility=source_reported_volatility)
+        evidence=_risk_volatility_evidence(source_reported_volatility=Decimal("8.50"))
     )
     monkeypatch.setattr(
         high_volatility_api,
@@ -413,20 +362,17 @@ def test_high_volatility_signal_from_source_exposes_non_candidate_success_modes(
             risk_base_url_configured=True,
         ),
     )
-    request_payload = high_volatility_source_payload()
-    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/high-volatility/evaluate-from-source",
-        json=request_payload,
+        json=high_volatility_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "high_volatility",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",

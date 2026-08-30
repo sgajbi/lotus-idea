@@ -200,21 +200,16 @@ def test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable(
     (
         "next_maturity_date",
         "maturing_position_count",
-        "duplicate_of_candidate_id",
-        "expected_outcome",
     ),
     (
-        (date(2026, 7, 10), 2, "idea_bond_maturity_existing", "suppressed"),
-        (date(2026, 8, 15), 2, None, "not_eligible"),
-        (None, 0, None, "not_eligible"),
+        (date(2026, 8, 15), 2),
+        (None, 0),
     ),
 )
-def test_bond_maturity_source_api_exposes_non_candidate_success_modes(
+def test_bond_maturity_source_api_reports_not_eligible(
     monkeypatch: Any,
     next_maturity_date: date | None,
     maturing_position_count: int,
-    duplicate_of_candidate_id: str | None,
-    expected_outcome: str,
 ) -> None:
     source = RecordingCoreBondMaturitySource(
         evidence=_core_bond_maturity_evidence(
@@ -233,22 +228,17 @@ def test_bond_maturity_source_api_exposes_non_candidate_success_modes(
         "_build_core_bond_maturity_source_runtime_from_environment",
         lambda: runtime,
     )
-    request_payload = bond_maturity_source_payload()
-    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
-
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
-        json=request_payload,
+        json=bond_maturity_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "bond_maturity",
-        "reasonCodes": [
-            "duplicate_suppressed" if expected_outcome == "suppressed" else "below_materiality"
-        ],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",
@@ -434,28 +424,6 @@ def test_bond_maturity_signal_api_reports_stale_source_blocker() -> None:
         "family": "bond_maturity",
         "reasonCodes": ["source_stale"],
         "unsupportedReasons": ["stale_source"],
-        "candidate": None,
-        "sourceAuthority": "lotus-core",
-        "supportedFeaturePromoted": False,
-    }
-
-
-def test_bond_maturity_signal_api_reports_duplicate_suppressed() -> None:
-    payload = bond_maturity_payload()
-    payload["duplicateOfCandidateId"] = "idea_bond_maturity_existing"
-
-    response = managed_test_client(app).post(
-        "/api/v1/idea-signals/bond-maturity/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "bond_maturity",
-        "reasonCodes": ["duplicate_suppressed"],
-        "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",
         "supportedFeaturePromoted": False,

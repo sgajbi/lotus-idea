@@ -52,7 +52,6 @@ HIGH_CASH_EVALUATE_AND_PERSIST_OPERATION_PATH = (
 HIGH_CASH_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "High-cash evidence creates a reviewable idea candidate",
     "blocked": "Incomplete or untrusted evidence blocks candidate creation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Cash weight below policy materiality creates no candidate",
 }
 HIGH_CASH_PERSISTENCE_SUCCESS_EXAMPLE_SUMMARIES = {
@@ -60,7 +59,6 @@ HIGH_CASH_PERSISTENCE_SUCCESS_EXAMPLE_SUMMARIES = {
     "replayed": "Matching idempotent request replayed without duplicate mutation",
     "duplicateCandidate": "New retry key resolves to the already persisted candidate",
     "blocked": "Blocked evaluation skips candidate persistence",
-    "suppressed": "Suppressed duplicate evaluation skips candidate persistence",
     "notEligible": "Below-materiality evaluation skips candidate persistence",
 }
 
@@ -78,10 +76,6 @@ def build_high_cash_evaluation_response_examples() -> dict[str, dict[str, Any]]:
             cash_weight=Decimal("0.18"),
             freshness=EvidenceFreshness.STALE,
         ),
-        "suppressed": _caller_evaluation_response(
-            cash_weight=Decimal("0.18"),
-            duplicate_of_candidate_id="idea_high_cash_existing",
-        ),
         "notEligible": _caller_evaluation_response(cash_weight=Decimal("0.05")),
     }
 
@@ -92,10 +86,6 @@ def build_source_backed_high_cash_evaluation_response_examples() -> dict[str, di
         "blocked": _source_evaluation_response(
             cash_weight=Decimal("0.18"),
             freshness=EvidenceFreshness.STALE,
-        ),
-        "suppressed": _source_evaluation_response(
-            cash_weight=Decimal("0.18"),
-            duplicate_of_candidate_id="idea_high_cash_existing",
         ),
         "notEligible": _source_evaluation_response(cash_weight=Decimal("0.05")),
     }
@@ -132,16 +122,6 @@ def build_high_cash_persistence_response_examples() -> dict[str, dict[str, Any]]
                 _persistence_command(
                     idempotency_key="high-cash-example-blocked",
                     cash_weight=None,
-                ),
-                repository=repository,
-            )
-        ),
-        "suppressed": _persistence_response(
-            evaluate_and_persist_high_cash_signal(
-                _persistence_command(
-                    idempotency_key="high-cash-example-suppressed",
-                    cash_weight=Decimal("0.18"),
-                    duplicate_of_candidate_id="idea_high_cash_existing",
                 ),
                 repository=repository,
             )
@@ -190,12 +170,10 @@ def _caller_evaluation_response(
     *,
     cash_weight: Decimal | None,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = _evaluation_request(
         cash_weight=cash_weight,
         freshness=freshness,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
     result = evaluate_high_cash_signal_command(request.to_command())
     return _serialized_evaluation(result)
@@ -205,7 +183,6 @@ def _source_evaluation_response(
     *,
     cash_weight: Decimal,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     result = evaluate_high_cash_signal_from_core(
         EvaluateHighCashFromCoreCommand(
@@ -213,7 +190,6 @@ def _source_evaluation_response(
             tenant_id=_TENANT_ID,
             as_of_date=_AS_OF_DATE,
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         core_source=_ExampleCoreSource(
             evidence=_core_evidence(cash_weight=cash_weight, freshness=freshness)
@@ -226,12 +202,10 @@ def _persistence_command(
     *,
     idempotency_key: str,
     cash_weight: Decimal | None,
-    duplicate_of_candidate_id: str | None = None,
 ) -> EvaluateAndPersistHighCashSignalCommand:
     return EvaluateAndPersistHighCashSignalCommand(
         evaluation=_evaluation_request(
             cash_weight=cash_weight,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ).to_command(),
         idempotency_key=idempotency_key,
         actor_subject="signal-ingestion-worker",
@@ -270,7 +244,6 @@ def _evaluation_request(
     *,
     cash_weight: Decimal | None,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> EvaluateHighCashSignalRequest:
     return EvaluateHighCashSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -294,7 +267,6 @@ def _evaluation_request(
                 freshness=freshness,
             ),
         ),
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
 
 

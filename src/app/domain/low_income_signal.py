@@ -57,7 +57,6 @@ class LowIncomeSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -125,12 +124,6 @@ def _source_cashflow_materiality_result(
     source_input: LowIncomeSignalInput,
     policy: LowIncomeSignalPolicy,
 ) -> SignalEvaluationResult | None:
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.LOW_INCOME,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if source_input.cash_movement_count is None:
         return _missing_source_value_result()
     if source_input.cash_movement_count < 0:

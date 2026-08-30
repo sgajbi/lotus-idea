@@ -30,10 +30,6 @@ BOND_MATURITY_CALLER_BLOCKED_TEST = (
     "tests/integration/test_bond_maturity_signal_api.py::"
     "test_bond_maturity_signal_api_reports_stale_source_blocker"
 )
-BOND_MATURITY_CALLER_SUPPRESSED_TEST = (
-    "tests/integration/test_bond_maturity_signal_api.py::"
-    "test_bond_maturity_signal_api_reports_duplicate_suppressed"
-)
 BOND_MATURITY_CALLER_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_bond_maturity_signal_api.py::"
     "test_bond_maturity_signal_api_reports_outside_window_not_eligible"
@@ -46,9 +42,9 @@ BOND_MATURITY_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_bond_maturity_signal_api.py::"
     "test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable"
 )
-BOND_MATURITY_SOURCE_NON_CANDIDATE_TEST = (
+BOND_MATURITY_SOURCE_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_bond_maturity_signal_api.py::"
-    "test_bond_maturity_source_api_exposes_non_candidate_success_modes"
+    "test_bond_maturity_source_api_reports_not_eligible"
 )
 BOND_MATURITY_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_bond_maturity_signal_examples.py::"
@@ -73,7 +69,6 @@ def validate_bond_maturity_evaluation_success_contract(
         required_test_evidence=(
             (BOND_MATURITY_CALLER_CANDIDATE_TEST, "candidate-created HTTP behavior test"),
             (BOND_MATURITY_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
-            (BOND_MATURITY_CALLER_SUPPRESSED_TEST, "suppressed HTTP behavior test"),
             (BOND_MATURITY_CALLER_NOT_ELIGIBLE_TEST, "not-eligible HTTP behavior test"),
             (
                 BOND_MATURITY_SUCCESS_CONTRACT_TEST,
@@ -101,8 +96,8 @@ def validate_source_backed_bond_maturity_evaluation_success_contract(
             (BOND_MATURITY_SOURCE_CANDIDATE_TEST, "source-backed candidate-created behavior test"),
             (BOND_MATURITY_SOURCE_BLOCKED_TEST, "source-backed blocked behavior test"),
             (
-                BOND_MATURITY_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                BOND_MATURITY_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 BOND_MATURITY_SUCCESS_CONTRACT_TEST,

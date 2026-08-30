@@ -59,7 +59,6 @@ def suitability_input(
     client_ready_publication: str | None = "BLOCKED",
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> MissingSuitabilityContextSignalInput:
     return MissingSuitabilityContextSignalInput(
@@ -73,7 +72,6 @@ def suitability_input(
         policy_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -207,18 +205,12 @@ def test_missing_suitability_context_blocks_missing_publication_boundary() -> No
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
-def test_missing_suitability_context_duplicate_and_entitlement_are_guarded() -> None:
-    duplicate = evaluate_missing_suitability_context_signal(
-        suitability_input(duplicate_of_candidate_id="idea_missing_suitability_context_existing"),
-        policy(),
-    )
+def test_missing_suitability_context_entitlement_denial_blocks_positive_claim() -> None:
     denied = evaluate_missing_suitability_context_signal(
         suitability_input(entitlement_allowed=False),
         policy(),
     )
 
-    assert duplicate.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert duplicate.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
     assert denied.outcome is SignalEvaluationOutcome.BLOCKED
     assert denied.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
 

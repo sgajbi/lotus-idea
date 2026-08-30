@@ -56,7 +56,6 @@ def concentration_input(
     issuer_coverage_status: str | None = "complete",
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> ConcentrationRiskSignalInput:
     return ConcentrationRiskSignalInput(
@@ -67,7 +66,6 @@ def concentration_input(
         concentration_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -194,17 +192,6 @@ def test_concentration_missing_weights_block_positive_claim() -> None:
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
-
-
-def test_concentration_duplicate_source_is_suppressed() -> None:
-    result = evaluate_concentration_risk_signal(
-        concentration_input(duplicate_of_candidate_id="idea_concentration_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_concentration_entitlement_denial_blocks_positive_claim() -> None:

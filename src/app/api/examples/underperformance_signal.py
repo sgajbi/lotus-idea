@@ -40,7 +40,6 @@ UNDERPERFORMANCE_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 UNDERPERFORMANCE_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Material active underperformance creates an advisor-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable Performance evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Active return above the attention threshold creates no candidate",
 }
 
@@ -54,9 +53,6 @@ def build_underperformance_evaluation_response_examples() -> dict[str, dict[str,
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_underperformance_existing"
-        ),
         "notEligible": _caller_evaluation_response(active_return=Decimal("-0.001")),
     }
 
@@ -67,9 +63,6 @@ def build_source_backed_underperformance_evaluation_response_examples() -> dict[
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=PerformanceSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_underperformance_existing"
-        ),
         "notEligible": _source_evaluation_response(active_return=Decimal("-0.001")),
     }
 
@@ -102,7 +95,6 @@ def _caller_evaluation_response(
     *,
     active_return: Decimal = Decimal("-0.0125"),
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateUnderperformanceSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -111,7 +103,6 @@ def _caller_evaluation_response(
         benchmarkContextAvailable=True,
         performanceRef=_performance_ref(freshness=freshness),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_underperformance_signal_command(request.to_command()))
 
@@ -119,7 +110,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     active_return: Decimal = Decimal("-0.0125"),
-    duplicate_of_candidate_id: str | None = None,
     source_error: PerformanceSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_underperformance_signal_from_performance(
@@ -128,7 +118,6 @@ def _source_evaluation_response(
             as_of_date=_AS_OF_DATE,
             period_name="YTD",
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
             reporting_currency="USD",
         ),
         performance_source=_ExamplePerformanceUnderperformanceSource(

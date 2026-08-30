@@ -504,7 +504,6 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
                             "duplicate_candidate": 0,
                             "skipped_not_eligible": 0,
                             "blocked": 0,
-                            "suppressed": 0,
                         },
                         "sourceFailureCounts": {
                             "source_unavailable": 0,

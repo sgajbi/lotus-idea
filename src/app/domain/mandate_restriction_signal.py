@@ -66,7 +66,6 @@ class MandateRestrictionSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 def evaluate_mandate_restriction_signal(
@@ -91,12 +90,6 @@ def evaluate_mandate_restriction_signal(
     blocked = _blocking_result(source_input)
     if blocked is not None:
         return blocked
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.MANDATE_RESTRICTION,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if not _restriction_review_required(source_input):
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,

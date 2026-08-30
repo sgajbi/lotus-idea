@@ -54,7 +54,6 @@ def volatility_input(
     risk_supportability_state: str | None = "ready",
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> HighVolatilitySignalInput:
     return HighVolatilitySignalInput(
@@ -64,7 +63,6 @@ def volatility_input(
         risk_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -175,17 +173,6 @@ def test_high_volatility_missing_source_metric_blocks_positive_claim() -> None:
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
-
-
-def test_high_volatility_duplicate_source_is_suppressed() -> None:
-    result = evaluate_high_volatility_signal(
-        volatility_input(duplicate_of_candidate_id="idea_high_volatility_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.candidate is None
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_high_volatility_entitlement_denial_blocks_positive_claim() -> None:

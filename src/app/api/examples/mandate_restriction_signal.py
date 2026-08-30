@@ -32,7 +32,6 @@ MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 MANDATE_RESTRICTION_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "A source-owned restriction posture creates a compliance-review candidate",
     "blocked": "Stale, incomplete, denied, or unavailable source evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "A clear mandate and restriction posture creates no candidate",
 }
 
@@ -46,9 +45,6 @@ def build_mandate_restriction_evaluation_response_examples() -> dict[str, dict[s
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_mandate_restriction_existing"
-        ),
         "notEligible": _caller_evaluation_response(
             restriction_status="CLEAR",
             changed_since_last_review=False,
@@ -63,9 +59,6 @@ def build_source_backed_mandate_restriction_evaluation_response_examples() -> di
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=AdviseSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_mandate_restriction_existing"
-        ),
         "notEligible": _source_evaluation_response(advise_diagnostic="policy_current"),
     }
 
@@ -100,7 +93,6 @@ def _caller_evaluation_response(
     changed_since_last_review: bool = True,
     actionability_blocked: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMandateRestrictionSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -110,7 +102,6 @@ def _caller_evaluation_response(
         changedSinceLastReview=changed_since_last_review,
         actionabilityBlocked=actionability_blocked,
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_mandate_restriction_signal_command(request.to_command()))
 
@@ -118,14 +109,12 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     advise_diagnostic: str = "mandate_restriction_review_required",
-    duplicate_of_candidate_id: str | None = None,
     source_error: AdviseSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     request = EvaluateMandateRestrictionFromSourceRequest(
         evaluationId=_EVALUATION_ID,
         asOfDate=_AS_OF_DATE,
         evaluatedAtUtc=_EVALUATED_AT,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     result = evaluate_mandate_restriction_signal_from_advise(
         request.to_command(correlation_id="corr-example", trace_id="trace-example"),

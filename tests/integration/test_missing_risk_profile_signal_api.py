@@ -99,29 +99,15 @@ def test_missing_risk_profile_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("mode", "expected_outcome", "expected_reason"),
-    (
-        ("suppressed", "suppressed", "duplicate_suppressed"),
-        ("not_eligible", "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_risk_profile_signal_api_exposes_non_candidate_success_modes(
-    mode: str,
-    expected_outcome: str,
-    expected_reason: str,
-) -> None:
+def test_missing_risk_profile_signal_api_reports_not_eligible() -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     payload = missing_risk_profile_payload()
-    if mode == "suppressed":
-        payload["duplicateOfCandidateId"] = "idea_missing_risk_profile_existing"
-    else:
-        payload.update(
-            riskProfileStatus="CURRENT",
-            riskProfileEffectiveForAsOfDate=True,
-            riskProfileReviewDue=False,
-        )
+    payload.update(
+        riskProfileStatus="CURRENT",
+        riskProfileEffectiveForAsOfDate=True,
+        riskProfileReviewDue=False,
+    )
 
     response = client.post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate",
@@ -131,9 +117,9 @@ def test_missing_risk_profile_signal_api_exposes_non_candidate_success_modes(
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_risk_profile",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",
@@ -270,28 +256,12 @@ def test_missing_risk_profile_signal_from_source_api_returns_review_candidate(
     assert advise_source.close_count == 1
 
 
-@pytest.mark.parametrize(
-    ("advise_diagnostic", "duplicate_candidate_id", "expected_outcome", "expected_reason"),
-    (
-        (
-            "risk_profile_missing",
-            "idea_missing_risk_profile_existing",
-            "suppressed",
-            "duplicate_suppressed",
-        ),
-        ("risk_profile_current", None, "not_eligible", "below_materiality"),
-    ),
-)
-def test_missing_risk_profile_signal_from_source_exposes_non_candidate_success_modes(
+def test_missing_risk_profile_signal_from_source_reports_not_eligible(
     monkeypatch: pytest.MonkeyPatch,
-    advise_diagnostic: str,
-    duplicate_candidate_id: str | None,
-    expected_outcome: str,
-    expected_reason: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
-    advise_source = RecordingAdvisePolicyEvaluationSource(advise_diagnostic=advise_diagnostic)
+    advise_source = RecordingAdvisePolicyEvaluationSource(advise_diagnostic="risk_profile_current")
     monkeypatch.setattr(
         missing_risk_profile_api,
         "_build_advise_policy_evaluation_source_runtime_from_environment",
@@ -300,21 +270,17 @@ def test_missing_risk_profile_signal_from_source_exposes_non_candidate_success_m
             advise_base_url_configured=True,
         ),
     )
-    payload = missing_risk_profile_source_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-
     response = client.post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate-from-source",
-        json=payload,
+        json=missing_risk_profile_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "outcome": expected_outcome,
+        "outcome": "not_eligible",
         "family": "missing_risk_profile",
-        "reasonCodes": [expected_reason],
+        "reasonCodes": ["below_materiality"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-advise",

@@ -39,7 +39,6 @@ ALLOCATION_DRIFT_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 ALLOCATION_DRIFT_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Manage action-register posture creates a PM-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable source evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "No material portfolio workflow activity creates no candidate",
 }
 
@@ -54,9 +53,6 @@ def build_allocation_drift_evaluation_response_examples() -> dict[str, dict[str,
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_allocation_drift_existing"
-        ),
         "notEligible": _caller_evaluation_response(workflow_decision_count=0),
     }
 
@@ -67,9 +63,6 @@ def build_source_backed_allocation_drift_evaluation_response_examples() -> dict[
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=ManageSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_allocation_drift_existing"
-        ),
         "notEligible": _source_evaluation_response(workflow_decision_count=0),
     }
 
@@ -102,7 +95,6 @@ def _caller_evaluation_response(
     *,
     workflow_decision_count: int = 2,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateAllocationDriftSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -117,7 +109,6 @@ def _caller_evaluation_response(
             freshness=freshness,
         ),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_mandate_health_signal_command(request.to_command()))
 
@@ -125,7 +116,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     workflow_decision_count: int = 2,
-    duplicate_of_candidate_id: str | None = None,
     source_error: ManageSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_mandate_health_signal_from_manage(
@@ -134,7 +124,6 @@ def _source_evaluation_response(
             portfolio_id=_PORTFOLIO_ID,
             as_of_date=_AS_OF_DATE,
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         manage_source=_ExampleManageMandateHealthSource(
             evidence=_manage_evidence(workflow_decision_count),

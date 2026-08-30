@@ -85,7 +85,6 @@ def missing_benchmark_input(
     assignment_version_present: bool = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> MissingBenchmarkSignalInput:
     return MissingBenchmarkSignalInput(
@@ -97,7 +96,6 @@ def missing_benchmark_input(
         assignment_version_present=assignment_version_present,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -230,16 +228,6 @@ def test_missing_benchmark_entitlement_denial_blocks_candidate_creation() -> Non
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
-
-
-def test_missing_benchmark_duplicate_source_is_suppressed() -> None:
-    result = evaluate_missing_benchmark_signal(
-        missing_benchmark_input(duplicate_of_candidate_id="idea_missing_benchmark_existing"),
-        policy(),
-    )
-
-    assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
 
 def test_missing_benchmark_requires_timezone_aware_evaluation_time() -> None:

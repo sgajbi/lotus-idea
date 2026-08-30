@@ -195,22 +195,12 @@ def test_low_income_source_api_returns_blocked_posture_for_core_unavailable(
     assert PORTFOLIO_ID not in response.text
 
 
-@pytest.mark.parametrize(
-    ("projected_cashflow", "duplicate_candidate_id", "expected_outcome"),
-    (
-        (Decimal("-12500"), "idea_low_income_existing", "suppressed"),
-        (Decimal("-500"), None, "not_eligible"),
-    ),
-)
-def test_low_income_source_api_exposes_suppressed_and_not_eligible_success_modes(
+def test_low_income_source_api_reports_not_eligible(
     monkeypatch: Any,
-    projected_cashflow: Decimal,
-    duplicate_candidate_id: str | None,
-    expected_outcome: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
     source = RecordingCoreLowIncomeSource(
-        evidence=_core_low_income_evidence(projected_cashflow=projected_cashflow)
+        evidence=_core_low_income_evidence(projected_cashflow=Decimal("-500"))
     )
     runtime = CoreLowIncomeSourceRuntime(
         core_source=source,
@@ -223,18 +213,14 @@ def test_low_income_source_api_exposes_suppressed_and_not_eligible_success_modes
         "_build_core_low_income_source_runtime_from_environment",
         lambda: runtime,
     )
-    payload = low_income_source_payload()
-    if duplicate_candidate_id is not None:
-        payload["duplicateOfCandidateId"] = duplicate_candidate_id
-
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/low-income/evaluate-from-source",
-        json=payload,
+        json=low_income_source_payload(),
         headers=source_evaluation_headers(),
     )
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == expected_outcome
+    assert response.json()["outcome"] == "not_eligible"
     assert response.json()["candidate"] is None
     assert source.close_count == 1
     assert len(get_idea_repository().snapshot().candidate_records) == 0
@@ -361,28 +347,6 @@ def test_low_income_signal_api_reports_above_threshold_not_eligible() -> None:
         "outcome": "not_eligible",
         "family": "low_income",
         "reasonCodes": ["below_materiality"],
-        "unsupportedReasons": [],
-        "candidate": None,
-        "sourceAuthority": "lotus-core",
-        "supportedFeaturePromoted": False,
-    }
-
-
-def test_low_income_signal_api_reports_duplicate_suppressed() -> None:
-    payload = low_income_payload()
-    payload["duplicateOfCandidateId"] = "idea_low_income_existing"
-
-    response = managed_test_client(app).post(
-        "/api/v1/idea-signals/low-income/evaluate",
-        json=payload,
-        headers=evaluate_headers(),
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "outcome": "suppressed",
-        "family": "low_income",
-        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",

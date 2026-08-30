@@ -31,14 +31,12 @@ def test_drawdown_review_examples_cover_every_domain_outcome_and_authority_bound
     assert tuple(caller_examples) == (
         "candidateCreated",
         "blocked",
-        "suppressed",
         "notEligible",
     )
     assert tuple(source_examples) == tuple(caller_examples)
     assert _outcomes(caller_examples) == {
         "candidate_created",
         "blocked",
-        "suppressed",
         "not_eligible",
     }
     assert _outcomes(source_examples) == _outcomes(caller_examples)
@@ -63,7 +61,6 @@ def test_drawdown_review_examples_cover_every_domain_outcome_and_authority_bound
         assert all(
             "route" not in ref and "contentHash" not in ref for ref in candidate["sourceRefs"]
         )
-        assert examples["suppressed"]["candidate"] is None
         assert examples["notEligible"]["candidate"] is None
         assert all(example["sourceAuthority"] == "lotus-risk" for example in examples.values())
         assert all(example["supportedFeaturePromoted"] is False for example in examples.values())
@@ -94,7 +91,7 @@ def test_drawdown_review_contract_blocks_missing_openapi_success_mode() -> None:
     examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
         "application/json"
     ]["examples"]
-    examples.pop("suppressed")
+    examples.pop("notEligible")
 
     errors = module.validate_drawdown_review_evaluation_success_contract(endpoint, openapi_spec)
 
@@ -110,14 +107,12 @@ def test_drawdown_review_contract_blocks_missing_behavior_evidence() -> None:
     endpoint = _ledger_endpoint(DRAWDOWN_REVIEW_EVALUATE_FROM_SOURCE_OPERATION_PATH)
     endpoint["test_evidence"].remove(
         "tests/integration/test_drawdown_review_signal_api.py::"
-        "test_drawdown_review_signal_from_source_exposes_non_candidate_success_modes"
+        "test_drawdown_review_signal_from_source_reports_not_eligible"
     )
 
     errors = module.validate_source_backed_drawdown_review_evaluation_success_contract(endpoint)
 
-    assert any(
-        "source-backed suppressed and not-eligible behavior test" in error for error in errors
-    )
+    assert any("source-backed not-eligible behavior test" in error for error in errors)
 
 
 def _outcomes(examples: dict[str, dict[str, object]]) -> set[object]:

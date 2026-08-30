@@ -34,9 +34,8 @@ HIGH_CASH_CALLER_BLOCKED_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
     "test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial"
 )
-HIGH_CASH_CALLER_NON_CANDIDATE_TEST = (
-    "tests/integration/test_high_cash_signal_api.py::"
-    "test_high_cash_api_exposes_non_candidate_success_modes"
+HIGH_CASH_CALLER_NOT_ELIGIBLE_TEST = (
+    "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_reports_not_eligible"
 )
 HIGH_CASH_SOURCE_CANDIDATE_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
@@ -46,9 +45,8 @@ HIGH_CASH_SOURCE_BLOCKED_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
     "test_high_cash_source_api_returns_blocked_posture_for_core_unavailable"
 )
-HIGH_CASH_SOURCE_NON_CANDIDATE_TEST = (
-    "tests/integration/test_high_cash_signal_api.py::"
-    "test_high_cash_source_api_exposes_suppressed_and_not_eligible_success_modes"
+HIGH_CASH_SOURCE_NOT_ELIGIBLE_TEST = (
+    "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_reports_not_eligible"
 )
 HIGH_CASH_PERSIST_ACCEPTED_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
@@ -66,9 +64,9 @@ HIGH_CASH_PERSIST_BLOCKED_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
     "test_high_cash_persist_api_does_not_persist_blocked_evaluation"
 )
-HIGH_CASH_PERSIST_NON_CANDIDATE_TEST = (
+HIGH_CASH_PERSIST_NOT_ELIGIBLE_TEST = (
     "tests/integration/test_high_cash_signal_api.py::"
-    "test_high_cash_persist_api_skips_non_candidate_success_modes"
+    "test_high_cash_persist_api_skips_not_eligible_evaluation"
 )
 HIGH_CASH_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_high_cash_signal_examples.py::"
@@ -94,8 +92,8 @@ def validate_high_cash_evaluation_success_contract(
             (HIGH_CASH_CALLER_CANDIDATE_TEST, "candidate-created HTTP behavior test"),
             (HIGH_CASH_CALLER_BLOCKED_TEST, "blocked HTTP behavior test"),
             (
-                HIGH_CASH_CALLER_NON_CANDIDATE_TEST,
-                "suppressed and not-eligible HTTP behavior test",
+                HIGH_CASH_CALLER_NOT_ELIGIBLE_TEST,
+                "not-eligible HTTP behavior test",
             ),
             (
                 HIGH_CASH_SUCCESS_CONTRACT_TEST,
@@ -123,8 +121,8 @@ def validate_source_backed_high_cash_evaluation_success_contract(
             (HIGH_CASH_SOURCE_CANDIDATE_TEST, "source-backed candidate-created behavior test"),
             (HIGH_CASH_SOURCE_BLOCKED_TEST, "source-backed blocked behavior test"),
             (
-                HIGH_CASH_SOURCE_NON_CANDIDATE_TEST,
-                "source-backed suppressed and not-eligible behavior test",
+                HIGH_CASH_SOURCE_NOT_ELIGIBLE_TEST,
+                "source-backed not-eligible behavior test",
             ),
             (
                 HIGH_CASH_SUCCESS_CONTRACT_TEST,
@@ -154,8 +152,8 @@ def validate_high_cash_persistence_success_contract(
             (HIGH_CASH_PERSIST_DUPLICATE_TEST, "duplicate-candidate behavior test"),
             (HIGH_CASH_PERSIST_BLOCKED_TEST, "blocked no-persistence behavior test"),
             (
-                HIGH_CASH_PERSIST_NON_CANDIDATE_TEST,
-                "suppressed and not-eligible no-persistence behavior test",
+                HIGH_CASH_PERSIST_NOT_ELIGIBLE_TEST,
+                "not-eligible no-persistence behavior test",
             ),
             (
                 HIGH_CASH_SUCCESS_CONTRACT_TEST,

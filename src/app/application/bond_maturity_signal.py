@@ -37,7 +37,6 @@ class EvaluateBondMaturitySignalCommand:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -47,7 +46,6 @@ class EvaluateBondMaturityFromCoreCommand:
     as_of_date: date
     evaluated_at_utc: datetime
     maturity_window_days: int = 30
-    duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
 
@@ -76,7 +74,6 @@ def evaluate_bond_maturity_signal_command(
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=command.entitlement_allowed,
             access_scope=command.access_scope,
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy,
     )
@@ -114,7 +111,6 @@ def evaluate_bond_maturity_signal_from_core(
                     tenant_id=command.tenant_id,
                     portfolio_id=command.portfolio_id,
                 ),
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
         )
@@ -150,7 +146,6 @@ def _evaluate_bond_maturity_core_evidence(
                 tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
             ),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
     )

@@ -54,7 +54,6 @@ def restriction_input(
     actionability_blocked: bool | None = True,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
-    duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
 ) -> MandateRestrictionSignalInput:
     return MandateRestrictionSignalInput(
@@ -65,7 +64,6 @@ def restriction_input(
         actionability_blocked=actionability_blocked,
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
-        duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
 
@@ -200,18 +198,12 @@ def test_mandate_restriction_blocks_missing_posture_fields() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
-def test_mandate_restriction_duplicate_and_entitlement_are_guarded() -> None:
-    duplicate = evaluate_mandate_restriction_signal(
-        restriction_input(duplicate_of_candidate_id="idea_mandate_restriction_existing"),
-        policy(),
-    )
+def test_mandate_restriction_entitlement_denial_blocks_positive_claim() -> None:
     denied = evaluate_mandate_restriction_signal(
         restriction_input(entitlement_allowed=False),
         policy(),
     )
 
-    assert duplicate.outcome is SignalEvaluationOutcome.SUPPRESSED
-    assert duplicate.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
     assert denied.outcome is SignalEvaluationOutcome.BLOCKED
     assert denied.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
 

@@ -40,7 +40,6 @@ HIGH_VOLATILITY_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 HIGH_VOLATILITY_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Material volatility creates an advisor-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable Risk evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Volatility below the policy threshold creates no candidate",
 }
 
@@ -54,9 +53,6 @@ def build_high_volatility_evaluation_response_examples() -> dict[str, dict[str, 
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_high_volatility_existing"
-        ),
         "notEligible": _caller_evaluation_response(source_reported_volatility=Decimal("8.50")),
     }
 
@@ -65,9 +61,6 @@ def build_source_backed_high_volatility_evaluation_response_examples() -> dict[s
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=RiskSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_high_volatility_existing"
-        ),
         "notEligible": _source_evaluation_response(source_reported_volatility=Decimal("8.50")),
     }
 
@@ -100,7 +93,6 @@ def _caller_evaluation_response(
     *,
     source_reported_volatility: Decimal = Decimal("14.25"),
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateHighVolatilitySignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -109,7 +101,6 @@ def _caller_evaluation_response(
         riskSupportabilityState="ready",
         riskRef=_risk_ref(freshness=freshness),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_high_volatility_signal_command(request.to_command()))
 
@@ -117,7 +108,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     source_reported_volatility: Decimal = Decimal("14.25"),
-    duplicate_of_candidate_id: str | None = None,
     source_error: RiskSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_high_volatility_signal_from_risk(
@@ -126,7 +116,6 @@ def _source_evaluation_response(
             as_of_date=_AS_OF_DATE,
             period_name="YTD",
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         risk_source=_ExampleRiskVolatilitySource(
             evidence=_volatility_evidence(

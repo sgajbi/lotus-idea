@@ -39,7 +39,6 @@ class EvaluateUnderperformanceSignalCommand:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -48,7 +47,6 @@ class EvaluateUnderperformanceFromPerformanceCommand:
     as_of_date: date
     period_name: str
     evaluated_at_utc: datetime
-    duplicate_of_candidate_id: str | None = None
     reporting_currency: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
@@ -94,7 +92,6 @@ def evaluate_underperformance_signal_command(
         evaluated_at_utc=command.evaluated_at_utc,
         entitlement_allowed=command.entitlement_allowed,
         access_scope=command.access_scope,
-        duplicate_of_candidate_id=command.duplicate_of_candidate_id,
     )
     return evaluate_underperformance_signal(source_input, policy)
 
@@ -186,7 +183,6 @@ def _evaluate_underperformance_source(
                     evaluated_at_utc=command.evaluated_at_utc,
                     entitlement_allowed=False,
                     access_scope=portfolio_only_scope(command.portfolio_id),
-                    duplicate_of_candidate_id=command.duplicate_of_candidate_id,
                 ),
                 policy=policy,
             ),
@@ -224,7 +220,6 @@ def _evaluate_underperformance_evidence(
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
             access_scope=portfolio_only_scope(command.portfolio_id),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
     )

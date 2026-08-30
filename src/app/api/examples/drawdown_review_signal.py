@@ -45,7 +45,6 @@ DRAWDOWN_REVIEW_EVALUATE_FROM_SOURCE_OPERATION_PATH = (
 DRAWDOWN_REVIEW_EVALUATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "candidateCreated": "Material drawdown creates an advisor-review candidate",
     "blocked": "Incomplete, stale, denied, or unavailable Risk evidence blocks evaluation",
-    "suppressed": "A known duplicate suppresses candidate creation",
     "notEligible": "Drawdown below the policy threshold creates no candidate",
 }
 
@@ -59,9 +58,6 @@ def build_drawdown_review_evaluation_response_examples() -> dict[str, dict[str, 
     return {
         "candidateCreated": _caller_evaluation_response(),
         "blocked": _caller_evaluation_response(freshness=EvidenceFreshness.STALE),
-        "suppressed": _caller_evaluation_response(
-            duplicate_of_candidate_id="idea_drawdown_review_existing"
-        ),
         "notEligible": _caller_evaluation_response(source_reported_max_drawdown=Decimal("-0.025")),
     }
 
@@ -70,9 +66,6 @@ def build_source_backed_drawdown_review_evaluation_response_examples() -> dict[s
     return {
         "candidateCreated": _source_evaluation_response(),
         "blocked": _source_evaluation_response(source_error=RiskSourceUnavailable()),
-        "suppressed": _source_evaluation_response(
-            duplicate_of_candidate_id="idea_drawdown_review_existing"
-        ),
         "notEligible": _source_evaluation_response(source_reported_max_drawdown=Decimal("-0.025")),
     }
 
@@ -105,7 +98,6 @@ def _caller_evaluation_response(
     *,
     source_reported_max_drawdown: Decimal = Decimal("-0.1245"),
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     request = EvaluateDrawdownReviewSignalRequest(
         asOfDate=_AS_OF_DATE,
@@ -114,7 +106,6 @@ def _caller_evaluation_response(
         riskSupportabilityState="ready",
         drawdownRef=_drawdown_ref(freshness=freshness),
         entitlementAllowed=True,
-        duplicateOfCandidateId=duplicate_of_candidate_id,
     )
     return _serialized(evaluate_drawdown_review_signal_command(request.to_command()))
 
@@ -122,7 +113,6 @@ def _caller_evaluation_response(
 def _source_evaluation_response(
     *,
     source_reported_max_drawdown: Decimal = Decimal("-0.1245"),
-    duplicate_of_candidate_id: str | None = None,
     source_error: RiskSourceUnavailable | None = None,
 ) -> dict[str, Any]:
     result = evaluate_drawdown_review_signal_from_risk(
@@ -131,7 +121,6 @@ def _source_evaluation_response(
             as_of_date=_AS_OF_DATE,
             period_name="YTD",
             evaluated_at_utc=_EVALUATED_AT,
-            duplicate_of_candidate_id=duplicate_of_candidate_id,
         ),
         risk_source=_ExampleRiskDrawdownSource(
             evidence=_drawdown_evidence(

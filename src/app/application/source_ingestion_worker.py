@@ -35,7 +35,6 @@ _WORK_ITEM_KEYS = {
     "portfolioId",
     "asOfDate",
     "idempotencyKey",
-    "duplicateOfCandidateId",
 }
 
 
@@ -58,7 +57,6 @@ class SourceIngestionWorkerPlan:
                     "itemIndex": index,
                     "asOfDate": item.as_of_date.isoformat(),
                     "hasExplicitIdempotencyKey": item.idempotency_key is not None,
-                    "hasDuplicateOfCandidateId": item.duplicate_of_candidate_id is not None,
                 }
                 for index, item in enumerate(self.command.work_items)
             ],
@@ -161,7 +159,6 @@ def _work_items_from_manifest(
                 ),
                 as_of_date=_date(raw_item.get("asOfDate"), f"workItems[{index}].asOfDate"),
                 idempotency_key=_optional_text(raw_item.get("idempotencyKey")),
-                duplicate_of_candidate_id=_optional_text(raw_item.get("duplicateOfCandidateId")),
             )
         )
     return tuple(parsed_items)

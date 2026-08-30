@@ -57,7 +57,6 @@ class MissingSuitabilityContextSignalInput:
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
-    duplicate_of_candidate_id: str | None = None
 
 
 def evaluate_missing_suitability_context_signal(
@@ -77,12 +76,6 @@ def evaluate_missing_suitability_context_signal(
     if blocked is not None:
         return blocked
     validate_missing_suitability_counts(source_input)
-    if source_input.duplicate_of_candidate_id is not None:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
-            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
-        )
     if not missing_suitability_review_required(source_input, policy):
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,

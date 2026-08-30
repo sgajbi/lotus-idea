@@ -426,10 +426,10 @@ def test_source_signal_boundary_blocks_before_runtime_use_case_and_cleanup() -> 
     assert calls == ["core_base_url_missing"]
 
 
-def test_signal_outcome_maps_suppressed_to_operation_outcome() -> None:
-    result = cast(Any, SimpleNamespace(outcome=SimpleNamespace(value="suppressed")))
+def test_signal_outcome_defaults_unknown_state_to_blocked_operation_outcome() -> None:
+    result = cast(Any, SimpleNamespace(outcome=SimpleNamespace(value="unexpected")))
 
-    assert operation_outcome_from_signal_evaluation(result) == OperationOutcome.SUPPRESSED
+    assert operation_outcome_from_signal_evaluation(result) == OperationOutcome.BLOCKED
 
 
 def test_signal_permission_allows_in_scope_request() -> None:
