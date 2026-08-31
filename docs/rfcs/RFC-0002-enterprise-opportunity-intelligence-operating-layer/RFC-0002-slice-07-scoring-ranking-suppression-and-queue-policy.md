@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Implemented on `main` - PR `#383` merged at `4f4e0985`; exact-main validation and authored wiki closure are complete; no supported-feature promotion
+Status: Queue-policy foundation is on `main` through PR `#383`; the evidence-derived family-scoring correction is implemented under issue `#1178` and awaiting merge/exact-main closure; no supported-feature promotion
 
 ## Outcome
 
@@ -30,9 +30,11 @@ Implemented on the Slice 07 branch:
    relevance, downstream fit, and conflict flags.
 2. `IdeaScoringPolicy` versions deterministic candidate scoring with bounded
    numeric validation. It does not own queue ordering or priority thresholds.
-3. `score_inputs` returns a `ScoreBreakdown` with score contributions, final
-   score, conflict penalty posture, policy version, and typed score reason
-   codes.
+3. `score_inputs` returns the persisted `IdeaScore` authority with typed score
+   contributions, final score, conflict penalty posture, policy version, and
+   typed score reason codes. Domain invariants require bounded inputs, unique
+   components, weights summing to one, exact contribution arithmetic, and
+   exact reconstruction of the rounded scalar.
 4. `score_candidate` attaches the policy-versioned `IdeaScore` to an immutable
    candidate without mutating lifecycle authority.
 5. `src/app/domain/review_queue/policy.py` owns the separate, versioned
@@ -138,14 +140,47 @@ GitHub issue `#332` closes the queue paging race without adding a queue service:
     existing deployable; no workload, ownership, isolation, or operability
     evidence justifies a queue microservice.
 
+### Evidence-Derived Family Scoring
+
+Issue `#1178` removes the former fixed family score constants. Eligibility is
+still evaluated first and remains independent of importance scoring; blocked,
+stale, incomplete, unsupported, or unauthorized evidence remains
+candidate-free. Idea interprets source-reported facts but does not reproduce
+Core, Risk, Performance, Advise, or Manage methodology.
+
+| Family posture | Source-owned input interpreted by Idea | Governed score components |
+| --- | --- | --- |
+| High cash, concentration, underperformance, low income, volatility, drawdown | Threshold-relative magnitude of the source-reported metric | `materiality` 70%, `evidence_quality` 15%, `freshness` 15% |
+| Bond maturity | Days to next maturity and source-reported affected-position count | `urgency` 55%, `materiality` 25%, `evidence_quality` 10%, `freshness` 10% |
+| Allocation drift / mandate health | Source-reported workflow-decision and lineage-edge depth | `relevance` 55%, `evidence_quality` 30%, `freshness` 15% |
+| Missing benchmark or risk profile | Bounded diagnostic/status posture from the owning source | `relevance` 70%, `evidence_quality` 15%, `freshness` 15% |
+| Missing suitability context | Open-requirement magnitude and blocker/sign-off posture | `relevance` 50%, `urgency` 30%, `evidence_quality` 10%, `freshness` 10% |
+| Mandate restriction | Bounded restriction status, change posture, and actionability blocker | `relevance` 55%, `urgency` 25%, `evidence_quality` 10%, `freshness` 10% |
+
+Each family now emits a v2 score-policy version. Historical v1 scalar-only
+records are not silently presented as evidence-derived. Migration `021`
+backfills only the known v1 policy set with the explicit
+`legacy_fixed_policy` component and a zero conflict penalty, validates that
+every persisted score has a non-empty breakdown, and leaves unknown or
+malformed payloads failing closed. Application decoding no longer contains a
+scalar-only fallback.
+
+Candidate detail, signal evaluation, review queue, and generated OpenAPI expose
+`scoreReasonCodes`, `scoreComponents`, and `scoreConflictPenaltyApplied` next
+to the scalar and score-policy version. Runtime proof receipts carry the same
+reconstructable breakdown and use incremented schemas. The independently
+authored opportunity-quality fixture hand-calculates every family policy and
+queue order; mutation tests alter magnitude, component input, weight,
+contribution, penalty, scalar, policy version, and rank to prove the gate fails.
+
 ## Remaining Gaps
 
-Slice 07 implementation is complete as a backend foundation, but it is not a
-supported product capability. Workbench realization, broader review audiences,
+The issue `#1178` implementation still requires PR merge, exact-main release
+validation, wiki publication/parity, and branch cleanup before Slice 07 can be
+redeclared complete. Workbench realization, broader review audiences,
 data-product certification, live operational evidence, and supported-feature
 promotion belong to later RFC slices and remain independently gated. Those
-downstream gates do not weaken or reopen the scoring/queue policy acceptance
-criteria in this slice.
+downstream gates do not weaken the scoring/queue-policy acceptance criteria.
 
 ## Validation
 

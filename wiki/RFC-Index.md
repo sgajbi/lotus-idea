@@ -125,15 +125,19 @@ Current RFC-0002 implementation-start baseline:
    source-safe evidence validation without adding a service or database.
    Protected execution and rollout-health proof remain open. This does not claim
    downstream execution or supported-feature readiness.
-8. Slice 07 is implemented on `main` through PR `#383`. Candidate score
-   policies and queue ranking policy are
-   separately versioned; unknown policies fail closed across process-local and
-   PostgreSQL providers; priority, suppression, deduplication, expiry, scope,
-   readiness, and snapshot behavior are deterministic and contract-gated.
-   Gateway read-only publication exists, but Workbench product proof,
-   data-product certification, and supported-feature promotion remain later,
-   independently gated work. Exact-main SHA `4f4e0985` passed Main
-   Releasability run `29291215703`.
+8. Slice 07 queue-policy foundations are implemented on `main` through PR
+   `#383`; issue `#1178` owns the evidence-derived family-scoring correction
+   and remains open until its implementation is merged and exact-main/wiki
+   closure passes. Candidate score policies and queue ranking policy are
+   separately versioned. Production families now derive bounded components
+   from authoritative magnitude, urgency, workflow depth, or source posture;
+   full breakdowns persist and surface through existing APIs. Migration `021`
+   marks known historical v1 scalars explicitly instead of fabricating v2
+   evidence. Unknown policies/components fail closed; priority, suppression,
+   deduplication, expiry, scope, readiness, and snapshot behavior remain
+   deterministic and contract-gated. Gateway read-only publication exists,
+   but Workbench product proof, data-product certification, and
+   supported-feature promotion remain independently gated.
 9. Slice 08 is implemented on `main` through PR `#387`. Advisor,
    portfolio-manager, and compliance
    queues are audience-bound; the operator surface exposes aggregate support

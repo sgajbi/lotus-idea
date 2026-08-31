@@ -1078,6 +1078,19 @@ Candidate scoring and queue ranking are distinct versioned policies:
 6. API `policyVersion` names the queue policy while candidate
    `scorePolicyVersion` preserves score provenance.
 
+Production opportunity families must derive `IdeaScore` components from
+authoritative evidence; a family eligibility label or policy constant is not
+an importance score. Quantitative families may interpret source-reported
+threshold-relative magnitude, while context families must use bounded status,
+workflow, or blocker posture without inventing financial materiality. Persist
+component input, weight, contribution, penalty, reason codes, and policy
+version, and require exact scalar reconstruction. Historical scalar-only
+records are handled only by migration `021` as explicit
+`legacy_fixed_policy` evidence; do not restore a decoder fallback or emit a v1
+policy from a current evaluator. Apply the same-pattern check to runtime proof
+receipts, candidate/signal/queue APIs, OpenAPI examples, offline feedback and
+effectiveness projections, AI context, independent golden data, and docs.
+
 This package is design modularity inside the existing `lotus-idea` deployable.
 Do not flatten it back into generic scoring or create a queue microservice
 without measured workload, ownership, isolation, or operability evidence.
