@@ -348,6 +348,12 @@ def high_cash_payload() -> dict[str, Any]:
             "cashMovementRef": source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
             "cashflowProjectionRef": source_ref("lotus-core:PortfolioCashflowProjection:v1"),
         },
+        "accessScope": {
+            "tenantId": "tenant-a",
+            "bookId": "book-advisor-001",
+            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "clientId": "client-001",
+        },
         "entitlementAllowed": True,
     }
 

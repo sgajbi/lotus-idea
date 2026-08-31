@@ -147,7 +147,7 @@ def persist_candidate(
         json=high_cash_payload(
             cash_weight=cash_weight,
             suffix=suffix,
-            candidate_scope=candidate_scope,
+            candidate_scope=candidate_scope or access_scope(),
             evaluated_at_utc=evaluated_at_utc,
         ),
         headers=persist_headers(idempotency_key),

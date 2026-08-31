@@ -713,7 +713,7 @@ def test_signal_and_candidate_persistence_emit_bounded_operation_events(
     )
     persist_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(suffix="-persist"),
+        json=high_cash_payload(suffix="-persist", scoped=True),
         headers=persist_headers("operation-persist-accepted-001"),
     )
 
