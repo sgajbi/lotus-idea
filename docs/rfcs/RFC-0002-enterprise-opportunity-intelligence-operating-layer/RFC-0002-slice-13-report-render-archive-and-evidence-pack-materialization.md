@@ -140,6 +140,16 @@ Implemented in the first Slice 13 foundation:
     denial, idempotency replay, idempotency conflict, not-certified
     operation-event emission, and absence of Report package intake, Render
     output, Archive record, client-publication, or supported-feature claims.
+15. Report evidence-pack acceptance and idempotent replay now return the exact
+    persisted `GovernedReportEvidencePack`. The application layer requires one
+    complete match across report-pack identity, conversion intent, actor,
+    idempotency key, purpose, reason codes, request time, and retention
+    reference. Missing or ambiguous evidence fails closed as product-safe
+    degraded recovery; the non-null API/OpenAPI success contract never
+    reconstructs evidence from the request and grants no Report, Render,
+    Archive, or client-publication authority. The idempotency fingerprint also
+    binds the forbidden client-publication request flag so a same-key retry
+    cannot disguise an authority escalation as replay.
 
 Current endpoint behavior:
 
@@ -150,7 +160,11 @@ Current endpoint behavior:
 4. preserves source evidence summaries and evidence hash without returning raw
    source routes or payloads,
 5. records retention policy reference and safe audit event,
-6. returns `durableStorageBacked` from the active repository provider and
+6. returns the exact persisted evidence-pack request for accepted and replayed
+   success, with zero or multiple matches failing closed,
+7. rejects same-key changes to the client-publication request flag as an
+   idempotency conflict before domain processing,
+8. returns `durableStorageBacked` from the active repository provider and
    `supportedFeaturePromoted=false`.
 
 ## Acceptance Gate

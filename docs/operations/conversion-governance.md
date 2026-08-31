@@ -23,6 +23,12 @@ Current implemented scope:
    - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`,
    - `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`,
    - `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
+8. successful conversion-intent and conversion-outcome acceptance or replay
+   returns the exact persisted Idea-owned action. The application layer binds
+   the command/resource identity to exactly one candidate-record entry;
+   missing or ambiguous evidence fails closed as product-safe degraded
+   recovery instead of returning a successful null or reconstructing an event
+   from the request.
 
 The report conversion path now has one additional internal request foundation:
 

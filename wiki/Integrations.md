@@ -279,6 +279,12 @@ certified internal API foundations:
 1. `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
 2. `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
+Accepted and replayed success return the exact persisted Idea-owned intent or
+outcome. The outcome response is selected by the complete source-event
+identity; missing or ambiguous persistence evidence fails closed as degraded
+recovery. This strengthens retry reconstruction without asserting downstream
+acceptance, completion, suitability, or execution authority.
+
 `lotus-idea` can also submit existing internal requests through source-safe
 adapter foundations when the corresponding adapter configuration is present:
 
@@ -316,6 +322,9 @@ The report conversion path also has an internal evidence-pack request foundation
 
 That route records source-provenanced request truth for reviewed report
 conversion intents and preserves Report/Render/Archive authority refs. It does
+return the exact persisted request for accepted and replayed success, requiring
+one complete identity-bound match and failing closed when persistence evidence
+is missing or ambiguous. It does
 not call downstream services, create proposals, create manage actions, create
 downstream report packages, render documents, archive material, authorize
 any client-ready publication without downstream approval, or grant suitability, execution, compliance, mandate,

@@ -176,9 +176,11 @@ differences. Supported-feature posture remains unchanged.
 
 Issue `#539` applies the same executable-contract standard to report
 evidence-pack request recording. A capability-owned, DTO-validated example
-module publishes accepted and idempotent replay modes; replay exposes
-`reportEvidencePack=null` with `persistence.decision=replayed`. The accepted
-mode preserves `grantsClientPublicationAuthority=false`,
+module publishes accepted and idempotent replay modes. Issue `#1170` corrects
+the earlier null-resource replay contract: accepted and replayed success now
+return the same exact persisted report evidence pack, while missing or
+ambiguous persistence evidence fails closed. Both modes preserve
+`grantsClientPublicationAuthority=false`,
 `createsRenderedOutput=false`, and `createsArchiveRecord=false`, while both
 modes retain `supportedFeaturePromoted=false`. OpenAPI, the endpoint ledger,
 and cited integration behavior must match exactly. The same-pattern inventory
