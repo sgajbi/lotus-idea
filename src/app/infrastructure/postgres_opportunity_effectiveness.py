@@ -65,6 +65,9 @@ def load_opportunity_effectiveness_summary(
         recurrent_detection_count=_integer(row, "recurrent_detection_count"),
         reconciled_submission_count=_integer(row, "reconciled_submission_count"),
         presented_opportunity_count=_integer(row, "presented_opportunity_count"),
+        top_ranked_presented_opportunity_count=_integer(
+            row, "top_ranked_presented_opportunity_count"
+        ),
         top_ranked_accepted_opportunity_count=_integer(
             row, "top_ranked_accepted_opportunity_count"
         ),
@@ -339,6 +342,10 @@ SELECT
         AS recurrent_detection_count,
     (SELECT COUNT(DISTINCT candidate_id)::INTEGER FROM presentation_receipts)
         AS presented_opportunity_count,
+    (SELECT COUNT(DISTINCT candidate_id)::INTEGER
+     FROM presentation_receipts
+     WHERE rank_at_presentation = 1)
+        AS top_ranked_presented_opportunity_count,
     (SELECT COUNT(DISTINCT receipt.candidate_id)::INTEGER
      FROM presentation_receipts AS receipt
      CROSS JOIN parameters

@@ -42,8 +42,15 @@ class EffectivenessCountsResponse(CamelModel):
 class EffectivenessPresentationResponse(CamelModel):
     measurement_status: str = Field(..., alias="measurementStatus")
     presented_opportunity_count: int | None = Field(..., alias="presentedOpportunityCount")
+    top_ranked_presented_opportunity_count: int | None = Field(
+        ..., alias="topRankedPresentedOpportunityCount"
+    )
     top_ranked_accepted_opportunity_count: int | None = Field(
         ..., alias="topRankedAcceptedOpportunityCount"
+    )
+    presentation_rate: EffectivenessRateResponse | None = Field(..., alias="presentationRate")
+    top_ranked_acceptance_rate: EffectivenessRateResponse | None = Field(
+        ..., alias="topRankedAcceptanceRate"
     )
 
 

@@ -224,7 +224,7 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                 "application/json": {
                     "example": {
                         "schemaVersion": "lotus-idea.opportunity-effectiveness.v1",
-                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v1",
+                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v2",
                         "window": {
                             "startUtcInclusive": "2026-06-21T00:00:00Z",
                             "endUtcExclusive": "2026-06-22T00:00:00Z",
@@ -252,7 +252,10 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                         "presentation": {
                             "measurementStatus": ("unavailable_consumer_certification_pending"),
                             "presentedOpportunityCount": None,
+                            "topRankedPresentedOpportunityCount": None,
                             "topRankedAcceptedOpportunityCount": None,
+                            "presentationRate": None,
+                            "topRankedAcceptanceRate": None,
                         },
                         "dimensions": {
                             "opportunityFamily": [

@@ -34,7 +34,7 @@ from app.domain.review_queue import priority_bucket_for_score
 from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
 
 
-OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v1"
+OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v2"
 OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v1"
 MAX_EFFECTIVENESS_OPPORTUNITIES = 10_000
 RATE_QUANTUM = Decimal("0.000001")
@@ -128,7 +128,10 @@ class OpportunityEffectivenessSnapshot:
     reconciled_submission_count: int
     presentation_measurement_status: PresentationMeasurementStatus
     presented_opportunity_count: int | None
+    top_ranked_presented_opportunity_count: int | None
     top_ranked_accepted_opportunity_count: int | None
+    presentation_rate: EffectivenessRate | None
+    top_ranked_acceptance_rate: EffectivenessRate | None
     family_counts: tuple[EffectivenessDimensionCount, ...]
     score_band_counts: tuple[EffectivenessDimensionCount, ...]
     latest_review_action_counts: tuple[EffectivenessDimensionCount, ...]
@@ -171,6 +174,16 @@ class _EffectivenessMeasures:
     detection_to_review_seconds: tuple[Decimal, ...]
     approval_to_conversion_seconds: tuple[Decimal, ...]
     cohort_intent_ids: frozenset[str]
+
+
+@dataclass(frozen=True)
+class _PresentationEffectiveness:
+    measurement_status: PresentationMeasurementStatus
+    presented_opportunity_count: int | None
+    top_ranked_presented_opportunity_count: int | None
+    top_ranked_accepted_opportunity_count: int | None
+    presentation_rate: EffectivenessRate | None
+    top_ranked_acceptance_rate: EffectivenessRate | None
 
 
 def build_opportunity_effectiveness_snapshot(
@@ -267,6 +280,7 @@ def build_opportunity_effectiveness_snapshot_from_summary(
             ConversionOutcomeStatus.REQUESTED.value,
         )
     )
+    presentation = _build_presentation_effectiveness(summary)
     provisional = OpportunityEffectivenessSnapshot(
         window_start_utc=window_start_utc,
         window_end_utc=window_end_utc,
@@ -284,19 +298,14 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         recurrent_opportunity_count=summary.recurrent_opportunity_count,
         recurrent_detection_count=summary.recurrent_detection_count,
         reconciled_submission_count=summary.reconciled_submission_count,
-        presentation_measurement_status=(
-            PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING
-            if summary.presented_opportunity_count > 0
-            else PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
+        presentation_measurement_status=presentation.measurement_status,
+        presented_opportunity_count=presentation.presented_opportunity_count,
+        top_ranked_presented_opportunity_count=(
+            presentation.top_ranked_presented_opportunity_count
         ),
-        presented_opportunity_count=(
-            summary.presented_opportunity_count if summary.presented_opportunity_count > 0 else None
-        ),
-        top_ranked_accepted_opportunity_count=(
-            summary.top_ranked_accepted_opportunity_count
-            if summary.presented_opportunity_count > 0
-            else None
-        ),
+        top_ranked_accepted_opportunity_count=(presentation.top_ranked_accepted_opportunity_count),
+        presentation_rate=presentation.presentation_rate,
+        top_ranked_acceptance_rate=presentation.top_ranked_acceptance_rate,
         family_counts=_dimension_counts(
             Counter(summary.family_counts),
             (family.value for family in OpportunityFamily),
@@ -357,6 +366,36 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         ).hexdigest()
     )
     return replace(provisional, snapshot_digest=digest)
+
+
+def _build_presentation_effectiveness(
+    summary: OpportunityEffectivenessRepositorySummary,
+) -> _PresentationEffectiveness:
+    if summary.presented_opportunity_count == 0:
+        return _PresentationEffectiveness(
+            measurement_status=(
+                PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
+            ),
+            presented_opportunity_count=None,
+            top_ranked_presented_opportunity_count=None,
+            top_ranked_accepted_opportunity_count=None,
+            presentation_rate=None,
+            top_ranked_acceptance_rate=None,
+        )
+    return _PresentationEffectiveness(
+        measurement_status=PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING,
+        presented_opportunity_count=summary.presented_opportunity_count,
+        top_ranked_presented_opportunity_count=(summary.top_ranked_presented_opportunity_count),
+        top_ranked_accepted_opportunity_count=(summary.top_ranked_accepted_opportunity_count),
+        presentation_rate=_rate(
+            summary.presented_opportunity_count,
+            summary.generated_opportunity_count,
+        ),
+        top_ranked_acceptance_rate=_rate(
+            summary.top_ranked_accepted_opportunity_count,
+            summary.top_ranked_presented_opportunity_count,
+        ),
+    )
 
 
 def _validate_scope(
@@ -434,7 +473,7 @@ def _in_memory_repository_summary(
         cohort_intent_ids=measures.cohort_intent_ids,
         evaluated_at_utc=evaluated_at_utc,
     )
-    presented_count, top_ranked_accepted_count = _presentation_measures(
+    presented_count, top_ranked_presented_count, top_ranked_accepted_count = _presentation_measures(
         snapshot,
         records=records,
         evaluated_at_utc=evaluated_at_utc,
@@ -459,6 +498,7 @@ def _in_memory_repository_summary(
         recurrent_detection_count=measures.recurrent_detection_count,
         reconciled_submission_count=reconciled_count,
         presented_opportunity_count=presented_count,
+        top_ranked_presented_opportunity_count=top_ranked_presented_count,
         top_ranked_accepted_opportunity_count=top_ranked_accepted_count,
         family_counts=Counter(record.candidate.family.value for record in records),
         score_band_counts=Counter(_score_band(record) for record in records),
@@ -495,6 +535,7 @@ def _validate_repository_summary(
         summary.recurrent_detection_count,
         summary.reconciled_submission_count,
         summary.presented_opportunity_count,
+        summary.top_ranked_presented_opportunity_count,
         summary.top_ranked_accepted_opportunity_count,
     )
     dimension_counts = (
@@ -512,9 +553,16 @@ def _validate_repository_summary(
         raise OpportunityEffectivenessDataError(
             "opportunity effectiveness repository summary contains an invalid count"
         )
-    if summary.top_ranked_accepted_opportunity_count > summary.presented_opportunity_count:
+    if summary.top_ranked_presented_opportunity_count > summary.presented_opportunity_count:
         raise OpportunityEffectivenessDataError(
-            "top-ranked accepted opportunities cannot exceed presented opportunities"
+            "top-ranked presented opportunities cannot exceed presented opportunities"
+        )
+    if (
+        summary.top_ranked_accepted_opportunity_count
+        > summary.top_ranked_presented_opportunity_count
+    ):
+        raise OpportunityEffectivenessDataError(
+            "top-ranked accepted opportunities cannot exceed top-ranked presented opportunities"
         )
     if summary.presented_opportunity_count > summary.generated_opportunity_count:
         raise OpportunityEffectivenessDataError(
@@ -717,9 +765,10 @@ def _presentation_measures(
     *,
     records: tuple[CandidatePersistenceRecord, ...],
     evaluated_at_utc: datetime,
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     records_by_candidate = {record.candidate.candidate_id: record for record in records}
     presented_candidates: set[str] = set()
+    top_ranked_presented_candidates: set[str] = set()
     top_ranked_accepted_candidates: set[str] = set()
 
     for receipt in snapshot.presentation_receipts.values():
@@ -735,6 +784,7 @@ def _presentation_measures(
         presented_candidates.add(receipt.candidate_id)
         if receipt.rank_at_presentation != 1:
             continue
+        top_ranked_presented_candidates.add(receipt.candidate_id)
         if any(
             decision.action is ReviewAction.APPROVE_FOR_CONVERSION
             and decision.evidence_content_hash == evidence_hash
@@ -743,7 +793,11 @@ def _presentation_measures(
         ):
             top_ranked_accepted_candidates.add(receipt.candidate_id)
 
-    return len(presented_candidates), len(top_ranked_accepted_candidates)
+    return (
+        len(presented_candidates),
+        len(top_ranked_presented_candidates),
+        len(top_ranked_accepted_candidates),
+    )
 
 
 def _presentation_evidence_hash(
@@ -901,7 +955,18 @@ def _snapshot_payload_without_digest(
         "presentation": {
             "measurementStatus": snapshot.presentation_measurement_status.value,
             "presentedOpportunityCount": snapshot.presented_opportunity_count,
+            "topRankedPresentedOpportunityCount": (snapshot.top_ranked_presented_opportunity_count),
             "topRankedAcceptedOpportunityCount": (snapshot.top_ranked_accepted_opportunity_count),
+            "presentationRate": (
+                snapshot.presentation_rate.to_payload()
+                if snapshot.presentation_rate is not None
+                else None
+            ),
+            "topRankedAcceptanceRate": (
+                snapshot.top_ranked_acceptance_rate.to_payload()
+                if snapshot.top_ranked_acceptance_rate is not None
+                else None
+            ),
         },
         "dimensions": {
             "opportunityFamily": [item.to_payload() for item in snapshot.family_counts],

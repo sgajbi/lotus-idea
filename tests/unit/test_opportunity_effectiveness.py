@@ -210,7 +210,10 @@ def test_effectiveness_snapshot_produces_reproducible_source_safe_funnel_math() 
         PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
     )
     assert first.presented_opportunity_count is None
+    assert first.top_ranked_presented_opportunity_count is None
     assert first.top_ranked_accepted_opportunity_count is None
+    assert first.presentation_rate is None
+    assert first.top_ranked_acceptance_rate is None
 
     encoded = json.dumps(first.to_payload(), sort_keys=True)
     for forbidden_value in (
@@ -293,7 +296,22 @@ def test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_
         PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING
     )
     assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_presented_opportunity_count == 1
     assert projection.top_ranked_accepted_opportunity_count == 1
+    assert projection.presentation_rate is not None
+    assert projection.presentation_rate.to_payload() == {
+        "numerator": 1,
+        "denominator": 1,
+        "value": "1.000000",
+        "zeroDenominatorBehavior": "null",
+    }
+    assert projection.top_ranked_acceptance_rate is not None
+    assert projection.top_ranked_acceptance_rate.to_payload() == {
+        "numerator": 1,
+        "denominator": 1,
+        "value": "1.000000",
+        "zeroDenominatorBehavior": "null",
+    }
 
 
 def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_approval() -> None:
@@ -347,7 +365,50 @@ def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_app
     )
 
     assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_presented_opportunity_count == 1
     assert projection.top_ranked_accepted_opportunity_count == 0
+    assert projection.top_ranked_acceptance_rate is not None
+    assert projection.top_ranked_acceptance_rate.value == Decimal("0.000000")
+
+
+def test_effectiveness_snapshot_distinguishes_no_rank_one_presentation_from_rejection() -> None:
+    candidate = _candidate(
+        "idea-presented-rank-two-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("81"),
+        created_at=WINDOW_START + timedelta(hours=1),
+    )
+
+    projection = build_opportunity_effectiveness_snapshot(
+        _snapshot(
+            _record(candidate),
+            receipts=(
+                _receipt(
+                    candidate,
+                    receipt_id="receipt-presented-rank-two-001",
+                    rank=2,
+                    presented_at=WINDOW_START + timedelta(hours=2),
+                ),
+            ),
+        ),
+        tenant_id="tenant-a",
+        window_start_utc=WINDOW_START,
+        window_end_utc=WINDOW_END,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_presented_opportunity_count == 0
+    assert projection.top_ranked_accepted_opportunity_count == 0
+    assert projection.presentation_rate is not None
+    assert projection.presentation_rate.value == Decimal("1.000000")
+    assert projection.top_ranked_acceptance_rate is not None
+    assert projection.top_ranked_acceptance_rate.to_payload() == {
+        "numerator": 0,
+        "denominator": 0,
+        "value": None,
+        "zeroDenominatorBehavior": "null",
+    }
 
 
 @pytest.mark.parametrize(
@@ -396,6 +457,7 @@ def test_effectiveness_snapshot_does_not_credit_approval_outside_presentation_ch
     )
 
     assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_presented_opportunity_count == 1
     assert projection.top_ranked_accepted_opportunity_count == 0
 
 
@@ -428,7 +490,10 @@ def test_effectiveness_snapshot_ignores_future_presentations() -> None:
         PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
     )
     assert projection.presented_opportunity_count is None
+    assert projection.top_ranked_presented_opportunity_count is None
     assert projection.top_ranked_accepted_opportunity_count is None
+    assert projection.presentation_rate is None
+    assert projection.top_ranked_acceptance_rate is None
 
 
 def test_effectiveness_snapshot_fails_closed_on_cross_tenant_presentation_receipt() -> None:
