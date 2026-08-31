@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
@@ -261,19 +262,66 @@ def test_opportunity_effectiveness_api_fails_closed_on_corrupt_projection_facts(
     assert response.json()["code"] == "opportunity_effectiveness_unavailable"
 
 
-def test_opportunity_effectiveness_api_fails_closed_when_family_totals_do_not_reconcile(
+@pytest.mark.parametrize(
+    "corrupt_family",
+    (
+        lambda family: replace(family, generated_opportunity_count=2),
+        lambda family: replace(family, presented_opportunity_count=2),
+        lambda family: replace(family, approved_opportunity_count=2),
+        lambda family: replace(family, duplicate_suppressed_opportunity_count=1),
+        lambda family: replace(family, conversion_intent_count=0),
+        lambda family: replace(family, downstream_accepted_count=0),
+        lambda family: replace(family, feedback_opportunity_count=0),
+    ),
+)
+def test_opportunity_effectiveness_api_fails_closed_on_corrupt_family_funnel(
     monkeypatch: pytest.MonkeyPatch,
+    corrupt_family: Callable[
+        [OpportunityFamilyEffectivenessRepositorySummary],
+        OpportunityFamilyEffectivenessRepositorySummary,
+    ],
 ) -> None:
-    summary = _summary(generated_opportunity_count=1, reviewed_opportunity_count=1)
+    summary = _summary(
+        generated_opportunity_count=1,
+        reviewed_opportunity_count=1,
+        feedback_opportunity_count=1,
+        conversion_opportunity_count=1,
+        conversion_intent_count=1,
+        latest_review_action_counts={"approve_for_conversion": 1},
+        current_downstream_outcome_counts={"accepted": 1},
+    )
     family = summary.family_effectiveness[0]
     corrupt_summary = replace(
         summary,
-        family_effectiveness=(replace(family, reviewed_opportunity_count=0),),
+        family_effectiveness=(corrupt_family(family),),
     )
     monkeypatch.setattr(
         opportunity_effectiveness_api,
         "get_idea_repository",
         lambda: _ProjectionRepository(corrupt_summary),
+    )
+
+    response = managed_test_client(app).get(
+        "/api/v1/operations/opportunity-effectiveness",
+        params=_params(),
+        headers=_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "opportunity_effectiveness_unavailable"
+
+
+def test_opportunity_effectiveness_api_fails_closed_when_family_cohort_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    summary = replace(
+        _summary(generated_opportunity_count=1),
+        family_effectiveness=(),
+    )
+    monkeypatch.setattr(
+        opportunity_effectiveness_api,
+        "get_idea_repository",
+        lambda: _ProjectionRepository(summary),
     )
 
     response = managed_test_client(app).get(
