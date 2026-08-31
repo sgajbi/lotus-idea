@@ -56,6 +56,28 @@ def _candidate_version_history_row(values: Sequence[Any]) -> dict[str, Any]:
     )
 
 
+def _candidate_presentation_receipt_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
+            "receipt_id",
+            "candidate_id",
+            "tenant_id",
+            "presented_at_utc",
+            "rank_at_presentation",
+            "visible_candidate_count",
+            "queue_snapshot_digest",
+            "queue_policy_version",
+            "ranking_policy_version",
+            "candidate_material_version",
+            "candidate_evidence_version",
+            "schema_version",
+            "surface",
+            "producer",
+        ),
+        values,
+    )
+
+
 def _idempotency_record_row(values: Sequence[Any]) -> dict[str, Any]:
     return _row_from_columns(
         (
@@ -272,6 +294,7 @@ def _row_from_columns(
 
 _ROW_BUILDERS: dict[str, RowBuilder] = {
     "idea_candidate_record": _candidate_record_row,
+    "idea_candidate_presentation_receipt": _candidate_presentation_receipt_row,
     "idea_candidate_version_history": _candidate_version_history_row,
     "idea_idempotency_record": _idempotency_record_row,
     "idea_lifecycle_history": _lifecycle_history_row,

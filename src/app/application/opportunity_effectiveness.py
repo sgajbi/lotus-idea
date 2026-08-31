@@ -24,6 +24,7 @@ from app.domain.ideas import (
     SuppressionReason,
 )
 from app.domain.persistence_models import CandidatePersistenceRecord, IdeaRepositorySnapshot
+from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.review_governance import (
     GovernedFeedbackEvent,
     GovernedReviewDecision,
@@ -53,6 +54,7 @@ class OpportunityEffectivenessDataError(ValueError):
 
 class PresentationMeasurementStatus(StrEnum):
     UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING = "unavailable_consumer_certification_pending"
+    STORED_CONSUMER_CERTIFICATION_PENDING = "stored_consumer_certification_pending"
 
 
 class DownstreamOutcomePosture(StrEnum):
@@ -283,10 +285,18 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         recurrent_detection_count=summary.recurrent_detection_count,
         reconciled_submission_count=summary.reconciled_submission_count,
         presentation_measurement_status=(
-            PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
+            PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING
+            if summary.presented_opportunity_count > 0
+            else PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
         ),
-        presented_opportunity_count=None,
-        top_ranked_accepted_opportunity_count=None,
+        presented_opportunity_count=(
+            summary.presented_opportunity_count if summary.presented_opportunity_count > 0 else None
+        ),
+        top_ranked_accepted_opportunity_count=(
+            summary.top_ranked_accepted_opportunity_count
+            if summary.presented_opportunity_count > 0
+            else None
+        ),
         family_counts=_dimension_counts(
             Counter(summary.family_counts),
             (family.value for family in OpportunityFamily),
@@ -424,6 +434,11 @@ def _in_memory_repository_summary(
         cohort_intent_ids=measures.cohort_intent_ids,
         evaluated_at_utc=evaluated_at_utc,
     )
+    presented_count, top_ranked_accepted_count = _presentation_measures(
+        snapshot,
+        records=records,
+        evaluated_at_utc=evaluated_at_utc,
+    )
     return OpportunityEffectivenessRepositorySummary(
         generated_opportunity_count=len(records),
         reviewed_opportunity_count=measures.reviewed_opportunity_count,
@@ -443,6 +458,8 @@ def _in_memory_repository_summary(
         recurrent_opportunity_count=measures.recurrent_opportunity_count,
         recurrent_detection_count=measures.recurrent_detection_count,
         reconciled_submission_count=reconciled_count,
+        presented_opportunity_count=presented_count,
+        top_ranked_accepted_opportunity_count=top_ranked_accepted_count,
         family_counts=Counter(record.candidate.family.value for record in records),
         score_band_counts=Counter(_score_band(record) for record in records),
         latest_review_action_counts=measures.latest_review_action_counts,
@@ -477,6 +494,8 @@ def _validate_repository_summary(
         summary.recurrent_opportunity_count,
         summary.recurrent_detection_count,
         summary.reconciled_submission_count,
+        summary.presented_opportunity_count,
+        summary.top_ranked_accepted_opportunity_count,
     )
     dimension_counts = (
         *summary.family_counts.values(),
@@ -492,6 +511,14 @@ def _validate_repository_summary(
     ):
         raise OpportunityEffectivenessDataError(
             "opportunity effectiveness repository summary contains an invalid count"
+        )
+    if summary.top_ranked_accepted_opportunity_count > summary.presented_opportunity_count:
+        raise OpportunityEffectivenessDataError(
+            "top-ranked accepted opportunities cannot exceed presented opportunities"
+        )
+    if summary.presented_opportunity_count > summary.generated_opportunity_count:
+        raise OpportunityEffectivenessDataError(
+            "presented opportunities cannot exceed generated opportunities"
         )
     if any(
         value < 0
@@ -683,6 +710,69 @@ def _downstream_submission_measures(
         ):
             reconciled_count += 1
     return counts, reconciled_count
+
+
+def _presentation_measures(
+    snapshot: IdeaRepositorySnapshot,
+    *,
+    records: tuple[CandidatePersistenceRecord, ...],
+    evaluated_at_utc: datetime,
+) -> tuple[int, int]:
+    records_by_candidate = {record.candidate.candidate_id: record for record in records}
+    presented_candidates: set[str] = set()
+    top_ranked_accepted_candidates: set[str] = set()
+
+    for receipt in snapshot.presentation_receipts.values():
+        record = records_by_candidate.get(receipt.candidate_id)
+        if record is None or receipt.presented_at_utc > evaluated_at_utc:
+            continue
+        candidate = record.candidate
+        if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
+            raise OpportunityEffectivenessDataError(
+                "presentation receipt tenant does not match its cohort candidate"
+            )
+        evidence_hash = _presentation_evidence_hash(record, receipt)
+        presented_candidates.add(receipt.candidate_id)
+        if receipt.rank_at_presentation != 1:
+            continue
+        if any(
+            decision.action is ReviewAction.APPROVE_FOR_CONVERSION
+            and decision.evidence_content_hash == evidence_hash
+            and receipt.presented_at_utc <= decision.decided_at_utc <= evaluated_at_utc
+            for decision in record.review_decisions
+        ):
+            top_ranked_accepted_candidates.add(receipt.candidate_id)
+
+    return len(presented_candidates), len(top_ranked_accepted_candidates)
+
+
+def _presentation_evidence_hash(
+    record: CandidatePersistenceRecord,
+    receipt: CandidatePresentationReceipt,
+) -> str:
+    matching_versions = tuple(
+        entry
+        for entry in record.version_history
+        if entry.material_version == receipt.candidate_material_version
+        and entry.evidence_version == receipt.candidate_evidence_version
+        and entry.recorded_at_utc <= receipt.presented_at_utc
+    )
+    if len(matching_versions) > 1:
+        raise OpportunityEffectivenessDataError(
+            "presentation receipt resolves to multiple candidate versions"
+        )
+    if matching_versions:
+        return matching_versions[0].evidence_hash
+    candidate = record.candidate
+    if (
+        candidate.identity.material_version == receipt.candidate_material_version
+        and candidate.identity.evidence_version == receipt.candidate_evidence_version
+        and candidate.updated_at_utc <= receipt.presented_at_utc
+    ):
+        return candidate.evidence_packet.lineage_ref.content_hash
+    raise OpportunityEffectivenessDataError(
+        "presentation receipt does not resolve to a durable candidate version"
+    )
 
 
 def _latest_review(

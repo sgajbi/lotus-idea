@@ -20,6 +20,7 @@ from app.application.opportunity_effectiveness import (
 )
 from app.domain import (
     CandidateChangeReason,
+    CandidatePresentationReceipt,
     CandidateVersionHistoryEntry,
     ConversionBoundary,
     ConversionOutcomeStatus,
@@ -246,6 +247,166 @@ def test_effectiveness_snapshot_uses_null_rates_and_timings_for_empty_population
         "p95Seconds": None,
         "maximumSeconds": None,
     }
+
+
+def test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_one_acceptance() -> (
+    None
+):
+    candidate = _candidate(
+        "idea-presented-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    record = _record(
+        candidate,
+        review=_review(
+            candidate.candidate_id,
+            action=ReviewAction.APPROVE_FOR_CONVERSION,
+            decided_at=WINDOW_START + timedelta(hours=3),
+        ),
+    )
+    first_receipt = _receipt(
+        candidate,
+        receipt_id="receipt-presented-001-a",
+        rank=1,
+        presented_at=WINDOW_START + timedelta(hours=2),
+    )
+    replay_from_later_queue = _receipt(
+        candidate,
+        receipt_id="receipt-presented-001-b",
+        rank=2,
+        presented_at=WINDOW_START + timedelta(hours=2, minutes=30),
+    )
+
+    projection = build_opportunity_effectiveness_snapshot(
+        _snapshot(record, receipts=(first_receipt, replay_from_later_queue)),
+        tenant_id="tenant-a",
+        window_start_utc=WINDOW_START,
+        window_end_utc=WINDOW_END,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.presentation_measurement_status is (
+        PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING
+    )
+    assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_accepted_opportunity_count == 1
+
+
+def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_approval() -> None:
+    candidate = _candidate(
+        "idea-version-fenced-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    old_version = CandidateVersionHistoryEntry(
+        candidate_id=candidate.candidate_id,
+        business_identity_id=candidate.identity.business_identity_id,
+        material_fingerprint=candidate.identity.material_fingerprint,
+        material_version=1,
+        evidence_version=1,
+        change_reason=CandidateChangeReason.INITIAL_DETECTION,
+        source_lifecycle_status=None,
+        resulting_lifecycle_status=IdeaLifecycleStatus.GENERATED,
+        supersedes_material_version=None,
+        evidence_hash=f"sha256:{'1' * 64}",
+        recorded_at_utc=WINDOW_START + timedelta(hours=1),
+    )
+    approval = replace(
+        _review(
+            candidate.candidate_id,
+            action=ReviewAction.APPROVE_FOR_CONVERSION,
+            decided_at=WINDOW_START + timedelta(hours=3),
+        ),
+        evidence_content_hash=f"sha256:{'2' * 64}",
+    )
+    record = replace(_record(candidate, review=approval), version_history=(old_version,))
+
+    projection = build_opportunity_effectiveness_snapshot(
+        _snapshot(
+            record,
+            receipts=(
+                _receipt(
+                    candidate,
+                    receipt_id="receipt-version-fenced-001",
+                    rank=1,
+                    presented_at=WINDOW_START + timedelta(hours=2),
+                ),
+            ),
+        ),
+        tenant_id="tenant-a",
+        window_start_utc=WINDOW_START,
+        window_end_utc=WINDOW_END,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_accepted_opportunity_count == 0
+
+
+def test_effectiveness_snapshot_ignores_future_presentations() -> None:
+    candidate = _candidate(
+        "idea-future-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+    )
+    projection = build_opportunity_effectiveness_snapshot(
+        _snapshot(
+            _record(candidate),
+            receipts=(
+                _receipt(
+                    candidate,
+                    receipt_id="receipt-future-presentation-001",
+                    rank=1,
+                    presented_at=EVALUATED_AT + timedelta(seconds=1),
+                ),
+            ),
+        ),
+        tenant_id="tenant-a",
+        window_start_utc=WINDOW_START,
+        window_end_utc=WINDOW_END,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.presentation_measurement_status is (
+        PresentationMeasurementStatus.UNAVAILABLE_CONSUMER_CERTIFICATION_PENDING
+    )
+    assert projection.presented_opportunity_count is None
+    assert projection.top_ranked_accepted_opportunity_count is None
+
+
+def test_effectiveness_snapshot_fails_closed_on_cross_tenant_presentation_receipt() -> None:
+    candidate = _candidate(
+        "idea-cross-tenant-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+    )
+    receipt = replace(
+        _receipt(
+            candidate,
+            receipt_id="receipt-cross-tenant-presentation-001",
+            rank=1,
+            presented_at=WINDOW_START + timedelta(hours=2),
+        ),
+        tenant_id="tenant-b",
+    )
+
+    with pytest.raises(OpportunityEffectivenessDataError, match="tenant does not match"):
+        build_opportunity_effectiveness_snapshot(
+            _snapshot(_record(candidate), receipts=(receipt,)),
+            tenant_id="tenant-a",
+            window_start_utc=WINDOW_START,
+            window_end_utc=WINDOW_END,
+            evaluated_at_utc=EVALUATED_AT,
+        )
 
 
 def test_effectiveness_snapshot_observes_only_facts_available_at_evaluation_time() -> None:
@@ -728,9 +889,37 @@ def _counts(items: tuple[EffectivenessDimensionCount, ...]) -> dict[str, int]:
     return {item.value: item.count for item in items if item.count > 0}
 
 
-def _snapshot(*records: CandidatePersistenceRecord) -> IdeaRepositorySnapshot:
+def _receipt(
+    candidate: IdeaCandidate,
+    *,
+    receipt_id: str,
+    rank: int,
+    presented_at: datetime,
+) -> CandidatePresentationReceipt:
+    scope = candidate.access_scope
+    assert scope is not None
+    return CandidatePresentationReceipt(
+        receipt_id=receipt_id,
+        candidate_id=candidate.candidate_id,
+        tenant_id=scope.tenant_id,
+        presented_at_utc=presented_at,
+        rank_at_presentation=rank,
+        visible_candidate_count=3,
+        queue_snapshot_digest=f"sha256:{'9' * 64}",
+        queue_policy_version="idea-queue-v1",
+        ranking_policy_version="idea-rank-v1",
+        candidate_material_version=candidate.identity.material_version,
+        candidate_evidence_version=candidate.identity.evidence_version,
+    )
+
+
+def _snapshot(
+    *records: CandidatePersistenceRecord,
+    receipts: tuple[CandidatePresentationReceipt, ...] = (),
+) -> IdeaRepositorySnapshot:
     return IdeaRepositorySnapshot(
         candidate_records={record.candidate.candidate_id: record for record in records},
         idempotency_records={},
         idempotency_candidates={},
+        presentation_receipts={receipt.receipt_id: receipt for receipt in receipts},
     )
