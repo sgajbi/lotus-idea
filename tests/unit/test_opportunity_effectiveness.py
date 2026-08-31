@@ -350,6 +350,55 @@ def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_app
     assert projection.top_ranked_accepted_opportunity_count == 0
 
 
+@pytest.mark.parametrize(
+    "approval_time",
+    (
+        WINDOW_START + timedelta(hours=1, minutes=30),
+        EVALUATED_AT + timedelta(seconds=1),
+    ),
+)
+def test_effectiveness_snapshot_does_not_credit_approval_outside_presentation_chronology(
+    approval_time: datetime,
+) -> None:
+    candidate = _candidate(
+        "idea-presentation-chronology-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    record = _record(
+        candidate,
+        review=_review(
+            candidate.candidate_id,
+            action=ReviewAction.APPROVE_FOR_CONVERSION,
+            decided_at=approval_time,
+        ),
+    )
+
+    projection = build_opportunity_effectiveness_snapshot(
+        _snapshot(
+            record,
+            receipts=(
+                _receipt(
+                    candidate,
+                    receipt_id="receipt-presentation-chronology-001",
+                    rank=1,
+                    presented_at=WINDOW_START + timedelta(hours=2),
+                ),
+            ),
+        ),
+        tenant_id="tenant-a",
+        window_start_utc=WINDOW_START,
+        window_end_utc=WINDOW_END,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert projection.presented_opportunity_count == 1
+    assert projection.top_ranked_accepted_opportunity_count == 0
+
+
 def test_effectiveness_snapshot_ignores_future_presentations() -> None:
     candidate = _candidate(
         "idea-future-presentation-001",
