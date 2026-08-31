@@ -45,6 +45,10 @@ SUPERSEDED_RFC0002_POSTURE_SNAPSHOTS = (
     "77 tracked RFC-0002 issues",
     "80 tracked issues",
     "93 label-backed",
+    "155 tracked RFC-0002 issues",
+    "251 label-backed RFC-0002 issues",
+    "Total RFC-0002 issues | 251",
+    "Open RFC-0002 issues | 42",
 )
 CURRENT_POSTURE_MARKERS = (
     "Current governed",

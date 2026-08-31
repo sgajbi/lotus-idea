@@ -323,6 +323,30 @@ def test_documentation_contract_gate_allows_then_current_issue_posture_snapshot(
     assert errors == []
 
 
+def test_documentation_contract_gate_blocks_stale_detailed_issue_posture_rows(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "wiki" / "RFC-0002-Execution-Status.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# RFC-0002 Execution Status\n\n"
+        "| GitHub issue posture | Current governed posture |\n"
+        "| --- | --- |\n"
+        "| Total RFC-0002 issues | 251 |\n"
+        "| Open RFC-0002 issues | 42 |\n",
+        encoding="utf-8",
+    )
+
+    errors = module.rfc0002_issue_posture_snapshot_errors(root=tmp_path)
+
+    assert errors == [
+        "wiki/RFC-0002-Execution-Status.md: paragraph 2 describes a superseded "
+        "RFC-0002 issue-count snapshot as current/live posture; use `then-current` "
+        "or update the count from `make rfc0002-cross-repo-issue-posture`"
+    ]
+
+
 def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     tmp_path: Path,
 ) -> None:

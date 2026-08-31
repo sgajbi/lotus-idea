@@ -706,16 +706,17 @@ canonical validation after Core PR #858 reopened Core #836 because positions
 data quality remained `UNKNOWN` despite ready/current Core diagnostics, and
 supported-feature promotion remains unclaimed.
 
-The 2026-08-31 source-truth reconciliation records 155 Idea RFC-0002 issues:
-128 closed complete and 27 open, including 12 `open_blocked`, 3
+The 2026-08-31 source-truth reconciliation records 156 Idea RFC-0002 issues:
+128 closed complete and 28 open, including 12 `open_blocked`, 4
 `open_in_progress`, 2 `open_merged_main_qa_pending`, 1 pending final closure, 1
-pending post-completion decision, and 8 trackers. #681/#685/#686 are in
-progress; #1155/#1156 are merged-main pending canonical consumer QA; and
+pending post-completion decision, and 8 trackers. #681/#685/#686/#1142 are in
+progress; #1142 owns the single-image Compose build correction,
+#1155/#1156 are merged-main pending canonical consumer QA; and
 #1168/#1169/#1170 are closed after exact persisted action evidence passed
 exact-main release, wiki publication/parity, and branch hygiene. The live state
 audit passes, the blocker classifier excludes #685/#686 because their work is
-writable in Gateway/Workbench, and the cross-repository snapshot records 251
-label-backed issues, 209 closed and 42 open, with 23 genuinely external or
+writable in Gateway/Workbench, and the cross-repository snapshot records 252
+label-backed issues, 209 closed and 43 open, with 23 genuinely external or
 protected blockers and 0 app-actionable blocked issues. This reconciliation
 does not promote support or close Slice 18.
 

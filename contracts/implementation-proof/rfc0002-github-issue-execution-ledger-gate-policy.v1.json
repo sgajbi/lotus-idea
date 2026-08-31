@@ -150,6 +150,7 @@
     1129,
     1131,
     1139,
+    1142,
     1145,
     1150,
     1154,
@@ -661,6 +662,15 @@
       "does not certify protected migration, capacity, dependency-recovery, or load/soak evidence",
       "does not promote supported features",
       "final RFC-0002 closure"
+    ],
+    "1142": [
+      "Keep #1142 open and status/in-progress",
+      "one canonical Compose build writer",
+      "API and optional source-ingestion worker consuming that exact image",
+      "deterministic mutation regression",
+      "fresh image build",
+      "COMPOSE_PARALLEL_LIMIT=1 workaround is diagnostic evidence only",
+      "Do not weaken BuildKit, migration, provenance, readiness, or browser-validation controls"
     ],
     "1119": [
       "Closed #1119",
