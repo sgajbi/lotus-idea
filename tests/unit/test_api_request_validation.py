@@ -11,6 +11,7 @@ from app.api.candidate_lifecycle import (
     CallerSettableIdeaLifecycleStatus,
 )
 from app.api.conversion_governance import ConversionIntentRequest
+from app.api.conversion_governance_models import ConversionOutcomeRequest
 from app.api.report_evidence import ReportEvidencePackRequest
 from app.api.request_validation import require_non_empty_reason_codes
 from app.api.review_workflow import (
@@ -93,6 +94,26 @@ def test_feedback_request_requires_the_explicit_taxonomy_contract() -> None:
                 "recordedAtUtc": REQUESTED_AT,
             }
         )
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    ("supersedesConversionOutcomeId", "correctionReason"),
+)
+def test_conversion_outcome_request_rejects_blank_correction_fields(field_name: str) -> None:
+    payload = {
+        "conversionOutcomeId": "conversion-outcome-correction-001",
+        "status": "accepted",
+        "sourceSystem": "lotus-report",
+        "sourceEventVersion": 2,
+        "recordedAtUtc": REQUESTED_AT,
+        "supersedesConversionOutcomeId": "conversion-outcome-rejected-001",
+        "correctionReason": "source correction",
+    }
+    payload[field_name] = " "
+
+    with pytest.raises(ValidationError, match="correction fields cannot be blank"):
+        ConversionOutcomeRequest.model_validate(payload)
 
 
 def _access_scope_payload() -> dict[str, str]:

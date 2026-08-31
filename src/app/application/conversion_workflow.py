@@ -11,11 +11,12 @@ from app.application.persisted_action_evidence import (
 from app.domain import (
     ConversionIntentCommand,
     ConversionOutcomeCommand,
-    ConversionOutcomeResult,
+    ConversionOutcomeIdentity,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
     EventLineageContext,
     GovernedConversionIntent,
+    GovernedConversionOutcome,
     conversion_outcome_identity_from_command,
     record_conversion_outcome,
     request_conversion_intent,
@@ -69,8 +70,15 @@ class ConversionIntentWorkflowResult:
 
 @dataclass(frozen=True)
 class ConversionOutcomeWorkflowResult:
-    outcome_result: ConversionOutcomeResult | None
+    conversion_outcome: GovernedConversionOutcome | None
     persistence: ConversionPersistenceResult
+
+    def require_conversion_outcome(self) -> GovernedConversionOutcome:
+        if self.conversion_outcome is None:
+            raise PersistedActionEvidenceUnavailable(
+                "Successful conversion mutation has no persisted conversion outcome"
+            )
+        return self.conversion_outcome
 
 
 class ConversionAccessScopeDenied(Exception):
@@ -158,7 +166,7 @@ def record_conversion_outcome_to_repository(
     conversion_intent = repository.conversion_intent_by_id(command.conversion_intent_id)
     if conversion_intent is None:
         return ConversionOutcomeWorkflowResult(
-            outcome_result=None,
+            conversion_outcome=None,
             persistence=ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.NOT_FOUND,
                 record=None,
@@ -173,7 +181,10 @@ def record_conversion_outcome_to_repository(
         identity=identity,
     )
     if prechecked is not None:
-        return ConversionOutcomeWorkflowResult(outcome_result=None, persistence=prechecked)
+        return ConversionOutcomeWorkflowResult(
+            conversion_outcome=_persisted_conversion_outcome(command, prechecked, identity),
+            persistence=prechecked,
+        )
 
     existing_outcomes = repository.conversion_outcomes_for_intent(command.conversion_intent_id)
     outcome_result = record_conversion_outcome(
@@ -188,12 +199,33 @@ def record_conversion_outcome_to_repository(
         event_lineage=command.event_lineage,
     )
     return ConversionOutcomeWorkflowResult(
-        outcome_result=(
-            outcome_result
-            if persistence.decision is ConversionPersistenceDecision.ACCEPTED
-            else None
-        ),
+        conversion_outcome=_persisted_conversion_outcome(command, persistence, identity),
         persistence=persistence,
+    )
+
+
+def _persisted_conversion_outcome(
+    command: RecordConversionOutcomeToRepositoryCommand,
+    persistence: ConversionPersistenceResult,
+    identity: ConversionOutcomeIdentity,
+) -> GovernedConversionOutcome | None:
+    if persistence.decision not in {
+        ConversionPersistenceDecision.ACCEPTED,
+        ConversionPersistenceDecision.REPLAYED,
+    }:
+        return None
+    record = persistence.record
+    if record is None:
+        raise PersistedActionEvidenceUnavailable(
+            "Successful conversion outcome mutation has no candidate record"
+        )
+    return require_single_persisted_action(
+        outcome
+        for outcome in record.conversion_outcomes
+        if (
+            outcome.conversion_intent_id == command.conversion_intent_id
+            and outcome.identity == identity
+        )
     )
 
 

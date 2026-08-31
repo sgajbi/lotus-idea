@@ -89,7 +89,7 @@ def test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact
     assert first.status_code == 200
     assert first.json()["conversionOutcome"]["sourceEventVersion"] == 1
     assert replayed.status_code == 200
-    assert replayed.json()["conversionOutcome"] is None
+    assert replayed.json()["conversionOutcome"] == first.json()["conversionOutcome"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "conversion_outcome_conflict"

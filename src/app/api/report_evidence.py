@@ -13,6 +13,7 @@ from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
+    recovery_posture_problem,
 )
 from app.api.idempotency import validate_idempotency_key
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
@@ -36,6 +37,7 @@ from app.application.report_evidence import (
     ReportEvidencePackWorkflowResult,
     request_report_evidence_pack_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
@@ -49,6 +51,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.data_lifecycle import resolve_external_retention_policy_ref
+from app.domain.recovery_posture import ServiceRecoveryPosture
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.ports.idea_repository import ReportEvidenceWorkflowRepository
@@ -220,10 +223,7 @@ class EvidencePackPersistenceSummaryResponse(CamelModel):
 
 
 class ReportEvidencePackApiResponse(CamelModel):
-    report_evidence_pack: ReportEvidencePackResponse | None = Field(
-        default=None,
-        alias="reportEvidencePack",
-    )
+    report_evidence_pack: ReportEvidencePackResponse = Field(alias="reportEvidencePack")
     persistence: EvidencePackPersistenceSummaryResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -253,14 +253,19 @@ async def record_report_evidence_pack(
         )
         if isinstance(context, JSONResponse):
             return context
-        result = _apply_report_evidence_request(
-            request,
-            context=context,
-            conversion_intent_id=conversion_intent_id,
-            idempotency_key=idempotency_key,
-            http_request=http_request,
-            causation_id=x_causation_id,
-        )
+        try:
+            result = _apply_report_evidence_request(
+                request,
+                context=context,
+                conversion_intent_id=conversion_intent_id,
+                idempotency_key=idempotency_key,
+                http_request=http_request,
+                causation_id=x_causation_id,
+            )
+        except PersistedActionEvidenceUnavailable:
+            return _report_evidence_persisted_evidence_problem(
+                durable_storage_backed=context.durable_storage_backed
+            )
     except PermissionDeniedError:
         return _report_evidence_permission_problem(
             "The caller is not permitted to request idea report evidence packs."
@@ -366,6 +371,18 @@ def _report_evidence_invalid_request_problem() -> JSONResponse:
     )
 
 
+def _report_evidence_persisted_evidence_problem(
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse:
+    _emit_report_evidence_operation_event(
+        OperationOutcome.BLOCKED,
+        "service_recovery_degraded",
+        durable_storage_backed,
+    )
+    return recovery_posture_problem(ServiceRecoveryPosture.DEGRADED)
+
+
 def _report_evidence_response(
     result: ReportEvidencePackWorkflowResult,
     *,
@@ -384,10 +401,8 @@ def _report_evidence_response(
         durable_storage_backed=durable_storage_backed,
     )
     return ReportEvidencePackApiResponse(
-        reportEvidencePack=(
-            ReportEvidencePackResponse.from_domain(result.evidence_pack_result.evidence_pack)
-            if result.evidence_pack_result is not None
-            else None
+        reportEvidencePack=ReportEvidencePackResponse.from_domain(
+            result.require_report_evidence_pack()
         ),
         persistence=EvidencePackPersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=durable_storage_backed,
@@ -471,7 +486,9 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
         "Records an internal report evidence-pack request for a reviewed idea that already "
         "has a report-evidence conversion intent. The route preserves source refs, lineage, "
         "retention posture, Report/Render/Archive source authority, and idempotency evidence, "
-        "but it does not create lotus-report, lotus-render, or lotus-archive records and does "
+        "and returns the exact persisted evidence-pack request for accepted and replayed "
+        "success. Missing or ambiguous persisted evidence fails closed. "
+        "It does not create lotus-report, lotus-render, or lotus-archive records and does "
         "not authorize client-ready publication."
     ),
     "status_code": status.HTTP_200_OK,
@@ -480,8 +497,8 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
     "responses": {
         200: {
             "description": (
-                "Report evidence-pack request accepted or replayed through the internal "
-                "repository foundation."
+                "Report evidence-pack request accepted or replayed with the exact persisted "
+                "Idea-owned evidence."
             ),
         },
         **invalid_request_metadata(detail="Correct the report evidence pack request and retry."),

@@ -67,48 +67,44 @@ def build_conversion_intent_response_examples() -> dict[str, dict[str, Any]]:
 
 
 def build_conversion_outcome_response_examples() -> dict[str, dict[str, Any]]:
+    accepted = _validated_conversion_outcome_response(
+        {
+            "conversionOutcome": {
+                "conversionOutcomeId": "conversion-report-outcome-001",
+                "conversionIntentId": "conversion-report-001",
+                "target": "report_evidence",
+                "status": "accepted",
+                "sourceSystem": "lotus-report",
+                "sourceEventVersion": 1,
+                "downstreamReference": "report-evidence-pack-001",
+                "supersedesConversionOutcomeId": None,
+                "correctionReason": None,
+                "boundary": "downstream_realization_required",
+                "recordedAtUtc": "2026-06-21T10:20:00Z",
+                "grantsExecutionAuthority": False,
+                "grantsClientCommunicationAuthority": False,
+                "grantsSuitabilityAuthority": False,
+            },
+            "persistence": {
+                "decision": "accepted",
+                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                "lifecycleStatus": "converted_to_report",
+                "reviewPosture": "approved_for_conversion",
+                "auditEventType": "idea.conversion.outcome_recorded",
+            },
+            "durableStorageBacked": False,
+            "supportedFeaturePromoted": False,
+        }
+    )
     return {
-        "accepted": _validated_conversion_outcome_response(
-            {
-                "conversionOutcome": {
-                    "conversionOutcomeId": "conversion-report-outcome-001",
-                    "conversionIntentId": "conversion-report-001",
-                    "target": "report_evidence",
-                    "status": "accepted",
-                    "sourceSystem": "lotus-report",
-                    "sourceEventVersion": 1,
-                    "downstreamReference": "report-evidence-pack-001",
-                    "supersedesConversionOutcomeId": None,
-                    "correctionReason": None,
-                    "boundary": "downstream_realization_required",
-                    "recordedAtUtc": "2026-06-21T10:20:00Z",
-                    "grantsExecutionAuthority": False,
-                    "grantsClientCommunicationAuthority": False,
-                    "grantsSuitabilityAuthority": False,
-                },
-                "persistence": {
-                    "decision": "accepted",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.conversion.outcome_recorded",
-                },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
-            }
-        ),
+        "accepted": accepted,
         "replayed": _validated_conversion_outcome_response(
             {
-                "conversionOutcome": None,
+                **accepted,
                 "persistence": {
+                    **accepted["persistence"],
                     "decision": "replayed",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.conversion.outcome_recorded",
                 },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
             }
         ),
     }

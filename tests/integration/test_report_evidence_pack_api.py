@@ -133,13 +133,23 @@ def _assert_report_evidence_pack_replays_and_conflicts(
         json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-replay-002"),
         headers=headers,
     )
+    publication_escalation = client.post(
+        _report_evidence_pack_url(conversion_intent_id),
+        json=report_evidence_pack_payload(
+            report_evidence_pack_id="report-pack-replay-001",
+            client_ready_publication_requested=True,
+        ),
+        headers=headers,
+    )
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["reportEvidencePack"] is None
+    assert replayed.json()["reportEvidencePack"] == first.json()["reportEvidencePack"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "idempotency_conflict"
+    assert publication_escalation.status_code == 409
+    assert publication_escalation.json()["code"] == "idempotency_conflict"
 
 
 def _assert_report_evidence_pack_blocks_client_ready_publication(

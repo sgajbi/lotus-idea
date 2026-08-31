@@ -1271,21 +1271,26 @@
       ],
       "response_examples": [
         "{\"conversionOutcome\":{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"sourceEventVersion\":1,\"downstreamReference\":\"report-evidence-pack-001\",\"supersedesConversionOutcomeId\":null,\"correctionReason\":null,\"boundary\":\"downstream_realization_required\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\",\"grantsExecutionAuthority\":false,\"grantsClientCommunicationAuthority\":false,\"grantsSuitabilityAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"conversionOutcome\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"conversionOutcome\":{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"sourceEventVersion\":1,\"downstreamReference\":\"report-evidence-pack-001\",\"supersedesConversionOutcomeId\":null,\"correctionReason\":null,\"boundary\":\"downstream_realization_required\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\",\"grantsExecutionAuthority\":false,\"grantsClientCommunicationAuthority\":false,\"grantsSuitabilityAuthority\":false},\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.conversion.outcome.record capability.",
         "404 returns product-safe Problem Details when the conversion intent is not found.",
         "409 idempotency_conflict identifies transport-key reuse with a different payload; 409 conversion_outcome_conflict identifies changed source identity, competing version, invalid progression, or invalid correction without exposing stored source content.",
-        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank.",
+        "503 service_recovery_degraded fails closed when accepted or replayed persistence cannot resolve exactly one identity-bound conversion outcome."
       ],
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays",
         "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact",
+        "tests/unit/test_conversion_outcome_workflow_application.py::test_conversion_outcome_replay_fails_closed_when_persisted_outcome_is_missing",
+        "tests/unit/test_conversion_outcome_workflow_application.py::test_conversion_outcome_replay_fails_closed_when_persisted_outcome_is_ambiguous",
+        "tests/integration/test_persisted_action_evidence_api.py::test_conversion_outcome_api_fails_safely_when_persisted_evidence_is_unavailable",
         "tests/unit/api_examples/test_conversion_workflow.py::test_conversion_outcome_success_examples_match_ledger_and_openapi",
         "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_enforces_progression_and_append_only_correction",
         "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
+        "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -1303,20 +1308,26 @@
       ],
       "response_examples": [
         "{\"reportEvidencePack\":{\"reportEvidencePackId\":\"report-evidence-pack-001\",\"conversionIntentId\":\"conversion-report-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"purpose\":\"client_review_report_section\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"evidenceContentHash\":\"sha256:evidence-lineage\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceSummaries\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}],\"reasonCodes\":[\"review_approved_for_conversion\"],\"reportSourceAuthority\":\"lotus-report\",\"renderSourceAuthority\":\"lotus-render\",\"archiveSourceAuthority\":\"lotus-archive\",\"boundary\":\"request_only\",\"retentionPolicyRef\":\"lotus-report:idea-evidence-retention:v1\",\"requestedAtUtc\":\"2026-06-21T10:25:00Z\",\"grantsClientPublicationAuthority\":false,\"createsRenderedOutput\":false,\"createsArchiveRecord\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.report_evidence_pack.requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"reportEvidencePack\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.report_evidence_pack.requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"reportEvidencePack\":{\"reportEvidencePackId\":\"report-evidence-pack-001\",\"conversionIntentId\":\"conversion-report-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"purpose\":\"client_review_report_section\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"evidenceContentHash\":\"sha256:evidence-lineage\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceSummaries\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}],\"reasonCodes\":[\"review_approved_for_conversion\"],\"reportSourceAuthority\":\"lotus-report\",\"renderSourceAuthority\":\"lotus-render\",\"archiveSourceAuthority\":\"lotus-archive\",\"boundary\":\"request_only\",\"retentionPolicyRef\":\"lotus-report:idea-evidence-retention:v1\",\"requestedAtUtc\":\"2026-06-21T10:25:00Z\",\"grantsClientPublicationAuthority\":false,\"createsRenderedOutput\":false,\"createsArchiveRecord\":false},\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.report_evidence_pack.requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.report-evidence-pack.request capability.",
         "404 returns product-safe Problem Details when the conversion intent or related candidate is not found.",
-        "409 returns product-safe Problem Details for idempotency conflict, non-report conversion intent, unready conversion state, or attempted client-ready publication.",
-        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+        "409 returns product-safe Problem Details for idempotency conflict (including same-key client-publication escalation), non-report conversion intent, unready conversion state, or attempted client-ready publication.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank.",
+        "503 service_recovery_degraded fails closed when accepted or replayed persistence cannot resolve exactly one identity-bound report evidence pack."
       ],
       "test_evidence": [
         "tests/integration/test_report_evidence_pack_api.py::test_report_evidence_pack_api_records_request_without_render_or_archive_authority",
         "tests/integration/test_report_evidence_pack_api.py::test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication",
+        "tests/unit/test_report_evidence_workflow_application.py::test_report_evidence_replay_rejects_client_publication_escalation",
+        "tests/unit/test_report_evidence_workflow_application.py::test_report_evidence_replay_fails_closed_when_persisted_pack_is_missing",
+        "tests/unit/test_report_evidence_workflow_application.py::test_report_evidence_replay_fails_closed_when_persisted_pack_is_ambiguous",
+        "tests/integration/test_persisted_action_evidence_api.py::test_report_evidence_api_fails_safely_when_persisted_evidence_is_unavailable",
         "tests/unit/api_examples/test_report_evidence_examples.py::test_report_evidence_pack_success_examples_match_ledger_and_openapi",
         "tests/unit/test_report_evidence.py::test_report_evidence_pack_requires_report_conversion_intent_and_preserves_authorities",
         "tests/unit/test_idea_persistence.py::test_report_evidence_pack_persistence_records_idempotent_request",
+        "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."

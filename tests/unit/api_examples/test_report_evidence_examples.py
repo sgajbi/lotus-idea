@@ -27,7 +27,7 @@ def test_report_evidence_pack_success_examples_match_ledger_and_openapi() -> Non
     assert evidence_pack["createsRenderedOutput"] is False
     assert evidence_pack["createsArchiveRecord"] is False
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
-    assert expected["replayed"]["reportEvidencePack"] is None
+    assert expected["replayed"]["reportEvidencePack"] == expected["accepted"]["reportEvidencePack"]
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
 
