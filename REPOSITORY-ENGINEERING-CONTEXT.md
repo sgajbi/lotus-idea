@@ -1267,6 +1267,13 @@ review-resource replay first so retries remain idempotent. Do not treat row
 locking or the candidate `updated_at_utc` compare-and-set alone as proof that a
 pre-lock domain decision was evaluated against current state.
 
+Conversion-intent results apply the same locked-state principle without
+sharing review-specific abstractions. Retain the exact candidate used to
+evaluate conversion readiness; after candidate-lock acquisition and fresh
+aggregate hydration, resolve legitimate transport replay first and reject a
+distinct stale result before recording lifecycle, conversion-intent, audit,
+outbox, or idempotency evidence. Exactly one competing intent may commit.
+
 ## Outbound HTTP Resilience Pattern
 
 Outbound HTTP resilience is centralized in

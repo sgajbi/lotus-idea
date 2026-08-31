@@ -569,6 +569,12 @@ problem mapping while preserving the route-owned OpenAPI contract and DTOs.
 It is not a runtime service split. Conversion remains a review-gated local
 intent/outcome posture and does not grant downstream execution, suitability,
 compliance, rebalance, render/archive, or client-communication authority.
+Conversion-intent domain results retain the exact candidate used to evaluate
+review approval and evidence readiness. Inside the PostgreSQL candidate fence,
+legitimate replay is resolved first; a distinct result evaluated from stale
+candidate state is then rejected with the existing conversion-intent conflict
+posture before any lifecycle, intent, audit, outbox, or idempotency side effect.
+Consequently, the first committed competing intent is authoritative.
 
 The conversion and report-evidence application use cases apply one shared
 persisted-action invariant: accepted and replayed success must resolve exactly
