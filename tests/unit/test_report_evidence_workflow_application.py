@@ -16,6 +16,7 @@ from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
 )
 from tests.unit.test_report_evidence import (
     EVALUATED_AT,
@@ -27,7 +28,15 @@ from tests.unit.test_report_evidence import (
 
 def _repository_with_report_conversion_intent() -> tuple[InMemoryIdeaRepository, str]:
     repository = InMemoryIdeaRepository()
-    source_candidate = candidate()
+    source_candidate = replace(
+        candidate(),
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-a",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+    )
     persisted = repository.persist_candidate(
         source_candidate,
         idempotency_key="signal-ingestion:report-evidence-workflow:001",

@@ -43,6 +43,7 @@ from app.domain import (
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    UnscopedCandidatePersistenceError,
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_high_cash_signal,
@@ -55,7 +56,6 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_codecs import (
@@ -75,7 +75,7 @@ def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> 
     connection = FakePostgresConnection()
     candidate = high_cash_candidate()
 
-    with pytest.raises(DataLifecycleWriteBlockedError) as exc_info:
+    with pytest.raises(UnscopedCandidatePersistenceError):
         PostgresIdeaRepository(connection).persist_candidate(
             candidate,
             idempotency_key="candidate:missing-tenant-scope",
@@ -84,7 +84,6 @@ def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> 
             occurred_at_utc=EVALUATED_AT,
         )
 
-    assert exc_info.value.blocker == "tenant_scope_missing"
     assert connection.rows["idea_candidate_record"] == []
     assert connection.rows["idea_data_lifecycle_control"] == []
 
