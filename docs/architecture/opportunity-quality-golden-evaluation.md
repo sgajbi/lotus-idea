@@ -76,12 +76,13 @@ The same dataset also proves:
    asserted;
 4. weighted score contributions are independently asserted and conflicting
    evidence applies the explicit bounded penalty and reason code;
-5. an evidence correction preserves reviewed state and increments only the
-   evidence version;
+5. an evidence correction preserves lifecycle and review posture, including a
+   terminal state, and increments only the evidence version;
 6. a material change creates a new material version and clears stale
    suppression;
-7. a changed recurring condition after expiry reopens the stable business
-   identity for human review;
+7. a materially changed recurring condition after expiry reopens the stable
+   business identity for human review, while evidence-only correction does
+   not manufacture recurrence;
 8. deliberate mutations of expected outcome, reason, score component, rank,
    or reopen version make the test fail.
 

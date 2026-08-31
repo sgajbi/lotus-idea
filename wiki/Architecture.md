@@ -287,11 +287,16 @@ authentication capability.
 ```mermaid
 flowchart LR
     Evidence["Source-owned evidence"] --> Classify{"Repository reconciliation"}
-    Classify -->|"Equivalent refresh"| EvidenceVersion["Same business/material identity<br/>new evidence version"]
-    Classify -->|"Material economic change"| MaterialVersion["Same business identity<br/>new material version"]
-    Classify -->|"Resolved then recurrent"| Reopen["Same business identity<br/>reopen with why-back reason"]
+    Classify -->|"Equivalent refresh, including terminal"| EvidenceVersion["Same business/material identity<br/>new evidence version<br/>preserve lifecycle and review posture"]
+    Classify -->|"Active material economic change"| MaterialVersion["Same business identity<br/>new material version"]
+    Classify -->|"Terminal plus material change"| Reopen["Same business identity<br/>reopen with why-back reason"]
     Classify -->|"Identity collision"| Conflict["Fail closed<br/>identity conflict"]
 ```
+
+Evidence correction is not recurrence. Accepted, rejected, expired, executed,
+and closed candidates stay terminal when only evidence representation changes.
+Only a governed material-fingerprint change may reopen a terminal candidate;
+source hashes cannot create new adviser work by themselves.
 
 Migration `016_candidate_economic_identity` deterministically backfills the
 identity/version columns, preserves legacy evidence lineage, and supports

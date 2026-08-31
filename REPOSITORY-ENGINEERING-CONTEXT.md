@@ -3375,6 +3375,12 @@ collision or unsupported transition, and perform reconciliation atomically in
 the repository so concurrent evaluations cannot create duplicate active
 candidates.
 
+Evidence correction is not economic recurrence. An evidence-only change must
+preserve lifecycle and review posture, including for accepted, rejected,
+expired, executed, and closed candidates. Reopen a terminal candidate only
+when its governed material fingerprint changes; a source content hash or other
+evidence representation change cannot create adviser work by itself.
+
 All caller and source evaluation DTOs are closed schemas and must reject
 `duplicateOfCandidateId`; the source-ingestion worker manifest must do the
 same. Persistence may return `duplicate_candidate` from authoritative economic

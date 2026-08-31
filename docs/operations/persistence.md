@@ -21,6 +21,10 @@ duplicate-candidate, blocked, and not-eligible outcomes over the Core source
 port and repository port. It also
 has a bounded run-once batch worker foundation with per-item idempotency and
 batch decision counts for scheduling-ready internal execution.
+Evidence-refreshed preserves the candidate's lifecycle and review posture,
+including terminal states. Recurrent-condition-reopened is emitted only for a
+terminal candidate whose governed material fingerprint changed; evidence hash
+correction alone never returns work to an adviser queue.
 `scripts/run_source_ingestion_worker.py` now provides a versioned
 manifest-backed run-once CLI, and `make source-ingestion-worker-check`
 validates the example manifest and source-safe check-only output contract

@@ -173,6 +173,22 @@ authored opportunity-quality fixture hand-calculates every family policy and
 queue order; mutation tests alter magnitude, component input, weight,
 contribution, penalty, scalar, policy version, and rank to prove the gate fails.
 
+## Terminal Recurrence Noise Control
+
+Evidence correction and economic recurrence are different product events.
+Corrected evidence for an accepted, rejected, expired, executed, or closed
+candidate preserves that terminal lifecycle and its review posture while
+incrementing only the evidence version. The repository reopens a terminal
+candidate only when the governed material fingerprint changes, creating a new
+material version with the explicit `recurrent_condition` reason. A changed
+source content hash cannot manufacture adviser work by itself.
+
+Issue `#1184` is guarded by an independently enumerated terminal-state matrix,
+in-memory and PostgreSQL persistence assertions, audit/outbox assertions, and
+two golden scenarios that distinguish evidence-only correction from genuine
+material recurrence. The golden mutation test proves that treating the
+evidence-only scenario as a reopen fails certification.
+
 ## Remaining Gaps
 
 The Slice 07 scoring and queue-policy acceptance criteria are complete. PR
