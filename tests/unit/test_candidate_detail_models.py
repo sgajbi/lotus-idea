@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import replace
+from datetime import UTC, datetime
+
 from app.api.candidate_detail_models import CandidateDetailResponse
 from app.domain import CandidatePersistenceRecord
 from app.main import app
@@ -8,6 +11,14 @@ from tests.unit.test_postgres_repository import access_scope, high_cash_candidat
 
 def test_candidate_detail_response_redacts_source_routes_and_content_hashes() -> None:
     candidate = high_cash_candidate(candidate_scope=access_scope())
+    expiry = datetime(2026, 7, 11, tzinfo=UTC)
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=expiry,
+        ),
+    )
     record = CandidatePersistenceRecord(
         candidate=candidate,
         evidence_hash="sha256:candidate-detail",
@@ -20,6 +31,8 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
     ).model_dump(by_alias=True)
 
     assert response["candidate"]["candidateId"] == candidate.candidate_id
+    assert response["candidate"]["applicabilityExpiresAtUtc"] == expiry
+    assert response["evidence"]["applicabilityExpiresAtUtc"] == expiry
     assert response["evidence"]["evidenceContentHash"] == "sha256:candidate-detail"
     assert response["evidence"]["sourceRefs"][0] == {
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
@@ -56,6 +69,7 @@ def test_openapi_exposes_reconstructable_candidate_score_contract() -> None:
     contribution = schemas["ScoreContributionResponse"]
 
     assert {
+        "applicabilityExpiresAtUtc",
         "scoreReasonCodes",
         "scoreComponents",
         "scoreConflictPenaltyApplied",

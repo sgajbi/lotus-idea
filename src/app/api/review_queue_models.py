@@ -40,6 +40,10 @@ class ReviewQueueCandidateResponse(CamelModel):
     score_components: tuple[ScoreContributionResponse, ...] = Field(..., alias="scoreComponents")
     score_conflict_penalty_applied: str = Field(..., alias="scoreConflictPenaltyApplied")
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
+    applicability_expires_at_utc: datetime | None = Field(
+        default=None,
+        alias="applicabilityExpiresAtUtc",
+    )
 
     @classmethod
     def from_item(cls, item: ReviewQueueItem) -> "ReviewQueueCandidateResponse":
@@ -62,6 +66,7 @@ class ReviewQueueCandidateResponse(CamelModel):
             ),
             scoreConflictPenaltyApplied=str(candidate.score.conflict_penalty_applied),
             sourceSignalIds=candidate.source_signal_ids,
+            applicabilityExpiresAtUtc=(candidate.evidence_packet.applicability_expires_at_utc),
         )
 
 

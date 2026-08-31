@@ -8,10 +8,14 @@ import pytest
 from app.domain import (
     BondMaturitySignalInput,
     BondMaturitySignalPolicy,
+    CandidateChangeReason,
+    CandidatePersistenceDecision,
     EvidenceFreshness,
     IdeaLifecycleStatus,
+    InMemoryIdeaRepository,
     OpportunityFamily,
     ReasonCode,
+    ReviewAccessScope,
     ReviewPosture,
     SignalEvaluationOutcome,
     SourceRef,
@@ -62,6 +66,7 @@ def maturity_input(
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
     entitlement_allowed: bool = True,
     include_maturity_fact_ref: bool = True,
+    evaluated_at_utc: datetime = EVALUATED_AT,
 ) -> BondMaturitySignalInput:
     return BondMaturitySignalInput(
         as_of_date=AS_OF_DATE,
@@ -77,7 +82,7 @@ def maturity_input(
             if include_maturity_fact_ref
             else None
         ),
-        evaluated_at_utc=EVALUATED_AT,
+        evaluated_at_utc=evaluated_at_utc,
         entitlement_allowed=entitlement_allowed,
     )
 
@@ -98,6 +103,9 @@ def test_bond_maturity_positive_case_creates_review_candidate() -> None:
     assert first.candidate.source_signal_ids == (first.signal.signal_id,)
     assert first.candidate.evidence_packet.source_refs == first.signal.source_refs
     assert first.candidate.evidence_packet.lineage_ref is not None
+    expected_expiry = datetime(2026, 7, 11, tzinfo=UTC)
+    assert first.signal.expires_at_utc == expected_expiry
+    assert first.candidate.evidence_packet.applicability_expires_at_utc == expected_expiry
     assert second.signal is not None
     assert first.signal.signal_id == second.signal.signal_id
     assert (
@@ -108,6 +116,34 @@ def test_bond_maturity_positive_case_creates_review_candidate() -> None:
         first.candidate.evidence_packet.lineage_ref.lineage_id
         == second.candidate.evidence_packet.lineage_ref.lineage_id
     )
+
+
+@pytest.mark.parametrize(
+    ("evaluated_at_utc", "expected_outcome"),
+    [
+        (
+            datetime(2026, 7, 10, 23, 59, 59, 999999, tzinfo=UTC),
+            SignalEvaluationOutcome.CANDIDATE_CREATED,
+        ),
+        (datetime(2026, 7, 11, tzinfo=UTC), SignalEvaluationOutcome.NOT_ELIGIBLE),
+        (datetime(2026, 7, 12, tzinfo=UTC), SignalEvaluationOutcome.NOT_ELIGIBLE),
+    ],
+)
+def test_bond_maturity_enforces_exact_contractual_date_expiry_boundary(
+    evaluated_at_utc: datetime,
+    expected_outcome: SignalEvaluationOutcome,
+) -> None:
+    result = evaluate_bond_maturity_signal(
+        maturity_input(evaluated_at_utc=evaluated_at_utc),
+        policy(),
+    )
+
+    assert result.outcome is expected_outcome
+    if expected_outcome is SignalEvaluationOutcome.CANDIDATE_CREATED:
+        assert result.candidate is not None
+    else:
+        assert result.candidate is None
+        assert result.reason_codes == (ReasonCode.OPPORTUNITY_NO_LONGER_ELIGIBLE,)
 
 
 def test_bond_maturity_score_increases_with_urgency_and_position_count() -> None:
@@ -162,6 +198,61 @@ def test_bond_maturity_source_correction_preserves_candidate_and_versions_eviden
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs
+    )
+
+
+def test_changed_contractual_maturity_reopens_with_new_material_expiry() -> None:
+    scope = ReviewAccessScope(
+        tenant_id="tenant-a",
+        book_id="book-a",
+        portfolio_id="portfolio-a",
+        client_id="client-a",
+    )
+    original = evaluate_bond_maturity_signal(
+        replace(maturity_input(next_maturity_date=date(2026, 7, 10)), access_scope=scope),
+        policy(),
+    )
+    changed = evaluate_bond_maturity_signal(
+        replace(maturity_input(next_maturity_date=date(2026, 7, 12)), access_scope=scope),
+        policy(),
+    )
+    assert original.candidate is not None
+    assert changed.candidate is not None
+    repository = InMemoryIdeaRepository()
+    accepted = repository.persist_candidate(
+        original.candidate,
+        idempotency_key="bond-maturity-original",
+        payload={"candidate_id": original.candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert accepted.record is not None
+    repository.record_lifecycle_transition(
+        original.candidate.candidate_id,
+        IdeaLifecycleStatus.EXPIRED,
+        idempotency_key="bond-maturity-original-expired",
+        payload={"candidate_id": original.candidate.candidate_id},
+        actor_subject="candidate-expiry-worker",
+        occurred_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+    )
+
+    reopened = repository.persist_candidate(
+        changed.candidate,
+        idempotency_key="bond-maturity-changed",
+        payload={"candidate_id": changed.candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=datetime(2026, 7, 11, 1, 0, tzinfo=UTC),
+    )
+
+    assert reopened.decision is CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED
+    assert reopened.record is not None
+    assert reopened.record.candidate.identity.material_version == 2
+    assert (
+        reopened.record.candidate.identity.change_reason
+        is CandidateChangeReason.RECURRENT_CONDITION
+    )
+    assert reopened.record.candidate.evidence_packet.applicability_expires_at_utc == datetime(
+        2026, 7, 13, tzinfo=UTC
     )
 
 

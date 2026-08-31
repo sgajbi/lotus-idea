@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
@@ -10,6 +11,7 @@ from app.application.candidate_expiry import (
     CandidateExpiryDecision,
     ExpireCandidateCommand,
     expire_candidate,
+    expire_candidate_if_due,
 )
 from app.domain import (
     CandidatePersistenceDecision,
@@ -139,8 +141,47 @@ def test_expiry_fails_closed_on_idempotency_conflict_while_candidate_remains_act
         expire_candidate(expiry_command(), repository=repository)
 
 
+@pytest.mark.parametrize(
+    ("evaluated_at_utc", "expected_decision"),
+    [
+        (
+            datetime(2026, 6, 21, 11, 59, 59, tzinfo=UTC),
+            CandidateExpiryDecision.NOT_DUE,
+        ),
+        (datetime(2026, 6, 21, 12, 0, tzinfo=UTC), CandidateExpiryDecision.EXPIRED),
+        (datetime(2026, 6, 21, 12, 0, 1, tzinfo=UTC), CandidateExpiryDecision.EXPIRED),
+    ],
+)
+def test_due_expiry_uses_persisted_exact_boundary(
+    evaluated_at_utc: datetime,
+    expected_decision: CandidateExpiryDecision,
+) -> None:
+    record = _candidate_record(
+        applicability_expires_at_utc=datetime(2026, 6, 21, 12, 0, tzinfo=UTC)
+    )
+    persistence = LifecyclePersistenceResult(
+        decision=LifecyclePersistenceDecision.ACCEPTED,
+        record=_candidate_record(IdeaLifecycleStatus.EXPIRED),
+    )
+    repository = _ControlledExpiryRepository(
+        records=(record,),
+        persistence=persistence,
+    )
+
+    result = expire_candidate_if_due(
+        expiry_command(evaluated_at_utc=evaluated_at_utc),
+        repository=repository,
+    )
+
+    assert result.decision is expected_decision
+    assert result.persistence is (
+        persistence if expected_decision is CandidateExpiryDecision.EXPIRED else None
+    )
+
+
 def _candidate_record(
     status: IdeaLifecycleStatus = IdeaLifecycleStatus.GENERATED,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> CandidatePersistenceRecord:
     repository = InMemoryIdeaRepository()
     candidate = candidate_fixture(
@@ -148,6 +189,13 @@ def _candidate_record(
         family=OpportunityFamily.HIGH_CASH,
         score=Decimal("80"),
         created_at=EVALUATED_AT,
+    )
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=applicability_expires_at_utc,
+        ),
     )
     persisted = repository.persist_candidate(
         candidate,

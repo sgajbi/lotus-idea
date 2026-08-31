@@ -7,6 +7,7 @@ from enum import StrEnum
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
+    CandidatePersistenceRecord,
     EventLineageContext,
     IdeaLifecycleStatus,
     InvalidLifecycleTransition,
@@ -21,6 +22,7 @@ class CandidateExpiryDecision(StrEnum):
     EXPIRED = "expired"
     NOT_FOUND = "not_found"
     ALREADY_EXPIRED = "already_expired"
+    NOT_DUE = "not_due"
     TERMINAL_STATE_PRESERVED = "terminal_state_preserved"
 
 
@@ -61,6 +63,29 @@ def expire_candidate(
     record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return CandidateExpiryResult(decision=CandidateExpiryDecision.NOT_FOUND)
+    return _expire_candidate_record(command, record=record, repository=repository)
+
+
+def expire_candidate_if_due(
+    command: ExpireCandidateCommand,
+    *,
+    repository: CandidateExpiryRepository,
+) -> CandidateExpiryResult:
+    """Apply a persisted applicability boundary through the governed lifecycle fence."""
+    record = candidate_record_by_id(repository, command.candidate_id)
+    if record is None:
+        return CandidateExpiryResult(decision=CandidateExpiryDecision.NOT_FOUND)
+    if not record.is_expired_at(command.evaluated_at_utc):
+        return CandidateExpiryResult(decision=CandidateExpiryDecision.NOT_DUE)
+    return _expire_candidate_record(command, record=record, repository=repository)
+
+
+def _expire_candidate_record(
+    command: ExpireCandidateCommand,
+    *,
+    record: CandidatePersistenceRecord,
+    repository: CandidateExpiryRepository,
+) -> CandidateExpiryResult:
     status = record.candidate.lifecycle_status
     if status is IdeaLifecycleStatus.EXPIRED:
         return CandidateExpiryResult(decision=CandidateExpiryDecision.ALREADY_EXPIRED)
@@ -124,4 +149,5 @@ __all__ = [
     "CandidateExpiryResult",
     "ExpireCandidateCommand",
     "expire_candidate",
+    "expire_candidate_if_due",
 ]

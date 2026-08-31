@@ -59,6 +59,7 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
     assert item["candidate"]["family"] == "high_cash"
     assert item["candidate"]["score"] == "82.50"
     assert item["candidate"]["scorePolicyVersion"] == "idle-liquidity-v2"
+    assert item["candidate"]["applicabilityExpiresAtUtc"] is None
     assert item["policyVersion"] == "idea-deterministic-ranking-v1"
     assert item["reasonCodes"] == (
         "high_cash_ratio",

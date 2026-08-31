@@ -43,6 +43,10 @@ class CandidateDetailCandidateResponse(CamelModel):
     suppression_reason: str | None = Field(default=None, alias="suppressionReason")
     created_at_utc: datetime = Field(..., alias="createdAtUtc")
     updated_at_utc: datetime = Field(..., alias="updatedAtUtc")
+    applicability_expires_at_utc: datetime | None = Field(
+        default=None,
+        alias="applicabilityExpiresAtUtc",
+    )
 
     @classmethod
     def from_record(cls, record: CandidatePersistenceRecord) -> "CandidateDetailCandidateResponse":
@@ -81,6 +85,7 @@ class CandidateDetailCandidateResponse(CamelModel):
             ),
             createdAtUtc=candidate.created_at_utc,
             updatedAtUtc=candidate.updated_at_utc,
+            applicabilityExpiresAtUtc=(candidate.evidence_packet.applicability_expires_at_utc),
         )
 
 
@@ -145,6 +150,10 @@ class CandidateEvidenceResponse(CamelModel):
     lineage_id: str = Field(..., alias="lineageId")
     created_at_utc: datetime = Field(..., alias="createdAtUtc")
     source_refs: tuple[RedactedSourceRefResponse, ...] = Field(..., alias="sourceRefs")
+    applicability_expires_at_utc: datetime | None = Field(
+        default=None,
+        alias="applicabilityExpiresAtUtc",
+    )
 
     @classmethod
     def from_record(cls, record: CandidatePersistenceRecord) -> "CandidateEvidenceResponse":
@@ -159,6 +168,7 @@ class CandidateEvidenceResponse(CamelModel):
                 RedactedSourceRefResponse.from_domain(source_ref)
                 for source_ref in evidence_packet.source_refs
             ),
+            applicabilityExpiresAtUtc=evidence_packet.applicability_expires_at_utc,
         )
 
 

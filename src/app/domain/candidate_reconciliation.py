@@ -66,6 +66,14 @@ def reconcile_candidate(
     material_changed = (
         incoming.identity.material_fingerprint != existing.identity.material_fingerprint
     )
+    if not material_changed and (
+        incoming.evidence_packet.applicability_expires_at_utc
+        != existing.evidence_packet.applicability_expires_at_utc
+    ):
+        return CandidateReconciliation(
+            decision=CandidatePersistenceDecision.IDENTITY_CONFLICT,
+            candidate=None,
+        )
     evidence_changed = incoming_evidence_hash != existing_evidence_hash
     if not material_changed and not evidence_changed:
         return CandidateReconciliation(

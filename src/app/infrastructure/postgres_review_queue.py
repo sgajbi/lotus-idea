@@ -183,6 +183,7 @@ def load_review_queue_readiness_summary(
         evaluated_at_utc,
         audience.required_posture.value,
         *access_scope_params,
+        evaluated_at_utc,
         ReviewAction.SNOOZE.value,
         evaluated_at_utc,
         ReviewPosture.SUPPRESSED.value,
@@ -269,6 +270,8 @@ def _review_queue_candidate_predicates(
 ) -> tuple[str, tuple[Any, ...]]:
     predicates = [
         candidate_record_state_compatibility_sql(),
+        "COALESCE((candidate_json->'evidence_packet'->>"
+        "'applicability_expires_at_utc')::timestamptz > %s, TRUE)",
         "lifecycle_status = ANY(%s)",
         "review_posture <> %s",
         "(candidate_json->>'suppression_reason') IS NULL",
@@ -281,6 +284,7 @@ def _review_queue_candidate_predicates(
         evaluated_at_utc,
         evaluated_at_utc,
         audience.required_posture.value,
+        evaluated_at_utc,
         [
             status.value
             for status in (
@@ -500,6 +504,12 @@ def _review_queue_readiness_exclusion_case(access_scope_mismatch_sql: str) -> st
                             THEN '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}'
                         WHEN NOT {compatible_state_sql}
                             THEN '{QueueExclusionReason.INVALID_STATE.value}'
+                        WHEN COALESCE(
+                            (candidate_json->'evidence_packet'->>
+                                'applicability_expires_at_utc')::timestamptz <= %s,
+                            FALSE
+                        )
+                            THEN '{QueueExclusionReason.EXPIRED.value}'
                         WHEN latest_review_action = %s
                             AND latest_snoozed_until_utc > %s
                             THEN '{QueueExclusionReason.SNOOZED.value}'

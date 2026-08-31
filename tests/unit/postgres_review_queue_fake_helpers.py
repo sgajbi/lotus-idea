@@ -70,15 +70,16 @@ def review_queue_readiness_summary_rows(
         for field_name, values in zip(scope_fields, params[3 : 3 + len(scope_fields)], strict=True)
     }
     offset = 3 + len(scope_fields)
-    snooze_action = params[offset]
-    snooze_evaluated_at_utc = params[offset + 1]
-    suppressed_posture = params[offset + 2]
-    expired_status = params[offset + 3]
-    closed_status = params[offset + 4]
-    rejected_status = params[offset + 5]
-    blocked_supportability = params[offset + 6]
-    rankable_score_policy_versions = set(params[offset + 7])
-    lifecycle_statuses = set(params[offset + 8])
+    applicability_evaluated_at_utc = params[offset]
+    snooze_action = params[offset + 1]
+    snooze_evaluated_at_utc = params[offset + 2]
+    suppressed_posture = params[offset + 3]
+    expired_status = params[offset + 4]
+    closed_status = params[offset + 5]
+    rejected_status = params[offset + 6]
+    blocked_supportability = params[offset + 7]
+    rankable_score_policy_versions = set(params[offset + 8])
+    lifecycle_statuses = set(params[offset + 9])
     exclusion_counts = {reason.value: 0 for reason in QueueExclusionReason}
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
@@ -103,6 +104,7 @@ def review_queue_readiness_summary_rows(
             ),
             snooze_action=snooze_action,
             evaluated_at_utc=snooze_evaluated_at_utc,
+            applicability_evaluated_at_utc=applicability_evaluated_at_utc,
             lifecycle_statuses=lifecycle_statuses,
             suppressed_posture=suppressed_posture,
             expired_status=expired_status,
@@ -142,19 +144,21 @@ def _review_queue_ordered_rows(
 ) -> list[dict[str, Any]]:
     evaluated_at_utc = params[0]
     required_posture = params[2]
-    lifecycle_statuses = set(params[3])
-    suppressed_posture = params[4]
-    snooze_action = params[5]
-    snooze_evaluated_at_utc = params[6]
-    rankable_score_policy_versions = set(params[7])
-    blocked_supportability = params[8]
+    applicability_evaluated_at_utc = params[3]
+    lifecycle_statuses = set(params[4])
+    suppressed_posture = params[5]
+    snooze_action = params[6]
+    snooze_evaluated_at_utc = params[7]
+    rankable_score_policy_versions = set(params[8])
+    blocked_supportability = params[9]
     scope_fields = tuple(
         field_name
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
     scope_values = {
-        field_name: set(values) for field_name, values in zip(scope_fields, params[9:], strict=True)
+        field_name: set(values)
+        for field_name, values in zip(scope_fields, params[10:], strict=True)
     }
     eligible_rows = [
         row
@@ -172,6 +176,7 @@ def _review_queue_ordered_rows(
             ),
             snooze_action=snooze_action,
             evaluated_at_utc=snooze_evaluated_at_utc,
+            applicability_evaluated_at_utc=applicability_evaluated_at_utc,
             lifecycle_statuses=lifecycle_statuses,
             suppressed_posture=suppressed_posture,
             blocked_supportability=blocked_supportability,
@@ -226,6 +231,7 @@ def _review_queue_row_exclusion_reason(
     latest_review: dict[str, Any] | None,
     snooze_action: str,
     evaluated_at_utc: datetime,
+    applicability_evaluated_at_utc: datetime,
     lifecycle_statuses: set[str],
     suppressed_posture: str,
     expired_status: str,
@@ -244,6 +250,8 @@ def _review_queue_row_exclusion_reason(
             return QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value
     if not _review_queue_row_has_compatible_state(row):
         return QueueExclusionReason.INVALID_STATE.value
+    if _applicability_is_expired(candidate_json, applicability_evaluated_at_utc):
+        return QueueExclusionReason.EXPIRED.value
     if _review_is_active_snooze(latest_review, snooze_action, evaluated_at_utc):
         return QueueExclusionReason.SNOOZED.value
     if row["review_posture"] == suppressed_posture:
@@ -273,6 +281,7 @@ def _review_queue_row_is_eligible(
     latest_review: dict[str, Any] | None,
     snooze_action: str,
     evaluated_at_utc: datetime,
+    applicability_evaluated_at_utc: datetime,
     lifecycle_statuses: set[str],
     suppressed_posture: str,
     blocked_supportability: str,
@@ -281,6 +290,8 @@ def _review_queue_row_is_eligible(
 ) -> bool:
     candidate_json = row["candidate_json"]
     if not _review_queue_row_has_compatible_state(row):
+        return False
+    if _applicability_is_expired(candidate_json, applicability_evaluated_at_utc):
         return False
     if _review_is_active_snooze(latest_review, snooze_action, evaluated_at_utc):
         return False
@@ -301,6 +312,14 @@ def _review_queue_row_is_eligible(
         if access_scope is None or access_scope.get(field_name) not in expected_values:
             return False
     return True
+
+
+def _applicability_is_expired(
+    candidate_json: dict[str, Any],
+    evaluated_at_utc: datetime,
+) -> bool:
+    expiry = candidate_json["evidence_packet"].get("applicability_expires_at_utc")
+    return expiry is not None and datetime.fromisoformat(expiry) <= evaluated_at_utc
 
 
 def _latest_applicable_review(

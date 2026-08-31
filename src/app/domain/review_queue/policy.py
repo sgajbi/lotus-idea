@@ -198,6 +198,7 @@ def build_review_queue(
             active_snoozes,
             access_scope_filter,
             policy,
+            evaluated_at,
         )
         if exclusion is None:
             eligible_candidates.append(candidate)
@@ -261,6 +262,7 @@ def _queue_exclusion_for_candidate(
     active_snoozes: dict[str, QueueSnooze],
     access_scope_filter: QueueAccessScopeFilter | None,
     policy: ReviewQueuePolicy,
+    evaluated_at_utc: datetime,
 ) -> QueueExclusion | None:
     if access_scope_filter is not None and not access_scope_filter.matches(candidate.access_scope):
         return QueueExclusion(
@@ -273,6 +275,13 @@ def _queue_exclusion_for_candidate(
             candidate_id=candidate.candidate_id,
             reason=QueueExclusionReason.INVALID_STATE,
             detail="candidate lifecycle and review posture are incompatible",
+        )
+    applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
+    if applicability_expiry is not None and evaluated_at_utc >= applicability_expiry:
+        return QueueExclusion(
+            candidate_id=candidate.candidate_id,
+            reason=QueueExclusionReason.EXPIRED,
+            detail=f"candidate applicability expired at {applicability_expiry.isoformat()}",
         )
     if candidate.candidate_id in active_snoozes:
         snooze = active_snoozes[candidate.candidate_id]

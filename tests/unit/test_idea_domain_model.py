@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -227,6 +227,16 @@ def test_opportunity_signal_validates_expiry_and_required_collections() -> None:
             expires_at_utc=datetime(2026, 6, 22, 9, 3),
         )
 
+    with pytest.raises(ValueError, match="expires_at_utc must be after detected_at_utc"):
+        OpportunitySignal(
+            signal_id="signal_high_cash_001",
+            family=OpportunityFamily.HIGH_CASH,
+            source_refs=(source_ref(),),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            detected_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
+            expires_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
+        )
+
     with pytest.raises(ValueError, match="source_refs is required"):
         OpportunitySignal(
             signal_id="signal_high_cash_001",
@@ -244,6 +254,20 @@ def test_opportunity_signal_validates_expiry_and_required_collections() -> None:
             reason_codes=(),
             detected_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
         )
+
+
+@pytest.mark.parametrize(
+    "expiry",
+    [
+        datetime(2026, 6, 21, 9, 1),
+        datetime(2026, 6, 21, 9, 1, tzinfo=UTC),
+    ],
+)
+def test_evidence_packet_rejects_invalid_applicability_expiry(expiry: datetime) -> None:
+    expected = "must be timezone-aware" if expiry.tzinfo is None else "must be after created_at_utc"
+
+    with pytest.raises(ValueError, match=expected):
+        replace(evidence_packet(), applicability_expires_at_utc=expiry)
 
 
 def test_valid_lifecycle_path_reaches_approved_conversion_ready_state() -> None:

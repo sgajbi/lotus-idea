@@ -695,6 +695,11 @@ def _evidence_packet_to_json(packet: IdeaEvidencePacket) -> dict[str, Any]:
         "reason_codes": [reason.value for reason in packet.reason_codes],
         "unsupported_reasons": [reason.value for reason in packet.unsupported_reasons],
         "created_at_utc": packet.created_at_utc.isoformat(),
+        "applicability_expires_at_utc": (
+            packet.applicability_expires_at_utc.isoformat()
+            if packet.applicability_expires_at_utc is not None
+            else None
+        ),
     }
 
 
@@ -709,6 +714,11 @@ def _evidence_packet_from_json(payload: Mapping[str, Any]) -> IdeaEvidencePacket
             UnsupportedEvidenceReason(value) for value in payload["unsupported_reasons"]
         ),
         created_at_utc=_datetime(payload["created_at_utc"]),
+        applicability_expires_at_utc=(
+            _datetime(payload["applicability_expires_at_utc"])
+            if payload.get("applicability_expires_at_utc") is not None
+            else None
+        ),
     )
 
 

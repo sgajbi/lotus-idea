@@ -81,6 +81,7 @@ def test_bond_maturity_source_api_fetches_core_evidence_without_persistence(
     assert payload["outcome"] == "candidate_created"
     assert payload["sourceAuthority"] == "lotus-core"
     assert payload["supportedFeaturePromoted"] is False
+    assert payload["candidate"]["applicabilityExpiresAtUtc"] == "2026-07-11T00:00:00Z"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-core:HoldingsAsOf:v1",
         "lotus-core:PortfolioMaturitySummary:v1",
