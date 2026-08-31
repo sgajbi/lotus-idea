@@ -28,6 +28,7 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
     assert summary.family_counts == {"high_cash": 2, "underperformance": 1}
     assert summary.current_downstream_outcome_counts == {"accepted": 1}
     assert summary.presented_opportunity_count == 2
+    assert summary.top_ranked_presented_opportunity_count == 2
     assert summary.top_ranked_accepted_opportunity_count == 1
     assert summary.detection_to_review_seconds == (Decimal("60.0"), Decimal("120.0"))
     assert connection.cursor_instance.params == (
@@ -183,6 +184,7 @@ def _summary_row() -> dict[str, Any]:
         "recurrent_detection_count": 0,
         "reconciled_submission_count": 0,
         "presented_opportunity_count": 2,
+        "top_ranked_presented_opportunity_count": 2,
         "top_ranked_accepted_opportunity_count": 1,
         "family_counts": {"high_cash": 2, "underperformance": 1},
         "score_band_counts": {"critical": 2, "high": 1},

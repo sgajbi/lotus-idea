@@ -35,7 +35,7 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
     assert response.status_code == 200
     payload = response.json()
     assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v1"
-    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v1"
+    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v2"
     assert payload["counts"]["generatedOpportunityCount"] == 3
     assert payload["counts"]["reviewedOpportunityCount"] == 3
     assert payload["rates"]["approval"] == {
@@ -47,7 +47,10 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
     assert payload["presentation"] == {
         "measurementStatus": "unavailable_consumer_certification_pending",
         "presentedOpportunityCount": None,
+        "topRankedPresentedOpportunityCount": None,
         "topRankedAcceptedOpportunityCount": None,
+        "presentationRate": None,
+        "topRankedAcceptanceRate": None,
     }
     assert payload["privacyBoundary"]["containsRawCandidateIdentifier"] is False
     assert payload["certificationStatus"] == "not_certified"
@@ -173,6 +176,7 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
         _summary(
             generated_opportunity_count=3,
             presented_opportunity_count=2,
+            top_ranked_presented_opportunity_count=2,
             top_ranked_accepted_opportunity_count=1,
         )
     )
@@ -188,7 +192,20 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
     assert response.json()["presentation"] == {
         "measurementStatus": "stored_consumer_certification_pending",
         "presentedOpportunityCount": 2,
+        "topRankedPresentedOpportunityCount": 2,
         "topRankedAcceptedOpportunityCount": 1,
+        "presentationRate": {
+            "numerator": 2,
+            "denominator": 3,
+            "value": "0.666667",
+            "zeroDenominatorBehavior": "null",
+        },
+        "topRankedAcceptanceRate": {
+            "numerator": 1,
+            "denominator": 2,
+            "value": "0.500000",
+            "zeroDenominatorBehavior": "null",
+        },
     }
     assert response.json()["certificationStatus"] == "not_certified"
     assert response.json()["supportedFeaturePromoted"] is False
@@ -201,7 +218,12 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
         {"detection_to_review_seconds": (Decimal("-1"),)},
         {
             "presented_opportunity_count": 1,
+            "top_ranked_presented_opportunity_count": 1,
             "top_ranked_accepted_opportunity_count": 2,
+        },
+        {
+            "presented_opportunity_count": 1,
+            "top_ranked_presented_opportunity_count": 2,
         },
         {"presented_opportunity_count": 1},
     ),
@@ -318,6 +340,7 @@ def _summary(**overrides: Any) -> OpportunityEffectivenessRepositorySummary:
         "recurrent_detection_count": 0,
         "reconciled_submission_count": 0,
         "presented_opportunity_count": 0,
+        "top_ranked_presented_opportunity_count": 0,
         "top_ranked_accepted_opportunity_count": 0,
         "family_counts": {},
         "score_band_counts": {},

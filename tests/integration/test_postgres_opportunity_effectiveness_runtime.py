@@ -188,4 +188,7 @@ def test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_vers
 
     assert actual == expected
     assert actual.presented_opportunity_count == 1
+    assert actual.top_ranked_presented_opportunity_count == 1
     assert actual.top_ranked_accepted_opportunity_count == 1
+    assert actual.top_ranked_acceptance_rate is not None
+    assert actual.top_ranked_acceptance_rate.value == Decimal("1.000000")
