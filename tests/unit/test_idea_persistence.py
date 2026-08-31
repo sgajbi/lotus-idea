@@ -34,6 +34,7 @@ from app.domain import (
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    InvalidConversionIntent,
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
     OutboxEventStatus,
@@ -899,6 +900,44 @@ def test_conversion_intent_persistence_rejects_mismatched_idempotency_key() -> N
 
     snapshot = repository.snapshot()
     assert "conversion:intent:mismatched-ledger-key" not in snapshot.idempotency_records
+    assert repository.conversion_intent_by_id(command.conversion_intent_id) is None
+
+
+def test_stale_conversion_intent_cannot_restore_expired_candidate_state() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:conversion-stale:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    command = conversion_intent_command()
+    stale_intent = request_conversion_intent(candidate, command)
+    expired = repository.record_lifecycle_transition(
+        candidate.candidate_id,
+        IdeaLifecycleStatus.EXPIRED,
+        idempotency_key="lifecycle:conversion-stale:expired:001",
+        payload={"target_status": "expired"},
+        actor_subject="idea-expiry-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+    )
+    assert expired.decision is LifecyclePersistenceDecision.ACCEPTED
+    before_stale_attempt = repository.snapshot()
+
+    with pytest.raises(
+        InvalidConversionIntent,
+        match="candidate state changed after conversion readiness evaluation",
+    ):
+        repository.record_conversion_intent(
+            stale_intent,
+            idempotency_key=command.idempotency_key,
+            payload={"candidate_id": candidate.candidate_id, "target": command.target.value},
+        )
+
+    assert repository.snapshot() == before_stale_attempt
     assert repository.conversion_intent_by_id(command.conversion_intent_id) is None
 
 
