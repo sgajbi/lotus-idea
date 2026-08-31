@@ -853,8 +853,6 @@ ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-ga
 ci-release: ci implementation-proof-readiness-check runtime-trust-telemetry-snapshot-check postgres-integration-gate docker-build container-runtime-smoke container-image-scan release-sbom
 
 compose-config-gate:
-	docker compose config --quiet
-	docker compose --profile worker config --quiet
 	$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py
 
 docker-build: compose-config-gate

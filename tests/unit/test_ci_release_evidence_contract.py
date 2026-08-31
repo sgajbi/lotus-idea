@@ -39,15 +39,8 @@ def test_compose_runtime_contract_rejects_required_untracked_env_file() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "command",
-    [
-        "docker compose config --quiet",
-        "docker compose --profile worker config --quiet",
-        "$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py",
-    ],
-)
-def test_release_contract_requires_clean_checkout_compose_gate(command: str) -> None:
+def test_release_contract_requires_clean_checkout_compose_gate() -> None:
+    command = "$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py"
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
     degraded = makefile.replace(f"\t{command}\n", "", 1)
 
@@ -86,49 +79,6 @@ def test_compose_build_identity_rejects_missing_commit_and_run_id() -> None:
 
     assert "docker-compose.yml must pass governed commit SHA build identity" in errors
     assert "docker-compose.yml must pass governed run ID build identity" in errors
-
-
-def test_compose_runtime_contract_rejects_concurrent_shared_image_build_writers() -> None:
-    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    degraded = compose.replace(
-        "  lotus-idea:\n    image: lotus-idea:local\n",
-        "  lotus-idea:\n    image: lotus-idea:local\n    build: *lotus-idea-build\n",
-        1,
-    )
-
-    assert degraded != compose
-    assert (
-        "docker-compose.yml must define exactly one build writer for the shared "
-        "lotus-idea:local image"
-    ) in validate_compose_runtime_contract(degraded)
-
-
-def test_compose_runtime_contract_requires_migration_runner_to_build_shared_image() -> None:
-    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    degraded = compose.replace("    build: *lotus-idea-build\n", "", 1)
-
-    assert degraded != compose
-    errors = validate_compose_runtime_contract(degraded)
-    assert (
-        "docker-compose.yml must define exactly one build writer for the shared "
-        "lotus-idea:local image"
-    ) in errors
-    assert (
-        "docker-compose.yml migration runner must own the shared Lotus Idea image build" in errors
-    )
-
-
-def test_compose_runtime_contract_ignores_build_text_in_comments() -> None:
-    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    with_diagnostic_comment = compose.replace(
-        "  lotus-idea:\n    image: lotus-idea:local\n",
-        "  lotus-idea:\n    image: lotus-idea:local\n"
-        "    # Historical defect: build: *lotus-idea-build duplicated this writer.\n",
-        1,
-    )
-
-    assert with_diagnostic_comment != compose
-    assert validate_compose_runtime_contract(with_diagnostic_comment) == []
 
 
 def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:

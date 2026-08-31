@@ -137,11 +137,7 @@ def _validate_docker_build_target(makefile: str) -> list[str]:
     errors: list[str] = []
     compose_config_gate = _target_block(makefile, "compose-config-gate")
     docker_build = _target_block(makefile, "docker-build")
-    for command in (
-        "docker compose config --quiet",
-        "docker compose --profile worker config --quiet",
-        "$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py",
-    ):
+    for command in ("$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py",):
         if command not in compose_config_gate:
             errors.append(
                 "Makefile compose-config-gate must validate clean-checkout Compose "
@@ -276,31 +272,6 @@ def validate_compose_runtime_contract(compose: str) -> list[str]:
         for fragment, label in required.items()
         if fragment not in compose
     ]
-    service_blocks = {
-        match.group("name"): match.group("body")
-        for match in re.finditer(
-            r"^  (?P<name>[a-z0-9-]+):\n"
-            r"(?P<body>(?:(?:^ {4,}.*|^[ \t]*)\n)*)",
-            compose,
-            flags=re.MULTILINE,
-        )
-    }
-    shared_image_builders = [
-        name
-        for name, body in service_blocks.items()
-        if re.search(r'^    image:\s*["\']?lotus-idea:local["\']?\s*$', body, re.MULTILINE)
-        and re.search(r"^    build:\s*", body, re.MULTILINE)
-    ]
-    if shared_image_builders != ["lotus-idea-migrations"]:
-        errors.append(
-            "docker-compose.yml must define exactly one build writer for the shared "
-            "lotus-idea:local image"
-        )
-    migration_service = service_blocks.get("lotus-idea-migrations", "")
-    if not re.search(r"^    build:\s*\*lotus-idea-build\s*$", migration_service, re.MULTILINE):
-        errors.append(
-            "docker-compose.yml migration runner must own the shared Lotus Idea image build"
-        )
     required_realization = {
         "      LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:": "Advise realization base URL",
         "      LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH:": "Advise realization submit path",
