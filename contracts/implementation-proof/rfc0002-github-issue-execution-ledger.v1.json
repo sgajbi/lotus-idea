@@ -1489,6 +1489,15 @@
       "closureInstruction": "Closed #1170 after QA passed for exact persisted downstream-action replay evidence. PR #1175 rebase-merged to exact Idea main df26f7f18c1dafb0009f8294cf08b999d1681ca0. Main Releasability run 33360310207 and CodeQL run 33360303951 passed, including exact revision assertion, PostgreSQL runtime proof, 5,774 unit tests, integration and E2E lanes, 99.01% combined coverage, vulnerability and image scanning, immutable image publication, signing, SBOM, provenance, release identity, and CI evidence. Repo-authored wiki publication reached commit 44c0940 with strict DiffCount 0. The remote branch was deleted, and the local branch was removed only after feature/main tree equality 27a18681358cc08a44579fbdc931c47caf42e58b; one clean main worktree remains with no unmerged remote branch. Accepted and replayed conversion outcomes and Report evidence requests return the exact persisted Idea-owned action; zero, multiple, or missing durable evidence fails closed, and same-key client-publication escalation conflicts before domain processing. No assertion or threshold was weakened, no compatibility layer was added, and no Report/Render/Archive materialization, production identity, supported-feature promotion, or downstream authority is claimed. No final RFC-0002 closure is claimed."
     },
     {
+      "issueNumber": 1178,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1178",
+      "rfcSlices": ["slice-07"],
+      "githubState": "open",
+      "executionStatus": "open_pr_raised",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1178 open and status/pr-open while PR #1179 implements evidence-derived family opportunity scoring. The implementation replaces fixed production-family score constants with versioned family policy, persists full typed score components and exact reconstruction provenance through migration 021, exposes the breakdown through existing API resources, and preserves eligibility and ReviewQueuePolicy as separate authorities. Closure remains pending every PR gate, including the unchanged 99% combined coverage threshold and Docker build, rebase merge to exact Idea main, Main Releasability and CodeQL for the exact merged SHA, repo-authored wiki publication with strict DiffCount 0, independent QA, and local/remote branch cleanup. No assertion or threshold may be weakened, no compatibility layer or AI decision authority is introduced, and no supported-feature promotion or final RFC-0002 closure is claimed."
+    },
+    {
       "issueNumber": 1162,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1162",
       "rfcSlices": [

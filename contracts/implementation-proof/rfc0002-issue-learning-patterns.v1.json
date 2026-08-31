@@ -313,8 +313,8 @@
     {
       "patternId": "opportunity_quality_golden_evaluation",
       "title": "Cross-family opportunity quality needs independently authored golden expectations over production policy paths.",
-      "currentLedgerIssueNumbers": [],
-      "relatedIssueNumbers": [699, 1154, 1155, 1156],
+      "currentLedgerIssueNumbers": [1178],
+      "relatedIssueNumbers": [699, 1154, 1155, 1156, 1178],
       "rfcSlices": ["slice-05", "slice-07", "slice-16", "slice-17"],
       "durableControls": [
         {
@@ -344,9 +344,13 @@
         {
           "type": "issue",
           "ref": "sgajbi/lotus-idea#1162"
+        },
+        {
+          "type": "issue",
+          "ref": "sgajbi/lotus-idea#1178"
         }
       ],
-      "futureAgentRule": "Maintain a versioned, independently authored opportunity-quality golden set that invokes production family policy, scoring, queue, and lifecycle paths. Handwrite expected candidate and abstention outcomes, reason codes, score components, rank, evidence posture, identity refresh, suppression or expiry, and reopen behavior; never generate expectations from the policy under test. Keep source-owned facts as explicit synthetic fixtures, preserve family-specific methodology, and resist a generic signal framework, endpoint, runtime service, production-data capture, or supported-feature claim.",
+      "futureAgentRule": "Maintain a versioned, independently authored opportunity-quality golden set that invokes production family policy, scoring, queue, and lifecycle paths. Every production family score must be derived from authoritative evidence or explicitly bounded workflow posture through a versioned family policy; never restore a fixed candidate-score constant. Persist and expose the full typed component, weight, contribution, penalty, reason-code, and policy-version provenance needed to reconstruct the scalar exactly. Handwrite expected candidate and abstention outcomes, magnitude-sensitive ordering, reason codes, score components, rank, evidence posture, identity refresh, suppression or expiry, and reopen behavior; never generate expectations from the policy under test. Keep source-owned facts as explicit synthetic fixtures, preserve family-specific methodology, and resist a generic signal framework, endpoint, runtime service, production-data capture, or supported-feature claim.",
       "nonClaimBoundaries": [
         "A deterministic local evaluation set is product regression evidence, not live source, Gateway, Workbench, downstream, deployment, or production certification.",
         "Synthetic source facts do not grant Idea authority over portfolio, performance, risk, mandate, suitability, or advisory methodology."
