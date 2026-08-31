@@ -48,10 +48,12 @@
 `docker compose up -d --build` is the app-owned standalone runtime. It provisions
 PostgreSQL 18, stores data in `lotus-idea-postgres-data`, waits for database
 health, runs a one-shot pending-only migration job, and starts the API only
-after migration success. The default local profile still reports its
-non-release posture truthfully, but repository responses report
-`durableStorageBacked=true`. Workbench canonical automation orchestrates this
-same contract; it does not supply Idea persistence.
+after migration success. The migration dependency is the sole Compose build
+writer for `lotus-idea:local`; the API and optional worker consume that exact
+artifact, preventing concurrent exports to one mutable tag. The default local
+profile still reports its non-release posture truthfully, but repository
+responses report `durableStorageBacked=true`. Workbench canonical automation
+orchestrates this same contract; it does not supply Idea persistence.
 
 Safe local defaults are explicit in `docker-compose.yml`, so a clean checkout
 needs no bootstrap environment file. Shell variables or an ignored `.env` file
@@ -62,6 +64,11 @@ requires it. Validate both API and worker profiles before starting containers:
 make compose-config-gate
 docker compose up --build
 ```
+
+If a mutation adds `build: *lotus-idea-build` to the API or worker, the
+release/Compose contract gate fails before startup. Do not use
+`COMPOSE_PARALLEL_LIMIT=1` as a permanent workaround; it serializes the race
+without correcting artifact ownership.
 
 Repeated `docker compose up -d` validates migration history and skips applied
 versions. The local history stores version, name, and content checksum under an
