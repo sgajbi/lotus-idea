@@ -24,13 +24,13 @@ dependency map, and closure rules without relying on chat memory.
 | Live drift gate | `make rfc0002-issue-posture-live-gate`; scheduled and manually dispatchable through `RFC-0002 Issue Posture Audit` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
 | Repositories checked | 13 |
-| Governed GitHub issue posture | 252 label-backed RFC-0002 issues; 209 closed and 43 open; 2026-08-31; 23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`; 0 app-actionable blocked. |
-| Total RFC-0002 issues | 252 |
-| Closed RFC-0002 issues | 209 |
+| Governed GitHub issue posture | 253 label-backed RFC-0002 issues; 210 closed and 43 open; 2026-08-31; 23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`; 0 app-actionable blocked. |
+| Total RFC-0002 issues | 253 |
+| Closed RFC-0002 issues | 210 |
 | Open RFC-0002 issues | 43 |
 | Open blocked issues | 23 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681`, `#685`, `#686`, and `#1142` are in progress; #685/#686 are writable Gateway/Workbench proof work and #1142 owns the single-image Compose build correction. `#1155` and `#1156` are merged-main pending canonical consumer QA. Gateway #694 is ready. `#1168`, `#1169`, and `#1170` are closed after exact persisted action evidence, exact-main release proof, wiki publication/parity, and branch hygiene. None promotes a supported feature or completes final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681`, `#685`, `#686`, and `#1142` are in progress; #685/#686 are writable Gateway/Workbench proof work and #1142 owns the single-image Compose build correction. `#1155` and `#1156` are merged-main pending canonical consumer QA. Gateway #694 is ready. `#1168`, `#1169`, `#1170`, and `#1178` are closed after exact persisted action or scoring evidence, exact-main release proof, wiki publication/parity, and branch hygiene. None promotes a supported feature or completes final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -48,8 +48,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>252 label-backed RFC-0002 issues<br/>as of 2026-08-31 UTC"]
-    Open["209 closed and 43 open<br/>23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`"]
+    Issues["GitHub issue posture<br/>253 label-backed RFC-0002 issues<br/>as of 2026-08-31 UTC"]
+    Open["210 closed and 43 open<br/>23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -73,17 +73,17 @@ flowchart LR
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: the dated 2026-08-31 UTC GitHub baseline has
-252 label-backed RFC-0002 issues, 209 closed and 43 open, with 23
+253 label-backed RFC-0002 issues, 210 closed and 43 open, with 23
 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1
 `status/ready`, 9 `status/tracker`, and 0 app-actionable blocked issues. As of
-2026-08-31 UTC, the Idea source ledger tracks 156 RFC-0002 issues: 128 closed
+2026-08-31 UTC, the Idea source ledger tracks 157 RFC-0002 issues: 129 closed
 and 28 open. `#681`, `#685`, `#686`, and `#1142` are in progress; `#1155` and
-`#1156` are merged-main pending canonical consumer QA. `#1168`, `#1169`, and `#1170`
-are closed with exact-main, release, wiki-parity, and branch-hygiene proof. PR
-#1175 placed the latest downstream-action evidence on exact Idea main
-`df26f7f18c1dafb0009f8294cf08b999d1681ca0`; Main Releasability run
-`33360310207`, CodeQL run `33360303951`, and wiki publication `44c0940`
-passed. The canonical journey now proceeds beyond Idea startup and is blocked
+`#1156` are merged-main pending canonical consumer QA. `#1168`, `#1169`,
+`#1170`, and `#1178` are closed with exact-main, release, wiki-parity, and
+branch-hygiene proof. PR #1179 placed the latest evidence-derived scoring on
+exact Idea main `384e330727c6e36df9c17bc30910170e95942105`; Main Releasability
+run `33390835524`, CodeQL run `33390825582`, and wiki publication
+`ebf49a1bc41215358ffcd633fe17fa6bc3471cd2` passed. The canonical journey now proceeds beyond Idea startup and is blocked
 by source-owned valuation-date propagation in `sgajbi/lotus-core#1035`.
 `#1154` is closed after PR #1157 exact-main, release-image,
 wiki, and branch-hygiene proof. `#1150` is

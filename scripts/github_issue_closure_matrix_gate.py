@@ -145,6 +145,7 @@ ACTIONABLE_ISSUES = frozenset(
         1080,
         1088,
         1154,
+        1178,
     }
 )
 
@@ -296,6 +297,7 @@ MERGED_MAIN_ISSUES = frozenset(
         1080,
         1088,
         1154,
+        1178,
     }
 )
 

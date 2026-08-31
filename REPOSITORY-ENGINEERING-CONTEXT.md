@@ -90,18 +90,18 @@ The supported-feature registry remains `foundation_only` with an empty
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an
 implemented feature.
 
-As of 2026-08-31, the governed Idea execution baseline contains 156 RFC-0002
-issues: 128 closed and 28 open. `#681`, `#685`, `#686`, and `#1142` are in
+As of 2026-08-31, the governed Idea execution baseline contains 157 RFC-0002
+issues: 129 closed and 28 open. `#681`, `#685`, `#686`, and `#1142` are in
 progress; #685/#686 are active writable Gateway/Workbench proof work and #1142
 owns the single-image Compose build correction. `#1155` and `#1156` are
 merged-main pending canonical consumer QA.
-`#1168`, `#1169`, and `#1170` are closed after exact persisted adviser-action,
-lifecycle-transition, and downstream-action evidence passed exact-main release,
-wiki publication/parity, and branch hygiene. The latest exact Idea main product
-closure is PR #1175 at `df26f7f18c1dafb0009f8294cf08b999d1681ca0`,
-with Main Releasability `33360310207`, CodeQL `33360303951`, and wiki
-publication `44c0940`. The 13-repository baseline contains 252 label-backed
-RFC-0002 issues: 209 closed and 43 open, including 23 blocked, 4 in progress,
+`#1168`, `#1169`, `#1170`, and `#1178` are closed after exact persisted action
+or evidence-derived scoring changes passed exact-main release, wiki
+publication/parity, and branch hygiene. The latest exact Idea main product
+closure is PR #1179 at `384e330727c6e36df9c17bc30910170e95942105`,
+with Main Releasability `33390835524`, CodeQL `33390825582`, and wiki
+publication `ebf49a1bc41215358ffcd633fe17fa6bc3471cd2`. The 13-repository baseline contains 253 label-backed
+RFC-0002 issues: 210 closed and 43 open, including 23 blocked, 4 in progress,
 6 merged-main, 1 ready, and 9 tracker issues; none of the blocked issues is
 app-actionable. The canonical journey now passes Idea clean-checkout startup
 and is blocked by source-owned valuation-date propagation in

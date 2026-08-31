@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Queue-policy foundation is on `main` through PR `#383`; the evidence-derived family-scoring correction is implemented under issue `#1178` and awaiting merge/exact-main closure; no supported-feature promotion
+Status: Queue-policy foundation and evidence-derived family scoring are complete on `main` through PRs `#383` and `#1179`; no supported-feature promotion
 
 ## Outcome
 
@@ -23,7 +23,7 @@ Create deterministic, explainable scoring and ranking for review queues.
 
 ## Current Implementation Evidence
 
-Implemented on the Slice 07 branch:
+Implemented on `main`:
 
 1. `src/app/domain/scoring.py` defines framework-free scoring inputs for
    materiality, urgency, confidence, evidence quality, freshness, advisor
@@ -175,27 +175,35 @@ contribution, penalty, scalar, policy version, and rank to prove the gate fails.
 
 ## Remaining Gaps
 
-The issue `#1178` implementation still requires PR merge, exact-main release
-validation, wiki publication/parity, and branch cleanup before Slice 07 can be
-redeclared complete. Workbench realization, broader review audiences,
-data-product certification, live operational evidence, and supported-feature
-promotion belong to later RFC slices and remain independently gated. Those
-downstream gates do not weaken the scoring/queue-policy acceptance criteria.
+The Slice 07 scoring and queue-policy acceptance criteria are complete. PR
+`#1179` merged the evidence-derived correction, exact-main release and CodeQL
+passed, the repo-authored wiki was published with strict parity, and the
+implementation branch was removed locally and remotely. Workbench realization,
+broader review audiences, data-product certification, live operational
+evidence, and supported-feature promotion belong to later RFC slices and remain
+independently gated. Those downstream gates do not weaken or reopen the Slice
+07 scoring/queue-policy acceptance criteria.
 
 ## Validation
 
-Current branch evidence:
+Current exact-main evidence:
 
-1. Focused score registry, queue policy, application, PostgreSQL, API, snapshot
-   mutation, and repository-hygiene suites pass with `89 passed`.
-2. Ruff passes for every changed Python module and focused test.
-3. `make typecheck` passes across `766` source files.
-4. Architecture, repository-hygiene, maintainability, review-queue snapshot,
-   GitHub issue closure, endpoint certification, OpenAPI, documentation, and
-   supported-features gates pass.
-5. Exact-main `make check` passes with `3,633` unit tests.
-6. PR Merge Gate run `29290924654` passed workflow lint, static/security,
-   unit, integration, E2E, combined coverage, PostgreSQL runtime, Docker build,
-   and CI-signal evidence for the final branch SHA.
-7. Main Releasability run `29291215703` passed the same release lanes for exact
-   main SHA `4f4e09854a076392e5cbbd0c413a2e433de04224`.
+1. Independently authored golden expectations, production family-policy tests,
+   runtime score-receipt reconstruction tests, migration tests, and HTTP
+   integration tests prove deterministic calculation, persistence, API
+   projection, ordering, replay, and candidate-free outcomes.
+2. PR Merge Gate run `33390238886` passed `5,839` unit tests, integration,
+   E2E, PostgreSQL runtime proof, the unchanged 99% combined coverage threshold,
+   Docker build/runtime/vulnerability scan, lint, typecheck, security, workflow
+   lint, CodeQL, and CI signal evidence.
+3. PR `#1179` rebase-merged to exact Idea main
+   `384e330727c6e36df9c17bc30910170e95942105`.
+4. Main Releasability run `33390835524` and CodeQL run `33390825582` passed
+   for that exact SHA. The certified signed image is
+   `ghcr.io/sgajbi/lotus-idea@sha256:91199afb237249a1805a7b2b47cdeccce42cd8d4d2ac4c08c216414529faba03`,
+   with SBOM and provenance attestations.
+5. Repo-authored wiki publication reached
+   `ebf49a1bc41215358ffcd633fe17fa6bc3471cd2` with strict `DiffCount 0`.
+   Issue `#1178` is closed, the implementation branch is absent locally and
+   remotely, one clean main worktree remained, and no unmerged remote branch
+   existed before the evidence-only closure synchronization branch.

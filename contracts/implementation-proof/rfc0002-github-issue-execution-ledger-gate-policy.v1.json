@@ -570,16 +570,22 @@
       "final RFC-0002 closure"
     ],
     "1178": [
-      "Keep #1178 open and status/pr-open",
+      "Closed #1178 after QA passed",
       "PR #1179",
+      "384e330727c6e36df9c17bc30910170e95942105",
+      "Main Releasability run 33390835524",
+      "CodeQL run 33390825582",
       "evidence-derived family opportunity scoring",
       "full typed score components",
       "migration 021",
-      "99% combined coverage threshold",
-      "exact Idea main",
-      "wiki publication with strict DiffCount 0",
-      "No assertion or threshold may be weakened",
-      "no supported-feature promotion",
+      "5,839 unit tests",
+      "unchanged 99% combined coverage threshold",
+      "ghcr.io/sgajbi/lotus-idea@sha256:91199afb237249a1805a7b2b47cdeccce42cd8d4d2ac4c08c216414529faba03",
+      "lotus-idea.wiki commit ebf49a1bc41215358ffcd633fe17fa6bc3471cd2",
+      "strict DiffCount 0",
+      "No assertion or threshold was weakened",
+      "no compatibility layer or AI decision authority was introduced",
+      "supported features remain unchanged",
       "final RFC-0002 closure"
     ],
     "1162": [

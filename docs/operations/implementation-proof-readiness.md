@@ -169,14 +169,14 @@ live GitHub proof; it deliberately points back to
 `make rfc0002-github-issue-execution-state-audit` for current GitHub label and
 open/closed verification.
 
-Current Slice 18 ledger synchronization records 156 tracked RFC-0002 issues:
-128 `closed_complete` and 28 open, with 12 `open_blocked`, 4
+Current Slice 18 ledger synchronization records 157 tracked RFC-0002 issues:
+129 `closed_complete` and 28 open, with 12 `open_blocked`, 4
 `open_in_progress`, 2 `open_merged_main_qa_pending`, no `open_ready`, no
 `open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
 `open_pending_post_completion`, and 8 `open_tracker`. The in-progress issues are
 #681/#685/#686/#1142; #1142 owns the single-image Compose build correction,
 while #1155/#1156 are merged-main pending canonical consumer QA;
-#1168/#1169/#1170 are closed with exact-main release, wiki-parity, and branch
+#1168/#1169/#1170/#1178 are closed with exact-main release, wiki-parity, and branch
 hygiene evidence. The live audit and cross-repo posture command pass with #685
 and #686 classified as active writable work rather than external blockers.
 

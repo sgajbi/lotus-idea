@@ -8,11 +8,11 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-The dated 2026-08-31 governed snapshot has 252 label-backed RFC-0002 issues
-across 13 repositories: 209 closed and 43 open, with 23 `status/blocked`, 4
+The dated 2026-08-31 governed snapshot has 253 label-backed RFC-0002 issues
+across 13 repositories: 210 closed and 43 open, with 23 `status/blocked`, 4
 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 156 RFC-0002 issues: 128 closed and 28 open.
+tracks 157 RFC-0002 issues: 129 closed and 28 open.
 
 `#681`, `#685`, `#686`, and `#1142` are in progress. The Slice 11 proof issues
 #685/#686 are writable Gateway/Workbench work; #1142 owns the single-image
@@ -20,12 +20,12 @@ Compose build correction. `#1155` and
 `#1156` have their Idea-owned feedback/evaluation and effectiveness/presentation
 contracts on exact main and are `status/merged-main` pending canonical consumer
 QA. Gateway #694 is ready for bounded review/conversion response-identity work.
-`#1168`, `#1169`, and `#1170` are closed after exact persisted adviser-action,
-lifecycle-transition, and downstream-action evidence passed exact-main release,
-wiki publication/parity, and branch hygiene. PR #1175 is the latest Idea product
-closure, on exact main `df26f7f18c1dafb0009f8294cf08b999d1681ca0`
-with Main Releasability `33360310207`, CodeQL `33360303951`, and wiki
-publication `44c0940`.
+`#1168`, `#1169`, `#1170`, and `#1178` are closed after their exact persisted
+action or evidence-derived scoring changes passed exact-main release, wiki
+publication/parity, and branch hygiene. PR #1179 is the latest Idea product
+closure, on exact main `384e330727c6e36df9c17bc30910170e95942105`
+with Main Releasability `33390835524`, CodeQL `33390825582`, and wiki
+publication `ebf49a1bc41215358ffcd633fe17fa6bc3471cd2`.
 
 The canonical journey now passes Idea clean-checkout startup and is blocked by
 source-owned valuation-date propagation in `sgajbi/lotus-core#1035`. Production
