@@ -3357,6 +3357,13 @@ from tenant, portfolio, opportunity family, and governed economic scope. Do
 not include source content hashes, source routes, transport idempotency keys,
 reason-code order, or representation-only fields in business identity.
 
+Unscoped evaluation is diagnostic only. Every path that durably writes a new
+candidate must provide complete tenant/book/portfolio/client economic access
+scope, and the repository must reject missing scope before candidate,
+idempotency, audit, or outbox mutation. Keep this domain invariant independent
+of production authentication: local/test callers may use pseudonymous governed
+scope, but durable records may not fall back to date-only unscoped identity.
+
 Preserve source content hashes and source-effective identity in evidence
 packets and lineage. Reconcile equivalent refreshes as evidence versions,
 material economic changes as material versions, and resolved-then-recurrent
@@ -3376,7 +3383,10 @@ until the normal promotion evidence is complete.
 Direct PostgreSQL fixtures that insert candidate rows must satisfy the current
 identity columns and the identity fields embedded in `candidate_json`. Tests
 that require distinct opportunities must vary governed economic scope; changing
-only source hashes represents new evidence for the same opportunity. After an
+only source hashes represents new evidence for the same opportunity. HTTP and
+application test producers that invoke a persistence route must likewise use
+explicit pseudonymous economic scope; do not weaken this invariant to preserve
+legacy test setup. After an
 execution-ledger status transition, run the dedicated current-backlog assertion
 and the full unit lane so source-controlled lifecycle truth cannot drift.
 

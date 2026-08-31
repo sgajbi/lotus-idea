@@ -277,6 +277,12 @@ from evidence and transport identity. The tenant, portfolio, opportunity
 family, and governed economic scope determine `businessIdentityId`. Source
 content hashes remain in evidence packets and lineage; idempotency keys remain
 transport controls. Neither can create a new business opportunity by itself.
+Evaluation-only results may remain unscoped diagnostics, but an unscoped result
+cannot cross the durable candidate boundary. Persistence requests require
+complete economic access scope, and the repository rechecks the invariant before
+candidate, idempotency, audit, or outbox mutation. This keeps candidate identity
+tenant/portfolio-safe without claiming an identity provider or production
+authentication capability.
 
 ```mermaid
 flowchart LR
