@@ -853,7 +853,7 @@ ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-ga
 ci-release: ci implementation-proof-readiness-check runtime-trust-telemetry-snapshot-check postgres-integration-gate docker-build container-runtime-smoke container-image-scan release-sbom
 
 compose-config-gate:
-	$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py
+	python scripts/compose_runtime_contract_gate.py
 
 docker-build: compose-config-gate
 	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) --build-arg GIT_COMMIT_SHA=$(BUILD_GIT_COMMIT_SHA) --build-arg GIT_BRANCH=$(BUILD_GIT_BRANCH) --build-arg BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) --build-arg REPO_URL=$(BUILD_REPO_URL) --build-arg CI_RUN_ID=$(BUILD_CI_RUN_ID) --build-arg IMAGE_BUILD_ID=$(BUILD_IMAGE_BUILD_ID) --build-arg SERVICE_VERSION=$(BUILD_SERVICE_VERSION) -t $(CONTAINER_IMAGE_NAME) .

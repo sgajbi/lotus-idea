@@ -137,7 +137,7 @@ def _validate_docker_build_target(makefile: str) -> list[str]:
     errors: list[str] = []
     compose_config_gate = _target_block(makefile, "compose-config-gate")
     docker_build = _target_block(makefile, "docker-build")
-    for command in ("$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py",):
+    for command in ("python scripts/compose_runtime_contract_gate.py",):
         if command not in compose_config_gate:
             errors.append(
                 "Makefile compose-config-gate must validate clean-checkout Compose "
