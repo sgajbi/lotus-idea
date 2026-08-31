@@ -28,6 +28,7 @@ from app.domain import (
     HighCashSignalPolicy,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    InvalidReviewAction,
     OutboxDeliveryDecision,
     OutboxDeliveryResult,
     OutboxEventRecord,
@@ -291,7 +292,7 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
     assert len(connection.rows["idea_review_decision"]) == 2
 
 
-def test_postgres_repository_serializes_same_candidate_mutations_from_fresh_state() -> None:
+def test_postgres_repository_rejects_a_stale_same_candidate_review_result() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -320,27 +321,26 @@ def test_postgres_repository_serializes_same_candidate_mutations_from_fresh_stat
         idempotency_key="review:stale-same-candidate-first",
         payload={"reviewId": first_review.decision.review_id},
     )
-    repository.record_review_action(
-        second_review,
-        idempotency_key="review:stale-same-candidate-second",
-        payload={"reviewId": second_review.decision.review_id},
-    )
+    with pytest.raises(InvalidReviewAction, match="approved/approved_for_conversion"):
+        repository.record_review_action(
+            second_review,
+            idempotency_key="review:stale-same-candidate-second",
+            payload={"reviewId": second_review.decision.review_id},
+        )
 
     recovered = PostgresIdeaRepository(connection).snapshot()
 
-    assert connection.commits == 3
-    assert connection.rollbacks == 0
+    assert connection.commits == 2
+    assert connection.rollbacks == 1
     assert [
         decision.review_id
         for decision in recovered.candidate_records[candidate.candidate_id].review_decisions
-    ] == [
-        "review-stale-same-candidate-first",
-        "review-stale-same-candidate-second",
-    ]
-    assert any(
+    ] == ["review-stale-same-candidate-first"]
+    assert not any(
         row["idempotency_key"] == "review:stale-same-candidate-second"
         for row in connection.rows["idea_idempotency_record"]
     )
+    assert len(connection.rows["idea_review_decision"]) == 1
 
 
 def test_postgres_repository_reads_exact_idempotency_state_as_replay() -> None:
