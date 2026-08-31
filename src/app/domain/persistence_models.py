@@ -154,7 +154,12 @@ class CandidatePersistenceRecord:
 
     def is_expired_at(self, evaluated_at_utc: datetime) -> bool:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
-        return self.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
+        applicability_expiry = self.candidate.evidence_packet.applicability_expires_at_utc
+        return (
+            self.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
+            or applicability_expiry is not None
+            and evaluated_at_utc >= applicability_expiry
+        )
 
 
 @dataclass(frozen=True)

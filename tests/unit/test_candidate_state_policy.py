@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -178,6 +179,26 @@ def test_candidate_rehydration_rejects_unmigrated_scalar_only_score() -> None:
         match="persisted candidate score breakdown is required; apply database migration 021",
     ):
         idea_candidate_from_json(payload)
+
+
+def test_candidate_codec_round_trips_authoritative_applicability_expiry() -> None:
+    candidate = high_cash_candidate()
+    expiry = datetime(2026, 7, 11, tzinfo=UTC)
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=expiry,
+        ),
+    )
+
+    payload = idea_candidate_to_json(candidate)
+    restored = idea_candidate_from_json(payload)
+
+    assert payload["evidence_packet"]["applicability_expires_at_utc"] == (
+        "2026-07-11T00:00:00+00:00"
+    )
+    assert restored.evidence_packet.applicability_expires_at_utc == expiry
 
 
 def test_candidate_rehydration_rejects_unknown_score_policy_version() -> None:

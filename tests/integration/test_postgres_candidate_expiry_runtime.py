@@ -8,12 +8,23 @@ from typing import Any, cast
 import psycopg
 from psycopg.rows import dict_row
 
-from app.application.candidate_expiry import CandidateExpiryDecision
+from app.application.candidate_expiry import (
+    CandidateExpiryDecision,
+    ExpireCandidateCommand,
+    expire_candidate_if_due,
+)
 from app.application.source_ingestion import (
     IngestHighCashSourceSignalCommand,
     ingest_high_cash_signal_from_core,
 )
-from app.domain import EvidenceFreshness, IdeaLifecycleStatus, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    IdeaLifecycleStatus,
+    OpportunityFamily,
+    ReasonCode,
+    SourceRef,
+    SourceSystem,
+)
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.main import app
 from app.ports.core_sources import (
@@ -32,6 +43,7 @@ from tests.integration.postgres_runtime_support import (
     table_count,
 )
 from tests.support.http import managed_test_client
+from tests.support.opportunity_effectiveness_fixture import candidate_fixture
 
 
 _EXPIRY_TABLES = frozenset(
@@ -178,6 +190,70 @@ def test_postgres_runtime_serializes_concurrent_authoritative_expiry(
     assert record is not None
     assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
     assert len(record.lifecycle_history) == 1
+    for table, count in before.items():
+        assert _table_count(postgres_database_url, table) == count + 1
+
+
+def test_postgres_runtime_serializes_concurrent_due_applicability_expiry(
+    postgres_database_url: str,
+) -> None:
+    expiry = datetime(2026, 6, 21, 11, 0, tzinfo=UTC)
+    candidate = candidate_fixture(
+        "idea-candidate-due-expiry-001",
+        family=OpportunityFamily.BOND_MATURITY,
+        score=Decimal("80"),
+        created_at=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+    )
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=expiry,
+        ),
+    )
+    persisted = get_idea_repository().persist_candidate(
+        candidate,
+        idempotency_key="postgres-due-expiry-seed",
+        payload={"candidate_id": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=candidate.created_at_utc,
+    )
+    assert persisted.record is not None
+    before = {
+        table: _table_count(postgres_database_url, table)
+        for table in ("idea_lifecycle_history", "idea_audit_event", "idea_outbox_event")
+    }
+
+    decisions = run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, _: (
+            expire_candidate_if_due(
+                ExpireCandidateCommand(
+                    candidate_id=candidate.candidate_id,
+                    actor_subject="candidate-expiry-worker",
+                    evaluated_at_utc=expiry,
+                    reason_codes=(ReasonCode.OPPORTUNITY_NO_LONGER_ELIGIBLE,),
+                ),
+                repository=repository,
+            ).decision
+        ),
+        ("postgres-due-expiry-race-a", "postgres-due-expiry-race-b"),
+    )
+
+    assert set(decisions) == {
+        CandidateExpiryDecision.EXPIRED,
+        CandidateExpiryDecision.ALREADY_EXPIRED,
+    }
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        record = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(
+            candidate.candidate_id
+        )
+    assert record is not None
+    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
+    assert len(record.lifecycle_history) == 1
+    assert record.audit_events[-1].attributes["reason_codes"] == (
+        ReasonCode.OPPORTUNITY_NO_LONGER_ELIGIBLE.value
+    )
     for table, count in before.items():
         assert _table_count(postgres_database_url, table) == count + 1
 

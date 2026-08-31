@@ -180,6 +180,36 @@ def test_evidence_correction_preserves_review_state_and_versions_evidence() -> N
     )
 
 
+def test_evidence_refresh_cannot_change_material_applicability_expiry() -> None:
+    candidate, refs = _candidate()
+    original = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+        ),
+    )
+    altered = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=datetime(2026, 7, 12, tzinfo=UTC),
+        ),
+    )
+    repository = InMemoryIdeaRepository()
+    accepted = _persist(repository, original, refs, sequence=1)
+
+    rejected = _persist(repository, altered, refs, sequence=2)
+
+    assert accepted.decision is CandidatePersistenceDecision.ACCEPTED
+    assert rejected.decision is CandidatePersistenceDecision.IDENTITY_CONFLICT
+    assert rejected.record is not None
+    assert rejected.record.candidate.evidence_packet.applicability_expires_at_utc == datetime(
+        2026, 7, 11, tzinfo=UTC
+    )
+    assert len(rejected.record.version_history) == 1
+
+
 def test_material_change_creates_version_and_clears_prior_suppression() -> None:
     candidate, refs = _candidate()
     suppressed_candidate = replace(

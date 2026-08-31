@@ -149,6 +149,14 @@ class IdeaCandidateSummaryResponse(CamelModel):
     )
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
     source_refs: tuple[SourceRefResponse, ...] = Field(..., alias="sourceRefs")
+    applicability_expires_at_utc: datetime | None = Field(
+        default=None,
+        alias="applicabilityExpiresAtUtc",
+        description=(
+            "Authoritative UTC boundary after which this material opportunity is no longer "
+            "reviewable; equality is expired."
+        ),
+    )
 
     @classmethod
     def from_domain(cls, candidate: IdeaCandidate) -> "IdeaCandidateSummaryResponse":
@@ -187,6 +195,7 @@ class IdeaCandidateSummaryResponse(CamelModel):
                 SourceRefResponse.from_domain(source_ref)
                 for source_ref in candidate.evidence_packet.source_refs
             ),
+            applicabilityExpiresAtUtc=(candidate.evidence_packet.applicability_expires_at_utc),
         )
 
 

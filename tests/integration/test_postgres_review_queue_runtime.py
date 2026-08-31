@@ -1,10 +1,89 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import UTC, date, datetime
+from typing import Any, cast
 
 from tests.support.http import managed_test_client
 
+from app.domain import (
+    BondMaturitySignalInput,
+    BondMaturitySignalPolicy,
+    EvidenceFreshness,
+    QueueExclusionReason,
+    ReviewAccessScope,
+    ReviewQueueAudience,
+    SourceRef,
+    SourceSystem,
+    evaluate_bond_maturity_signal,
+)
 from app.main import app
+from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.runtime.repository_state import get_idea_repository
+
+
+def test_postgres_review_queue_and_readiness_enforce_applicability_expiry_boundary(
+    postgres_database_url: str,
+) -> None:
+    del postgres_database_url
+    repository = cast(PostgresIdeaRepository, get_idea_repository())
+    evaluation = evaluate_bond_maturity_signal(
+        _bond_maturity_input(),
+        BondMaturitySignalPolicy(
+            policy_version="bond-maturity-review-v2",
+            maturity_window_days=30,
+        ),
+    )
+    assert evaluation.candidate is not None
+    candidate = evaluation.candidate
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="postgres-bond-applicability-expiry",
+        payload={"candidate_id": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+    )
+    assert persisted.record is not None
+    rehydrated = repository.candidate_record_by_id(candidate.candidate_id)
+    assert rehydrated is not None
+    assert rehydrated.candidate.evidence_packet.applicability_expires_at_utc == datetime(
+        2026, 6, 23, tzinfo=UTC
+    )
+
+    before = repository.review_queue_candidate_page(
+        evaluated_at_utc=datetime(2026, 6, 22, 23, 59, 59, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        expected_snapshot_token=None,
+        queue_policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    exactly_at = repository.review_queue_candidate_page(
+        evaluated_at_utc=datetime(2026, 6, 23, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        expected_snapshot_token=None,
+        queue_policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(
+        evaluated_at_utc=datetime(2026, 6, 23, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+    )
+
+    assert [record.candidate.candidate_id for record in before.candidate_records] == [
+        candidate.candidate_id
+    ]
+    assert exactly_at.candidate_records == ()
+    assert exactly_at.total_excluded_candidate_count == 1
+    assert readiness.reviewable_item_count == 0
+    assert readiness.excluded_candidate_count == 1
+    assert readiness.exclusion_counts[QueueExclusionReason.EXPIRED.value] == 1
 
 
 def test_postgres_review_queue_honors_persisted_snooze_until_exact_boundary(
@@ -118,6 +197,39 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
     )
     assert stale_page.status_code == 409
     assert stale_page.json()["code"] == "review_queue_snapshot_conflict"
+
+
+def _bond_maturity_input() -> BondMaturitySignalInput:
+    as_of_date = date(2026, 6, 21)
+    evaluated_at_utc = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+    def source_ref(product_id: str) -> SourceRef:
+        return SourceRef(
+            product_id=product_id,
+            source_system=SourceSystem.LOTUS_CORE,
+            product_version="v1",
+            route=f"/source/{product_id}",
+            as_of_date=as_of_date,
+            generated_at_utc=evaluated_at_utc,
+            content_hash=f"sha256:{product_id}:applicability-expiry",
+            data_quality_status="complete",
+            freshness=EvidenceFreshness.CURRENT,
+        )
+
+    return BondMaturitySignalInput(
+        as_of_date=as_of_date,
+        source_reported_next_maturity_date=date(2026, 6, 22),
+        source_reported_maturing_position_count=2,
+        holdings_ref=source_ref("lotus-core:HoldingsAsOf:v1"),
+        maturity_fact_ref=source_ref("lotus-core:PortfolioMaturitySummary:v1"),
+        evaluated_at_utc=evaluated_at_utc,
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-private-bank-sg",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+    )
 
 
 def _source_ref(product_id: str, *, suffix: str) -> dict[str, str]:

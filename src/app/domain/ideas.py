@@ -273,6 +273,8 @@ class OpportunitySignal:
         _require_aware_utc(self.detected_at_utc, "detected_at_utc")
         if self.expires_at_utc is not None:
             _require_aware_utc(self.expires_at_utc, "expires_at_utc")
+            if self.expires_at_utc <= self.detected_at_utc:
+                raise ValueError("expires_at_utc must be after detected_at_utc")
         if not self.source_refs:
             raise ValueError("source_refs is required")
         if not self.reason_codes:
@@ -290,10 +292,18 @@ class IdeaEvidencePacket:
     reason_codes: tuple[ReasonCode, ...]
     unsupported_reasons: tuple[UnsupportedEvidenceReason, ...] = ()
     created_at_utc: datetime = field(default_factory=lambda: datetime.now(UTC))
+    applicability_expires_at_utc: datetime | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_aware_utc(self.created_at_utc, "created_at_utc")
+        if self.applicability_expires_at_utc is not None:
+            _require_aware_utc(
+                self.applicability_expires_at_utc,
+                "applicability_expires_at_utc",
+            )
+            if self.applicability_expires_at_utc <= self.created_at_utc:
+                raise ValueError("applicability_expires_at_utc must be after created_at_utc")
         if not self.source_refs:
             raise ValueError("source_refs is required")
         if not self.reason_codes:

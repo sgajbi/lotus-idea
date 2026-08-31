@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from app.domain.access_scope import ReviewAccessScope
@@ -84,7 +84,16 @@ def evaluate_bond_maturity_signal(
     ):
         return _not_eligible_below_materiality()
 
-    return _candidate_created_result(source_input, policy, source_refs)
+    applicability_expires_at_utc = _bond_maturity_applicability_expiry(maturity_date)
+    if source_input.evaluated_at_utc >= applicability_expires_at_utc:
+        return _not_eligible_expired()
+
+    return _candidate_created_result(
+        source_input,
+        policy,
+        source_refs,
+        applicability_expires_at_utc=applicability_expires_at_utc,
+    )
 
 
 def _require_timezone_aware_evaluation_time(source_input: BondMaturitySignalInput) -> None:
@@ -143,6 +152,8 @@ def _candidate_created_result(
     source_input: BondMaturitySignalInput,
     policy: BondMaturitySignalPolicy,
     source_refs: tuple[SourceRef, ...],
+    *,
+    applicability_expires_at_utc: datetime,
 ) -> SignalEvaluationResult:
     identity = _stable_bond_maturity_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
@@ -151,6 +162,7 @@ def _candidate_created_result(
         source_refs=source_refs,
         reason_codes=(ReasonCode.MATURITY_WINDOW,),
         detected_at_utc=source_input.evaluated_at_utc,
+        expires_at_utc=applicability_expires_at_utc,
     )
     lineage = LineageRef(
         lineage_id=identity.lineage_id,
@@ -164,6 +176,7 @@ def _candidate_created_result(
         lineage_ref=lineage,
         reason_codes=(ReasonCode.MATURITY_WINDOW, ReasonCode.REVIEW_REQUIRED),
         created_at_utc=source_input.evaluated_at_utc,
+        applicability_expires_at_utc=applicability_expires_at_utc,
     )
     candidate = IdeaCandidate(
         candidate_id=identity.candidate_id,
@@ -233,6 +246,14 @@ def _not_eligible_below_materiality() -> SignalEvaluationResult:
     )
 
 
+def _not_eligible_expired() -> SignalEvaluationResult:
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+        family=OpportunityFamily.BOND_MATURITY,
+        reason_codes=(ReasonCode.OPPORTUNITY_NO_LONGER_ELIGIBLE,),
+    )
+
+
 def _blocked(
     *,
     reason_codes: tuple[ReasonCode, ...],
@@ -266,6 +287,11 @@ def _within_maturity_window(
     window_days: int,
 ) -> bool:
     return as_of_date <= maturity_date <= as_of_date + timedelta(days=window_days)
+
+
+def _bond_maturity_applicability_expiry(maturity_date: date) -> datetime:
+    """Keep a contractual-date opportunity active through that UTC calendar date."""
+    return datetime.combine(maturity_date + timedelta(days=1), time.min, tzinfo=UTC)
 
 
 def _stable_bond_maturity_identity(

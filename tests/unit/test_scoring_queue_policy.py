@@ -66,6 +66,7 @@ def source_ref(product_id: str = "lotus-core:PortfolioStateSnapshot:v1") -> Sour
 def evidence_packet(
     *,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaEvidencePacket:
     source = source_ref()
     lineage = LineageRef(
@@ -85,6 +86,7 @@ def evidence_packet(
             else ()
         ),
         created_at_utc=EVALUATED_AT,
+        applicability_expires_at_utc=applicability_expires_at_utc,
     )
 
 
@@ -99,6 +101,7 @@ def candidate(
     suppression_reason: SuppressionReason | None = None,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
     score_policy_version: str = SCORING_POLICY.policy_version,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=candidate_id,
@@ -106,7 +109,10 @@ def candidate(
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,
-        evidence_packet=evidence_packet(supportability=supportability),
+        evidence_packet=evidence_packet(
+            supportability=supportability,
+            applicability_expires_at_utc=applicability_expires_at_utc,
+        ),
         source_signal_ids=source_signal_ids or (f"signal:{candidate_id}",),
         score=(
             score_fixture(
@@ -121,6 +127,42 @@ def candidate(
         created_at_utc=created_at_utc,
         updated_at_utc=created_at_utc,
     )
+
+
+@pytest.mark.parametrize(
+    ("evaluated_at_utc", "is_reviewable"),
+    [
+        (datetime(2026, 6, 21, 10, 59, 59, tzinfo=UTC), True),
+        (datetime(2026, 6, 21, 11, 0, tzinfo=UTC), False),
+        (datetime(2026, 6, 21, 11, 0, 1, tzinfo=UTC), False),
+    ],
+)
+def test_review_queue_enforces_exact_applicability_expiry_boundary(
+    evaluated_at_utc: datetime,
+    is_reviewable: bool,
+) -> None:
+    expiring = candidate(
+        "candidate-expiring",
+        applicability_expires_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
+    )
+
+    queue = build_review_queue(
+        (expiring,),
+        policy=QUEUE_POLICY,
+        evaluated_at_utc=evaluated_at_utc,
+    )
+
+    assert bool(queue.items) is is_reviewable
+    if is_reviewable:
+        assert queue.exclusions == ()
+    else:
+        assert queue.exclusions == (
+            QueueExclusion(
+                candidate_id=expiring.candidate_id,
+                reason=QueueExclusionReason.EXPIRED,
+                detail=("candidate applicability expired at 2026-06-21T11:00:00+00:00"),
+            ),
+        )
 
 
 def scoring_inputs(**overrides: Decimal) -> tuple[IdeaScoringInput, ...]:

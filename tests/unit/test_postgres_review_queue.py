@@ -46,6 +46,60 @@ QUEUE_AUDIENCE = ReviewQueueAudience.ADVISOR
 RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v2",)
 
 
+def test_postgres_review_queue_and_readiness_apply_exact_applicability_expiry() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = queue_candidate(index=1, candidate_scope=access_scope())
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            applicability_expires_at_utc=QUEUE_EVALUATED_AT,
+        ),
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:applicability-expiry-001",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    before = repository.review_queue_candidate_page(
+        evaluated_at_utc=QUEUE_EVALUATED_AT - timedelta(microseconds=1),
+        audience=QUEUE_AUDIENCE,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    exactly_at = repository.review_queue_candidate_page(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+    )
+
+    assert [record.candidate.candidate_id for record in before.candidate_records] == [
+        candidate.candidate_id
+    ]
+    assert exactly_at.candidate_records == ()
+    assert exactly_at.total_excluded_candidate_count == 1
+    assert readiness.exclusion_counts[QueueExclusionReason.EXPIRED.value] == 1
+
+
 def test_postgres_review_queue_enforces_persisted_snooze_until_exact_boundary() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -505,7 +559,7 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
 def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> None:
     query = _review_queue_readiness_summary_query("FALSE")
 
-    assert query.count("%s") == 12
+    assert query.count("%s") == 13
     assert "WITH base AS" in query
     assert "classified AS" in query
     assert "duplicate_counts AS" in query
@@ -515,9 +569,9 @@ def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> No
     classification_order = (
         QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
         QueueExclusionReason.INVALID_STATE,
+        QueueExclusionReason.EXPIRED,
         QueueExclusionReason.SNOOZED,
         QueueExclusionReason.SUPPRESSED,
-        QueueExclusionReason.EXPIRED,
         QueueExclusionReason.CLOSED,
         QueueExclusionReason.REJECTED,
         QueueExclusionReason.UNSUPPORTED_EVIDENCE,
@@ -584,11 +638,12 @@ def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     assert params[0] == QUEUE_EVALUATED_AT
     assert params[1] == QUEUE_EVALUATED_AT
     assert params[2] == ReviewPosture.ADVISOR_REVIEW_REQUIRED.value
-    assert isinstance(params[3], list)
-    assert params[5] == ReviewAction.SNOOZE.value
-    assert params[6] == QUEUE_EVALUATED_AT
-    assert params[7] == ["idle-liquidity-v2"]
-    assert params[9] == ["portfolio-001"]
+    assert params[3] == QUEUE_EVALUATED_AT
+    assert isinstance(params[4], list)
+    assert params[6] == ReviewAction.SNOOZE.value
+    assert params[7] == QUEUE_EVALUATED_AT
+    assert params[8] == ["idle-liquidity-v2"]
+    assert params[10] == ["portfolio-001"]
 
 
 def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes() -> None:
@@ -617,7 +672,7 @@ def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes()
         predicate_sql.index(f"->>'{field_name}'")
         for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
     )
-    assert params[9:] == (
+    assert params[10:] == (
         ["tenant-001"],
         ["book-001"],
         ["portfolio-001"],
