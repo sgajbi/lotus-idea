@@ -40,7 +40,7 @@ def test_compose_runtime_contract_rejects_required_untracked_env_file() -> None:
 
 
 def test_release_contract_requires_clean_checkout_compose_gate() -> None:
-    command = "$(VENV_PYTHON) scripts/compose_runtime_contract_gate.py"
+    command = "python scripts/compose_runtime_contract_gate.py"
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
     degraded = makefile.replace(f"\t{command}\n", "", 1)
 
