@@ -389,8 +389,17 @@ def test_downstream_outcome_contract_rejects_ambiguous_postures() -> None:
 
 def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> None:
     repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    second_candidate = candidate("idea-downstream-002")
+    persisted = repository.persist_candidate(
+        second_candidate,
+        idempotency_key="candidate-persist-002",
+        payload={"candidate_id": second_candidate.candidate_id},
+        actor_subject="system",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
     second = request_conversion_intent(
-        candidate(),
+        second_candidate,
         ConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-002",
             target=ConversionTarget.ADVISE_PROPOSAL,
@@ -706,27 +715,27 @@ def repository_with_candidate() -> InMemoryIdeaRepository:
     return repository
 
 
-def candidate() -> IdeaCandidate:
+def candidate(candidate_id: str = "idea-downstream-001") -> IdeaCandidate:
     source = source_ref()
     return IdeaCandidate(
-        candidate_id="idea-downstream-001",
-        identity=initial_candidate_identity("idea-downstream-001"),
+        candidate_id=candidate_id,
+        identity=initial_candidate_identity(candidate_id),
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
         evidence_packet=IdeaEvidencePacket(
-            evidence_packet_id="iep-downstream-001",
+            evidence_packet_id=f"iep-{candidate_id}",
             supportability=EvidenceSupportability.READY,
             source_refs=(source,),
             lineage_ref=LineageRef(
-                lineage_id="lineage:lotus-idea:downstream:test",
+                lineage_id=f"lineage:lotus-idea:downstream:{candidate_id}",
                 source_refs=(source,),
                 content_hash="sha256:downstream-evidence",
             ),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
             created_at_utc=EVALUATED_AT,
         ),
-        source_signal_ids=("signal-downstream-001",),
+        source_signal_ids=(f"signal-{candidate_id}",),
         score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("88"),
