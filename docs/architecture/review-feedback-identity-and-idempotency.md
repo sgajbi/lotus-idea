@@ -52,6 +52,17 @@ This ordering allows an equivalent retry of a terminal review to replay before
 terminal-state validation. Entitlement checks and candidate lookup still run
 before identity disclosure.
 
+For a genuinely new review resource, the domain result retains the exact
+source candidate snapshot used to evaluate the action. After the PostgreSQL
+candidate fence is acquired, persistence compares that source with the locked
+aggregate before writing. A distinct decision derived from older lifecycle,
+posture, evidence, score, scope, identity version, or update state fails with
+the existing `review_action_conflict`; it cannot overwrite the committed
+candidate or append decision, audit, idempotency, lifecycle, or outbox rows.
+Equivalent resource-identity replay remains earlier in the ordering so a
+legitimate retry does not fail merely because its first attempt already
+changed the candidate.
+
 ## PostgreSQL Atomicity
 
 PostgreSQL primary keys remain the final concurrency authority. Delta writes
@@ -94,6 +105,10 @@ not expose the prior actor, evidence, candidate state, or request payload.
 - An identity conflict does not reserve the losing transport key.
 - An equivalent replay does reserve its transport key so later changed reuse of
   that key remains an idempotency conflict.
+- Concurrent distinct state-changing decisions are serialized by candidate;
+  the first committed decision wins and the stale loser writes no side effect.
+- A sequential new decision is evaluated from a fresh candidate snapshot and
+  remains governed by the review-action matrix.
 
 ## Operability
 
