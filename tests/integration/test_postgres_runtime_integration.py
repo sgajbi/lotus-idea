@@ -22,6 +22,7 @@ from app.domain import (
     FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
     FeedbackReason,
+    InvalidReviewAction,
     ReasonCode,
     ReviewAction,
     ReviewActorContext,
@@ -619,6 +620,7 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
         proof_context.actor,
         approved_candidate,
     )
+    _assert_concurrent_competing_review_actions(postgres_database_url)
 
 
 def _concurrent_review_feedback_proof_context(
@@ -633,13 +635,22 @@ def _concurrent_review_feedback_proof_context(
     )
 
 
-def _persist_review_ready_candidate_for_concurrency_proof() -> str:
+def _persist_review_ready_candidate_for_concurrency_proof(
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> str:
     client = managed_test_client(app)
+    payload = high_cash_payload()
+    payload["accessScope"] = {
+        **payload["accessScope"],
+        "portfolioId": portfolio_id,
+    }
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
-        headers=persistence_headers("postgres-runtime-identity-persist-001"),
+        json=payload,
+        headers=persistence_headers(f"postgres-runtime-identity-persist:{portfolio_id}"),
     )
+    assert persisted.status_code == 200
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
     _transition_candidate_to_review_ready(client, candidate_id)
     reset_idea_repository_for_tests()
@@ -732,6 +743,78 @@ def _assert_concurrent_feedback_resource_identity(
     _assert_accepted_and_replayed(feedback_decisions)
     assert _table_count(postgres_database_url, "idea_feedback_event") == 1
     _assert_review_feedback_side_effect_delta(postgres_database_url, before_counts)
+
+
+def _assert_concurrent_competing_review_actions(postgres_database_url: str) -> None:
+    candidate_id = _persist_review_ready_candidate_for_concurrency_proof(
+        portfolio_id="PB_SG_REVIEW_RACE_001",
+    )
+    candidate = _candidate_for_concurrency_proof(postgres_database_url, candidate_id)
+    actor = _review_actor_context(candidate)
+    competing_results = {
+        "review:competing:approve": apply_review_action(
+            candidate,
+            ReviewDecisionCommand(
+                review_id="postgres-competing-approval-001",
+                action=ReviewAction.APPROVE_FOR_CONVERSION,
+                actor=actor,
+                reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+                decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        "review:competing:reject": apply_review_action(
+            candidate,
+            ReviewDecisionCommand(
+                review_id="postgres-competing-rejection-001",
+                action=ReviewAction.REJECT,
+                actor=actor,
+                reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+                decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            ),
+        ),
+    }
+    tracked_tables = (
+        "idea_review_decision",
+        "idea_lifecycle_history",
+        "idea_audit_event",
+        "idea_outbox_event",
+        "idea_idempotency_record",
+    )
+    before_counts = {table: _table_count(postgres_database_url, table) for table in tracked_tables}
+
+    def persist_competing_action(
+        repository: PostgresIdeaRepository,
+        idempotency_key: str,
+    ) -> ReviewPersistenceDecision | InvalidReviewAction:
+        try:
+            return repository.record_review_action(
+                competing_results[idempotency_key],
+                idempotency_key=idempotency_key,
+                payload={"reviewId": competing_results[idempotency_key].decision.review_id},
+            ).decision
+        except InvalidReviewAction as exc:
+            return exc
+
+    outcomes = run_concurrent_repository_mutations(
+        postgres_database_url,
+        persist_competing_action,
+        ("review:competing:approve", "review:competing:reject"),
+    )
+
+    assert sum(outcome is ReviewPersistenceDecision.ACCEPTED for outcome in outcomes) == 1
+    stale_conflict = next(
+        outcome for outcome in outcomes if isinstance(outcome, InvalidReviewAction)
+    )
+    assert stale_conflict.code == "review_action_conflict"
+    assert {table: _table_count(postgres_database_url, table) for table in tracked_tables} == {
+        table: count + 1 for table, count in before_counts.items()
+    }
+    persisted = _candidate_for_concurrency_proof(postgres_database_url, candidate_id)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        record = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(candidate_id)
+    assert record is not None
+    assert len(record.review_decisions) == 1
+    assert record.review_decisions[0].resulting_posture is persisted.review_posture
 
 
 def _assert_accepted_and_replayed(
