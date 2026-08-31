@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from dataclasses import dataclass, replace
 
@@ -14,10 +14,13 @@ from app.application.high_cash_signal import (
     evaluate_high_cash_signal_from_core,
     evaluate_high_cash_signal_command,
 )
+from app.application.candidate_expiry import CandidateExpiryDecision
 from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    IdeaLifecycleStatus,
+    LifecyclePersistenceDecision,
     ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
@@ -281,6 +284,111 @@ def test_application_does_not_persist_blocked_high_cash_evaluation() -> None:
     assert len(repository.snapshot().candidate_records) == 0
 
 
+def test_authoritative_non_eligible_reevaluation_expires_existing_candidate_once() -> None:
+    repository = InMemoryIdeaRepository()
+    created = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+    assert created.persistence is not None
+    assert created.persistence.record is not None
+    candidate_id = created.persistence.record.candidate.candidate_id
+    reevaluated_at = EVALUATED_AT + timedelta(hours=1)
+    non_eligible = replace(
+        command(cash_weight=Decimal("0.10")),
+        evaluated_at_utc=reevaluated_at,
+    )
+
+    expired = evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=non_eligible,
+            idempotency_key="signal-ingestion:high-cash:pb-001:below-threshold",
+        ),
+        repository=repository,
+    )
+    repeated = evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=non_eligible,
+            idempotency_key="signal-ingestion:high-cash:pb-001:below-threshold-repeat",
+        ),
+        repository=repository,
+    )
+
+    assert expired.evaluation.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert expired.persistence is None
+    assert expired.expiry is not None
+    assert expired.expiry.decision is CandidateExpiryDecision.EXPIRED
+    assert expired.expiry.persistence is not None
+    assert expired.expiry.persistence.decision is LifecyclePersistenceDecision.ACCEPTED
+    assert expired.expiry.persistence.record is not None
+    record = expired.expiry.persistence.record
+    assert record.candidate.candidate_id == candidate_id
+    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
+    assert record.audit_events[-1].event_type == "idea.lifecycle.transitioned"
+    assert record.audit_events[-1].attributes["reason_codes"] == (
+        "opportunity_no_longer_eligible,below_materiality"
+    )
+    assert repeated.expiry is not None
+    assert repeated.expiry.decision is CandidateExpiryDecision.ALREADY_EXPIRED
+    assert len(repository.snapshot().candidate_records[candidate_id].lifecycle_history) == 1
+
+
+def test_blocked_reevaluation_does_not_expire_existing_candidate() -> None:
+    repository = InMemoryIdeaRepository()
+    created = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+    assert created.persistence is not None
+    assert created.persistence.record is not None
+    candidate_id = created.persistence.record.candidate.candidate_id
+
+    blocked = evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=replace(
+                command(freshness=EvidenceFreshness.STALE),
+                evaluated_at_utc=EVALUATED_AT + timedelta(hours=1),
+            ),
+            idempotency_key="signal-ingestion:high-cash:pb-001:stale",
+        ),
+        repository=repository,
+    )
+
+    assert blocked.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert blocked.expiry is None
+    record = repository.snapshot().candidate_records[candidate_id]
+    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
+    assert record.lifecycle_history == ()
+
+
+def test_materially_changed_condition_reopens_after_automatic_expiry() -> None:
+    repository = InMemoryIdeaRepository()
+    evaluate_and_persist_high_cash_signal(persist_command(), repository=repository)
+    evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=command(cash_weight=Decimal("0.10")),
+            idempotency_key="signal-ingestion:high-cash:pb-001:expire",
+        ),
+        repository=repository,
+    )
+
+    reopened = evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=command(cash_weight=Decimal("0.20")),
+            idempotency_key="signal-ingestion:high-cash:pb-001:recur",
+        ),
+        repository=repository,
+    )
+
+    assert reopened.persistence is not None
+    assert (
+        reopened.persistence.decision is CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED
+    )
+    assert reopened.persistence.record is not None
+    assert reopened.persistence.record.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
+    assert reopened.persistence.record.candidate.identity.material_version == 2
+
+
 def test_application_persists_core_backed_high_cash_candidate() -> None:
     source = RecordingCoreSource(evidence=current_core_evidence())
     repository = InMemoryIdeaRepository()
@@ -300,6 +408,81 @@ def test_application_persists_core_backed_high_cash_candidate() -> None:
     assert result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
     assert source.seen_request is not None
     assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+
+
+def test_core_ingestion_retires_candidate_when_source_condition_is_no_longer_eligible() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=current_core_evidence())
+    initial_command = EvaluateAndPersistHighCashFromCoreCommand(
+        evaluation=from_core_command(),
+        idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
+        actor_subject="signal-ingestion-worker",
+    )
+    created = evaluate_and_persist_high_cash_signal_from_core(
+        initial_command,
+        core_source=source,
+        repository=repository,
+    )
+    assert created.persistence is not None
+    assert created.persistence.record is not None
+    candidate_id = created.persistence.record.candidate.candidate_id
+    source.evidence = current_core_evidence(cash_weight=Decimal("0.10"))
+
+    retired = evaluate_and_persist_high_cash_signal_from_core(
+        replace(
+            initial_command,
+            evaluation=replace(
+                from_core_command(),
+                evaluated_at_utc=EVALUATED_AT + timedelta(hours=1),
+            ),
+            idempotency_key="signal-ingestion:high-cash:core:pb-001:not-eligible",
+        ),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert retired.evaluation.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert retired.expiry is not None
+    assert retired.expiry.decision is CandidateExpiryDecision.EXPIRED
+    assert (
+        repository.snapshot().candidate_records[candidate_id].candidate.lifecycle_status
+        is IdeaLifecycleStatus.EXPIRED
+    )
+
+
+def test_core_source_failure_does_not_retire_existing_candidate() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=current_core_evidence())
+    initial_command = EvaluateAndPersistHighCashFromCoreCommand(
+        evaluation=from_core_command(),
+        idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
+        actor_subject="signal-ingestion-worker",
+    )
+    created = evaluate_and_persist_high_cash_signal_from_core(
+        initial_command,
+        core_source=source,
+        repository=repository,
+    )
+    assert created.persistence is not None
+    assert created.persistence.record is not None
+    candidate_id = created.persistence.record.candidate.candidate_id
+    source.error = CoreSourceUnavailable(code="upstream_timeout")
+
+    blocked = evaluate_and_persist_high_cash_signal_from_core(
+        replace(
+            initial_command,
+            idempotency_key="signal-ingestion:high-cash:core:pb-001:blocked",
+        ),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert blocked.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert blocked.expiry is None
+    assert (
+        repository.snapshot().candidate_records[candidate_id].candidate.lifecycle_status
+        is IdeaLifecycleStatus.GENERATED
+    )
 
 
 def test_application_validates_persistence_command_identity() -> None:

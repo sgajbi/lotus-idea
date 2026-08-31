@@ -256,6 +256,22 @@ class CandidateLifecycleRepository(Protocol):
     ) -> LifecyclePersistenceResult: ...
 
 
+class CandidateExpiryRepository(
+    CandidateSnapshotRepository,
+    CandidateLifecycleRepository,
+    Protocol,
+):
+    """Repository capabilities required for source-authoritative candidate retirement."""
+
+
+class CandidateEvaluationRepository(
+    CandidatePersistenceRepository,
+    CandidateExpiryRepository,
+    Protocol,
+):
+    """Repository surface for evaluation, persistence, and non-eligible reconciliation."""
+
+
 class CandidateEvidenceReplayRepository(Protocol):
     def replay_evidence(
         self,
