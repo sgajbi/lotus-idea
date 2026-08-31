@@ -67,7 +67,7 @@ from app.domain import (
     SignalEvaluationResult,
     SourceSystem,
 )
-from app.ports.idea_repository import CandidatePersistenceRepository
+from app.ports.idea_repository import CandidateEvaluationRepository
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -101,7 +101,7 @@ _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
 @dataclass(frozen=True)
 class _HighCashPersistenceApiContext:
     source_authority: str
-    repository: CandidatePersistenceRepository
+    repository: CandidateEvaluationRepository
     durable_storage_backed: bool
     event_lineage: EventLineageContext
 

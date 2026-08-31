@@ -109,6 +109,7 @@ class ReasonCode(StrEnum):
     REVIEW_SUPPRESSED = "review_suppressed"
     REVIEW_SNOOZED = "review_snoozed"
     REVIEW_ESCALATED = "review_escalated"
+    OPPORTUNITY_NO_LONGER_ELIGIBLE = "opportunity_no_longer_eligible"
     FEEDBACK_RECORDED = "feedback_recorded"
     ENTITLEMENT_DENIED = "entitlement_denied"
     AI_REDACTION_APPLIED = "ai_redaction_applied"

@@ -20,7 +20,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
 )
 from app.ports.core_sources import CoreOpportunitySourcePort
-from app.ports.idea_repository import CandidatePersistenceRepository
+from app.ports.idea_repository import CandidateEvaluationRepository
 
 
 SOURCE_INGESTION_ACTOR = "signal-ingestion-worker"
@@ -150,7 +150,7 @@ def ingest_high_cash_signal_from_core(
     command: IngestHighCashSourceSignalCommand,
     *,
     core_source: CoreOpportunitySourcePort,
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
 ) -> HighCashSourceIngestionResult:
     _require_text(command.portfolio_id, "portfolio_id")
@@ -192,7 +192,7 @@ def run_high_cash_source_ingestion_batch(
     command: RunHighCashSourceIngestionBatchCommand,
     *,
     core_source: CoreOpportunitySourcePort,
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
 ) -> HighCashSourceIngestionBatchResult:
     item_results = tuple(

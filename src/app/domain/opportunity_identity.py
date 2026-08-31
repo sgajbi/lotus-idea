@@ -48,6 +48,59 @@ class OpportunityIdentity:
         )
 
 
+@dataclass(frozen=True)
+class OpportunityBusinessIdentity:
+    """Stable identity for one opportunity kind inside its governed business scope."""
+
+    business_identity_id: str
+    candidate_id: str
+
+
+def build_opportunity_business_identity(
+    *,
+    family: OpportunityFamily,
+    opportunity_kind: str,
+    as_of_date: date,
+    access_scope: ReviewAccessScope | None,
+) -> OpportunityBusinessIdentity:
+    """Build identity without requiring evidence or a currently eligible material state."""
+    identity, _ = _build_opportunity_business_identity(
+        family=family,
+        opportunity_kind=opportunity_kind,
+        as_of_date=as_of_date,
+        access_scope=access_scope,
+    )
+    return identity
+
+
+def _build_opportunity_business_identity(
+    *,
+    family: OpportunityFamily,
+    opportunity_kind: str,
+    as_of_date: date,
+    access_scope: ReviewAccessScope | None,
+) -> tuple[OpportunityBusinessIdentity, str]:
+    normalized_kind = opportunity_kind.strip()
+    if not normalized_kind:
+        raise ValueError("opportunity_kind is required")
+    business_digest = _canonical_digest(
+        {
+            "family": family.value,
+            "opportunity_kind": normalized_kind,
+            "scope": _business_scope_payload(access_scope, as_of_date=as_of_date),
+        }
+    )
+    identifier_kind = normalized_kind.replace("-", "_")
+    candidate_token = business_digest[:16]
+    return (
+        OpportunityBusinessIdentity(
+            business_identity_id=f"opportunity_{identifier_kind}_{business_digest[:24]}",
+            candidate_id=f"idea_{identifier_kind}_{candidate_token}",
+        ),
+        business_digest,
+    )
+
+
 def build_opportunity_identity(
     *,
     family: OpportunityFamily,
@@ -59,20 +112,18 @@ def build_opportunity_identity(
 ) -> OpportunityIdentity:
     """Build deterministic identities without treating source bytes as business meaning."""
     normalized_kind = opportunity_kind.strip()
-    if not normalized_kind:
-        raise ValueError("opportunity_kind is required")
     if not material_facts:
         raise ValueError("material_facts is required")
     if not source_refs:
         raise ValueError("source_refs is required")
     _validate_material_facts(material_facts)
 
-    business_payload = {
-        "family": family.value,
-        "opportunity_kind": normalized_kind,
-        "scope": _business_scope_payload(access_scope, as_of_date=as_of_date),
-    }
-    business_digest = _canonical_digest(business_payload)
+    business_identity, business_digest = _build_opportunity_business_identity(
+        family=family,
+        opportunity_kind=normalized_kind,
+        as_of_date=as_of_date,
+        access_scope=access_scope,
+    )
     material_digest = _canonical_digest(
         {
             "business_identity_digest": business_digest,
@@ -94,10 +145,10 @@ def build_opportunity_identity(
     return OpportunityIdentity(
         policy_version=OPPORTUNITY_IDENTITY_POLICY_VERSION,
         opportunity_kind=normalized_kind,
-        business_identity_id=f"opportunity_{identifier_kind}_{business_digest[:24]}",
+        business_identity_id=business_identity.business_identity_id,
         material_fingerprint=f"sha256:{material_digest}",
         evidence_fingerprint=f"sha256:{evidence_digest}",
-        candidate_id=f"idea_{identifier_kind}_{candidate_token}",
+        candidate_id=business_identity.candidate_id,
         signal_id=(f"signal_{identifier_kind}_{candidate_token}_{material_token}_{evidence_token}"),
         evidence_packet_id=(
             f"iep_{identifier_kind}_{candidate_token}_{material_token}_{evidence_token}"
@@ -180,6 +231,8 @@ __all__ = [
     "PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION",
     "OPPORTUNITY_IDENTITY_POLICY_VERSION",
     "IdentityMaterialValue",
+    "OpportunityBusinessIdentity",
     "OpportunityIdentity",
+    "build_opportunity_business_identity",
     "build_opportunity_identity",
 ]

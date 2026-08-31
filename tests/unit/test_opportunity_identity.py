@@ -10,6 +10,7 @@ from app.domain.ideas import EvidenceFreshness, OpportunityFamily, SourceRef, So
 from app.domain.opportunity_identity import (
     OPPORTUNITY_IDENTITY_POLICY_VERSION,
     OpportunityIdentity,
+    build_opportunity_business_identity,
     build_opportunity_identity,
 )
 
@@ -115,6 +116,20 @@ def test_material_change_versions_candidate_under_the_same_business_identity() -
     assert changed.signal_id != original.signal_id
     assert changed.evidence_packet_id != original.evidence_packet_id
     assert changed.lineage_id != original.lineage_id
+
+
+def test_business_identity_can_be_rebuilt_without_material_or_evidence_facts() -> None:
+    complete = _identity()
+
+    business = build_opportunity_business_identity(
+        family=OpportunityFamily.HIGH_CASH,
+        opportunity_kind="high_cash",
+        as_of_date=AS_OF_DATE,
+        access_scope=SCOPE,
+    )
+
+    assert business.business_identity_id == complete.business_identity_id
+    assert business.candidate_id == complete.candidate_id
 
 
 def test_observation_date_versions_evidence_not_scoped_candidate_materiality() -> None:

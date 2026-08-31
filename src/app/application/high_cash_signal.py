@@ -19,6 +19,11 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_high_cash_signal,
 )
+from app.application.candidate_expiry import (
+    CandidateExpiryResult,
+    ExpireCandidateCommand,
+    expire_candidate,
+)
 from app.application.access_scope import tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
@@ -29,7 +34,8 @@ from app.ports.core_sources import (
     CoreSourceUnavailable,
 )
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
-from app.ports.idea_repository import CandidatePersistenceRepository
+from app.domain.opportunity_identity import build_opportunity_business_identity
+from app.ports.idea_repository import CandidateEvaluationRepository
 
 
 @dataclass(frozen=True)
@@ -74,6 +80,7 @@ class EvaluateAndPersistHighCashFromCoreCommand:
 class HighCashSignalPersistenceResult:
     evaluation: SignalEvaluationResult
     persistence: CandidatePersistenceResult | None
+    expiry: CandidateExpiryResult | None = None
     source_diagnostic_codes: tuple[str, ...] = ()
 
 
@@ -151,14 +158,26 @@ def evaluate_high_cash_signal_from_core(
 def evaluate_and_persist_high_cash_signal(
     command: EvaluateAndPersistHighCashSignalCommand,
     *,
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
     evaluation = evaluate_high_cash_signal_command(command.evaluation, policy=policy)
     if evaluation.candidate is None:
-        return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=None)
+        return HighCashSignalPersistenceResult(
+            evaluation=evaluation,
+            persistence=None,
+            expiry=_expire_non_eligible_high_cash(
+                evaluation=evaluation,
+                as_of_date=command.evaluation.as_of_date,
+                access_scope=command.evaluation.access_scope,
+                idempotency_key=command.idempotency_key,
+                actor_subject=command.actor_subject,
+                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                repository=repository,
+            ),
+        )
 
     persistence = repository.persist_candidate(
         evaluation.candidate,
@@ -175,7 +194,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
     command: EvaluateAndPersistHighCashFromCoreCommand,
     *,
     core_source: CoreOpportunitySourcePort,
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
@@ -233,6 +252,18 @@ def evaluate_and_persist_high_cash_signal_from_core(
         return HighCashSignalPersistenceResult(
             evaluation=evaluation,
             persistence=None,
+            expiry=_expire_non_eligible_high_cash(
+                evaluation=evaluation,
+                as_of_date=command.evaluation.as_of_date,
+                access_scope=tenant_portfolio_scope(
+                    tenant_id=command.evaluation.tenant_id,
+                    portfolio_id=command.evaluation.portfolio_id,
+                ),
+                idempotency_key=command.idempotency_key,
+                actor_subject=command.actor_subject,
+                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                repository=repository,
+            ),
             source_diagnostic_codes=source_diagnostic_codes,
         )
 
@@ -247,6 +278,39 @@ def evaluate_and_persist_high_cash_signal_from_core(
         evaluation=evaluation,
         persistence=persistence,
         source_diagnostic_codes=source_diagnostic_codes,
+    )
+
+
+def _expire_non_eligible_high_cash(
+    *,
+    evaluation: SignalEvaluationResult,
+    as_of_date: date,
+    access_scope: ReviewAccessScope | None,
+    idempotency_key: str,
+    actor_subject: str,
+    evaluated_at_utc: datetime,
+    repository: CandidateEvaluationRepository,
+) -> CandidateExpiryResult | None:
+    if evaluation.outcome is not SignalEvaluationOutcome.NOT_ELIGIBLE:
+        return None
+    business_identity = build_opportunity_business_identity(
+        family=OpportunityFamily.HIGH_CASH,
+        opportunity_kind="high_cash",
+        as_of_date=as_of_date,
+        access_scope=access_scope,
+    )
+    reason_codes = tuple(
+        dict.fromkeys((ReasonCode.OPPORTUNITY_NO_LONGER_ELIGIBLE, *evaluation.reason_codes))
+    )
+    return expire_candidate(
+        ExpireCandidateCommand(
+            candidate_id=business_identity.candidate_id,
+            idempotency_key=f"{idempotency_key}:expire",
+            actor_subject=actor_subject,
+            evaluated_at_utc=evaluated_at_utc,
+            reason_codes=reason_codes,
+        ),
+        repository=repository,
     )
 
 
