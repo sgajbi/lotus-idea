@@ -65,8 +65,8 @@ HIGH_CASH_PERSIST_BLOCKED_TEST = (
     "test_high_cash_persist_api_does_not_persist_blocked_evaluation"
 )
 HIGH_CASH_PERSIST_NOT_ELIGIBLE_TEST = (
-    "tests/integration/test_high_cash_signal_api.py::"
-    "test_high_cash_persist_api_skips_not_eligible_evaluation"
+    "tests/integration/test_high_cash_candidate_expiry_api.py::"
+    "test_high_cash_persist_api_skips_not_eligible_evaluation_without_candidate"
 )
 HIGH_CASH_SUCCESS_CONTRACT_TEST = (
     "tests/unit/api_examples/test_high_cash_signal_examples.py::"

@@ -12,7 +12,6 @@ import app.api.idea_signals as idea_signals_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import (
     EvidenceFreshness,
-    IdeaLifecycleStatus,
     InMemoryIdeaRepository,
     SourceRef,
     SourceSystem,
@@ -1139,73 +1138,6 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
     assert payload["evaluation"]["outcome"] == "blocked"
     assert payload["persistence"] is None
     assert payload["durableStorageBacked"] is False
-
-
-def test_high_cash_persist_api_skips_not_eligible_evaluation() -> None:
-    reset_idea_repository_for_tests()
-
-    response = managed_test_client(app).post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight="0.05", scoped=True),
-        headers=persistence_headers("persist-high-cash-api-not-eligible"),
-    )
-
-    assert response.status_code == 200
-    assert response.json()["evaluation"]["outcome"] == "not_eligible"
-    assert response.json()["evaluation"]["candidate"] is None
-    assert response.json()["persistence"] is None
-    assert response.json()["supportedFeaturePromoted"] is False
-    assert len(get_idea_repository().snapshot().candidate_records) == 0
-
-
-def test_high_cash_persist_api_expires_candidate_after_authoritative_resolution() -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    created = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(scoped=True),
-        headers=persistence_headers("persist-high-cash-api-expiry-created"),
-    )
-    candidate_id = created.json()["persistence"]["candidateId"]
-
-    resolved = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight="0.10", scoped=True),
-        headers=persistence_headers("persist-high-cash-api-expiry-resolved"),
-    )
-
-    assert (created.status_code, resolved.status_code) == (200, 200)
-    assert resolved.json()["evaluation"]["outcome"] == "not_eligible"
-    assert resolved.json()["persistence"] is None
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
-    assert len(record.lifecycle_history) == 1
-    assert record.audit_events[-1].attributes["reason_codes"] == (
-        "opportunity_no_longer_eligible,below_materiality"
-    )
-
-
-def test_high_cash_persist_api_preserves_candidate_when_reevaluation_is_blocked() -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    created = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(scoped=True),
-        headers=persistence_headers("persist-high-cash-api-blocked-created"),
-    )
-    candidate_id = created.json()["persistence"]["candidateId"]
-
-    blocked = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(freshness="stale", scoped=True),
-        headers=persistence_headers("persist-high-cash-api-blocked-reevaluation"),
-    )
-
-    assert (created.status_code, blocked.status_code) == (200, 200)
-    assert blocked.json()["evaluation"]["outcome"] == "blocked"
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
-    assert record.lifecycle_history == ()
 
 
 def test_high_cash_persist_api_requires_candidate_persistence_capability() -> None:
