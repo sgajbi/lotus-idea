@@ -150,6 +150,19 @@ def test_golden_set_detects_candidate_reopen_regression() -> None:
     )
 
 
+def test_golden_set_detects_evidence_only_terminal_reopen_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["lifecycleExpectations"][3]["expected"]["decision"] = "recurrent_condition_reopened"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any(
+        "expired-evidence-correction-stays-terminal decision expected "
+        "'recurrent_condition_reopened'" in error
+        for error in errors
+    )
+
+
 def test_golden_set_rejects_production_derived_expectations() -> None:
     golden_set = deepcopy(load_golden_set())
     golden_set["authorship"]["expectedResultsDerivedFromProductionCode"] = True
