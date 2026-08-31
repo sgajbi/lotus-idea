@@ -480,16 +480,15 @@ proof is Core-owned canonical seed/DPM readiness through
 `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885`, plus fresh governed
 Gateway/BFF-backed canonical Workbench validation for #685/#686; it is not
 hidden Idea app-code work.
-Evidence-only Slice 18 synchronization PRs must not create an endless
-source-sync chain solely to record their own post-merge evidence. Their final
-proof is durable when recorded as a #681 GitHub issue comment with the PR URL,
-merged main SHA, exact-main Main Releasability run, wiki publication or
-no-wiki-change decision, and branch/worktree hygiene. PR #845 is the current
-example in the
+Do not create routine post-merge source-sync PRs solely to transcribe PR
+numbers, run ids, exact-main SHAs, issue counts, image digests, lifecycle
+labels, wiki publication, or branch-cleanup evidence. Those volatile facts are
+durable on the owning GitHub issue/PR and in generated or immutable CI/release
+artifacts. PR #845 is a historical recursion-stop example in the
 [#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
-If an evidence-sync PR changes implementation truth, blocker state, support
-posture, wiki source, context, or policy, source-controlled
-ledger/docs/wiki/context truth remains mandatory.
+Put durable product, architecture, blocker, support, wiki, context, and policy
+truth in the implementation PR. Batch later durable corrections through a
+periodic Slice 18 reconciliation sweep.
 Platform PR `sgajbi/lotus-platform#646` merged the corresponding reusable
 guidance hardening into platform-owned agent workflow source on main
 `c041a7e13358feb322b8e92b3827f3ed2a834b43`, with exact-main Main

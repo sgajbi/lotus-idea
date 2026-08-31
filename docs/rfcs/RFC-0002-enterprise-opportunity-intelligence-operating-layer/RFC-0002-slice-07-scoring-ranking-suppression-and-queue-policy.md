@@ -220,6 +220,29 @@ expired record, evidence-only refresh preserves expiry, and a genuinely changed
 eligible condition reopens only as the next governed material version with the
 existing recurrence reason.
 
+### Explicit applicability expiry
+
+Bond maturity is the first production-backed time-window policy. Core's
+`source_reported_next_maturity_date` remains the contractual source fact and is
+already part of the opportunity material fingerprint. Idea interprets that
+date as reviewable through the UTC calendar date and persists
+`applicabilityExpiresAtUtc` at 00:00 UTC on the following day. Active means
+`evaluatedAtUtc < applicabilityExpiresAtUtc`; equality is expired.
+
+The expiry is retained in the evidence packet and candidate JSON, exposed by
+signal, candidate-detail, evidence-detail, and review-queue contracts, and
+enforced identically by process-local and bounded PostgreSQL queue/readiness
+projections. Exact replay reports an expired posture once due. Applying the
+lifecycle transition reuses the candidate-plus-material-version idempotency
+fence, so concurrent workers write at most one lifecycle, audit, and outbox
+event. Evidence-only correction cannot move or remove the expiry; a changed
+source-reported maturity date creates a material version and the existing
+`recurrent_condition` why-back evidence.
+
+No transport receipt time, market calendar, tenant timezone, or implicit
+freshness threshold supplies this boundary. No new scheduler or deployable
+service is introduced.
+
 ## Remaining Gaps
 
 Workbench realization, broader review audiences, data-product certification,
