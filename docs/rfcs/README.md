@@ -8,45 +8,29 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-The dated 2026-08-30 RFC-0002 snapshot baseline has 242 label-backed RFC-0002
-issues across 13 repositories: 204 closed and 38 open, with 25
-`status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/ready`, 9
-`status/tracker`, and 0
-app-actionable blocked issues.
-The latest Idea implementation-backed closures are Slice 17 release-governance
-hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
-`#1131`, merged through PRs #1120, #1122, #1124, #1126, #1128, #1130, and
-#1132. They harden immutable merged-PR releasability dispatch, structural
-lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
-semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
-dispatch rejection. As of 2026-08-30, the current Idea source ledger tracks 151
-RFC-0002 issues, 124 closed and 27 open. `#681` remains the Slice 18 tracker,
-`#1154` is closed after PR #1157 exact-main, release-image, wiki, and
-branch-hygiene proof for governed economic candidate identity, and
-`#1155` has its Idea-owned governed feedback taxonomy and offline evaluation
-foundation on exact main, while `#1156` is actively implementing opportunity
-effectiveness and immutable visible-render receipt evidence. Both remain open
-for their issue-backed consumer and certification proof. `#1145`
-is closed after PR #1149 exact-main, release-image, wiki, and branch-hygiene
-proof, `#1150` is closed after PR #1152 exact-main, release-image, wiki, and
-branch-hygiene proof, and `#1139` is closed
-after PR #1147 exact-main, live-posture, wiki, and branch-hygiene proof.
-PR #1146 merged the first Slice 18 live-posture tranche to exact main
-`6f92b8c6888bae33e5d7a08cb40763054924bbc4`. PR #1147 merged the post-merge
-non-regression correction to `0fd885bbc0542e7df697756f8035bfcb4b5484f4`,
-preventing normal lifecycle progress from invalidating its own dated snapshot;
-`#1110`, `#1109`,
-`#1104`, `#1101`, `#1098`, `#1094`, `#1091`,
-`#1088`, and `#1084` remain recent QA-closed Idea maintainability issues.
-These are issue-backed internal hardening closures and do not change product
-behavior or support posture. Fresh canonical QA is still required before closing AI/Advise
-QA-pending issues or promoting support; current blockers remain fresh exact-main
-canonical QA evidence, production identity/session authority, protected runtime
-evidence, provider/legal approvals, and final certification evidence. Core PR
-#948, Gateway PR #550, Workbench PR #701, and Workbench PR #708 have merged, but
-the shared local Core and Workbench checkouts are currently active non-main
-agent branches, so closure-grade canonical proof requires exact-main or an
-isolated non-conflicting QA workspace.
+The dated 2026-08-31 governed snapshot has 251 label-backed RFC-0002 issues
+across 13 repositories: 209 closed and 42 open, with 23 `status/blocked`, 3
+`status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9
+`status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
+tracks 155 RFC-0002 issues: 128 closed and 27 open.
+
+`#681`, `#685`, and `#686` are in progress. The Slice 11 proof issues #685 and
+#686 are writable Gateway/Workbench work, not external blockers. `#1155` and
+`#1156` have their Idea-owned feedback/evaluation and effectiveness/presentation
+contracts on exact main and are `status/merged-main` pending canonical consumer
+QA. Gateway #694 is ready for bounded review/conversion response-identity work.
+`#1168`, `#1169`, and `#1170` are closed after exact persisted adviser-action,
+lifecycle-transition, and downstream-action evidence passed exact-main release,
+wiki publication/parity, and branch hygiene. PR #1175 is the latest Idea product
+closure, on exact main `df26f7f18c1dafb0009f8294cf08b999d1681ca0`
+with Main Releasability `33360310207`, CodeQL `33360303951`, and wiki
+publication `44c0940`.
+
+The canonical journey now passes Idea clean-checkout startup and is blocked by
+source-owned valuation-date propagation in `sgajbi/lotus-core#1035`. Production
+identity/session authority, protected runtime evidence, provider/legal
+approval, client publication, and supported-feature promotion remain separate
+issue-backed gates. No external feature or final RFC-0002 closure is claimed.
 
 ## Active RFC Suite
 

@@ -169,12 +169,18 @@ live GitHub proof; it deliberately points back to
 `make rfc0002-github-issue-execution-state-audit` for current GitHub label and
 open/closed verification.
 
-Current Slice 18 ledger synchronization records 54 tracked RFC-0002 issues:
-29 closed complete, 25 open, no `open_ready`, no
-`open_merged_main_qa_pending` issues, 14 `open_blocked`, 1
-`open_in_progress`, no `open_fixed_local`, no `open_pr_raised`, 1
-`open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
-`open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
+Current Slice 18 ledger synchronization records 155 tracked RFC-0002 issues:
+128 `closed_complete` and 27 open, with 12 `open_blocked`, 3
+`open_in_progress`, 2 `open_merged_main_qa_pending`, no `open_ready`, no
+`open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
+`open_pending_post_completion`, and 8 `open_tracker`. The in-progress issues are
+#681/#685/#686; #1155/#1156 are merged-main pending canonical consumer QA;
+#1168/#1169/#1170 are closed with exact-main release, wiki-parity, and branch
+hygiene evidence. The live audit and cross-repo posture command pass with #685
+and #686 classified as active writable work rather than external blockers.
+
+Historical execution evidence follows. PR #745 reconciled #340 to
+`open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
 and CodeQL `30326422515` passed for that exact SHA. Final QA closed #340 on
 2026-07-29 after Idea-side attestation/governance/lineage/API proof and
@@ -196,9 +202,10 @@ evidence, trusted IdP caller context, and Archive legal/privacy lifecycle
 conformance remain open through `sgajbi/lotus-manage#624` and
 `sgajbi/lotus-archive#55`. Platform PR
 `sgajbi/lotus-platform#631`
-fixes the prior Manage seed authorization failure, but #686 is still
-`open_blocked`, not QA-pending because `sgajbi/lotus-core#840` blocks
-canonical DPM source readiness and Workbench live browser action-control proof.
+fixed the prior Manage seed authorization failure. At that historical stage,
+#686 remained `open_blocked` because `sgajbi/lotus-core#840` blocked canonical
+DPM source readiness and Workbench live browser action-control proof. Core #840
+is no longer a current blocker; #686 is now active writable proof work.
 PR #748 merged the latest app-side
 protected workflow-pin hardening for #693 on
 `29c235c21ff25c36f34d560e7794bc980661818f`;
