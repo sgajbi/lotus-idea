@@ -297,16 +297,11 @@ def test_fetch_github_issue_reference_states_queries_owning_repository(
     ]
 
 
-def test_github_issue_execution_state_audit_rejects_rfc_labeled_issue_missing_from_ledger(
+def test_github_issue_execution_state_audit_allows_github_owned_issue_outside_legacy_ledger(
     tmp_path: Path,
 ) -> None:
     module = _load_audit()
     ledger = _load_ledger()
-    ledger["issues"] = [
-        entry
-        for entry in ledger["issues"]
-        if isinstance(entry, dict) and entry["issueNumber"] == 681
-    ]
     github_payload = _github_issue_payload(ledger)
     github_payload.append(
         {
@@ -319,12 +314,13 @@ def test_github_issue_execution_state_audit_rejects_rfc_labeled_issue_missing_fr
     )
     github_issues = module._parse_github_issue_states(github_payload)
 
-    errors = module.audit_github_issue_execution_state(
-        ledger_path=_write_ledger(tmp_path, ledger),
-        github_issues=github_issues,
+    assert (
+        module.audit_github_issue_execution_state(
+            ledger_path=_write_ledger(tmp_path, ledger),
+            github_issues=github_issues,
+        )
+        == []
     )
-
-    assert "rfc/RFC-0002 GitHub issues missing from execution ledger: #999" in errors
 
 
 def test_github_issue_execution_state_audit_rejects_auto_closed_open_issue(

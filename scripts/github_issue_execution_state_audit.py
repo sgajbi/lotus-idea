@@ -223,7 +223,7 @@ def audit_github_issue_execution_state(
             + ", ".join(f"#{issue_number}" for issue_number in missing_from_github_input)
         )
 
-    errors.extend(_audit_rfc_label_coverage(ledger_entries, github_issues))
+    errors.extend(_audit_ledger_rfc_labels(ledger_entries, github_issues))
     if current_blocker_issues is not None:
         errors.extend(_audit_current_blocker_issue_states(ledger_entries, current_blocker_issues))
     return errors
@@ -306,23 +306,11 @@ def _audit_conflicting_status_labels(
     ]
 
 
-def _audit_rfc_label_coverage(
+def _audit_ledger_rfc_labels(
     ledger_entries: Sequence[IssueEntry],
     github_issues: Mapping[int, GitHubIssueState],
 ) -> list[str]:
-    ledger_issue_numbers = {entry.issue_number for entry in ledger_entries}
-    rfc_labeled_issue_numbers = {
-        issue.issue_number for issue in github_issues.values() if EXPECTED_RFC_LABEL in issue.labels
-    }
     errors: list[str] = []
-
-    missing_from_ledger = sorted(rfc_labeled_issue_numbers - ledger_issue_numbers)
-    if missing_from_ledger:
-        errors.append(
-            f"{EXPECTED_RFC_LABEL} GitHub issues missing from execution ledger: "
-            + ", ".join(f"#{issue_number}" for issue_number in missing_from_ledger)
-        )
-
     missing_rfc_label = sorted(
         entry.issue_number
         for entry in ledger_entries
