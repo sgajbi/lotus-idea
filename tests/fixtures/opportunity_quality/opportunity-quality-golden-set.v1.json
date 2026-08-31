@@ -87,9 +87,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["high_cash_ratio", "cash_source_ready", "review_required"],
         "unsupportedReasons": [],
-        "score": "82",
-        "scorePolicyVersion": "idle-liquidity-v1",
-        "scoreComponents": {"policyCandidateScore": "82"},
+        "score": "82.50",
+        "scorePolicyVersion": "idle-liquidity-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "75.00", "weight": "0.70", "contribution": "52.50"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": [
@@ -114,9 +118,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["concentration_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "78",
-        "scorePolicyVersion": "concentration-attention-v1",
-        "scoreComponents": {"policyCandidateScore": "78"},
+        "score": "83.67",
+        "scorePolicyVersion": "concentration-attention-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "76.67", "weight": "0.70", "contribution": "53.67"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-risk:ConcentrationRiskReport:v1"]
@@ -135,9 +143,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["underperformance_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "74",
-        "scorePolicyVersion": "underperformance-review-v1",
-        "scoreComponents": {"policyCandidateScore": "74"},
+        "score": "100",
+        "scorePolicyVersion": "underperformance-review-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "100", "weight": "0.70", "contribution": "70.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-performance:ReturnsSeriesBundle:v1"]
@@ -158,9 +170,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["allocation_drift_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "70",
-        "scorePolicyVersion": "allocation-drift-mandate-review-v1",
-        "scoreComponents": {"policyCandidateScore": "70"},
+        "score": "100",
+        "scorePolicyVersion": "allocation-drift-mandate-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "100", "weight": "0.55", "contribution": "55.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.30", "contribution": "30.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "pm_review_required",
         "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
@@ -179,9 +195,14 @@
         "outcome": "candidate_created",
         "reasonCodes": ["maturity_window", "review_required"],
         "unsupportedReasons": [],
-        "score": "70",
-        "scorePolicyVersion": "bond-maturity-review-v1",
-        "scoreComponents": {"policyCandidateScore": "70"},
+        "score": "82.58",
+        "scorePolicyVersion": "bond-maturity-review-v2",
+        "scoreComponents": {
+          "urgency": {"inputScore": "68.33", "weight": "0.55", "contribution": "37.58"},
+          "materiality": {"inputScore": "100", "weight": "0.25", "contribution": "25.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"},
+          "freshness": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": [
@@ -204,9 +225,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["missing_risk_profile", "review_required"],
         "unsupportedReasons": [],
-        "score": "64",
-        "scorePolicyVersion": "missing-risk-profile-review-v1",
-        "scoreComponents": {"policyCandidateScore": "64"},
+        "score": "100",
+        "scorePolicyVersion": "missing-risk-profile-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "100", "weight": "0.70", "contribution": "70.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
@@ -229,9 +254,14 @@
         "outcome": "candidate_created",
         "reasonCodes": ["suitability_context_missing", "review_required"],
         "unsupportedReasons": [],
-        "score": "68",
-        "scorePolicyVersion": "missing-suitability-context-review-v1",
-        "scoreComponents": {"policyCandidateScore": "68"},
+        "score": "100",
+        "scorePolicyVersion": "missing-suitability-context-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "100", "weight": "0.50", "contribution": "50.00"},
+          "urgency": {"inputScore": "100", "weight": "0.30", "contribution": "30.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"},
+          "freshness": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "compliance_review_required",
         "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
@@ -251,9 +281,14 @@
         "outcome": "candidate_created",
         "reasonCodes": ["mandate_restriction_review", "review_required"],
         "unsupportedReasons": [],
-        "score": "66",
-        "scorePolicyVersion": "mandate-restriction-review-v1",
-        "scoreComponents": {"policyCandidateScore": "66"},
+        "score": "86.25",
+        "scorePolicyVersion": "mandate-restriction-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "75", "weight": "0.55", "contribution": "41.25"},
+          "urgency": {"inputScore": "100", "weight": "0.25", "contribution": "25.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"},
+          "freshness": {"inputScore": "100", "weight": "0.10", "contribution": "10.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "compliance_review_required",
         "sourceProducts": ["lotus-advise:AdvisoryPolicyEvaluationRecord:v1"]
@@ -272,9 +307,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["income_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "68",
-        "scorePolicyVersion": "cashflow-liquidity-review-v1",
-        "scoreComponents": {"policyCandidateScore": "68"},
+        "score": "73.75",
+        "scorePolicyVersion": "cashflow-liquidity-review-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "62.50", "weight": "0.70", "contribution": "43.75"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": [
@@ -298,9 +337,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["missing_benchmark", "review_required"],
         "unsupportedReasons": [],
-        "score": "68",
-        "scorePolicyVersion": "missing-benchmark-review-v1",
-        "scoreComponents": {"policyCandidateScore": "68"},
+        "score": "100",
+        "scorePolicyVersion": "missing-benchmark-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "100", "weight": "0.70", "contribution": "70.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-core:BenchmarkAssignment:v1"]
@@ -320,9 +363,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["volatility_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "72",
-        "scorePolicyVersion": "high-volatility-attention-v1",
-        "scoreComponents": {"policyCandidateScore": "72"},
+        "score": "71.57",
+        "scorePolicyVersion": "high-volatility-attention-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "59.38", "weight": "0.70", "contribution": "41.57"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-risk:RiskMetricsReport:v1"]
@@ -342,9 +389,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["drawdown_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "72",
-        "scorePolicyVersion": "drawdown-review-attention-v1",
-        "scoreComponents": {"policyCandidateScore": "72"},
+        "score": "84.47",
+        "scorePolicyVersion": "drawdown-review-attention-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "77.81", "weight": "0.70", "contribution": "54.47"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-risk:DrawdownAnalyticsReport:v1"]
@@ -418,9 +469,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["high_cash_ratio", "cash_source_ready", "review_required"],
         "unsupportedReasons": [],
-        "score": "82",
-        "scorePolicyVersion": "idle-liquidity-v1",
-        "scoreComponents": {"policyCandidateScore": "82"},
+        "score": "65.00",
+        "scorePolicyVersion": "idle-liquidity-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "50.00", "weight": "0.70", "contribution": "35.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": [
@@ -445,9 +500,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["concentration_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "78",
-        "scorePolicyVersion": "concentration-attention-v1",
-        "scoreComponents": {"policyCandidateScore": "78"},
+        "score": "65.00",
+        "scorePolicyVersion": "concentration-attention-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "50.00", "weight": "0.70", "contribution": "35.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-risk:ConcentrationRiskReport:v1"]
@@ -466,9 +525,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["underperformance_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "74",
-        "scorePolicyVersion": "underperformance-review-v1",
-        "scoreComponents": {"policyCandidateScore": "74"},
+        "score": "65.00",
+        "scorePolicyVersion": "underperformance-review-v2",
+        "scoreComponents": {
+          "materiality": {"inputScore": "50.00", "weight": "0.70", "contribution": "35.00"},
+          "evidence_quality": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "advisor_review_required",
         "sourceProducts": ["lotus-performance:ReturnsSeriesBundle:v1"]
@@ -489,9 +552,13 @@
         "outcome": "candidate_created",
         "reasonCodes": ["allocation_drift_attention", "review_required"],
         "unsupportedReasons": [],
-        "score": "70",
-        "scorePolicyVersion": "allocation-drift-mandate-review-v1",
-        "scoreComponents": {"policyCandidateScore": "70"},
+        "score": "57.50",
+        "scorePolicyVersion": "allocation-drift-mandate-review-v2",
+        "scoreComponents": {
+          "relevance": {"inputScore": "50.00", "weight": "0.55", "contribution": "27.50"},
+          "evidence_quality": {"inputScore": "50.00", "weight": "0.30", "contribution": "15.00"},
+          "freshness": {"inputScore": "100", "weight": "0.15", "contribution": "15.00"}
+        },
         "evidenceSupportability": "ready",
         "reviewPosture": "pm_review_required",
         "sourceProducts": ["lotus-manage:PortfolioActionRegister:v1"]
@@ -724,30 +791,30 @@
       "portfolio": "active-opportunities",
       "audience": "advisor",
       "orderedCaseIds": [
-        "active-high-cash",
-        "active-concentration",
         "active-underperformance",
-        "active-bond-maturity"
+        "active-concentration",
+        "active-bond-maturity",
+        "active-high-cash"
       ],
-      "priorityBuckets": ["high", "high", "high", "high"]
+      "priorityBuckets": ["critical", "high", "high", "high"]
     },
     {
       "portfolio": "active-opportunities",
       "audience": "portfolio_manager",
       "orderedCaseIds": ["active-allocation-drift"],
-      "priorityBuckets": ["high"]
+      "priorityBuckets": ["critical"]
     },
     {
       "portfolio": "incomplete-advisory-context",
       "audience": "advisor",
       "orderedCaseIds": ["missing-benchmark-assignment", "incomplete-risk-profile"],
-      "priorityBuckets": ["standard", "standard"]
+      "priorityBuckets": ["critical", "critical"]
     },
     {
       "portfolio": "incomplete-advisory-context",
       "audience": "compliance",
       "orderedCaseIds": ["incomplete-suitability-context", "changed-mandate-restriction"],
-      "priorityBuckets": ["standard", "standard"]
+      "priorityBuckets": ["critical", "critical"]
     },
     {
       "portfolio": "quiet-portfolio",

@@ -53,7 +53,7 @@ def test_drawdown_review_examples_cover_every_domain_outcome_and_authority_bound
         )
         assert candidate["family"] == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family.value
         assert candidate["candidateId"].startswith("idea_drawdown_review_")
-        assert candidate["scorePolicyVersion"] == "drawdown-review-attention-v1"
+        assert candidate["scorePolicyVersion"] == "drawdown-review-attention-v2"
         assert candidate["reviewPosture"] == "advisor_review_required"
         assert {ref["productId"] for ref in candidate["sourceRefs"]} == {
             DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id

@@ -27,7 +27,7 @@ from app.domain import (
     HighCashSignalInput,
     HighVolatilitySignalInput,
     IdeaCandidate,
-    IdeaScoringInputs,
+    IdeaScoringInput,
     LowIncomeSignalInput,
     MandateHealthSignalInput,
     IdeaLifecycleStatus,
@@ -38,6 +38,7 @@ from app.domain import (
     OpportunityFamily,
     ReviewPosture,
     ReviewQueueAudience,
+    ScoreComponent,
     SourceRef,
     SourceSystem,
     SuppressionReason,
@@ -144,22 +145,30 @@ def evaluate_golden_set(golden_set: dict[str, Any]) -> tuple[str, ...]:
 
 def _evaluate_scoring_expectation(scenario: dict[str, Any]) -> tuple[str, ...]:
     inputs = scenario["inputs"]
+    component_values = (
+        (ScoreComponent.MATERIALITY, "materiality", Decimal("0.20")),
+        (ScoreComponent.URGENCY, "urgency", Decimal("0.15")),
+        (ScoreComponent.CONFIDENCE, "confidence", Decimal("0.15")),
+        (ScoreComponent.EVIDENCE_QUALITY, "evidenceQuality", Decimal("0.15")),
+        (ScoreComponent.FRESHNESS, "freshness", Decimal("0.10")),
+        (ScoreComponent.RELEVANCE, "relevance", Decimal("0.10")),
+        (ScoreComponent.DOWNSTREAM_FIT, "downstreamFit", Decimal("0.15")),
+    )
     breakdown = score_inputs(
-        IdeaScoringInputs(
-            materiality=Decimal(inputs["materiality"]),
-            urgency=Decimal(inputs["urgency"]),
-            confidence=Decimal(inputs["confidence"]),
-            evidence_quality=Decimal(inputs["evidenceQuality"]),
-            freshness=Decimal(inputs["freshness"]),
-            relevance=Decimal(inputs["relevance"]),
-            downstream_fit=Decimal(inputs["downstreamFit"]),
-            has_conflict_flags=inputs["hasConflictFlags"],
+        tuple(
+            IdeaScoringInput(
+                component=component,
+                input_score=Decimal(inputs[field_name]),
+                weight=weight,
+            )
+            for component, field_name, weight in component_values
         ),
         policy=DEFAULT_SCORING_POLICY,
+        has_conflict_flags=inputs["hasConflictFlags"],
     )
     actual: dict[str, object] = {
         "policyVersion": breakdown.policy_version,
-        "finalScore": str(breakdown.final_score),
+        "finalScore": str(breakdown.score),
         "conflictPenaltyApplied": str(breakdown.conflict_penalty_applied),
         "reasonCodes": [reason.value for reason in breakdown.reason_codes],
         "contributions": {
@@ -657,16 +666,20 @@ def _compare_case(case: dict[str, Any], result: SignalEvaluationResult) -> tuple
         errors.append(f"{case_id} unexpectedly created a candidate")
         return tuple(errors)
     actual_products = [ref.product_id for ref in result.candidate.evidence_packet.source_refs]
+    score_components = {
+        contribution.component.value: {
+            "inputScore": str(contribution.input_score),
+            "weight": str(contribution.weight),
+            "contribution": str(contribution.contribution),
+        }
+        for contribution in (result.candidate.score.contributions if result.candidate.score else ())
+    }
     candidate_comparisons: dict[str, object] = {
         "score": str(result.candidate.score.score) if result.candidate.score else None,
         "scorePolicyVersion": (
             result.candidate.score.policy_version if result.candidate.score else None
         ),
-        "scoreComponents": {
-            "policyCandidateScore": (
-                str(result.candidate.score.score) if result.candidate.score else None
-            )
-        },
+        "scoreComponents": score_components,
         "evidenceSupportability": result.candidate.evidence_packet.supportability.value,
         "reviewPosture": result.candidate.review_posture.value,
         "sourceProducts": actual_products,

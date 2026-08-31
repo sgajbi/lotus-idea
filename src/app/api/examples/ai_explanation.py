@@ -200,8 +200,8 @@ def _local_fixture_payload() -> dict[str, Any]:
             ],
             "reasonCodes": ["high_cash_ratio", "review_required"],
             "unsupportedReasons": [],
-            "scorePolicyVersion": "idle-liquidity-v1",
-            "score": "82",
+            "scorePolicyVersion": "idle-liquidity-v2",
+            "score": "82.50",
             "sourceSignalCount": 1,
         },
         "verifiedOutput": {

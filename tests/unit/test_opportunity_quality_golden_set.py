@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pytest
+
 from tests.support.opportunity_quality_golden import evaluate_golden_set, load_golden_set
 
 from app.domain.scoring import CandidateScorePolicyVersion
@@ -42,6 +44,7 @@ def test_golden_set_covers_every_implemented_signal_policy() -> None:
         version.value
         for version in CandidateScorePolicyVersion
         if version is not CandidateScorePolicyVersion.WEIGHTED_EVIDENCE
+        and not version.name.endswith("_LEGACY")
     }
     assert covered_score_policy_versions == registered_signal_policy_versions
 
@@ -84,6 +87,55 @@ def test_golden_set_detects_score_component_regression() -> None:
     errors = evaluate_golden_set(golden_set)
 
     assert any("weighted-evidence-score contributions" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    ("field_name", "mutated_value"),
+    (
+        ("inputScore", "74.99"),
+        ("weight", "0.69"),
+        ("contribution", "52.49"),
+    ),
+)
+def test_golden_set_detects_candidate_component_regression(
+    field_name: str,
+    mutated_value: str,
+) -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["cases"][0]["expected"]["scoreComponents"]["materiality"][field_name] = mutated_value
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any("active-high-cash scoreComponents" in error for error in errors)
+
+
+def test_golden_set_detects_candidate_scalar_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["cases"][0]["expected"]["score"] = "82.49"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any("active-high-cash score expected '82.49'" in error for error in errors)
+
+
+def test_golden_set_detects_candidate_policy_version_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["cases"][0]["expected"]["scorePolicyVersion"] = "idle-liquidity-v1"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any("active-high-cash scorePolicyVersion" in error for error in errors)
+
+
+def test_golden_set_detects_conflict_penalty_regression() -> None:
+    golden_set = deepcopy(load_golden_set())
+    golden_set["scoringExpectations"][1]["expected"]["conflictPenaltyApplied"] = "14"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any(
+        "conflicting-evidence-score-penalty conflictPenaltyApplied" in error for error in errors
+    )
 
 
 def test_golden_set_detects_candidate_reopen_regression() -> None:
