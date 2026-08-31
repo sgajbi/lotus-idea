@@ -24,13 +24,13 @@ dependency map, and closure rules without relying on chat memory.
 | Live drift gate | `make rfc0002-issue-posture-live-gate`; scheduled and manually dispatchable through `RFC-0002 Issue Posture Audit` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed; canonical current external blocker references are checked against their owning repositories |
 | Repositories checked | 13 |
-| Governed GitHub issue posture | 251 label-backed RFC-0002 issues; 209 closed and 42 open; 2026-08-31; 23 `status/blocked`, 3 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`; 0 app-actionable blocked. |
-| Total RFC-0002 issues | 251 |
+| Governed GitHub issue posture | 252 label-backed RFC-0002 issues; 209 closed and 43 open; 2026-08-31; 23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`; 0 app-actionable blocked. |
+| Total RFC-0002 issues | 252 |
 | Closed RFC-0002 issues | 209 |
-| Open RFC-0002 issues | 42 |
+| Open RFC-0002 issues | 43 |
 | Open blocked issues | 23 |
 | App-actionable blocked issues | 0 |
-| Active RFC work | `sgajbi/lotus-idea#681`, `#685`, and `#686` are in progress; #685/#686 are writable Gateway/Workbench proof work, not external blockers. `#1155` and `#1156` are merged-main pending canonical consumer QA. Gateway #694 is ready. `#1168`, `#1169`, and `#1170` are closed after exact persisted action evidence, exact-main release proof, wiki publication/parity, and branch hygiene. None promotes a supported feature or completes final RFC-0002 blockers. |
+| Active RFC work | `sgajbi/lotus-idea#681`, `#685`, `#686`, and `#1142` are in progress; #685/#686 are writable Gateway/Workbench proof work and #1142 owns the single-image Compose build correction. `#1155` and `#1156` are merged-main pending canonical consumer QA. Gateway #694 is ready. `#1168`, `#1169`, and `#1170` are closed after exact persisted action evidence, exact-main release proof, wiki publication/parity, and branch hygiene. None promotes a supported feature or completes final RFC-0002 blockers. |
 
 These figures are a dated baseline, not a demand that normal delivery freezes
 all lifecycle labels. The live gate permits issue closure and status
@@ -48,8 +48,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>251 label-backed RFC-0002 issues<br/>as of 2026-08-31 UTC"]
-    Open["209 closed and 42 open<br/>23 `status/blocked`, 3 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`"]
+    Issues["GitHub issue posture<br/>252 label-backed RFC-0002 issues<br/>as of 2026-08-31 UTC"]
+    Open["209 closed and 43 open<br/>23 `status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -67,18 +67,18 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 23 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 3 | Idea #681/#685/#686. The two product-proof issues are active writable work, not external blockers. |
+| `status/in-progress` | 4 | Idea #681/#685/#686/#1142. The product-proof issues are active writable work, and #1142 owns the single-image Compose build correction. |
 | `status/merged-main` | 6 | AI #126, Gateway #692, Idea #1155/#1156, and Workbench #953/#954 await issue-specific QA or closure evidence. |
 | `status/ready` | 1 | Gateway #694 is ready for bounded review/conversion response-identity implementation. |
 | `status/tracker` | 9 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: the dated 2026-08-31 UTC GitHub baseline has
-251 label-backed RFC-0002 issues, 209 closed and 42 open, with 23
-`status/blocked`, 3 `status/in-progress`, 6 `status/merged-main`, 1
+252 label-backed RFC-0002 issues, 209 closed and 43 open, with 23
+`status/blocked`, 4 `status/in-progress`, 6 `status/merged-main`, 1
 `status/ready`, 9 `status/tracker`, and 0 app-actionable blocked issues. As of
-2026-08-31 UTC, the Idea source ledger tracks 155 RFC-0002 issues: 128 closed
-and 27 open. `#681`, `#685`, and `#686` are in progress; `#1155` and `#1156`
-are merged-main pending canonical consumer QA. `#1168`, `#1169`, and `#1170`
+2026-08-31 UTC, the Idea source ledger tracks 156 RFC-0002 issues: 128 closed
+and 28 open. `#681`, `#685`, `#686`, and `#1142` are in progress; `#1155` and
+`#1156` are merged-main pending canonical consumer QA. `#1168`, `#1169`, and `#1170`
 are closed with exact-main, release, wiki-parity, and branch-hygiene proof. PR
 #1175 placed the latest downstream-action evidence on exact Idea main
 `df26f7f18c1dafb0009f8294cf08b999d1681ca0`; Main Releasability run

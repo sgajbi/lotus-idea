@@ -8,14 +8,15 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-The dated 2026-08-31 governed snapshot has 251 label-backed RFC-0002 issues
-across 13 repositories: 209 closed and 42 open, with 23 `status/blocked`, 3
+The dated 2026-08-31 governed snapshot has 252 label-backed RFC-0002 issues
+across 13 repositories: 209 closed and 43 open, with 23 `status/blocked`, 4
 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 155 RFC-0002 issues: 128 closed and 27 open.
+tracks 156 RFC-0002 issues: 128 closed and 28 open.
 
-`#681`, `#685`, and `#686` are in progress. The Slice 11 proof issues #685 and
-#686 are writable Gateway/Workbench work, not external blockers. `#1155` and
+`#681`, `#685`, `#686`, and `#1142` are in progress. The Slice 11 proof issues
+#685/#686 are writable Gateway/Workbench work; #1142 owns the single-image
+Compose build correction. `#1155` and
 `#1156` have their Idea-owned feedback/evaluation and effectiveness/presentation
 contracts on exact main and are `status/merged-main` pending canonical consumer
 QA. Gateway #694 is ready for bounded review/conversion response-identity work.

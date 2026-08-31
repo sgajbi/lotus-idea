@@ -283,7 +283,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"{issue_681_section}\n\n" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
-    assert "#681, #685, #686" in rendered
+    assert "#681, #685, #686, #1142" in rendered
     assert "#756" not in rendered
     for execution_status in (
         "open_in_progress",
@@ -305,7 +305,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "Current issues: #673, #681, #683, #684, #874" not in rendered
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert f"Current issues: {ai_attestation_current_rendering}" in rendered
-    assert "Current issues: #343, #344, #345, #375, #678, #693, #814" in rendered
+    assert "Current issues: #343, #344, #345, #375, #678, #693, #814, #1142" in rendered
     assert "Current issues: #343, #344, #345, #375, #678, #693, #814, #886" not in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #699, #880" not in rendered

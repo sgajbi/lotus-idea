@@ -90,17 +90,18 @@ The supported-feature registry remains `foundation_only` with an empty
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an
 implemented feature.
 
-As of 2026-08-31, the governed Idea execution baseline contains 155 RFC-0002
-issues: 128 closed and 27 open. `#681`, `#685`, and `#686` are in progress;
-#685/#686 are active writable Gateway/Workbench proof work rather than external
-blockers. `#1155` and `#1156` are merged-main pending canonical consumer QA.
+As of 2026-08-31, the governed Idea execution baseline contains 156 RFC-0002
+issues: 128 closed and 28 open. `#681`, `#685`, `#686`, and `#1142` are in
+progress; #685/#686 are active writable Gateway/Workbench proof work and #1142
+owns the single-image Compose build correction. `#1155` and `#1156` are
+merged-main pending canonical consumer QA.
 `#1168`, `#1169`, and `#1170` are closed after exact persisted adviser-action,
 lifecycle-transition, and downstream-action evidence passed exact-main release,
 wiki publication/parity, and branch hygiene. The latest exact Idea main product
 closure is PR #1175 at `df26f7f18c1dafb0009f8294cf08b999d1681ca0`,
 with Main Releasability `33360310207`, CodeQL `33360303951`, and wiki
-publication `44c0940`. The 13-repository baseline contains 251 label-backed
-RFC-0002 issues: 209 closed and 42 open, including 23 blocked, 3 in progress,
+publication `44c0940`. The 13-repository baseline contains 252 label-backed
+RFC-0002 issues: 209 closed and 43 open, including 23 blocked, 4 in progress,
 6 merged-main, 1 ready, and 9 tracker issues; none of the blocked issues is
 app-actionable. The canonical journey now passes Idea clean-checkout startup
 and is blocked by source-owned valuation-date propagation in
@@ -2292,10 +2293,13 @@ expected environment variable.
 The app-owned `docker-compose.yml` is independently operable: it provisions
 PostgreSQL 18, mounts the named volume at the major-version-supported
 `/var/lib/postgresql` path, executes a one-shot migration dependency, and starts
-API/optional worker roles against one explicit database URL. Local migration
-history is pending-only, advisory-lock serialized, transactional, and bound to
-version/name/content checksums so repeated Compose startup is safe and drift
-fails closed. Safe local settings are explicit in the Compose contract; no
+API/optional worker roles against one explicit database URL. The migration
+dependency is the sole build writer for the shared
+`lotus-idea:local` artifact; API and worker roles consume that exact image so a
+parallel Compose build cannot export multiple artifacts to one tag. Local
+migration history is pending-only, advisory-lock serialized, transactional, and
+bound to version/name/content checksums so repeated Compose startup is safe and
+drift fails closed. Safe local settings are explicit in the Compose contract; no
 untracked bootstrap file is required, optional ignored `.env` values may
 override them, and `make compose-config-gate` resolves both API and worker
 profiles before image build. Direct `uvicorn` without a database remains an

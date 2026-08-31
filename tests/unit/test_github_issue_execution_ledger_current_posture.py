@@ -72,3 +72,17 @@ def test_latest_exact_main_closures_are_durable(
     for evidence_fragment in evidence_fragments:
         assert evidence_fragment in issue["closureInstruction"]
     assert "No final RFC-0002 closure is claimed" in issue["closureInstruction"]
+
+
+def test_shared_compose_image_race_is_active_and_governed() -> None:
+    issue = _issue_by_number(1142)
+
+    assert issue["githubState"] == "open"
+    assert issue["executionStatus"] == "open_in_progress"
+    assert issue["allowPullRequestAutoClose"] is False
+    assert issue["rfcSlices"] == ["slice-15", "slice-17"]
+    assert "one canonical Compose build writer" in issue["closureInstruction"]
+    assert (
+        "COMPOSE_PARALLEL_LIMIT=1 workaround is diagnostic evidence only"
+        in issue["closureInstruction"]
+    )
