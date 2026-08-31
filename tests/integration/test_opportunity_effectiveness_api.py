@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -9,7 +10,10 @@ import pytest
 import app.api.opportunity_effectiveness as opportunity_effectiveness_api
 from app.domain import InMemoryIdeaRepository
 from app.main import app
-from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
+from app.ports.idea_repository import (
+    OpportunityEffectivenessRepositorySummary,
+    OpportunityFamilyEffectivenessRepositorySummary,
+)
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.support.http import managed_test_client
 from tests.support.opportunity_effectiveness_fixture import (
@@ -35,7 +39,7 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
     assert response.status_code == 200
     payload = response.json()
     assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v1"
-    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v2"
+    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v3"
     assert payload["counts"]["generatedOpportunityCount"] == 3
     assert payload["counts"]["reviewedOpportunityCount"] == 3
     assert payload["rates"]["approval"] == {
@@ -158,6 +162,8 @@ def test_opportunity_effectiveness_api_uses_bounded_durable_projection(
 
     assert response.status_code == 200
     assert response.json()["counts"]["generatedOpportunityCount"] == 2
+    assert response.json()["familyEffectiveness"][0]["counts"]["presentedOpportunityCount"] is None
+    assert response.json()["familyEffectiveness"][0]["rates"]["presentation"] is None
     assert repository.calls == [
         {
             "tenant_id": "tenant-a",
@@ -207,6 +213,13 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
             "zeroDenominatorBehavior": "null",
         },
     }
+    assert response.json()["familyEffectiveness"][0]["counts"]["presentedOpportunityCount"] == 2
+    assert response.json()["familyEffectiveness"][0]["rates"]["presentation"] == {
+        "numerator": 2,
+        "denominator": 3,
+        "value": "0.666667",
+        "zeroDenominatorBehavior": "null",
+    }
     assert response.json()["certificationStatus"] == "not_certified"
     assert response.json()["supportedFeaturePromoted"] is False
 
@@ -236,6 +249,31 @@ def test_opportunity_effectiveness_api_fails_closed_on_corrupt_projection_facts(
         opportunity_effectiveness_api,
         "get_idea_repository",
         lambda: _ProjectionRepository(_summary(**summary_overrides)),
+    )
+
+    response = managed_test_client(app).get(
+        "/api/v1/operations/opportunity-effectiveness",
+        params=_params(),
+        headers=_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "opportunity_effectiveness_unavailable"
+
+
+def test_opportunity_effectiveness_api_fails_closed_when_family_totals_do_not_reconcile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    summary = _summary(generated_opportunity_count=1, reviewed_opportunity_count=1)
+    family = summary.family_effectiveness[0]
+    corrupt_summary = replace(
+        summary,
+        family_effectiveness=(replace(family, reviewed_opportunity_count=0),),
+    )
+    monkeypatch.setattr(
+        opportunity_effectiveness_api,
+        "get_idea_repository",
+        lambda: _ProjectionRepository(corrupt_summary),
     )
 
     response = managed_test_client(app).get(
@@ -342,6 +380,7 @@ def _summary(**overrides: Any) -> OpportunityEffectivenessRepositorySummary:
         "presented_opportunity_count": 0,
         "top_ranked_presented_opportunity_count": 0,
         "top_ranked_accepted_opportunity_count": 0,
+        "family_effectiveness": (),
         "family_counts": {},
         "score_band_counts": {},
         "latest_review_action_counts": {},
@@ -356,4 +395,34 @@ def _summary(**overrides: Any) -> OpportunityEffectivenessRepositorySummary:
     if isinstance(generated_count, int) and generated_count > 0:
         values["family_counts"] = {"high_cash": generated_count}
         values["score_band_counts"] = {"unranked": generated_count}
+        values["family_effectiveness"] = (
+            OpportunityFamilyEffectivenessRepositorySummary(
+                family="high_cash",
+                generated_opportunity_count=generated_count,
+                presented_opportunity_count=values["presented_opportunity_count"],
+                reviewed_opportunity_count=values["reviewed_opportunity_count"],
+                approved_opportunity_count=values["latest_review_action_counts"].get(
+                    "approve_for_conversion", 0
+                ),
+                rejected_opportunity_count=values["latest_review_action_counts"].get("reject", 0),
+                suppressed_opportunity_count=values["suppressed_opportunity_count"],
+                duplicate_suppressed_opportunity_count=values[
+                    "duplicate_suppressed_opportunity_count"
+                ],
+                feedback_opportunity_count=values["feedback_opportunity_count"],
+                conversion_opportunity_count=values["conversion_opportunity_count"],
+                conversion_intent_count=values["conversion_intent_count"],
+                downstream_accepted_count=values["current_downstream_outcome_counts"].get(
+                    "accepted", 0
+                )
+                + values["current_downstream_outcome_counts"].get("completed", 0),
+                downstream_rejected_count=values["current_downstream_outcome_counts"].get(
+                    "rejected", 0
+                ),
+                downstream_uncertain_count=values["current_downstream_outcome_counts"].get(
+                    "not_reported", 0
+                )
+                + values["current_downstream_outcome_counts"].get("requested", 0),
+            ),
+        )
     return OpportunityEffectivenessRepositorySummary(**values)

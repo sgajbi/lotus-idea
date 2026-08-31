@@ -26,6 +26,12 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
 
     assert summary.generated_opportunity_count == 3
     assert summary.family_counts == {"high_cash": 2, "underperformance": 1}
+    assert [item.family for item in summary.family_effectiveness] == [
+        "high_cash",
+        "underperformance",
+    ]
+    assert summary.family_effectiveness[0].approved_opportunity_count == 1
+    assert summary.family_effectiveness[1].rejected_opportunity_count == 1
     assert summary.current_downstream_outcome_counts == {"accepted": 1}
     assert summary.presented_opportunity_count == 2
     assert summary.top_ranked_presented_opportunity_count == 2
@@ -107,6 +113,7 @@ def test_postgres_effectiveness_projection_requires_exactly_one_summary_row(
         ("generated_opportunity_count", True, "must be an integer"),
         ("family_counts", [], "must be a mapping"),
         ("family_counts", {1: 2}, "keys must be strings"),
+        ("family_effectiveness", {}, "must be an array"),
         ("detection_to_review_seconds", "60", "must be an array"),
     ),
 )
@@ -186,6 +193,40 @@ def _summary_row() -> dict[str, Any]:
         "presented_opportunity_count": 2,
         "top_ranked_presented_opportunity_count": 2,
         "top_ranked_accepted_opportunity_count": 1,
+        "family_effectiveness": [
+            {
+                "family": "high_cash",
+                "generated_opportunity_count": 2,
+                "presented_opportunity_count": 2,
+                "reviewed_opportunity_count": 1,
+                "approved_opportunity_count": 1,
+                "rejected_opportunity_count": 0,
+                "suppressed_opportunity_count": 0,
+                "duplicate_suppressed_opportunity_count": 0,
+                "feedback_opportunity_count": 1,
+                "conversion_opportunity_count": 1,
+                "conversion_intent_count": 1,
+                "downstream_accepted_count": 1,
+                "downstream_rejected_count": 0,
+                "downstream_uncertain_count": 0,
+            },
+            {
+                "family": "underperformance",
+                "generated_opportunity_count": 1,
+                "presented_opportunity_count": 0,
+                "reviewed_opportunity_count": 1,
+                "approved_opportunity_count": 0,
+                "rejected_opportunity_count": 1,
+                "suppressed_opportunity_count": 0,
+                "duplicate_suppressed_opportunity_count": 0,
+                "feedback_opportunity_count": 0,
+                "conversion_opportunity_count": 0,
+                "conversion_intent_count": 0,
+                "downstream_accepted_count": 0,
+                "downstream_rejected_count": 0,
+                "downstream_uncertain_count": 0,
+            },
+        ],
         "family_counts": {"high_cash": 2, "underperformance": 1},
         "score_band_counts": {"critical": 2, "high": 1},
         "latest_review_action_counts": {"approve_for_conversion": 1, "reject": 1},

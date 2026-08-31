@@ -99,6 +99,44 @@ class EffectivenessRatesResponse(CamelModel):
     downstream_uncertain: EffectivenessRateResponse = Field(..., alias="downstreamUncertain")
 
 
+class OpportunityFamilyEffectivenessCountsResponse(CamelModel):
+    generated_opportunity_count: int = Field(..., alias="generatedOpportunityCount")
+    presented_opportunity_count: int | None = Field(..., alias="presentedOpportunityCount")
+    reviewed_opportunity_count: int = Field(..., alias="reviewedOpportunityCount")
+    approved_opportunity_count: int = Field(..., alias="approvedOpportunityCount")
+    rejected_opportunity_count: int = Field(..., alias="rejectedOpportunityCount")
+    suppressed_opportunity_count: int = Field(..., alias="suppressedOpportunityCount")
+    duplicate_suppressed_opportunity_count: int = Field(
+        ..., alias="duplicateSuppressedOpportunityCount"
+    )
+    feedback_opportunity_count: int = Field(..., alias="feedbackOpportunityCount")
+    conversion_opportunity_count: int = Field(..., alias="conversionOpportunityCount")
+    conversion_intent_count: int = Field(..., alias="conversionIntentCount")
+    downstream_accepted_count: int = Field(..., alias="downstreamAcceptedCount")
+    downstream_rejected_count: int = Field(..., alias="downstreamRejectedCount")
+    downstream_uncertain_count: int = Field(..., alias="downstreamUncertainCount")
+
+
+class OpportunityFamilyEffectivenessRatesResponse(CamelModel):
+    presentation: EffectivenessRateResponse | None
+    review: EffectivenessRateResponse
+    approval: EffectivenessRateResponse
+    rejection: EffectivenessRateResponse
+    suppression: EffectivenessRateResponse
+    duplicate_suppression: EffectivenessRateResponse = Field(..., alias="duplicateSuppression")
+    feedback: EffectivenessRateResponse
+    conversion: EffectivenessRateResponse
+    downstream_accepted: EffectivenessRateResponse = Field(..., alias="downstreamAccepted")
+    downstream_rejected: EffectivenessRateResponse = Field(..., alias="downstreamRejected")
+    downstream_uncertain: EffectivenessRateResponse = Field(..., alias="downstreamUncertain")
+
+
+class OpportunityFamilyEffectivenessResponse(CamelModel):
+    family: str
+    counts: OpportunityFamilyEffectivenessCountsResponse
+    rates: OpportunityFamilyEffectivenessRatesResponse
+
+
 class EffectivenessDurationResponse(CamelModel):
     observation_count: int = Field(..., alias="observationCount")
     minimum_seconds: Decimal | None = Field(..., alias="minimumSeconds")
@@ -135,6 +173,9 @@ class OpportunityEffectivenessResponse(CamelModel):
     counts: EffectivenessCountsResponse
     presentation: EffectivenessPresentationResponse
     dimensions: EffectivenessDimensionsResponse
+    family_effectiveness: tuple[OpportunityFamilyEffectivenessResponse, ...] = Field(
+        ..., alias="familyEffectiveness"
+    )
     rates: EffectivenessRatesResponse
     timings: EffectivenessTimingsResponse
     privacy_boundary: EffectivenessPrivacyBoundaryResponse = Field(..., alias="privacyBoundary")

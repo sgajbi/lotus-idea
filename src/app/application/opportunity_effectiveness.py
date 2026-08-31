@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import Decimal
 from enum import StrEnum
 import hashlib
 import json
@@ -31,13 +31,24 @@ from app.domain.review_governance import (
     ReviewAction,
 )
 from app.domain.review_queue import priority_bucket_for_score
-from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
+from app.application.opportunity_effectiveness_family import (
+    EffectivenessRate,
+    FamilyEffectivenessDataError,
+    OpportunityFamilyEffectiveness,
+    build_family_effectiveness,
+    rate,
+    summary_counts,
+    validate_family_effectiveness,
+)
+from app.ports.idea_repository import (
+    OpportunityEffectivenessRepositorySummary,
+    OpportunityFamilyEffectivenessRepositorySummary,
+)
 
 
-OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v2"
+OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v3"
 OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v1"
 MAX_EFFECTIVENESS_OPPORTUNITIES = 10_000
-RATE_QUANTUM = Decimal("0.000001")
 
 
 class OpportunityEffectivenessScopeError(ValueError):
@@ -64,21 +75,6 @@ class DownstreamOutcomePosture(StrEnum):
     REJECTED = "rejected"
     FAILED = "failed"
     COMPLETED = "completed"
-
-
-@dataclass(frozen=True)
-class EffectivenessRate:
-    numerator: int
-    denominator: int
-    value: Decimal | None
-
-    def to_payload(self) -> dict[str, Any]:
-        return {
-            "numerator": self.numerator,
-            "denominator": self.denominator,
-            "value": str(self.value) if self.value is not None else None,
-            "zeroDenominatorBehavior": "null",
-        }
 
 
 @dataclass(frozen=True)
@@ -132,6 +128,7 @@ class OpportunityEffectivenessSnapshot:
     top_ranked_accepted_opportunity_count: int | None
     presentation_rate: EffectivenessRate | None
     top_ranked_acceptance_rate: EffectivenessRate | None
+    family_effectiveness: tuple[OpportunityFamilyEffectiveness, ...]
     family_counts: tuple[EffectivenessDimensionCount, ...]
     score_band_counts: tuple[EffectivenessDimensionCount, ...]
     latest_review_action_counts: tuple[EffectivenessDimensionCount, ...]
@@ -306,6 +303,11 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         top_ranked_accepted_opportunity_count=(presentation.top_ranked_accepted_opportunity_count),
         presentation_rate=presentation.presentation_rate,
         top_ranked_acceptance_rate=presentation.top_ranked_acceptance_rate,
+        family_effectiveness=build_family_effectiveness(
+            summary.family_effectiveness,
+            presentation_available=presentation.measurement_status
+            == PresentationMeasurementStatus.STORED_CONSUMER_CERTIFICATION_PENDING,
+        ),
         family_counts=_dimension_counts(
             Counter(summary.family_counts),
             (family.value for family in OpportunityFamily),
@@ -330,27 +332,27 @@ def build_opportunity_effectiveness_snapshot_from_summary(
             Counter(summary.downstream_submission_posture_counts),
             (posture.value for posture in DownstreamSubmissionPosture),
         ),
-        review_rate=_rate(summary.reviewed_opportunity_count, summary.generated_opportunity_count),
-        approval_rate=_rate(approved_count, summary.reviewed_opportunity_count),
-        rejection_rate=_rate(rejected_count, summary.reviewed_opportunity_count),
-        suppression_rate=_rate(
+        review_rate=rate(summary.reviewed_opportunity_count, summary.generated_opportunity_count),
+        approval_rate=rate(approved_count, summary.reviewed_opportunity_count),
+        rejection_rate=rate(rejected_count, summary.reviewed_opportunity_count),
+        suppression_rate=rate(
             summary.suppressed_opportunity_count,
             summary.reviewed_opportunity_count,
         ),
-        feedback_rate=_rate(
+        feedback_rate=rate(
             summary.feedback_opportunity_count,
             summary.reviewed_opportunity_count,
         ),
-        conversion_rate=_rate(summary.conversion_opportunity_count, approved_count),
-        downstream_accepted_rate=_rate(
+        conversion_rate=rate(summary.conversion_opportunity_count, approved_count),
+        downstream_accepted_rate=rate(
             accepted_outcome_count,
             summary.conversion_intent_count,
         ),
-        downstream_rejected_rate=_rate(
+        downstream_rejected_rate=rate(
             rejected_outcome_count,
             summary.conversion_intent_count,
         ),
-        downstream_uncertain_rate=_rate(
+        downstream_uncertain_rate=rate(
             uncertain_outcome_count,
             summary.conversion_intent_count,
         ),
@@ -387,11 +389,11 @@ def _build_presentation_effectiveness(
         presented_opportunity_count=summary.presented_opportunity_count,
         top_ranked_presented_opportunity_count=(summary.top_ranked_presented_opportunity_count),
         top_ranked_accepted_opportunity_count=(summary.top_ranked_accepted_opportunity_count),
-        presentation_rate=_rate(
+        presentation_rate=rate(
             summary.presented_opportunity_count,
             summary.generated_opportunity_count,
         ),
-        top_ranked_acceptance_rate=_rate(
+        top_ranked_acceptance_rate=rate(
             summary.top_ranked_accepted_opportunity_count,
             summary.top_ranked_presented_opportunity_count,
         ),
@@ -500,6 +502,11 @@ def _in_memory_repository_summary(
         presented_opportunity_count=presented_count,
         top_ranked_presented_opportunity_count=top_ranked_presented_count,
         top_ranked_accepted_opportunity_count=top_ranked_accepted_count,
+        family_effectiveness=_in_memory_family_effectiveness(
+            snapshot,
+            records=records,
+            evaluated_at_utc=evaluated_at_utc,
+        ),
         family_counts=Counter(record.candidate.family.value for record in records),
         score_band_counts=Counter(_score_band(record) for record in records),
         latest_review_action_counts=measures.latest_review_action_counts,
@@ -545,6 +552,7 @@ def _validate_repository_summary(
         *summary.feedback_reason_counts.values(),
         *summary.current_downstream_outcome_counts.values(),
         *summary.downstream_submission_posture_counts.values(),
+        *(count for family in summary.family_effectiveness for count in summary_counts(family)),
     )
     if any(
         isinstance(value, bool) or not isinstance(value, int) or value < 0
@@ -568,6 +576,10 @@ def _validate_repository_summary(
         raise OpportunityEffectivenessDataError(
             "presented opportunities cannot exceed generated opportunities"
         )
+    try:
+        validate_family_effectiveness(summary)
+    except FamilyEffectivenessDataError as exc:
+        raise OpportunityEffectivenessDataError(str(exc)) from exc
     if any(
         value < 0
         for value in (*summary.detection_to_review_seconds, *summary.approval_to_conversion_seconds)
@@ -579,6 +591,70 @@ def _validate_repository_summary(
 
 def _count(counts: Mapping[str, int], value: str) -> int:
     return counts.get(value, 0)
+
+
+def _in_memory_family_effectiveness(
+    snapshot: IdeaRepositorySnapshot,
+    *,
+    records: tuple[CandidatePersistenceRecord, ...],
+    evaluated_at_utc: datetime,
+) -> tuple[OpportunityFamilyEffectivenessRepositorySummary, ...]:
+    summaries: list[OpportunityFamilyEffectivenessRepositorySummary] = []
+    for family in sorted(
+        {record.candidate.family for record in records}, key=lambda item: item.value
+    ):
+        family_records = tuple(record for record in records if record.candidate.family is family)
+        measures = _effectiveness_measures(
+            family_records,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+        presented, _, _ = _presentation_measures(
+            snapshot,
+            records=family_records,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+        accepted = sum(
+            _count(measures.current_downstream_outcome_counts, status.value)
+            for status in (ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED)
+        )
+        rejected = _count(
+            measures.current_downstream_outcome_counts,
+            ConversionOutcomeStatus.REJECTED.value,
+        )
+        uncertain = sum(
+            _count(measures.current_downstream_outcome_counts, value)
+            for value in (
+                DownstreamOutcomePosture.NOT_REPORTED.value,
+                ConversionOutcomeStatus.REQUESTED.value,
+            )
+        )
+        summaries.append(
+            OpportunityFamilyEffectivenessRepositorySummary(
+                family=family.value,
+                generated_opportunity_count=len(family_records),
+                presented_opportunity_count=presented,
+                reviewed_opportunity_count=measures.reviewed_opportunity_count,
+                approved_opportunity_count=_count(
+                    measures.latest_review_action_counts,
+                    ReviewAction.APPROVE_FOR_CONVERSION.value,
+                ),
+                rejected_opportunity_count=_count(
+                    measures.latest_review_action_counts,
+                    ReviewAction.REJECT.value,
+                ),
+                suppressed_opportunity_count=measures.suppressed_opportunity_count,
+                duplicate_suppressed_opportunity_count=(
+                    measures.duplicate_suppressed_opportunity_count
+                ),
+                feedback_opportunity_count=measures.feedback_opportunity_count,
+                conversion_opportunity_count=measures.conversion_opportunity_count,
+                conversion_intent_count=measures.conversion_intent_count,
+                downstream_accepted_count=accepted,
+                downstream_rejected_count=rejected,
+                downstream_uncertain_count=uncertain,
+            )
+        )
+    return tuple(summaries)
 
 
 def _effectiveness_measures(
@@ -876,18 +952,6 @@ def _dimension_counts(
     )
 
 
-def _rate(numerator: int, denominator: int) -> EffectivenessRate:
-    value = (
-        None
-        if denominator == 0
-        else (Decimal(numerator) / Decimal(denominator)).quantize(
-            RATE_QUANTUM,
-            rounding=ROUND_HALF_EVEN,
-        )
-    )
-    return EffectivenessRate(numerator=numerator, denominator=denominator, value=value)
-
-
 def _duration(values: tuple[Decimal, ...]) -> EffectivenessDuration:
     if not values:
         return EffectivenessDuration(
@@ -982,6 +1046,7 @@ def _snapshot_payload_without_digest(
                 item.to_payload() for item in snapshot.downstream_submission_posture_counts
             ],
         },
+        "familyEffectiveness": [item.to_payload() for item in snapshot.family_effectiveness],
         "rates": {
             "review": snapshot.review_rate.to_payload(),
             "approval": snapshot.approval_rate.to_payload(),
@@ -1034,6 +1099,7 @@ __all__ = [
     "OpportunityEffectivenessDataError",
     "OpportunityEffectivenessScopeError",
     "OpportunityEffectivenessSnapshot",
+    "OpportunityFamilyEffectiveness",
     "PresentationMeasurementStatus",
     "build_opportunity_effectiveness_snapshot",
     "build_opportunity_effectiveness_snapshot_from_summary",

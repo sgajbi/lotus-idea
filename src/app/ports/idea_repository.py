@@ -121,6 +121,24 @@ class RuntimeTrustTelemetryRepositorySummary:
 
 
 @dataclass(frozen=True)
+class OpportunityFamilyEffectivenessRepositorySummary:
+    family: str
+    generated_opportunity_count: int
+    presented_opportunity_count: int
+    reviewed_opportunity_count: int
+    approved_opportunity_count: int
+    rejected_opportunity_count: int
+    suppressed_opportunity_count: int
+    duplicate_suppressed_opportunity_count: int
+    feedback_opportunity_count: int
+    conversion_opportunity_count: int
+    conversion_intent_count: int
+    downstream_accepted_count: int
+    downstream_rejected_count: int
+    downstream_uncertain_count: int
+
+
+@dataclass(frozen=True)
 class OpportunityEffectivenessRepositorySummary:
     """Tenant-scoped aggregate facts used by the governed effectiveness methodology."""
 
@@ -140,6 +158,7 @@ class OpportunityEffectivenessRepositorySummary:
     presented_opportunity_count: int
     top_ranked_presented_opportunity_count: int
     top_ranked_accepted_opportunity_count: int
+    family_effectiveness: tuple[OpportunityFamilyEffectivenessRepositorySummary, ...]
     family_counts: Mapping[str, int]
     score_band_counts: Mapping[str, int]
     latest_review_action_counts: Mapping[str, int]
