@@ -338,7 +338,7 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert replayed.status_code == 200
-    assert replayed.json()["transition"] is None
+    assert replayed.json()["transition"] == payload["transition"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
 
 

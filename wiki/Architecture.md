@@ -389,6 +389,15 @@ durable storage behind one governed contract surface while default
 process-local and configured PostgreSQL-backed runtime postures remain
 truthful.
 
+Successful lifecycle transitions are projected from persisted Idea-owned
+audit evidence in the application layer. Accepted and replayed requests must
+resolve exactly one event matching the candidate and `transitionId`; both
+responses expose the same stored status, occurrence time, and reason codes.
+Missing, ambiguous, or malformed evidence is a degraded-recovery condition,
+not permission to reconstruct success from the request. This keeps lifecycle
+truth behind the existing repository port and does not introduce another
+runtime service or persistence schema.
+
 Domain persistence data contracts are separated from repository behavior:
 `src/app/domain/persistence_models.py` owns immutable persistence decisions,
 records, results, lifecycle history, and snapshots, while

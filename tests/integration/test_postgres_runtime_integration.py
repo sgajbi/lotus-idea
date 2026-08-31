@@ -131,6 +131,63 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
         connection.rollback()
 
 
+def test_postgres_lifecycle_replay_returns_exact_transition_after_repository_reload(
+    postgres_database_url: str,
+) -> None:
+    client = managed_test_client(app)
+    created = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-lifecycle-replay-seed-001"),
+    )
+    assert created.status_code == 200
+    candidate_id = created.json()["persistence"]["candidateId"]
+    request = _lifecycle_payload(
+        transition_id="postgres-lifecycle-enriched-001",
+        target_status="enriched",
+        changed_at_utc="2026-06-21T10:01:00Z",
+    )
+    headers = _lifecycle_headers("postgres-lifecycle-replay-001")
+
+    accepted = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=request,
+        headers=headers,
+    )
+    counts_after_accept = {
+        table: _table_count(postgres_database_url, table)
+        for table in (
+            "idea_lifecycle_history",
+            "idea_audit_event",
+            "idea_outbox_event",
+            "idea_idempotency_record",
+        )
+    }
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=request,
+        headers={**headers, "X-Trace-Id": "trace-postgres-lifecycle-replay"},
+    )
+
+    assert accepted.status_code == 200
+    assert replayed.status_code == 200
+    assert accepted.json()["persistence"]["decision"] == "accepted"
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert replayed.json()["transition"] == accepted.json()["transition"]
+    assert replayed.json()["transition"] == {
+        "transitionId": "postgres-lifecycle-enriched-001",
+        "candidateId": candidate_id,
+        "lifecycleStatus": "enriched",
+        "changedAtUtc": "2026-06-21T10:01:00Z",
+        "reasonCodes": ["review_required"],
+        "grantsDownstreamAuthority": False,
+    }
+    assert {
+        table: _table_count(postgres_database_url, table) for table in counts_after_accept
+    } == counts_after_accept
+
+
 def test_outbox_lineage_migration_preserves_and_sanitizes_legacy_event(
     postgres_database_url: str,
 ) -> None:

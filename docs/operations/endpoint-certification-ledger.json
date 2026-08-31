@@ -858,7 +858,7 @@
       ],
       "response_examples": [
         "{\"transition\":{\"transitionId\":\"lifecycle-ready-for-review-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"reasonCodes\":[\"review_required\"],\"grantsDownstreamAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"transition\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"transition\":{\"transitionId\":\"lifecycle-ready-for-review-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"reasonCodes\":[\"review_required\"],\"grantsDownstreamAuthority\":false},\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.candidate.lifecycle.transition capability.",

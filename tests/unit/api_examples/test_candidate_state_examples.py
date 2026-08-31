@@ -29,7 +29,7 @@ def test_candidate_lifecycle_success_examples_match_ledger_and_openapi() -> None
     assert expected["accepted"]["transition"] is not None
     assert expected["accepted"]["persistence"]["decision"] == "accepted"
     assert expected["accepted"]["transition"]["grantsDownstreamAuthority"] is False
-    assert expected["replayed"]["transition"] is None
+    assert expected["replayed"]["transition"] == expected["accepted"]["transition"]
     assert expected["replayed"]["persistence"]["decision"] == "replayed"
     assert all(value["supportedFeaturePromoted"] is False for value in expected.values())
 
