@@ -771,7 +771,7 @@
         "reviewPosture": "no_action"
       },
       "incoming": {
-        "cashWeight": "0.18",
+        "cashWeight": "0.21",
         "evidenceHash": "sha256:golden:cashflow:recurrent"
       },
       "expected": {
@@ -782,6 +782,29 @@
         "changeReason": "recurrent_condition",
         "lifecycleStatus": "generated",
         "reviewPosture": "advisor_review_required",
+        "suppressionReason": null
+      }
+    },
+    {
+      "scenarioId": "expired-evidence-correction-stays-terminal",
+      "initial": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:initial",
+        "lifecycleStatus": "expired",
+        "reviewPosture": "no_action"
+      },
+      "incoming": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:corrected"
+      },
+      "expected": {
+        "decision": "evidence_refreshed",
+        "candidateIdStable": true,
+        "materialVersion": 1,
+        "evidenceVersion": 2,
+        "changeReason": "evidence_correction",
+        "lifecycleStatus": "expired",
+        "reviewPosture": "no_action",
         "suppressionReason": null
       }
     }
