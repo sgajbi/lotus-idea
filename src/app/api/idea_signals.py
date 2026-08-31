@@ -798,8 +798,9 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
     "summary": "Evaluate and persist a high-cash idea signal",
     "description": (
         "Evaluates caller-supplied, source-owned Core evidence for the first high-cash "
-        "opportunity family, then persists created candidates through the internal "
-        "idempotency/audit repository foundation. The endpoint is an internal certified "
+        "opportunity family, persists created candidates, and retires the matching active "
+        "candidate when authoritative evidence is no longer eligible. Blocked evidence "
+        "remains non-mutating. The endpoint is an internal certified "
         "API foundation; local/test profiles may use process-local writes, while "
         "production-like profiles require LOTUS_IDEA_DATABASE_URL and fail closed before "
         "in-memory mutation. No supported business feature is promoted."
@@ -809,7 +810,7 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
     "tags": ["Idea Signals"],
     "responses": {
         200: {
-            "description": "High-cash signal evaluation completed and candidate persistence accepted, replayed, duplicated, or skipped for non-created candidates.",
+            "description": "High-cash evaluation completed; a qualifying candidate was persisted or reconciled, authoritative no-longer-eligible evidence retired the matching active candidate, or blocked evidence made no mutation.",
             "content": {
                 "application/json": {
                     "example": {

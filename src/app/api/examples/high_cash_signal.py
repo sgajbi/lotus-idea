@@ -59,7 +59,9 @@ HIGH_CASH_PERSISTENCE_SUCCESS_EXAMPLE_SUMMARIES = {
     "replayed": "Matching idempotent request replayed without duplicate mutation",
     "duplicateCandidate": "New retry key resolves to the already persisted candidate",
     "blocked": "Blocked evaluation skips candidate persistence",
-    "notEligible": "Below-materiality evaluation skips candidate persistence",
+    "notEligible": (
+        "Below-materiality evidence creates no new candidate and retires a matching active one"
+    ),
 }
 
 _AS_OF_DATE = date(2026, 6, 21)

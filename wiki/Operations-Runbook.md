@@ -119,6 +119,12 @@ recurrent-condition-reopened, replayed, conflict, identity-conflict,
 duplicate-candidate, blocked, and not-eligible outcomes,
 and it now includes a bounded run-once batch worker foundation with per-item
 idempotency, batch decision counts, and maximum item validation.
+An authoritative high-cash `not_eligible` result expires the matching active
+candidate and removes it from review queues; blocked source evidence remains
+non-mutating. Candidate plus material version form the expiry idempotency
+boundary, so concurrent worker requests write one lifecycle/audit/outbox
+transition. The batch decision remains `skipped_not_eligible` because no new
+candidate is persisted.
 `scripts/run_source_ingestion_worker.py` provides the versioned run-once worker
 CLI, and `make source-ingestion-worker-check` validates the manifest contract
 and source-safe check-only output contract without calling Core or writing

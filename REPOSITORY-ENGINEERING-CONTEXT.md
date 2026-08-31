@@ -3399,6 +3399,14 @@ review-posture actions and must not be reintroduced as evaluator-level
 duplicate outcomes. Preserve the foundation-only supported-feature posture
 until the normal promotion evidence is complete.
 
+For persisted high-cash opportunities, authoritative `not_eligible` evidence
+expires the matching active candidate; blocked evidence never proves
+resolution and remains non-mutating. Derive expiry identity from the stable
+scoped candidate and current material version, not from transport idempotency,
+so repeated and concurrent reevaluations create one lifecycle/audit/outbox
+transition. Preserve terminal states, keep the expired record out of review
+queues, and allow return only through governed material recurrence.
+
 Direct PostgreSQL fixtures that insert candidate rows must satisfy the current
 identity columns and the identity fields embedded in `candidate_json`. Tests
 that require distinct opportunities must vary governed economic scope; changing
