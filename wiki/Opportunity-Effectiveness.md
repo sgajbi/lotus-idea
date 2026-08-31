@@ -42,6 +42,15 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   denominator, and exact-version rank-1 acceptance rate under
   `stored_consumer_certification_pending`. Gateway/Workbench certification
   remains outstanding and the endpoint remains `not_certified`.
+- Methodology v3 also returns a per-family funnel for generated, presented,
+  reviewed, approved, rejected, suppressed, duplicate-suppressed, feedback,
+  conversion, and current downstream outcome posture. Each rate carries its
+  numerator, denominator, and null-on-empty behavior, making weak or noisy
+  families visible without exposing client, portfolio, candidate, or actor
+  identity and without changing production policy automatically.
+- Family presentation counts and rates remain `null` when the cohort has no
+  qualifying presentation receipt, preserving the difference between measured
+  zero activity and unavailable evidence.
 
 The receipt is fenced by tenant, strict-integer candidate material/evidence versions, UTC
 chronology, strict positive global rank, independently bounded integer visible-set count, and

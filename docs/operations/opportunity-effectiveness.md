@@ -48,7 +48,7 @@ learning without claiming that Workbench and Gateway are certified.
 
 `GET /api/v1/operations/opportunity-effectiveness` returns schema
 `lotus-idea.opportunity-effectiveness.v1` under methodology policy
-`idea-opportunity-effectiveness-v2`.
+`idea-opportunity-effectiveness-v3`.
 
 The population is economic opportunities first generated in the half-open UTC
 window `[windowStartUtc, windowEndUtc)`. Later review, feedback, conversion,
@@ -63,6 +63,8 @@ behavior. Empty denominators return `null`. The response includes:
   suppressed, duplicate, recurrent, and reconciled counts;
 - family, score-band, latest-review, feedback-reason, current-downstream-outcome,
   and submission-posture dimensions;
+- a per-family funnel that applies the same cohort, chronology, latest-review,
+  current-outcome, and zero-denominator rules as the global snapshot;
 - review, approval, rejection, suppression, feedback, conversion, downstream
   accepted/rejected/uncertain rates;
 - detection-to-review and approval-to-conversion distributions; and
@@ -91,6 +93,24 @@ divides exact-version rank-1 acceptances by that count. A stored presentation
 population with no rank-1 observation yields a `0 / 0` rate with `null` value;
 it is not reported as a rejection. Repeated receipts never inflate either
 denominator.
+
+Methodology v3 adds `familyEffectiveness`. Each represented opportunity family
+has generated, presented, reviewed, approved, rejected, suppressed,
+duplicate-suppressed, feedback, conversion, conversion-intent, and current
+downstream accepted/rejected/uncertain counts. Review and presentation divide
+by generated opportunities; approval and rejection divide by reviewed
+opportunities; suppression and duplicate suppression divide by generated
+opportunities; feedback divides by reviewed opportunities; conversion divides
+by approved opportunities; and downstream rates divide by conversion intents.
+Empty denominators remain `null`. Family totals reconcile to the same economic
+opportunity cohort, so corrected evidence or recurrence cannot manufacture a
+second family observation. This makes family-specific noise or low relevance
+visible without authorizing automatic policy changes.
+
+Presentation remains receipt-derived at family level. When the cohort contains
+no qualifying presentation receipt, every family's `presentedOpportunityCount`
+and `presentation` rate are `null`; unavailable evidence is never reported as
+measured zero activity.
 
 ## Presentation Receipt Contract
 
