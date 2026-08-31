@@ -1259,6 +1259,14 @@ replay and report precheck use candidate-only and idempotency-linked projections
 The 17-test disposable PostgreSQL 18 lane proves the resulting restart,
 concurrency, recovery, queue, downstream, lifecycle, and nullable-bind posture.
 
+State-changing review results retain the source candidate used by domain
+evaluation. After the candidate lock and fresh aggregate load, persistence must
+reject a distinct result whose source candidate is stale before it records any
+idempotency, review, lifecycle, audit, or outbox evidence. Resolve equivalent
+review-resource replay first so retries remain idempotent. Do not treat row
+locking or the candidate `updated_at_utc` compare-and-set alone as proof that a
+pre-lock domain decision was evaluated against current state.
+
 ## Outbound HTTP Resilience Pattern
 
 Outbound HTTP resilience is centralized in

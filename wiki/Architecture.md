@@ -1064,6 +1064,15 @@ split has no workload, failure-isolation, ownership, or operability evidence.
 Gateway/Workbench functionality and supported review-product promotion remain
 planned.
 
+New review decisions also carry the exact candidate snapshot against which the
+domain action was evaluated. Persistence checks that source only after the
+candidate transaction fence and fresh aggregate load. Consequently, two
+distinct competing actions cannot both become authoritative: the first commit
+wins, while the stale loser returns `review_action_conflict` and writes no
+candidate, decision, lifecycle, audit, idempotency, or outbox change.
+Equivalent resource-identity retries are resolved before this stale-state
+check and retain their governed replay behavior.
+
 ### Governed Feedback Evaluation
 
 Feedback uses a domain-owned, versioned outcome/reason taxonomy rather than a
