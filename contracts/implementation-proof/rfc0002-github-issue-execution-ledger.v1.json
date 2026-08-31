@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-30",
+  "asOfDate": "2026-08-31",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -399,18 +399,18 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/685",
       "rfcSlices": ["slice-11"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open and status/blocked. PR #736 merged the optional Gateway/Workbench runtime-execution proof consumer to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #754 proved the default Gateway/Workbench runtime artifact was stale and non-certifying because `make gateway-workbench-runtime-execution-proof` rejected `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and `proofChecks.workbenchEvidenceFresh`. PR #755 fixed the stale runtime-proof timestamp variable so stale artifacts cannot be accepted as fresh Gateway/Workbench evidence. Core blockers #836, #840, #856, #873, and #882 are closed; Core #882 / PR #924 supplied the previously missing DpmPortfolioUniverseCandidate:v1 source_batch_fingerprint/content_hash evidence. Fresh exact-main Gateway/BFF-backed Workbench queue and candidate-detail browser evidence from the governed PB_SG_GLOBAL_BAL_001 runtime remains required before the issue can move to merged-main QA. Keep browser/accessibility proof, canonical demo runtime proof, #380 data-product/supported-feature promotion posture, production identity, client publication, suitability, proposal approval, rebalance/action execution, report/render/archive authority, and broader production readiness out of closure claims until their independent evidence exists."
+      "closureInstruction": "Keep #685 open and status/in-progress. This is active writable Gateway/Workbench owner work, not an external blocker. PR #736 merged the optional Gateway/Workbench runtime-execution proof consumer to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #754 proved the default Gateway/Workbench runtime artifact was stale and non-certifying because `make gateway-workbench-runtime-execution-proof` rejected `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and `proofChecks.workbenchEvidenceFresh`. PR #755 fixed the stale runtime-proof timestamp variable so stale artifacts cannot be accepted as fresh Gateway/Workbench evidence. Core blockers #836, #840, #856, #873, and #882 are closed; Core #882 / PR #924 supplied the previously missing DpmPortfolioUniverseCandidate:v1 source_batch_fingerprint/content_hash evidence. Fresh exact-main Gateway/BFF-backed Workbench queue and candidate-detail browser evidence from the governed PB_SG_GLOBAL_BAL_001 runtime remains required before the issue can move to merged-main QA. Keep browser/accessibility proof, canonical demo runtime proof, #380 data-product/supported-feature promotion posture, production identity, client publication, suitability, proposal approval, rebalance/action execution, report/render/archive authority, and broader production readiness out of closure claims until their independent evidence exists."
     },
     {
       "issueNumber": 686,
       "url": "https://github.com/sgajbi/lotus-idea/issues/686",
       "rfcSlices": ["slice-08", "slice-11"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #686 open and status/blocked. PR #736 merged Gateway/Workbench runtime-execution proof consumption to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. Workbench PR #501 merged the browser-action proof path, platform PR #631 fixed the prior Manage seed authorization failure, and Core #882 / PR #924 supplied deterministic source_batch_fingerprint/content_hash evidence for DpmPortfolioUniverseCandidate:v1. This issue is not QA-pending: it remains blocked until fresh exact-main Workbench live validation produces implementation-backed browser evidence for review-action, feedback, conversion-intent, permission-denied, and no-authority-inflation behavior. PR #736, platform #631, Workbench #501, Core PR #924, and Idea PR #810 do not certify production identity, supported-feature promotion, client publication, suitability, proposal approval, rebalance/action execution, or downstream authority."
+      "closureInstruction": "Keep #686 open and status/in-progress. This is active writable Gateway/Workbench owner work, not an external blocker. PR #736 merged Gateway/Workbench runtime-execution proof consumption to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. Workbench PR #501 merged the browser-action proof path, platform PR #631 fixed the prior Manage seed authorization failure, and Core #882 / PR #924 supplied deterministic source_batch_fingerprint/content_hash evidence for DpmPortfolioUniverseCandidate:v1. Fresh exact-main Workbench live validation must still produce implementation-backed browser evidence for review-action, feedback, conversion-intent, permission-denied, and no-authority-inflation behavior before this issue can move to merged-main QA. PR #736, platform #631, Workbench #501, Core PR #924, and Idea PR #810 do not certify production identity, supported-feature promotion, client publication, suitability, proposal approval, rebalance/action execution, or downstream authority."
     },
     {
       "issueNumber": 687,
@@ -1439,18 +1439,45 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1155",
       "rfcSlices": ["slice-08", "slice-16", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1155 open and status/in-progress. PR #1159 merged the Idea-owned idea-feedback-taxonomy-v1 domain contract, migration 017, canonical mutation/persistence/replay/audit/outbox/API/OpenAPI behavior, and bounded tenant-scoped source-safe offline evaluation projection to exact Idea main b0eca2c291ca5d3046dc47600c4cf32da13d99df. Main Releasability run 33310758263 and CodeQL run 33310752467 passed, repo-authored wiki publication reached commit fc96116 with strict DiffCount 0, and branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#691 must forward the canonical taxonomy without rewriting it and Workbench sgajbi/lotus-workbench#953 must capture the governed adviser reason. Preserve review actions as separate lifecycle facts and keep every evaluation output read-only: no automatic policy, eligibility, scoring, ranking, suppression, lifecycle, AI-training, or online-learning mutation. No supported-feature promotion or final RFC-0002 closure is claimed."
+      "closureInstruction": "Keep #1155 open and status/merged-main pending canonical consumer QA. PR #1159 merged the Idea-owned idea-feedback-taxonomy-v1 domain contract, migration 017, canonical mutation/persistence/replay/audit/outbox/API/OpenAPI behavior, and bounded tenant-scoped source-safe offline evaluation projection to exact Idea main b0eca2c291ca5d3046dc47600c4cf32da13d99df. Main Releasability run 33310758263 and CodeQL run 33310752467 passed, repo-authored wiki publication reached commit fc96116 with strict DiffCount 0, and branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#691 must forward the canonical taxonomy without rewriting it and Workbench sgajbi/lotus-workbench#953 must capture the governed adviser reason. Preserve review actions as separate lifecycle facts and keep every evaluation output read-only: no automatic policy, eligibility, scoring, ranking, suppression, lifecycle, AI-training, or online-learning mutation. No supported-feature promotion or final RFC-0002 closure is claimed."
     },
     {
       "issueNumber": 1156,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1156",
       "rfcSlices": ["slice-08", "slice-12", "slice-15", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1156 open and status/in-progress. PR #1160 merged the Idea-owned opportunity-effectiveness-v1 read model, bounded tenant-scoped PostgreSQL aggregate projection, exact API/OpenAPI contract, and immutable candidate-presentation-receipt-v1 domain/API/persistence contract to main 2cbe11c063cd3ed24e460051c2036f65a7a8cf43. PR #1161 then merged PostgreSQL driver-outage containment and projection-read SLI hardening to exact main 0b8a6b09606a2abe57dec9c93653e96865d0f301. PR gates and CodeQL passed; final exact-main Main Releasability is run 33319584650. Repo-authored wiki publication reached c503fd8 with strict DiffCount 0 and all changed pages passed the professional wiki audit; branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#692 must pass the receipt contract through without deriving rank and Workbench sgajbi/lotus-workbench#954 must emit receipts only after visible render. Until then, shown and rank-at-show measures remain null with unavailable_consumer_certification_pending and not_certified posture. Queue retrieval must never be used as a presentation proxy. Metrics alone do not promote a supported feature or complete RFC-0002."
+      "closureInstruction": "Keep #1156 open and status/merged-main pending canonical consumer QA. PR #1160 merged the Idea-owned opportunity-effectiveness-v1 read model, bounded tenant-scoped PostgreSQL aggregate projection, exact API/OpenAPI contract, and immutable candidate-presentation-receipt-v1 domain/API/persistence contract to main 2cbe11c063cd3ed24e460051c2036f65a7a8cf43. PR #1161 then merged PostgreSQL driver-outage containment and projection-read SLI hardening to exact main 0b8a6b09606a2abe57dec9c93653e96865d0f301. PR gates and CodeQL passed; final exact-main Main Releasability is run 33319584650. Repo-authored wiki publication reached c503fd8 with strict DiffCount 0 and all changed pages passed the professional wiki audit; branch cleanup passed. Remaining completion evidence is consumer-owned: Gateway sgajbi/lotus-gateway#692 must pass the receipt contract through without deriving rank and Workbench sgajbi/lotus-workbench#954 must emit receipts only after visible render. Until then, shown and rank-at-show measures remain null with unavailable_consumer_certification_pending and not_certified posture. Queue retrieval must never be used as a presentation proxy. Metrics alone do not promote a supported feature or complete RFC-0002."
+    },
+    {
+      "issueNumber": 1168,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1168",
+      "rfcSlices": ["slice-08", "slice-11"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1168 after QA passed for exact persisted adviser-action replay evidence. PR #1171 rebase-merged to exact Idea main cdc9fbc0cd64a0dec3fffe7fb42be384a394f0df. Main Releasability run 33333214234 and CodeQL run 33333206828 passed, including PostgreSQL runtime proof, 5,744 unit tests, integration and E2E lanes, 99.01% combined coverage, vulnerability and image scanning, signed immutable image publication, SBOM, provenance, release identity, and CI evidence. Repo-authored wiki publication reached commit 944caae with strict DiffCount 0. Local and remote feature branches were removed after patch-equivalence proof, leaving one clean main worktree and no unmerged remote branch. The implementation returns exact persisted adviser review, feedback, and conversion-intent evidence on accepted or replayed success; missing or ambiguous durable evidence fails closed without replay side effects. No assertion or threshold was weakened, no compatibility layer was added, and no production identity, supported-feature promotion, or downstream authority is claimed. No final RFC-0002 closure is claimed."
+    },
+    {
+      "issueNumber": 1169,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1169",
+      "rfcSlices": ["slice-08"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1169 after QA passed for exact persisted lifecycle-transition replay evidence. PR #1173 rebase-merged to exact Idea main b923165ba1925eb59cbd3e74c9315c4f3659f7e7. Main Releasability run 33353245168 and CodeQL run 33353237457 passed, including PostgreSQL lifecycle reload/replay and every release gate. Repo-authored wiki publication reached commit da09f97 with strict DiffCount 0. The remote branch was pruned, the local branch was removed after tree-equivalence proof, and one clean main worktree remained with no unmerged remote branch. The implementation returns one exact persisted lifecycle transition on accepted or replayed success and fails closed for missing or ambiguous evidence. No assertion or gate was weakened, no compatibility layer was added, and no production identity, supported-feature promotion, or downstream authority is claimed. No final RFC-0002 closure is claimed."
+    },
+    {
+      "issueNumber": 1170,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1170",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1170 after QA passed for exact persisted downstream-action replay evidence. PR #1175 rebase-merged to exact Idea main df26f7f18c1dafb0009f8294cf08b999d1681ca0. Main Releasability run 33360310207 and CodeQL run 33360303951 passed, including exact revision assertion, PostgreSQL runtime proof, 5,774 unit tests, integration and E2E lanes, 99.01% combined coverage, vulnerability and image scanning, immutable image publication, signing, SBOM, provenance, release identity, and CI evidence. Repo-authored wiki publication reached commit 44c0940 with strict DiffCount 0. The remote branch was deleted, and the local branch was removed only after feature/main tree equality 27a18681358cc08a44579fbdc931c47caf42e58b; one clean main worktree remains with no unmerged remote branch. Accepted and replayed conversion outcomes and Report evidence requests return the exact persisted Idea-owned action; zero, multiple, or missing durable evidence fails closed, and same-key client-publication escalation conflicts before domain processing. No assertion or threshold was weakened, no compatibility layer was added, and no Report/Render/Archive materialization, production identity, supported-feature promotion, or downstream authority is claimed. No final RFC-0002 closure is claimed."
     },
     {
       "issueNumber": 1162,

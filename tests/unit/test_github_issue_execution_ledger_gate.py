@@ -889,7 +889,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependen
     )
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_active_workbench_action_proof() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_686 = next(
@@ -899,9 +899,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
     )
 
     assert issue_686["githubState"] == "open"
-    assert issue_686["executionStatus"] == "open_blocked"
+    assert issue_686["executionStatus"] == "open_in_progress"
     assert issue_686["allowPullRequestAutoClose"] is False
-    assert "Keep #686 open and status/blocked" in issue_686["closureInstruction"]
+    assert "Keep #686 open and status/in-progress" in issue_686["closureInstruction"]
+    assert "active writable Gateway/Workbench owner work" in issue_686["closureInstruction"]
     assert (
         "Workbench PR #501 merged the browser-action proof path"
         in (issue_686["closureInstruction"])
@@ -909,12 +910,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
     assert "Core #882 / PR #924 supplied" in issue_686["closureInstruction"]
     assert "source_batch_fingerprint/content_hash" in issue_686["closureInstruction"]
     assert "DpmPortfolioUniverseCandidate:v1" in issue_686["closureInstruction"]
-    assert "fresh exact-main Workbench live validation" in issue_686["closureInstruction"]
-    assert "This issue is not QA-pending" in issue_686["closureInstruction"]
+    assert "Fresh exact-main Workbench live validation" in issue_686["closureInstruction"]
     assert "production identity" in issue_686["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocker() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_active_workbench_read_path_proof() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_685 = next(
@@ -924,9 +924,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     )
 
     assert issue_685["githubState"] == "open"
-    assert issue_685["executionStatus"] == "open_blocked"
+    assert issue_685["executionStatus"] == "open_in_progress"
     assert issue_685["allowPullRequestAutoClose"] is False
-    assert "Keep #685 open and status/blocked" in issue_685["closureInstruction"]
+    assert "Keep #685 open and status/in-progress" in issue_685["closureInstruction"]
+    assert "active writable Gateway/Workbench owner work" in issue_685["closureInstruction"]
     assert "make gateway-workbench-runtime-execution-proof" in issue_685["closureInstruction"]
     assert "runtimeExecutionProofValid" in issue_685["closureInstruction"]
     assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]

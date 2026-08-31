@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-09",
+  "asOfDate": "2026-08-31",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -72,20 +72,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "post_completion_final_evidence",
       "remainingAuthority": "Slice 20 final closure evidence and final supported-feature/publication posture before post-completion communication or LinkedIn decision"
-    },
-    {
-      "repository": "sgajbi/lotus-idea",
-      "issueNumber": 685,
-      "actionability": "external_or_protected_evidence",
-      "blockerClass": "canonical_workbench_runtime_evidence",
-      "remainingAuthority": "Fresh governed Gateway/BFF-backed Workbench queue and candidate-detail runtime proof for PB_SG_GLOBAL_BAL_001 after the Core #882 source-fingerprint blocker closed; do not close from merged PRs, stale artifacts, or partial browser validation"
-    },
-    {
-      "repository": "sgajbi/lotus-idea",
-      "issueNumber": 686,
-      "actionability": "external_or_protected_evidence",
-      "blockerClass": "canonical_workbench_action_evidence",
-      "remainingAuthority": "Fresh Workbench browser proof for review-action, feedback, and conversion-intent controls after the Core #882 source-fingerprint blocker closed, including Gateway-backed feedback confirmation and no authority inflation"
     },
     {
       "repository": "sgajbi/lotus-idea",
