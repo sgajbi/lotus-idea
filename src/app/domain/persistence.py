@@ -56,6 +56,7 @@ from app.domain.ideas import (
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
+    InvalidConversionIntent,
 )
 from app.domain.conversion_outcome_policy import (
     ConversionOutcomeIdentity,
@@ -564,6 +565,11 @@ class InMemoryIdeaRepository(
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.NOT_FOUND,
                 record=None,
+            )
+        if record.candidate != result.source_candidate:
+            raise InvalidConversionIntent(
+                candidate_id,
+                "candidate state changed after conversion readiness evaluation",
             )
 
         history = record.lifecycle_history

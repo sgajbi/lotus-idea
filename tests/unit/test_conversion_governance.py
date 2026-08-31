@@ -160,8 +160,10 @@ def test_conversion_target_maps_to_downstream_authority_and_lifecycle(
     expected_status: IdeaLifecycleStatus,
     expected_source: SourceSystem,
 ) -> None:
-    result = request_conversion_intent(candidate(), intent_command(target))
+    source_candidate = candidate()
+    result = request_conversion_intent(source_candidate, intent_command(target))
 
+    assert result.source_candidate is source_candidate
     assert result.candidate.lifecycle_status is expected_status
     assert result.conversion_intent.target_source_authority is expected_source
 
