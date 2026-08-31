@@ -22,7 +22,7 @@ flowchart LR
     Queue --> Render["Visible Workbench render"]
     Render --> Receipt["Immutable Idea receipt"]
     Candidate --> Decisions["Review + feedback + conversion"]
-    Receipt -. "after consumer certification" .-> Funnel["Effectiveness snapshot"]
+    Receipt -->|"version-matched stored evidence"| Funnel["Effectiveness snapshot"]
     Decisions --> Funnel
 ```
 
@@ -35,9 +35,12 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   privacy-safe methodology snapshot.
 - `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts` stores an
   immutable visible-render receipt using `Idempotency-Key` as receipt identity.
-- Presentation counts remain `null` with
-  `unavailable_consumer_certification_pending` until Gateway issue `#692` and
-  Workbench issue `#954` are merged and validated.
+- Without qualifying receipt evidence, presentation counts remain `null` under
+  `unavailable_consumer_certification_pending`; this means unavailable, not zero.
+- With qualifying stored evidence, the read model returns distinct presented
+  candidates and exact-version rank-1 acceptance under
+  `stored_consumer_certification_pending`. Gateway/Workbench certification
+  remains outstanding and the endpoint remains `not_certified`.
 
 The receipt is fenced by tenant, strict-integer candidate material/evidence versions, UTC
 chronology, strict positive global rank, independently bounded integer visible-set count, and
@@ -49,6 +52,10 @@ The advisor queue supplies the current Idea-owned material/evidence versions
 for every candidate. A Workbench receipt must copy them from the exact rendered
 item rather than reconstructing source version state; Workbench remains
 responsible for digesting the exact ordered identities that were visible.
+Repeated receipts for one candidate do not inflate presentation counts. A
+rank-1 acceptance is attributed only when the receipt precedes an adviser
+approval whose evidence hash resolves to the receipt's exact candidate version;
+an older recurrence version cannot receive credit for a later approval.
 It is included in the complete data-lifecycle inventory and disaster-recovery
 representative fixture. Restore inspection fails on missing candidate/version
 lineage, tenant mismatch, or presentation time preceding the referenced

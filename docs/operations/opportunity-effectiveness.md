@@ -36,13 +36,13 @@ flowchart LR
 
     Sources --> Candidate --> Queue --> Workbench --> Gateway --> Receipt
     Candidate --> Review
-    Receipt -. "eligible only after consumer certification" .-> Projection
+    Receipt -->|"version-matched stored evidence"| Projection
     Review --> Projection
 ```
 
-The dashed edge is intentional. Idea can validate and store a receipt today,
-but `shown` and top-ranked acceptance remain unavailable until the Gateway and
-Workbench consumer obligations are merged and validated on exact `main`.
+Idea measures stored presentation evidence independently from end-to-end
+consumer certification. The projection can therefore support internal product
+learning without claiming that Workbench and Gateway are certified.
 
 ## Effectiveness Read Model
 
@@ -68,9 +68,20 @@ behavior. Empty denominators return `null`. The response includes:
 - detection-to-review and approval-to-conversion distributions; and
 - a deterministic snapshot digest and explicit privacy boundary.
 
-Presentation fields currently return
-`unavailable_consumer_certification_pending` with `null` counts. This is a
-truthful measurement posture, not a missing-value default.
+Presentation fields use two explicit postures:
+
+| Measurement status | Counts | Meaning |
+| --- | --- | --- |
+| `unavailable_consumer_certification_pending` | Both `null` | No qualifying receipt exists by the evaluation cutoff; zero must not be inferred |
+| `stored_consumer_certification_pending` | Non-null | Idea has eligible stored evidence, but canonical Gateway/Workbench certification remains outstanding |
+
+`presentedOpportunityCount` counts distinct cohort candidates with at least one
+tenant-matched receipt at or before `evaluatedAtUtc`; repeated renders do not
+inflate it. `topRankedAcceptedOpportunityCount` counts a presented candidate
+once only when a rank-1 receipt precedes an `approve_for_conversion` decision
+for the exact same material/evidence version. Idea resolves that version to its
+durable evidence hash before attribution, so a pre-recurrence rank cannot be
+credited to a later-version approval.
 
 ## Presentation Receipt Contract
 
@@ -160,14 +171,18 @@ python scripts/disaster_recovery_contract_gate.py
 ```
 
 `make postgres-integration-gate` includes restart-safe real-PostgreSQL receipt
-proof. The disaster-recovery integration suite also seeds the receipt and
+and effectiveness-attribution proof. Repository snapshots preserve receipts
+associated with loaded candidate state so in-memory recovery and PostgreSQL
+snapshot replacement retain the same learning evidence. The disaster-recovery
+integration suite also seeds the receipt and
 rejects restored version-lineage, tenant, or chronology corruption. Full
 release validation remains `make ci-release`.
 
 ## Certification Posture
 
-Idea contract, persistence, API, and local PostgreSQL proof are implemented but
-not certified as an end-to-end shown metric. Remaining consumer evidence is
+Idea contract, persistence, measurement, API, and local PostgreSQL proof are
+implemented but not certified as an end-to-end shown metric. Stored receipts
+can support internal effectiveness analysis. Remaining consumer evidence is
 tracked durably in:
 
 - `sgajbi/lotus-gateway#692` — exact pass-through; and
