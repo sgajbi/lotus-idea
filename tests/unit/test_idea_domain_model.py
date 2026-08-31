@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.domain import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
@@ -32,6 +33,8 @@ from app.domain import (
     ReasonCode,
     ReviewDecision,
     ReviewPosture,
+    ScoreComponent,
+    ScoreContribution,
     SourceRef,
     SourceSystem,
     UnsupportedEvidenceReason,
@@ -89,8 +92,8 @@ def candidate(
         review_posture=review_posture,
         evidence_packet=evidence_packet(supportability=supportability),
         source_signal_ids=("signal_high_cash_001",),
-        score=IdeaScore(
-            policy_version="idle-liquidity-v1",
+        score=score_fixture(
+            policy_version="idle-liquidity-v2",
             score=Decimal("82.5"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         ),
@@ -472,20 +475,22 @@ def test_domain_models_are_immutable() -> None:
 
 def test_score_policy_is_bounded_and_versioned() -> None:
     score = IdeaScore(
-        policy_version="idle-liquidity-v1",
+        policy_version="idle-liquidity-v2",
         score=Decimal("75"),
         reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+        contributions=(_score_contribution(),),
     )
 
-    assert score.policy_version == "idle-liquidity-v1"
+    assert score.policy_version == "idle-liquidity-v2"
 
 
 def test_score_policy_requires_reason_codes() -> None:
     with pytest.raises(ValueError, match="reason_codes is required"):
         IdeaScore(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             score=Decimal("75"),
             reason_codes=(),
+            contributions=(_score_contribution(),),
         )
 
 
@@ -493,7 +498,85 @@ def test_score_policy_requires_reason_codes() -> None:
 def test_score_policy_rejects_out_of_bounds_values(score: Decimal) -> None:
     with pytest.raises(ValueError, match="score must be between 0 and 100"):
         IdeaScore(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             score=score,
             reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            contributions=(_score_contribution(),),
         )
+
+
+def test_score_contribution_rejects_mismatched_weighted_value() -> None:
+    with pytest.raises(ValueError, match="input_score multiplied by weight"):
+        _score_contribution(
+            input_score=Decimal("80"),
+            weight=Decimal("0.50"),
+            contribution=Decimal("39.99"),
+        )
+
+
+def test_score_rejects_duplicate_components() -> None:
+    contribution = _score_contribution(
+        input_score=Decimal("75"),
+        weight=Decimal("0.50"),
+        contribution=Decimal("37.50"),
+    )
+
+    with pytest.raises(ValueError, match="components must be unique"):
+        IdeaScore(
+            policy_version="idle-liquidity-v2",
+            score=Decimal("75"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            contributions=(contribution, contribution),
+        )
+
+
+def test_score_rejects_weights_that_do_not_sum_to_one() -> None:
+    with pytest.raises(ValueError, match="weights must sum to 1"):
+        IdeaScore(
+            policy_version="idle-liquidity-v2",
+            score=Decimal("37.50"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            contributions=(
+                _score_contribution(
+                    input_score=Decimal("75"),
+                    weight=Decimal("0.50"),
+                    contribution=Decimal("37.50"),
+                ),
+            ),
+        )
+
+
+def test_score_rejects_scalar_that_cannot_be_reconstructed() -> None:
+    with pytest.raises(ValueError, match="contributions minus conflict penalty"):
+        IdeaScore(
+            policy_version="idle-liquidity-v2",
+            score=Decimal("74.99"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            contributions=(_score_contribution(),),
+        )
+
+
+def test_score_reconstructs_zero_after_conflict_penalty_floor() -> None:
+    score = IdeaScore(
+        policy_version="idle-liquidity-v2",
+        score=Decimal("0"),
+        reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.CONFLICT_PENALTY),
+        contributions=(_score_contribution(input_score=Decimal("10"), contribution=Decimal("10")),),
+        conflict_penalty_applied=Decimal("15"),
+    )
+
+    assert score.score == Decimal("0")
+
+
+def _score_contribution(
+    *,
+    input_score: Decimal = Decimal("75"),
+    weight: Decimal = Decimal("1"),
+    contribution: Decimal = Decimal("75.00"),
+) -> ScoreContribution:
+    return ScoreContribution(
+        component=ScoreComponent.MATERIALITY,
+        input_score=input_score,
+        weight=weight,
+        contribution=contribution,
+    )

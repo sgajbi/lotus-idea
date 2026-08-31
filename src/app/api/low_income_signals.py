@@ -296,7 +296,7 @@ LOW_INCOME_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_low_income_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "68",
-                            "scorePolicyVersion": "cashflow-liquidity-review-v1",
+                            "scorePolicyVersion": "cashflow-liquidity-review-v2",
                             "sourceSignalIds": ["signal_low_income_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {
@@ -357,7 +357,7 @@ LOW_INCOME_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_low_income_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "68",
-                            "scorePolicyVersion": "cashflow-liquidity-review-v1",
+                            "scorePolicyVersion": "cashflow-liquidity-review-v2",
                             "sourceSignalIds": ["signal_low_income_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

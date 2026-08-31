@@ -276,7 +276,7 @@ HIGH_VOLATILITY_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_high_volatility_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "72",
-                            "scorePolicyVersion": "high-volatility-attention-v1",
+                            "scorePolicyVersion": "high-volatility-attention-v2",
                             "sourceSignalIds": ["signal_high_volatility_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

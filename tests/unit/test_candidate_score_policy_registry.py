@@ -33,8 +33,14 @@ def test_default_candidate_score_policies_are_registered_for_queue_ranking() -> 
         DEFAULT_UNDERPERFORMANCE_POLICY.policy_version,
     }
     registered_versions = {version.value for version in CandidateScorePolicyVersion}
+    retained_legacy_versions = {
+        version.value for version in CandidateScorePolicyVersion if version.name.endswith("_LEGACY")
+    }
 
-    assert signal_policy_versions | {DEFAULT_SCORING_POLICY.policy_version} == registered_versions
+    assert (
+        signal_policy_versions | {DEFAULT_SCORING_POLICY.policy_version} | retained_legacy_versions
+        == registered_versions
+    )
     assert set(DEFAULT_RANKABLE_SCORE_POLICY_VERSIONS) == registered_versions
 
 

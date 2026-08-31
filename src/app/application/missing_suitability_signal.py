@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-
 from app.domain import (
     CandidateScorePolicyVersion,
     MissingSuitabilityContextSignalInput,
@@ -61,7 +59,6 @@ class MissingSuitabilitySourceEvaluation:
 DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY = MissingSuitabilityContextSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MISSING_SUITABILITY.value,
     minimum_open_requirement_count=1,
-    candidate_score=Decimal("68"),
 )
 
 

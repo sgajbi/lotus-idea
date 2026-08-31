@@ -288,7 +288,7 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_bond_maturity_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "70",
-                            "scorePolicyVersion": "bond-maturity-review-v1",
+                            "scorePolicyVersion": "bond-maturity-review-v2",
                             "sourceSignalIds": ["signal_bond_maturity_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

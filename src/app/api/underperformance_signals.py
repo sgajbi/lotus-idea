@@ -304,7 +304,7 @@ UNDERPERFORMANCE_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_underperformance_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "74",
-                            "scorePolicyVersion": "underperformance-review-v1",
+                            "scorePolicyVersion": "underperformance-review-v2",
                             "sourceSignalIds": ["signal_underperformance_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

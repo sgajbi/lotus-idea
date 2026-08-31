@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-
 from app.domain import (
     CandidateScorePolicyVersion,
     MissingBenchmarkSignalInput,
@@ -60,7 +58,6 @@ class MissingBenchmarkSourceEvaluation:
 
 DEFAULT_MISSING_BENCHMARK_POLICY = MissingBenchmarkSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MISSING_BENCHMARK.value,
-    candidate_score=Decimal("68"),
 )
 
 

@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
@@ -27,7 +28,6 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
-    IdeaScore,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
@@ -268,7 +268,7 @@ def approved_candidate() -> IdeaCandidate:
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
         evidence_packet=evidence_packet,
         source_signal_ids=("signal-conversion-workflow-001",),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("88"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),

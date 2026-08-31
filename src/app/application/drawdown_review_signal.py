@@ -74,7 +74,6 @@ class _DrawdownReviewSourceEvaluation:
 DEFAULT_DRAWDOWN_REVIEW_POLICY = DrawdownReviewSignalPolicy(
     policy_version=CandidateScorePolicyVersion.DRAWDOWN_REVIEW.value,
     max_drawdown_threshold=Decimal("-0.08"),
-    candidate_score=Decimal("72"),
 )
 
 

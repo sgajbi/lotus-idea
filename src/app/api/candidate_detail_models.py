@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pydantic import Field
 
 from app.api.base_model import CamelModel
+from app.api.score_models import ScoreContributionResponse
 from app.api.signal_models import CandidateIdentityResponse
 from app.domain import (
     CandidatePersistenceRecord,
@@ -30,6 +31,12 @@ class CandidateDetailCandidateResponse(CamelModel):
     supportability: str
     score: str | None = None
     score_policy_version: str | None = Field(default=None, alias="scorePolicyVersion")
+    score_reason_codes: tuple[str, ...] = Field(..., alias="scoreReasonCodes")
+    score_components: tuple[ScoreContributionResponse, ...] = Field(..., alias="scoreComponents")
+    score_conflict_penalty_applied: str | None = Field(
+        default=None,
+        alias="scoreConflictPenaltyApplied",
+    )
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
@@ -51,6 +58,17 @@ class CandidateDetailCandidateResponse(CamelModel):
             supportability=candidate.evidence_packet.supportability.value,
             score=(str(score.score) if score is not None else None),
             scorePolicyVersion=(score.policy_version if score is not None else None),
+            scoreReasonCodes=(
+                tuple(reason.value for reason in score.reason_codes) if score is not None else ()
+            ),
+            scoreComponents=(
+                tuple(ScoreContributionResponse.from_domain(item) for item in score.contributions)
+                if score is not None
+                else ()
+            ),
+            scoreConflictPenaltyApplied=(
+                str(score.conflict_penalty_applied) if score is not None else None
+            ),
             sourceSignalIds=candidate.source_signal_ids,
             reasonCodes=tuple(reason.value for reason in candidate.evidence_packet.reason_codes),
             unsupportedReasons=tuple(

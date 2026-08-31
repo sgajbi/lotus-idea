@@ -66,7 +66,7 @@ def test_underperformance_signal_api_returns_review_candidate() -> None:
     assert payload["sourceAuthority"] == "lotus-performance"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "underperformance-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "underperformance-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-performance:ReturnsSeriesBundle:v1"
     }
@@ -256,7 +256,7 @@ def test_underperformance_signal_from_source_api_returns_review_candidate(
     assert payload["family"] == "underperformance"
     assert payload["sourceAuthority"] == "lotus-performance"
     assert payload["supportedFeaturePromoted"] is False
-    assert payload["candidate"]["scorePolicyVersion"] == "underperformance-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "underperformance-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-performance:ReturnsSeriesBundle:v1"
     }

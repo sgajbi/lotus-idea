@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.domain import (
     EvidenceFreshness,
@@ -14,8 +15,7 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
-    IdeaScore,
-    IdeaScoringInputs,
+    IdeaScoringInput,
     IdeaScoringPolicy,
     LineageRef,
     OpportunityFamily,
@@ -27,6 +27,7 @@ from app.domain import (
     ReviewQueueItem,
     ReviewQueuePolicy,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     SourceSystem,
     SuppressionReason,
@@ -107,7 +108,7 @@ def candidate(
         evidence_packet=evidence_packet(supportability=supportability),
         source_signal_ids=source_signal_ids or (f"signal:{candidate_id}",),
         score=(
-            IdeaScore(
+            score_fixture(
                 policy_version=score_policy_version,
                 score=score,
                 reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
@@ -121,8 +122,8 @@ def candidate(
     )
 
 
-def scoring_inputs(**overrides: Decimal | bool) -> IdeaScoringInputs:
-    values: dict[str, Decimal | bool] = {
+def scoring_inputs(**overrides: Decimal) -> tuple[IdeaScoringInput, ...]:
+    values: dict[str, Decimal] = {
         "materiality": Decimal("90"),
         "urgency": Decimal("80"),
         "confidence": Decimal("75"),
@@ -130,10 +131,25 @@ def scoring_inputs(**overrides: Decimal | bool) -> IdeaScoringInputs:
         "freshness": Decimal("100"),
         "relevance": Decimal("70"),
         "downstream_fit": Decimal("65"),
-        "has_conflict_flags": False,
     }
     values.update(overrides)
-    return IdeaScoringInputs(**values)  # type: ignore[arg-type]
+    weights = {
+        "materiality": Decimal("0.20"),
+        "urgency": Decimal("0.15"),
+        "confidence": Decimal("0.15"),
+        "evidence_quality": Decimal("0.15"),
+        "freshness": Decimal("0.10"),
+        "relevance": Decimal("0.10"),
+        "downstream_fit": Decimal("0.15"),
+    }
+    return tuple(
+        IdeaScoringInput(
+            component=ScoreComponent(component),
+            input_score=input_score,
+            weight=weights[component],
+        )
+        for component, input_score in values.items()
+    )
 
 
 def test_score_inputs_are_deterministic_versioned_and_explainable() -> None:
@@ -142,7 +158,7 @@ def test_score_inputs_are_deterministic_versioned_and_explainable() -> None:
 
     assert first == second
     assert first.policy_version == "idea-weighted-evidence-score-v1"
-    assert first.final_score == Decimal("80.75")
+    assert first.score == Decimal("80.75")
     assert first.reason_codes == (
         ReasonCode.MATERIALITY_SCORE,
         ReasonCode.URGENCY_SCORE,
@@ -164,9 +180,13 @@ def test_score_inputs_are_deterministic_versioned_and_explainable() -> None:
 
 
 def test_conflict_flags_apply_bounded_reasoned_penalty() -> None:
-    breakdown = score_inputs(scoring_inputs(has_conflict_flags=True), policy=SCORING_POLICY)
+    breakdown = score_inputs(
+        scoring_inputs(),
+        policy=SCORING_POLICY,
+        has_conflict_flags=True,
+    )
 
-    assert breakdown.final_score == Decimal("65.75")
+    assert breakdown.score == Decimal("65.75")
     assert breakdown.conflict_penalty_applied == Decimal("15")
     assert ReasonCode.CONFLICT_PENALTY in breakdown.reason_codes
 
@@ -183,7 +203,7 @@ def test_score_candidate_attaches_policy_score_without_changing_lifecycle() -> N
 
     assert scored.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert scored.score is not None
-    assert scored.score.score == breakdown.final_score
+    assert scored.score.score == breakdown.score
     assert scored.score.policy_version == SCORING_POLICY.policy_version
     assert scored.updated_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 
@@ -376,17 +396,16 @@ def test_expired_snooze_returns_candidate_to_queue() -> None:
 
 
 def test_scoring_inputs_and_policy_reject_invalid_values() -> None:
-    with pytest.raises(ValueError, match="materiality must be between 0 and 100"):
+    with pytest.raises(ValueError, match="input_score must be between 0 and 100"):
         scoring_inputs(materiality=Decimal("101"))
 
     with pytest.raises(ValueError, match="policy_version is required"):
         IdeaScoringPolicy(policy_version=" ")
 
-    with pytest.raises(ValueError, match="score weights must sum to 1.00"):
-        IdeaScoringPolicy(
-            policy_version="bad-policy",
-            materiality_weight=Decimal("0.10"),
-        )
+    inputs = scoring_inputs()
+    invalid_weights = (replace(inputs[0], weight=Decimal("0.10")), *inputs[1:])
+    with pytest.raises(ValueError, match="score contribution weights must sum to 1"):
+        score_inputs(invalid_weights, policy=SCORING_POLICY)
 
     with pytest.raises(ValueError, match="priority thresholds must be descending"):
         ReviewQueuePolicy(

@@ -28,10 +28,9 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> ConcentrationRiskSignalPolicy:
     return ConcentrationRiskSignalPolicy(
-        policy_version="concentration-attention-v1",
+        policy_version="concentration-attention-v2",
         top_position_weight_threshold=Decimal("0.15"),
         top_issuer_weight_threshold=Decimal("0.20"),
-        candidate_score=Decimal("78"),
     )
 
 
@@ -81,6 +80,14 @@ def test_concentration_positive_case_creates_reproducible_candidate() -> None:
     assert first.candidate.candidate_id == second.candidate.candidate_id
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
+    assert first.candidate.score is not None
+    assert first.candidate.score.policy_version == "concentration-attention-v2"
+    assert first.candidate.score.score == Decimal("83.67")
+    assert [item.component.value for item in first.candidate.score.contributions] == [
+        "materiality",
+        "evidence_quality",
+        "freshness",
+    ]
     assert first.reason_codes == (
         ReasonCode.CONCENTRATION_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
@@ -241,14 +248,13 @@ def test_concentration_rejects_invalid_source_reported_weight(
         )
 
 
-@pytest.mark.parametrize("threshold", [Decimal("-0.01"), Decimal("1.01")])
+@pytest.mark.parametrize("threshold", [Decimal("-0.01"), Decimal("0"), Decimal("1.01")])
 def test_concentration_policy_rejects_invalid_position_threshold(threshold: Decimal) -> None:
     with pytest.raises(ValueError, match="top_position_weight_threshold"):
         ConcentrationRiskSignalPolicy(
-            policy_version="concentration-attention-v1",
+            policy_version="concentration-attention-v2",
             top_position_weight_threshold=threshold,
             top_issuer_weight_threshold=Decimal("0.20"),
-            candidate_score=Decimal("78"),
         )
 
 
@@ -258,16 +264,23 @@ def test_concentration_policy_requires_version() -> None:
             policy_version=" ",
             top_position_weight_threshold=Decimal("0.15"),
             top_issuer_weight_threshold=Decimal("0.20"),
-            candidate_score=Decimal("78"),
         )
 
 
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_concentration_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score"):
-        ConcentrationRiskSignalPolicy(
-            policy_version="concentration-attention-v1",
-            top_position_weight_threshold=Decimal("0.15"),
-            top_issuer_weight_threshold=Decimal("0.20"),
-            candidate_score=score,
-        )
+def test_concentration_score_increases_with_source_reported_materiality() -> None:
+    threshold = evaluate_concentration_risk_signal(
+        concentration_input(
+            top_position_weight=Decimal("0.15"),
+            top_issuer_weight=Decimal("0.20"),
+        ),
+        policy(),
+    )
+    materially_higher = evaluate_concentration_risk_signal(
+        concentration_input(top_position_weight=Decimal("0.30")),
+        policy(),
+    )
+
+    assert threshold.candidate is not None and threshold.candidate.score is not None
+    assert materially_higher.candidate is not None and materially_higher.candidate.score is not None
+    assert threshold.candidate.score.score == Decimal("65.00")
+    assert materially_higher.candidate.score.score == Decimal("100.00")

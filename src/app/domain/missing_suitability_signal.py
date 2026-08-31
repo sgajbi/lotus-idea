@@ -17,10 +17,17 @@ from app.domain.ideas import (
     OpportunitySignal,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringInput,
+    IdeaScoringPolicy,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -33,15 +40,12 @@ from app.domain.signal_evaluation import (
 class MissingSuitabilityContextSignalPolicy:
     policy_version: str
     minimum_open_requirement_count: int
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
         if self.minimum_open_requirement_count < 0:
             raise ValueError("minimum_open_requirement_count must be non-negative")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
 
 
 @dataclass(frozen=True)
@@ -233,11 +237,7 @@ def _candidate_result(
         review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.SUITABILITY_CONTEXT_MISSING, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_missing_suitability_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -248,6 +248,46 @@ def _candidate_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _missing_suitability_score(
+    source_input: MissingSuitabilityContextSignalInput,
+    policy: MissingSuitabilityContextSignalPolicy,
+) -> IdeaScore:
+    open_count = source_input.open_requirement_count
+    blocked_count = source_input.blocked_requirement_count
+    sign_off_blockers = source_input.sign_off_blocker_count
+    if open_count is None or blocked_count is None or sign_off_blockers is None:
+        raise ValueError("eligible missing-suitability scoring requires requirement counts")
+    if policy.minimum_open_requirement_count == 0:
+        relevance = Decimal("100") if open_count > 0 else Decimal("50")
+    elif open_count >= policy.minimum_open_requirement_count:
+        relevance = relative_threshold_score(
+            Decimal(open_count),
+            Decimal(policy.minimum_open_requirement_count),
+        )
+    else:
+        relevance = Decimal("50")
+    evaluation_status = (source_input.evaluation_status or "").strip().upper()
+    sign_off_status = (source_input.sign_off_status or "").strip().upper()
+    if (
+        blocked_count > 0
+        or sign_off_blockers > 0
+        or "BLOCKED" in {evaluation_status, sign_off_status}
+    ):
+        urgency = Decimal("100")
+    else:
+        urgency = Decimal("75")
+    return score_inputs(
+        (
+            IdeaScoringInput(ScoreComponent.RELEVANCE, relevance, Decimal("0.50")),
+            IdeaScoringInput(ScoreComponent.URGENCY, urgency, Decimal("0.30")),
+            IdeaScoringInput(ScoreComponent.EVIDENCE_QUALITY, Decimal("100"), Decimal("0.10")),
+            IdeaScoringInput(ScoreComponent.FRESHNESS, Decimal("100"), Decimal("0.10")),
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.SUITABILITY_CONTEXT_MISSING, ReasonCode.REVIEW_REQUIRED),
     )
 
 

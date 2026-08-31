@@ -56,9 +56,8 @@ def high_cash_candidate(*, portfolio_id: str = "portfolio-dr-fixture") -> IdeaCa
             access_scope=_access_scope(portfolio_id),
         ),
         HighCashSignalPolicy(
-            policy_version="dr-fixture-idle-liquidity-v1",
+            policy_version="dr-fixture-idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
     if result.candidate is None:

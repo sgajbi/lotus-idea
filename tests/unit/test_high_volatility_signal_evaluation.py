@@ -28,9 +28,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> HighVolatilitySignalPolicy:
     return HighVolatilitySignalPolicy(
-        policy_version="high-volatility-attention-v1",
+        policy_version="high-volatility-attention-v2",
         volatility_threshold=Decimal("12.00"),
-        candidate_score=Decimal("72"),
     )
 
 
@@ -82,6 +81,19 @@ def test_high_volatility_positive_case_creates_reproducible_candidate() -> None:
         ReasonCode.VOLATILITY_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_high_volatility_score_increases_with_source_reported_volatility() -> None:
+    boundary = evaluate_high_volatility_signal(
+        volatility_input(source_reported_volatility=Decimal("12.00")), policy()
+    )
+    severe = evaluate_high_volatility_signal(
+        volatility_input(source_reported_volatility=Decimal("24.00")), policy()
+    )
+
+    assert boundary.candidate is not None and boundary.candidate.score is not None
+    assert severe.candidate is not None and severe.candidate.score is not None
+    assert severe.candidate.score.score > boundary.candidate.score.score
 
 
 def test_high_volatility_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -206,12 +218,12 @@ def test_high_volatility_requires_timezone_aware_evaluation_time() -> None:
         evaluate_high_volatility_signal(invalid_input, policy())
 
 
-def test_high_volatility_policy_rejects_negative_threshold() -> None:
+@pytest.mark.parametrize("threshold", [Decimal("-0.01"), Decimal("0")])
+def test_high_volatility_policy_rejects_non_positive_threshold(threshold: Decimal) -> None:
     with pytest.raises(ValueError, match="volatility_threshold"):
         HighVolatilitySignalPolicy(
-            policy_version="high-volatility-attention-v1",
-            volatility_threshold=Decimal("-0.01"),
-            candidate_score=Decimal("72"),
+            policy_version="high-volatility-attention-v2",
+            volatility_threshold=threshold,
         )
 
 
@@ -220,15 +232,4 @@ def test_high_volatility_policy_requires_version() -> None:
         HighVolatilitySignalPolicy(
             policy_version=" ",
             volatility_threshold=Decimal("12.00"),
-            candidate_score=Decimal("72"),
-        )
-
-
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_high_volatility_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score"):
-        HighVolatilitySignalPolicy(
-            policy_version="high-volatility-attention-v1",
-            volatility_threshold=Decimal("12.00"),
-            candidate_score=score,
         )

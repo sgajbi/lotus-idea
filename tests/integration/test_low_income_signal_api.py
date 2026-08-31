@@ -322,7 +322,7 @@ def test_low_income_signal_api_returns_review_candidate() -> None:
     assert payload["sourceAuthority"] == "lotus-core"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "cashflow-liquidity-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "cashflow-liquidity-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-core:PortfolioCashMovementSummary:v1",
         "lotus-core:PortfolioCashflowProjection:v1",

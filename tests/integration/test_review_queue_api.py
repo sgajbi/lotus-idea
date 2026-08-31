@@ -201,14 +201,16 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     assert payload["policyVersion"] == "idea-deterministic-ranking-v1"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
-    assert [item["candidate"]["candidateId"] for item in payload["items"]] == sorted(
-        [first, second]
-    )
+    assert [item["candidate"]["candidateId"] for item in payload["items"]] == [second, first]
+    assert [item["candidate"]["score"] for item in payload["items"]] == ["88.33", "82.50"]
     assert [item["rank"] for item in payload["items"]] == [1, 2]
     assert {item["policyVersion"] for item in payload["items"]} == {"idea-deterministic-ranking-v1"}
     assert {item["candidate"]["scorePolicyVersion"] for item in payload["items"]} == {
-        "idle-liquidity-v1"
+        "idle-liquidity-v2"
     }
+    assert [
+        component["component"] for component in payload["items"][0]["candidate"]["scoreComponents"]
+    ] == ["materiality", "evidence_quality", "freshness"]
     assert {
         (
             item["candidate"]["materialVersion"],

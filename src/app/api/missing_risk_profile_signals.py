@@ -263,7 +263,7 @@ MISSING_RISK_PROFILE_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_missing_risk_profile_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "64",
-                            "scorePolicyVersion": "missing-risk-profile-review-v1",
+                            "scorePolicyVersion": "missing-risk-profile-review-v2",
                             "sourceSignalIds": ["signal_missing_risk_profile_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

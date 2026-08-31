@@ -29,6 +29,7 @@ from app.domain.ideas import (
     OpportunityFamily,
     ReasonCode,
     ReviewPosture,
+    ScoreContribution,
     SourceSystem,
     UnsupportedEvidenceReason,
 )
@@ -160,6 +161,8 @@ class RedactedIdeaEvidence:
     score_policy_version: str | None
     score: Decimal | None
     source_signal_count: int
+    score_contributions: tuple[ScoreContribution, ...] = ()
+    score_conflict_penalty_applied: Decimal | None = None
 
     @property
     def source_product_ids(self) -> frozenset[str]:
@@ -175,11 +178,22 @@ class RedactedIdeaEvidence:
             raise ValueError("reason_codes is required")
         if self.source_signal_count <= 0:
             raise ValueError("source_signal_count must be positive")
+        score_fields_present = (
+            self.score_policy_version is not None,
+            self.score is not None,
+            bool(self.score_contributions),
+            self.score_conflict_penalty_applied is not None,
+        )
+        if any(score_fields_present) and not all(score_fields_present):
+            raise ValueError(
+                "score policy, scalar, contributions, and conflict penalty must be provided together"
+            )
         if self.score_policy_version is not None:
             _require_text(self.score_policy_version, "score_policy_version")
         object.__setattr__(self, "source_refs", tuple(self.source_refs))
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "unsupported_reasons", tuple(self.unsupported_reasons))
+        object.__setattr__(self, "score_contributions", tuple(self.score_contributions))
 
     @classmethod
     def from_candidate(cls, candidate: IdeaCandidate) -> RedactedIdeaEvidence:
@@ -209,6 +223,12 @@ class RedactedIdeaEvidence:
             ),
             score=(candidate.score.score if candidate.score is not None else None),
             source_signal_count=len(candidate.source_signal_ids),
+            score_contributions=(
+                candidate.score.contributions if candidate.score is not None else ()
+            ),
+            score_conflict_penalty_applied=(
+                candidate.score.conflict_penalty_applied if candidate.score is not None else None
+            ),
         )
 
 

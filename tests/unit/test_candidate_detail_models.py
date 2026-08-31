@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.api.candidate_detail_models import CandidateDetailResponse
 from app.domain import CandidatePersistenceRecord
+from app.main import app
 from tests.unit.test_postgres_repository import access_scope, high_cash_candidate
 
 
@@ -33,3 +34,51 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
     assert "contentHash" not in response["evidence"]["sourceRefs"][0]
     assert response["durableStorageBacked"] is True
     assert response["supportedFeaturePromoted"] is False
+    assert response["candidate"]["scoreReasonCodes"] == (
+        "high_cash_ratio",
+        "review_required",
+        "materiality_score",
+        "evidence_quality_score",
+        "freshness_score",
+    )
+    assert response["candidate"]["scoreComponents"][0] == {
+        "component": "materiality",
+        "inputScore": "75.00",
+        "weight": "0.70",
+        "contribution": "52.50",
+    }
+    assert response["candidate"]["scoreConflictPenaltyApplied"] == "0"
+
+
+def test_openapi_exposes_reconstructable_candidate_score_contract() -> None:
+    schemas = app.openapi()["components"]["schemas"]
+    candidate = schemas["CandidateDetailCandidateResponse"]
+    contribution = schemas["ScoreContributionResponse"]
+
+    assert {
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
+    } <= set(candidate["properties"])
+    assert candidate["properties"]["scoreComponents"]["items"] == {
+        "$ref": "#/components/schemas/ScoreContributionResponse"
+    }
+    assert contribution["properties"]["component"] == {
+        "$ref": "#/components/schemas/ScoreComponent"
+    }
+    assert set(schemas["ScoreComponent"]["enum"]) == {
+        "materiality",
+        "urgency",
+        "confidence",
+        "evidence_quality",
+        "freshness",
+        "relevance",
+        "downstream_fit",
+        "legacy_fixed_policy",
+    }
+    assert set(contribution["required"]) == {
+        "component",
+        "inputScore",
+        "weight",
+        "contribution",
+    }

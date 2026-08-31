@@ -21,6 +21,12 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringPolicy,
+    current_complete_materiality_inputs,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -36,15 +42,12 @@ from app.domain.signal_evaluation_models import (
 class LowIncomeSignalPolicy:
     policy_version: str
     projected_cumulative_cashflow_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.projected_cumulative_cashflow_threshold > Decimal("0"):
-            raise ValueError("projected_cumulative_cashflow_threshold must be zero or negative")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+        if self.projected_cumulative_cashflow_threshold >= Decimal("0"):
+            raise ValueError("projected_cumulative_cashflow_threshold must be negative")
 
 
 @dataclass(frozen=True)
@@ -194,14 +197,26 @@ def _idea_candidate(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=inputs.policy.policy_version,
-            score=inputs.policy.candidate_score,
-            reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_low_income_score(inputs),
         access_scope=inputs.source_input.access_scope,
         created_at_utc=inputs.source_input.evaluated_at_utc,
         updated_at_utc=inputs.source_input.evaluated_at_utc,
+    )
+
+
+def _low_income_score(inputs: _LowIncomeCandidateInputs) -> IdeaScore:
+    projected_cashflow = inputs.source_input.source_reported_min_projected_cumulative_cashflow
+    if projected_cashflow is None:
+        raise ValueError("eligible low-income scoring requires projected cumulative cashflow")
+    threshold_magnitude = abs(inputs.policy.projected_cumulative_cashflow_threshold)
+    if threshold_magnitude == Decimal("0"):
+        raise ValueError("evidence-derived low-income scoring requires a negative threshold")
+    return score_inputs(
+        current_complete_materiality_inputs(
+            relative_threshold_score(abs(projected_cashflow), threshold_magnitude)
+        ),
+        policy=IdeaScoringPolicy(policy_version=inputs.policy.policy_version),
+        reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
     )
 
 

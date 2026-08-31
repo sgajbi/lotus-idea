@@ -270,8 +270,36 @@ CONCENTRATION_RISK_EVALUATE_ROUTE: RouteMetadata = {
                             "reviewPosture": "advisor_review_required",
                             "evidencePacketId": "iep_concentration_8d57adbf52f7f5a7",
                             "supportability": "ready",
-                            "score": "78",
-                            "scorePolicyVersion": "concentration-attention-v1",
+                            "score": "72.00",
+                            "scorePolicyVersion": "concentration-attention-v2",
+                            "scoreReasonCodes": [
+                                "concentration_attention",
+                                "review_required",
+                                "materiality_score",
+                                "evidence_quality_score",
+                                "freshness_score",
+                            ],
+                            "scoreComponents": [
+                                {
+                                    "component": "materiality",
+                                    "inputScore": "60.00",
+                                    "weight": "0.70",
+                                    "contribution": "42.00",
+                                },
+                                {
+                                    "component": "evidence_quality",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                                {
+                                    "component": "freshness",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                            ],
+                            "scoreConflictPenaltyApplied": "0",
                             "sourceSignalIds": ["signal_concentration_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

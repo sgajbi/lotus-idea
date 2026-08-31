@@ -81,7 +81,7 @@ def test_application_evaluates_concentration_command_with_default_policy() -> No
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert result.candidate is not None
     assert result.candidate.score is not None
-    assert result.candidate.score.policy_version == "concentration-attention-v1"
+    assert result.candidate.score.policy_version == "concentration-attention-v2"
 
 
 def test_application_preserves_entitlement_denied_as_blocked_domain_posture() -> None:

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-
 from app.domain import (
     CandidateScorePolicyVersion,
     MandateHealthSignalInput,
@@ -64,7 +62,6 @@ DEFAULT_MANDATE_HEALTH_POLICY = MandateHealthSignalPolicy(
     policy_version=CandidateScorePolicyVersion.ALLOCATION_DRIFT.value,
     minimum_workflow_decision_count=1,
     minimum_lineage_edge_count=1,
-    candidate_score=Decimal("70"),
 )
 
 

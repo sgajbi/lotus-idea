@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 
@@ -28,9 +27,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> BondMaturitySignalPolicy:
     return BondMaturitySignalPolicy(
-        policy_version="bond-maturity-review-v1",
+        policy_version="bond-maturity-review-v2",
         maturity_window_days=30,
-        candidate_score=Decimal("70"),
     )
 
 
@@ -110,6 +108,22 @@ def test_bond_maturity_positive_case_creates_review_candidate() -> None:
         first.candidate.evidence_packet.lineage_ref.lineage_id
         == second.candidate.evidence_packet.lineage_ref.lineage_id
     )
+
+
+def test_bond_maturity_score_increases_with_urgency_and_position_count() -> None:
+    later_single = evaluate_bond_maturity_signal(
+        maturity_input(next_maturity_date=date(2026, 7, 20), maturing_position_count=1),
+        policy(),
+    )
+    imminent_multiple = evaluate_bond_maturity_signal(
+        maturity_input(next_maturity_date=date(2026, 6, 22), maturing_position_count=5),
+        policy(),
+    )
+
+    assert later_single.candidate is not None and later_single.candidate.score is not None
+    assert imminent_multiple.candidate is not None
+    assert imminent_multiple.candidate.score is not None
+    assert imminent_multiple.candidate.score.score > later_single.candidate.score.score
 
 
 def test_bond_maturity_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -258,16 +272,6 @@ def test_bond_maturity_requires_timezone_aware_evaluation_time() -> None:
 def test_bond_maturity_policy_rejects_invalid_window() -> None:
     with pytest.raises(ValueError, match="maturity_window_days must be between 1 and 366"):
         BondMaturitySignalPolicy(
-            policy_version="bond-maturity-review-v1",
+            policy_version="bond-maturity-review-v2",
             maturity_window_days=0,
-            candidate_score=Decimal("70"),
-        )
-
-
-def test_bond_maturity_policy_rejects_out_of_range_score() -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        BondMaturitySignalPolicy(
-            policy_version="bond-maturity-review-v1",
-            maturity_window_days=30,
-            candidate_score=Decimal("101"),
         )

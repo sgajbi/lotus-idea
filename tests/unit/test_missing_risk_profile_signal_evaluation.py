@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 
@@ -28,8 +27,7 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> MissingRiskProfileSignalPolicy:
     return MissingRiskProfileSignalPolicy(
-        policy_version="missing-risk-profile-review-v1",
-        candidate_score=Decimal("64"),
+        policy_version="missing-risk-profile-review-v2",
     )
 
 
@@ -80,6 +78,22 @@ def test_missing_risk_profile_gap_creates_reproducible_review_candidate() -> Non
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.MISSING_RISK_PROFILE, ReasonCode.REVIEW_REQUIRED)
+
+
+def test_missing_risk_profile_score_reflects_governed_status_posture() -> None:
+    pending = evaluate_missing_risk_profile_signal(
+        risk_profile_input(
+            risk_profile_status="PENDING_REVIEW",
+            risk_profile_effective_for_as_of_date=True,
+            risk_profile_review_due=True,
+        ),
+        policy(),
+    )
+    missing = evaluate_missing_risk_profile_signal(risk_profile_input(), policy())
+
+    assert pending.candidate is not None and pending.candidate.score is not None
+    assert missing.candidate is not None and missing.candidate.score is not None
+    assert missing.candidate.score.score > pending.candidate.score.score
 
 
 def test_missing_risk_profile_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -217,15 +231,6 @@ def test_missing_risk_profile_requires_timezone_aware_evaluation_time() -> None:
         )
 
 
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_missing_risk_profile_policy_rejects_out_of_range_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        MissingRiskProfileSignalPolicy(
-            policy_version="missing-risk-profile-review-v1",
-            candidate_score=score,
-        )
-
-
 def test_missing_risk_profile_policy_rejects_blank_version() -> None:
     with pytest.raises(ValueError, match="policy_version is required"):
-        MissingRiskProfileSignalPolicy(policy_version=" ", candidate_score=Decimal("64"))
+        MissingRiskProfileSignalPolicy(policy_version=" ")

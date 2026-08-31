@@ -242,7 +242,7 @@ def test_missing_risk_profile_signal_from_source_api_returns_review_candidate(
     assert payload["sourceAuthority"] == "lotus-advise"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "missing-risk-profile-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "missing-risk-profile-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
     }

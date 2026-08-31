@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from decimal import Decimal
 
 import pytest
 
@@ -8,8 +9,12 @@ from app.domain import (
     ALLOWED_REVIEW_POSTURES_BY_LIFECYCLE,
     CANDIDATE_STATE_POLICY_VERSION,
     IdeaLifecycleStatus,
+    IdeaScore,
     InvalidCandidateState,
+    ReasonCode,
     ReviewPosture,
+    ScoreComponent,
+    ScoreContribution,
     candidate_state_is_compatible,
     transition_candidate,
 )
@@ -116,9 +121,37 @@ def test_candidate_construction_and_rehydration_reject_contradictory_state() -> 
 
 
 def test_candidate_identity_round_trips_without_losing_version_posture() -> None:
-    candidate = high_cash_candidate()
+    candidate = replace(
+        high_cash_candidate(),
+        score=IdeaScore(
+            policy_version="idle-liquidity-v2",
+            score=Decimal("82.50"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.MATERIALITY_SCORE),
+            contributions=(
+                ScoreContribution(
+                    component=ScoreComponent.MATERIALITY,
+                    input_score=Decimal("75"),
+                    weight=Decimal("0.70"),
+                    contribution=Decimal("52.50"),
+                ),
+                ScoreContribution(
+                    component=ScoreComponent.EVIDENCE_QUALITY,
+                    input_score=Decimal("100"),
+                    weight=Decimal("0.15"),
+                    contribution=Decimal("15.00"),
+                ),
+                ScoreContribution(
+                    component=ScoreComponent.FRESHNESS,
+                    input_score=Decimal("100"),
+                    weight=Decimal("0.15"),
+                    contribution=Decimal("15.00"),
+                ),
+            ),
+        ),
+    )
 
-    restored = idea_candidate_from_json(idea_candidate_to_json(candidate))
+    payload = idea_candidate_to_json(candidate)
+    restored = idea_candidate_from_json(payload)
 
     assert restored == candidate
     assert restored.identity.business_identity_id == candidate.identity.business_identity_id
@@ -126,6 +159,43 @@ def test_candidate_identity_round_trips_without_losing_version_posture() -> None
     assert restored.identity.material_version == 1
     assert restored.identity.evidence_version == 1
     assert restored.identity.supersedes_material_version is None
+    assert payload["score"]["contributions"][0] == {
+        "component": "materiality",
+        "input_score": "75",
+        "weight": "0.70",
+        "contribution": "52.50",
+    }
+    assert restored.score == candidate.score
+
+
+def test_candidate_rehydration_rejects_unmigrated_scalar_only_score() -> None:
+    payload = idea_candidate_to_json(high_cash_candidate())
+    assert payload["score"] is not None
+    payload["score"].pop("contributions")
+
+    with pytest.raises(
+        ValueError,
+        match="persisted candidate score breakdown is required; apply database migration 021",
+    ):
+        idea_candidate_from_json(payload)
+
+
+def test_candidate_rehydration_rejects_unknown_score_policy_version() -> None:
+    payload = idea_candidate_to_json(high_cash_candidate())
+    assert payload["score"] is not None
+    payload["score"]["policy_version"] = "unregistered-scoring-policy-v1"
+
+    with pytest.raises(ValueError, match="unregistered-scoring-policy-v1"):
+        idea_candidate_from_json(payload)
+
+
+def test_candidate_rehydration_rejects_unknown_score_component() -> None:
+    payload = idea_candidate_to_json(high_cash_candidate())
+    assert payload["score"] is not None
+    payload["score"]["contributions"][0]["component"] = "opaque_priority_signal"
+
+    with pytest.raises(ValueError, match="opaque_priority_signal"):
+        idea_candidate_from_json(payload)
 
 
 def test_terminal_transitions_normalize_review_posture_to_non_actionable_state() -> None:

@@ -119,9 +119,8 @@ def test_signal_evaluation_response_maps_domain_result_source_safely() -> None:
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         ),
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
 

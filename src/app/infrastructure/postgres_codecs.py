@@ -32,6 +32,8 @@ from app.domain.ideas import (
     OpportunityFamily,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
+    ScoreContribution,
     SourceRef,
     SourceSystem,
     SuppressionReason,
@@ -55,6 +57,7 @@ from app.domain.review_governance import (
     ReviewActorRole,
 )
 from app.domain.review_queue import QueuePriorityBucket
+from app.domain.scoring import CandidateScorePolicyVersion
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
 
 __all__ = (
@@ -744,14 +747,39 @@ def _score_to_json(score: IdeaScore) -> dict[str, Any]:
         "policy_version": score.policy_version,
         "score": str(score.score),
         "reason_codes": [reason.value for reason in score.reason_codes],
+        "contributions": [
+            {
+                "component": contribution.component.value,
+                "input_score": str(contribution.input_score),
+                "weight": str(contribution.weight),
+                "contribution": str(contribution.contribution),
+            }
+            for contribution in score.contributions
+        ],
+        "conflict_penalty_applied": str(score.conflict_penalty_applied),
     }
 
 
 def _score_from_json(payload: Mapping[str, Any]) -> IdeaScore:
+    if "contributions" not in payload:
+        raise ValueError(
+            "persisted candidate score breakdown is required; apply database migration 021"
+        )
+    policy_version = CandidateScorePolicyVersion(str(payload["policy_version"])).value
     return IdeaScore(
-        policy_version=str(payload["policy_version"]),
+        policy_version=policy_version,
         score=Decimal(str(payload["score"])),
         reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+        contributions=tuple(
+            ScoreContribution(
+                component=ScoreComponent(item["component"]),
+                input_score=Decimal(str(item["input_score"])),
+                weight=Decimal(str(item["weight"])),
+                contribution=Decimal(str(item["contribution"])),
+            )
+            for item in payload["contributions"]
+        ),
+        conflict_penalty_applied=Decimal(str(payload.get("conflict_penalty_applied", "0"))),
     )
 
 

@@ -227,7 +227,7 @@ def test_missing_suitability_signal_from_source_api_returns_compliance_review_ca
     assert payload["sourceAuthority"] == "lotus-advise"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "compliance_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "missing-suitability-context-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "missing-suitability-context-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
     }

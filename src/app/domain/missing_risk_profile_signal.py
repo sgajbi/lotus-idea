@@ -18,10 +18,12 @@ from app.domain.ideas import (
     OpportunitySignal,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import IdeaScoringInput, IdeaScoringPolicy, score_inputs
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -81,13 +83,10 @@ def missing_risk_profile_review_required_from_diagnostic(
 @dataclass(frozen=True)
 class MissingRiskProfileSignalPolicy:
     policy_version: str
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
 
 
 @dataclass(frozen=True)
@@ -226,11 +225,7 @@ def _candidate_result(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.MISSING_RISK_PROFILE, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_missing_risk_profile_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -241,6 +236,34 @@ def _candidate_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _missing_risk_profile_score(
+    source_input: MissingRiskProfileSignalInput,
+    policy: MissingRiskProfileSignalPolicy,
+) -> IdeaScore:
+    status = (source_input.risk_profile_status or "").strip().upper()
+    relevance_by_status = {
+        "MISSING": Decimal("100"),
+        "EXPIRED": Decimal("100"),
+        "BLOCKED": Decimal("95"),
+        "STALE": Decimal("90"),
+        "PENDING_REVIEW": Decimal("75"),
+    }
+    relevance = relevance_by_status.get(status, Decimal("70"))
+    if source_input.risk_profile_effective_for_as_of_date is False:
+        relevance = max(relevance, Decimal("90"))
+    if source_input.risk_profile_review_due:
+        relevance = max(relevance, Decimal("70"))
+    return score_inputs(
+        (
+            IdeaScoringInput(ScoreComponent.RELEVANCE, relevance, Decimal("0.70")),
+            IdeaScoringInput(ScoreComponent.EVIDENCE_QUALITY, Decimal("100"), Decimal("0.15")),
+            IdeaScoringInput(ScoreComponent.FRESHNESS, Decimal("100"), Decimal("0.15")),
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.MISSING_RISK_PROFILE, ReasonCode.REVIEW_REQUIRED),
     )
 
 

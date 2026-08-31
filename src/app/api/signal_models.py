@@ -7,6 +7,7 @@ from pydantic import Field
 
 from app.api.access_scope_models import ReviewAccessScopeRequest as ReviewAccessScopeRequest
 from app.api.base_model import CamelModel
+from app.api.score_models import ScoreContributionResponse
 from app.domain import (
     CandidateIdentity,
     EvidenceFreshness,
@@ -140,6 +141,12 @@ class IdeaCandidateSummaryResponse(CamelModel):
     supportability: str
     score: str | None = None
     score_policy_version: str | None = Field(default=None, alias="scorePolicyVersion")
+    score_reason_codes: tuple[str, ...] = Field(..., alias="scoreReasonCodes")
+    score_components: tuple[ScoreContributionResponse, ...] = Field(..., alias="scoreComponents")
+    score_conflict_penalty_applied: str | None = Field(
+        default=None,
+        alias="scoreConflictPenaltyApplied",
+    )
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
     source_refs: tuple[SourceRefResponse, ...] = Field(..., alias="sourceRefs")
 
@@ -157,6 +164,24 @@ class IdeaCandidateSummaryResponse(CamelModel):
             scorePolicyVersion=candidate.score.policy_version
             if candidate.score is not None
             else None,
+            scoreReasonCodes=(
+                tuple(reason.value for reason in candidate.score.reason_codes)
+                if candidate.score is not None
+                else ()
+            ),
+            scoreComponents=(
+                tuple(
+                    ScoreContributionResponse.from_domain(item)
+                    for item in candidate.score.contributions
+                )
+                if candidate.score is not None
+                else ()
+            ),
+            scoreConflictPenaltyApplied=(
+                str(candidate.score.conflict_penalty_applied)
+                if candidate.score is not None
+                else None
+            ),
             sourceSignalIds=candidate.source_signal_ids,
             sourceRefs=tuple(
                 SourceRefResponse.from_domain(source_ref)

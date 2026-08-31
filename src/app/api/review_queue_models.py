@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import Field
 
 from app.api.base_model import CamelModel
+from app.api.score_models import ScoreContributionResponse
 from app.application.review_queue import ReviewQueuePage, ReviewQueueReadinessSnapshot
 from app.domain import QueueExclusion, ReviewQueueAudience, ReviewQueueItem
 
@@ -35,6 +36,9 @@ class ReviewQueueCandidateResponse(CamelModel):
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     score: str
     score_policy_version: str = Field(..., alias="scorePolicyVersion")
+    score_reason_codes: tuple[str, ...] = Field(..., alias="scoreReasonCodes")
+    score_components: tuple[ScoreContributionResponse, ...] = Field(..., alias="scoreComponents")
+    score_conflict_penalty_applied: str = Field(..., alias="scoreConflictPenaltyApplied")
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
 
     @classmethod
@@ -51,6 +55,12 @@ class ReviewQueueCandidateResponse(CamelModel):
             evidencePacketId=candidate.evidence_packet.evidence_packet_id,
             score=str(candidate.score.score),
             scorePolicyVersion=candidate.score.policy_version,
+            scoreReasonCodes=tuple(reason.value for reason in candidate.score.reason_codes),
+            scoreComponents=tuple(
+                ScoreContributionResponse.from_domain(item)
+                for item in candidate.score.contributions
+            ),
+            scoreConflictPenaltyApplied=str(candidate.score.conflict_penalty_applied),
             sourceSignalIds=candidate.source_signal_ids,
         )
 

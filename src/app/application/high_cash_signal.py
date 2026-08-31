@@ -80,7 +80,6 @@ class HighCashSignalPersistenceResult:
 DEFAULT_HIGH_CASH_POLICY = HighCashSignalPolicy(
     policy_version=CandidateScorePolicyVersion.HIGH_CASH.value,
     cash_weight_threshold=Decimal("0.12"),
-    candidate_score=Decimal("82"),
 )
 
 

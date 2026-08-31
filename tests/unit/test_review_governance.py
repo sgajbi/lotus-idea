@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.domain import (
     EvidenceFreshness,
@@ -21,7 +22,6 @@ from app.domain import (
     IdeaEvidencePacket,
     IdeaFeedback,
     IdeaLifecycleStatus,
-    IdeaScore,
     InvalidReviewAction,
     LineageRef,
     OpportunityFamily,
@@ -107,7 +107,7 @@ def candidate(
         review_posture=review_posture,
         evidence_packet=evidence_packet(supportability=supportability),
         source_signal_ids=("signal-review-001",),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("82"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),

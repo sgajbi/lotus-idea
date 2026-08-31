@@ -75,7 +75,6 @@ class _UnderperformanceSourceEvaluation:
 DEFAULT_UNDERPERFORMANCE_POLICY = UnderperformanceSignalPolicy(
     policy_version=CandidateScorePolicyVersion.UNDERPERFORMANCE.value,
     active_return_threshold=Decimal("-0.005"),
-    candidate_score=Decimal("74"),
 )
 
 

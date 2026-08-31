@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 
 from app.domain.candidate_state import (
@@ -119,6 +119,33 @@ class ReasonCode(StrEnum):
     AI_ACTION_CONTENT_BLOCKED = "ai_action_content_blocked"
 
 
+class ScoreComponent(StrEnum):
+    MATERIALITY = "materiality"
+    URGENCY = "urgency"
+    CONFIDENCE = "confidence"
+    EVIDENCE_QUALITY = "evidence_quality"
+    FRESHNESS = "freshness"
+    RELEVANCE = "relevance"
+    DOWNSTREAM_FIT = "downstream_fit"
+    LEGACY_FIXED_POLICY = "legacy_fixed_policy"
+
+
+@dataclass(frozen=True)
+class ScoreContribution:
+    component: ScoreComponent
+    input_score: Decimal
+    weight: Decimal
+    contribution: Decimal
+
+    def __post_init__(self) -> None:
+        _require_bounded_score(self.input_score, "input_score")
+        if self.weight < Decimal("0") or self.weight > Decimal("1"):
+            raise ValueError("weight must be between 0 and 1")
+        expected = _quantize_score(self.input_score * self.weight)
+        if self.contribution != expected:
+            raise ValueError("contribution must equal input_score multiplied by weight")
+
+
 DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES = frozenset(
     {
         IdeaLifecycleStatus.ACCEPTED,
@@ -180,6 +207,15 @@ class InvalidLifecycleTransition(ValueError):
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_bounded_score(value: Decimal, field_name: str) -> None:
+    if value < Decimal("0") or value > Decimal("100"):
+        raise ValueError(f"{field_name} must be between 0 and 100")
+
+
+def _quantize_score(value: Decimal) -> Decimal:
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _require_aware_utc(value: datetime, field_name: str) -> None:
@@ -275,14 +311,41 @@ class IdeaScore:
     policy_version: str
     score: Decimal
     reason_codes: tuple[ReasonCode, ...]
+    contributions: tuple[ScoreContribution, ...]
+    conflict_penalty_applied: Decimal = Decimal("0")
 
     def __post_init__(self) -> None:
         _require_text(self.policy_version, "policy_version")
-        if self.score < Decimal("0") or self.score > Decimal("100"):
-            raise ValueError("score must be between 0 and 100")
+        _require_bounded_score(self.score, "score")
+        _require_bounded_score(self.conflict_penalty_applied, "conflict_penalty_applied")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
+        if not self.contributions:
+            raise ValueError("contributions is required")
+        components = tuple(contribution.component for contribution in self.contributions)
+        if len(set(components)) != len(components):
+            raise ValueError("score contribution components must be unique")
+        total_weight = sum(
+            (contribution.weight for contribution in self.contributions),
+            Decimal("0"),
+        )
+        if total_weight != Decimal("1"):
+            raise ValueError("score contribution weights must sum to 1")
+        contribution_total = sum(
+            (contribution.contribution for contribution in self.contributions),
+            Decimal("0"),
+        )
+        expected_score = min(
+            Decimal("100"),
+            max(
+                Decimal("0"),
+                _quantize_score(contribution_total - self.conflict_penalty_applied),
+            ),
+        )
+        if self.score != expected_score:
+            raise ValueError("score must equal contributions minus conflict penalty")
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
+        object.__setattr__(self, "contributions", tuple(self.contributions))
 
 
 @dataclass(frozen=True)

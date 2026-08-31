@@ -21,6 +21,12 @@ from app.domain.ideas import (
 )
 from app.domain.opportunity_family_compatibility import DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringPolicy,
+    current_complete_materiality_inputs,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -191,11 +197,7 @@ def _drawdown_review_candidate_result(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.DRAWDOWN_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_drawdown_review_score(candidate_inputs, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -206,6 +208,22 @@ def _drawdown_review_candidate_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _drawdown_review_score(
+    candidate_inputs: _DrawdownReviewCandidateInputs,
+    policy: DrawdownReviewSignalPolicy,
+) -> IdeaScore:
+    return score_inputs(
+        current_complete_materiality_inputs(
+            relative_threshold_score(
+                abs(candidate_inputs.source_reported_max_drawdown),
+                abs(policy.max_drawdown_threshold),
+            )
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.DRAWDOWN_ATTENTION, ReasonCode.REVIEW_REQUIRED),
     )
 
 

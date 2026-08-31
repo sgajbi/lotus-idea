@@ -66,7 +66,7 @@ def test_high_volatility_signal_api_returns_review_candidate() -> None:
     assert payload["sourceAuthority"] == "lotus-risk"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "high-volatility-attention-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "high-volatility-attention-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-risk:RiskMetricsReport:v1"
     }
@@ -242,7 +242,7 @@ def test_high_volatility_signal_from_source_api_returns_review_candidate(
     assert payload["family"] == "high_volatility"
     assert payload["sourceAuthority"] == "lotus-risk"
     assert payload["supportedFeaturePromoted"] is False
-    assert payload["candidate"]["scorePolicyVersion"] == "high-volatility-attention-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "high-volatility-attention-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-risk:RiskMetricsReport:v1"
     }

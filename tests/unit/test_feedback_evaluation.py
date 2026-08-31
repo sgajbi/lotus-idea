@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from tests.support.score_fixture import score_fixture
+
 from app.application.feedback_evaluation import (
     FeedbackEvaluationBoundExceeded,
     FeedbackEvaluationScopeError,
@@ -29,7 +31,6 @@ from app.domain import (
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
-    IdeaScore,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
@@ -338,8 +339,8 @@ def _candidate(
         created_at_utc=datetime(2026, 6, 21, 9, 0, tzinfo=UTC),
     )
     score_policy = {
-        OpportunityFamily.HIGH_CASH: "idle-liquidity-v1",
-        OpportunityFamily.UNDERPERFORMANCE: "underperformance-review-v1",
+        OpportunityFamily.HIGH_CASH: "idle-liquidity-v2",
+        OpportunityFamily.UNDERPERFORMANCE: "underperformance-review-v2",
     }[family]
     return IdeaCandidate(
         candidate_id=candidate_id,
@@ -349,7 +350,7 @@ def _candidate(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence,
         source_signal_ids=(f"signal-{candidate_id}",),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version=score_policy,
             score=score,
             reason_codes=(ReasonCode.QUEUE_PRIORITY,),
