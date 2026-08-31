@@ -269,6 +269,7 @@ from app.domain.persistence import (
     LifecycleHistoryEntry,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
+    UnscopedCandidatePersistenceError,
 )
 from app.domain.report_evidence import (
     GovernedReportEvidencePack,
@@ -529,6 +530,7 @@ __all__ = [
     "outbox_recovery_request_payload",
     "ReviewPersistenceDecision",
     "ReviewPersistenceResult",
+    "UnscopedCandidatePersistenceError",
     "SignalEvaluationOutcome",
     "SignalEvaluationResult",
     "evidence_hash_for_candidate",

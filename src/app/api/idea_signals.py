@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.idea_signal_models import (
     CandidatePersistenceSummaryResponse,
+    EvaluateAndPersistHighCashSignalRequest,
     EvaluateAndPersistHighCashSignalResponse,
     EvaluateHighCashFromSourceRequest,
     EvaluateHighCashSignalRequest,
@@ -212,7 +213,7 @@ async def evaluate_mandate_restriction_signal_from_source(
 
 
 async def evaluate_and_persist_high_cash_signal(
-    request: EvaluateHighCashSignalRequest,
+    request: EvaluateAndPersistHighCashSignalRequest,
     http_request: Request,
     caller: CallerContextHeaders,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
@@ -292,7 +293,7 @@ def _high_cash_persistence_idempotency_problem(
 
 
 def _high_cash_persistence_context_or_problem(
-    request: EvaluateHighCashSignalRequest,
+    request: EvaluateAndPersistHighCashSignalRequest,
     *,
     http_request: Request,
     x_causation_id: EventCausationHeader,
@@ -339,7 +340,7 @@ def _high_cash_persistence_context_or_problem(
 
 
 def _evaluate_high_cash_persistence_request(
-    request: EvaluateHighCashSignalRequest,
+    request: EvaluateAndPersistHighCashSignalRequest,
     *,
     caller: CallerContextHeaders,
     idempotency_key: str,

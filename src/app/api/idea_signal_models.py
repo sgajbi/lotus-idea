@@ -120,6 +120,17 @@ class EvaluateHighCashSignalRequest(CamelModel):
         )
 
 
+class EvaluateAndPersistHighCashSignalRequest(EvaluateHighCashSignalRequest):
+    access_scope: ReviewAccessScopeRequest = Field(
+        ...,
+        alias="accessScope",
+        description=(
+            "Required economic scope for durable candidate identity and tenant-safe "
+            "persistence. Evaluation-only requests may remain unscoped diagnostics."
+        ),
+    )
+
+
 class EvaluateHighCashFromSourceRequest(CamelModel):
     portfolio_id: str = Field(
         ...,
@@ -355,6 +366,7 @@ class EvaluateAndPersistHighCashSignalResponse(CamelModel):
 
 __all__ = [
     "CandidatePersistenceSummaryResponse",
+    "EvaluateAndPersistHighCashSignalRequest",
     "EvaluateAndPersistHighCashSignalResponse",
     "EvaluateHighCashFromSourceRequest",
     "EvaluateHighCashSignalRequest",

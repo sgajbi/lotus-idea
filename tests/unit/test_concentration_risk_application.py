@@ -20,6 +20,7 @@ from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -40,6 +41,12 @@ from app.ports.risk_sources import (
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+ACCESS_SCOPE = ReviewAccessScope(
+    tenant_id="tenant-a",
+    book_id="book-advisor-001",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-001",
+)
 
 
 def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> SourceRef:
@@ -72,6 +79,7 @@ def command(
         concentration_ref=source_ref(freshness),
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
+        access_scope=ACCESS_SCOPE,
     )
 
 

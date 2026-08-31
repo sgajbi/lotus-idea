@@ -8,6 +8,7 @@ from app.domain import (
     HighCashSignalInput,
     HighCashSignalPolicy,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -15,6 +16,12 @@ from app.domain import (
 )
 
 _AS_OF_DATE = date(2026, 6, 21)
+_ACCESS_SCOPE = ReviewAccessScope(
+    tenant_id="tenant-source-safe",
+    book_id="book-source-safe",
+    portfolio_id="portfolio-source-safe",
+    client_id="client-source-safe",
+)
 
 
 def build_source_safe_runtime_trust_telemetry_repository(
@@ -56,6 +63,7 @@ def _high_cash_input(*, generated_at_utc: datetime) -> HighCashSignalInput:
             "lotus-core:PortfolioCashflowProjection:v1", generated_at_utc=generated_at_utc
         ),
         evaluated_at_utc=generated_at_utc,
+        access_scope=_ACCESS_SCOPE,
     )
 
 

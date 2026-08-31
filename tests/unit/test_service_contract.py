@@ -186,6 +186,22 @@ def test_lifecycle_transition_openapi_excludes_downstream_authority_input_status
     )
 
 
+def test_high_cash_persistence_openapi_requires_economic_access_scope() -> None:
+    schema = app.openapi()
+    operation = schema["paths"]["/api/v1/idea-signals/high-cash/evaluate-and-persist"]["post"]
+    request_ref = operation["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+    request_schema = schema["components"]["schemas"][request_ref.rsplit("/", 1)[-1]]
+    evaluation_operation = schema["paths"]["/api/v1/idea-signals/high-cash/evaluate"]["post"]
+    evaluation_ref = evaluation_operation["requestBody"]["content"]["application/json"]["schema"][
+        "$ref"
+    ]
+    evaluation_schema = schema["components"]["schemas"][evaluation_ref.rsplit("/", 1)[-1]]
+
+    assert request_ref.endswith("/EvaluateAndPersistHighCashSignalRequest")
+    assert "accessScope" in request_schema["required"]
+    assert "accessScope" not in evaluation_schema["required"]
+
+
 def test_source_ingestion_openapi_publishes_both_dependency_failure_codes() -> None:
     schema = app.openapi()
     response = schema["paths"]["/api/v1/source-ingestion/run-once"]["post"]["responses"]["502"]

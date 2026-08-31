@@ -43,6 +43,7 @@ from app.domain import (
     ReasonCode,
     RedactedIdeaEvidence,
     RedactedSourceRef,
+    ReviewAccessScope,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -127,6 +128,12 @@ def candidate(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("84"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.QUEUE_PRIORITY),
+        ),
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-ai-test",
         ),
         created_at_utc=EVALUATED_AT,
         updated_at_utc=EVALUATED_AT,
@@ -245,6 +252,7 @@ def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:projection:001",
             idempotency_payload={"candidateId": "idea-ai-001", "requestId": "ai-explanation-001"},
+            caller_tenant_ids=("tenant-ai-test",),
         ),
         repository=repository,
     )
@@ -293,6 +301,7 @@ def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> No
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:conflict:001",
             idempotency_payload={"requestId": base_command.request_id},
+            caller_tenant_ids=("tenant-ai-test",),
         ),
         repository=source_repository,
     )
@@ -303,6 +312,7 @@ def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> No
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:conflict:001",
             idempotency_payload={"requestId": "ai-request-conflicting"},
+            caller_tenant_ids=("tenant-ai-test",),
         ),
         repository=source_repository,
     )

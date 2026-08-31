@@ -49,6 +49,7 @@ from app.domain import (
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    UnscopedCandidatePersistenceError,
     apply_review_action,
     build_ai_explanation_request,
     ai_explanation_lineage_record_from_result,
@@ -310,6 +311,29 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
     assert "signal-ingestion:high-cash:001" not in event.idempotency_fingerprint
     assert event.correlation_id == first_lineage.correlation_id
     assert event.trace_id == first_lineage.trace_id
+
+
+def test_persist_candidate_rejects_unscoped_candidate_before_any_mutation() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(
+        UnscopedCandidatePersistenceError,
+        match="candidate access scope is required for persistence",
+    ):
+        repository.persist_candidate(
+            replace(candidate, access_scope=None),
+            idempotency_key="signal-ingestion:unscoped:001",
+            payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
+
+    snapshot = repository.snapshot()
+    assert snapshot.candidate_records == {}
+    assert snapshot.idempotency_records == {}
+    assert snapshot.idempotency_candidates == {}
+    assert snapshot.outbox_events == {}
 
 
 def test_persist_candidate_rejects_idempotency_conflict_without_extra_audit_event() -> None:
