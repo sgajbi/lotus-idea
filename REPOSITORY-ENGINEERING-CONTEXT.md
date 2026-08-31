@@ -3354,7 +3354,7 @@ justify a signal microservice or supported-feature promotion.
 
 ## Candidate Identity And Evidence Versioning
 
-Issue `#1154` establishes `idea-opportunity-identity-v2` as the single
+Issue `#1154` establishes the versioned `idea-opportunity-identity` policy as the single
 Idea-owned business-candidate identity authority. Derive `businessIdentityId`
 from tenant, portfolio, opportunity family, and governed economic scope. Do
 not include source content hashes, source routes, transport idempotency keys,
@@ -3380,6 +3380,16 @@ preserve lifecycle and review posture, including for accepted, rejected,
 expired, executed, and closed candidates. Reopen a terminal candidate only
 when its governed material fingerprint changes; a source content hash or other
 evidence representation change cannot create adviser work by itself.
+
+Policy v3 treats the exact observation `as_of_date` as evidence and lineage,
+not economic materiality. A later exact source business date with unchanged
+governed economics therefore keeps the material fingerprint and terminal
+posture while versioning evidence. Date-derived business facts remain material
+when they change the opportunity itself. The identity builder rejects
+observation-only material keys so new families cannot silently reintroduce
+daily recurrence noise. The explicit v2-to-v3 backfill runs during the first
+governed re-evaluation, preserves material version and lifecycle, records
+`migration_backfill`, and fails closed for every other policy transition.
 
 All caller and source evaluation DTOs are closed schemas and must reject
 `duplicateOfCandidateId`; the source-ingestion worker manifest must do the

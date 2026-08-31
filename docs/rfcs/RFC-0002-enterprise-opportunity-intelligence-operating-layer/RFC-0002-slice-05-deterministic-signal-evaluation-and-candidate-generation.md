@@ -1117,7 +1117,7 @@ Current source-ingestion orchestration validation:
 
 ### Issue 1154 economic candidate identity checkpoint
 
-1. `idea-opportunity-identity-v2` derives `businessIdentityId` from governed
+1. `idea-opportunity-identity-v2` introduced `businessIdentityId` from governed
    tenant, portfolio, family, and economic scope across every opportunity
    family. Source content hashes, transport idempotency, source routes, and
    reason-code ordering are excluded from business identity.
@@ -1136,6 +1136,11 @@ Current source-ingestion orchestration validation:
    `33305344556` and CodeQL run `33305341663` passed. This does not promote a
    supported feature or transfer source-fact authority from Core, Risk,
    Performance, Advise, or Manage.
+6. Identity policy v3 preserves that business boundary while moving exact
+   observation date out of economic materiality and into evidence lineage.
+   The shared builder rejects `as_of_date` as a material fact, genuine
+   date-derived economic changes remain material, and the one-way v2 backfill
+   preserves persisted lifecycle/review posture without a false reopen.
 
 Current Core cash-weight adapter validation:
 

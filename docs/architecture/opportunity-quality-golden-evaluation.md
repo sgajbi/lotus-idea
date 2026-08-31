@@ -83,7 +83,10 @@ The same dataset also proves:
 7. a materially changed recurring condition after expiry reopens the stable
    business identity for human review, while evidence-only correction does
    not manufacture recurrence;
-8. deliberate mutations of expected outcome, reason, score component, rank,
+8. an unchanged condition on the next exact source business date stays
+   terminal and versions evidence, while changing the economic fact on that
+   later date still reopens it;
+9. deliberate mutations of expected outcome, reason, score component, rank,
    or reopen version make the test fail.
 
 ## Source Authority And No-Claim Boundaries

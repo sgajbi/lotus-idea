@@ -189,37 +189,31 @@ two golden scenarios that distinguish evidence-only correction from genuine
 material recurrence. The golden mutation test proves that treating the
 evidence-only scenario as a reopen fails certification.
 
+Exact observation date is evidence, not economic materiality. Identity policy
+v3 removes `as_of_date` from every family material fingerprint and rejects that
+observation-only key at the shared identity boundary. An unchanged opportunity
+on the next exact source date preserves material version and terminal posture;
+new source lineage increments evidence. A changed source-owned economic fact
+on that later date still creates a material version and reopens an eligible
+terminal candidate. Existing v2 records use a one-way, fail-closed policy
+backfill that preserves candidate identity, material version, lifecycle,
+review, and suppression posture rather than manufacturing a deployment-time
+recurrence.
+
 ## Remaining Gaps
 
-The Slice 07 scoring and queue-policy acceptance criteria are complete. PR
-`#1179` merged the evidence-derived correction, exact-main release and CodeQL
-passed, the repo-authored wiki was published with strict parity, and the
-implementation branch was removed locally and remotely. Workbench realization,
-broader review audiences, data-product certification, live operational
-evidence, and supported-feature promotion belong to later RFC slices and remain
-independently gated. Those downstream gates do not weaken or reopen the Slice
-07 scoring/queue-policy acceptance criteria.
+Workbench realization, broader review audiences, data-product certification,
+live operational evidence, and supported-feature promotion remain independently
+gated. Those downstream concerns do not weaken the implemented scoring,
+identity, recurrence, and queue-policy semantics.
 
-## Validation
+## Validation Contract
 
-Current exact-main evidence:
-
-1. Independently authored golden expectations, production family-policy tests,
-   runtime score-receipt reconstruction tests, migration tests, and HTTP
-   integration tests prove deterministic calculation, persistence, API
-   projection, ordering, replay, and candidate-free outcomes.
-2. PR Merge Gate run `33390238886` passed `5,839` unit tests, integration,
-   E2E, PostgreSQL runtime proof, the unchanged 99% combined coverage threshold,
-   Docker build/runtime/vulnerability scan, lint, typecheck, security, workflow
-   lint, CodeQL, and CI signal evidence.
-3. PR `#1179` rebase-merged to exact Idea main
-   `384e330727c6e36df9c17bc30910170e95942105`.
-4. Main Releasability run `33390835524` and CodeQL run `33390825582` passed
-   for that exact SHA. The certified signed image is
-   `ghcr.io/sgajbi/lotus-idea@sha256:91199afb237249a1805a7b2b47cdeccce42cd8d4d2ac4c08c216414529faba03`,
-   with SBOM and provenance attestations.
-5. Repo-authored wiki publication reached
-   `ebf49a1bc41215358ffcd633fe17fa6bc3471cd2` with strict `DiffCount 0`.
-   Issue `#1178` is closed, the implementation branch is absent locally and
-   remotely, one clean main worktree remained, and no unmerged remote branch
-   existed before the evidence-only closure synchronization branch.
+Independently authored golden expectations, production family-policy tests,
+terminal-state matrices, PostgreSQL persistence/replay tests, audit/outbox
+assertions, runtime score-receipt reconstruction, and API projection tests must
+prove deterministic calculation, ordering, replay, evidence correction,
+observation-date rollover, and genuine recurrence. Exact PR, run, commit,
+artifact, image, issue-count, and lifecycle-label evidence belongs on the
+owning GitHub issue, PR, and immutable CI/release artifacts rather than this
+durable RFC source.

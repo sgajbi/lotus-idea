@@ -272,7 +272,7 @@ effective-date window is inferred.
 
 ### Economic Candidate Identity
 
-`idea-opportunity-identity-v2` separates advisor-visible economic identity
+`idea-opportunity-identity-v3` separates advisor-visible economic identity
 from evidence and transport identity. The tenant, portfolio, opportunity
 family, and governed economic scope determine `businessIdentityId`. Source
 content hashes remain in evidence packets and lineage; idempotency keys remain
@@ -297,6 +297,15 @@ Evidence correction is not recurrence. Accepted, rejected, expired, executed,
 and closed candidates stay terminal when only evidence representation changes.
 Only a governed material-fingerprint change may reopen a terminal candidate;
 source hashes cannot create new adviser work by themselves.
+
+Exact source business date remains mandatory evidence lineage, but the
+observation date alone is not economic materiality. An unchanged opportunity
+observed on the next business date therefore preserves material version and
+terminal review posture. Date-derived facts such as a changed contractual
+maturity or assignment-effectiveness state remain material. The identity
+builder rejects observation-only material keys, and the one-way v2-to-v3
+backfill records `migration_backfill` without reopening existing candidates.
+Every unsupported identity-policy transition fails closed.
 
 Migration `016_candidate_economic_identity` deterministically backfills the
 identity/version columns, preserves legacy evidence lineage, and supports

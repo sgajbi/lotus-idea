@@ -25,6 +25,15 @@ Evidence-refreshed preserves the candidate's lifecycle and review posture,
 including terminal states. Recurrent-condition-reopened is emitted only for a
 terminal candidate whose governed material fingerprint changed; evidence hash
 correction alone never returns work to an adviser queue.
+The v3 opportunity-identity policy also keeps exact source observation date in
+evidence lineage rather than the economic material fingerprint. Consecutive
+daily evaluations with unchanged economics therefore refresh or replay the
+same candidate instead of creating a material version. Genuine changes to
+source-owned economic facts still version or reopen the candidate. Existing
+v2 candidate rows upgrade on their first governed v3 re-evaluation as a
+`migration_backfill`: tenant/business identity, material version, lifecycle,
+review posture, and suppression posture are preserved; unknown policy changes
+fail closed as identity conflicts.
 `scripts/run_source_ingestion_worker.py` now provides a versioned
 manifest-backed run-once CLI, and `make source-ingestion-worker-check`
 validates the example manifest and source-safe check-only output contract
