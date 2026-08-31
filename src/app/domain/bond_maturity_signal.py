@@ -279,7 +279,6 @@ def _stable_bond_maturity_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "maturity_window_days": policy.maturity_window_days,
             "policy_version": policy.policy_version,
             "source_reported_maturing_position_count": (

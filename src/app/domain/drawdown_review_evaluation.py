@@ -240,7 +240,6 @@ def _stable_drawdown_review_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "policy_version": policy.policy_version,
             "risk_supportability_state": source_input.risk_supportability_state,
             "source_reported_max_drawdown": str(source_reported_max_drawdown),

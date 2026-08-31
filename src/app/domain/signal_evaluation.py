@@ -897,7 +897,6 @@ def _stable_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "cash_weight": str(source_input.source_reported_cash_weight),
             "policy_version": policy.policy_version,
         },
@@ -924,7 +923,6 @@ def _stable_concentration_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "issuer_coverage_status": source_input.issuer_coverage_status,
             "policy_version": policy.policy_version,
             "top_issuer_weight_current": (
@@ -954,7 +952,6 @@ def _stable_underperformance_identity(
         access_scope=source_input.access_scope,
         material_facts={
             "active_return": str(source_input.source_reported_active_return),
-            "as_of_date": source_input.as_of_date.isoformat(),
             "benchmark_context_available": source_input.benchmark_context_available,
             "policy_version": policy.policy_version,
         },
@@ -973,7 +970,6 @@ def _stable_mandate_health_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "lineage_edge_count": source_input.lineage_edge_count,
             "manage_supportability_state": (source_input.manage_supportability_state or "")
             .strip()

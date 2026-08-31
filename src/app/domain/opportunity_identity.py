@@ -16,7 +16,9 @@ from app.domain.ideas import (
 )
 
 
-OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v2"
+PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v2"
+OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v3"
+OBSERVATION_ONLY_MATERIAL_FACTS = frozenset({"as_of_date"})
 
 IdentityMaterialValue: TypeAlias = str | int | bool | None
 
@@ -113,6 +115,10 @@ def _validate_material_facts(material_facts: Mapping[str, IdentityMaterialValue]
             raise ValueError("material fact names must be non-blank strings")
         if value is not None and not isinstance(value, (str, int, bool)):
             raise TypeError(f"material fact {key} must be a canonical scalar")
+    observation_only_facts = OBSERVATION_ONLY_MATERIAL_FACTS.intersection(material_facts)
+    if observation_only_facts:
+        names = ", ".join(sorted(observation_only_facts))
+        raise ValueError(f"observation-only facts cannot define economic materiality: {names}")
 
 
 def _business_scope_payload(
@@ -171,6 +177,7 @@ def _canonical_digest(payload: Mapping[str, object]) -> str:
 
 
 __all__ = [
+    "PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION",
     "OPPORTUNITY_IDENTITY_POLICY_VERSION",
     "IdentityMaterialValue",
     "OpportunityIdentity",

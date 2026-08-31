@@ -265,7 +265,6 @@ def _stable_low_income_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "cash_movement_count": source_input.cash_movement_count,
             "policy_version": policy.policy_version,
             "source_reported_min_projected_cumulative_cashflow": str(

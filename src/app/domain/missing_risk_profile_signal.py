@@ -291,7 +291,6 @@ def _stable_missing_risk_profile_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "policy_version": policy.policy_version,
             "risk_profile_effective_for_as_of_date": (
                 source_input.risk_profile_effective_for_as_of_date

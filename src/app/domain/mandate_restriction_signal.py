@@ -251,7 +251,6 @@ def _stable_mandate_restriction_identity(
         access_scope=source_input.access_scope,
         material_facts={
             "actionability_blocked": source_input.actionability_blocked,
-            "as_of_date": source_input.as_of_date.isoformat(),
             "changed_since_last_review": source_input.changed_since_last_review,
             "policy_version": policy.policy_version,
             "restriction_status": (source_input.restriction_status or "").strip().upper(),

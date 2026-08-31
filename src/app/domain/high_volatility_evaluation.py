@@ -228,7 +228,6 @@ def _stable_high_volatility_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "policy_version": policy.policy_version,
             "risk_supportability_state": source_input.risk_supportability_state,
             "source_reported_volatility": str(source_input.source_reported_volatility),

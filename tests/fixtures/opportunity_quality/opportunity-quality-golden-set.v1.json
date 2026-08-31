@@ -807,6 +807,30 @@
         "reviewPosture": "no_action",
         "suppressionReason": null
       }
+    },
+    {
+      "scenarioId": "expired-next-day-unchanged-stays-terminal",
+      "initial": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:day-one",
+        "lifecycleStatus": "expired",
+        "reviewPosture": "no_action"
+      },
+      "incoming": {
+        "cashWeight": "0.18",
+        "evidenceHash": "sha256:golden:cashflow:day-two",
+        "asOfDateOffsetDays": 1
+      },
+      "expected": {
+        "decision": "evidence_refreshed",
+        "candidateIdStable": true,
+        "materialVersion": 1,
+        "evidenceVersion": 2,
+        "changeReason": "evidence_correction",
+        "lifecycleStatus": "expired",
+        "reviewPosture": "no_action",
+        "suppressionReason": null
+      }
     }
   ],
   "queueExpectations": [

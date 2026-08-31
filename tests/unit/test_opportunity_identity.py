@@ -24,13 +24,18 @@ SCOPE = ReviewAccessScope(
 )
 
 
-def _source_ref(product_id: str, content_hash: str) -> SourceRef:
+def _source_ref(
+    product_id: str,
+    content_hash: str,
+    *,
+    as_of_date: date = AS_OF_DATE,
+) -> SourceRef:
     return SourceRef(
         product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
         product_version="v1",
         route=f"/source/{product_id}",
-        as_of_date=AS_OF_DATE,
+        as_of_date=as_of_date,
         generated_at_utc=GENERATED_AT,
         content_hash=content_hash,
         data_quality_status="complete",
@@ -44,21 +49,25 @@ def _identity(
     source_refs: tuple[SourceRef, ...] | None = None,
     scope: ReviewAccessScope | None = SCOPE,
     opportunity_kind: str = "high_cash",
+    as_of_date: date = AS_OF_DATE,
 ) -> OpportunityIdentity:
     return build_opportunity_identity(
         family=OpportunityFamily.HIGH_CASH,
         opportunity_kind=opportunity_kind,
-        as_of_date=AS_OF_DATE,
+        as_of_date=as_of_date,
         access_scope=scope,
         material_facts={
-            "as_of_date": AS_OF_DATE.isoformat(),
             "cash_weight": cash_weight,
             "policy_version": "idle-liquidity-v1",
         },
         source_refs=source_refs
         or (
-            _source_ref("portfolio-state", "sha256:portfolio-state-v1"),
-            _source_ref("holdings", "sha256:holdings-v1"),
+            _source_ref(
+                "portfolio-state",
+                "sha256:portfolio-state-v1",
+                as_of_date=as_of_date,
+            ),
+            _source_ref("holdings", "sha256:holdings-v1", as_of_date=as_of_date),
         ),
     )
 
@@ -108,6 +117,18 @@ def test_material_change_versions_candidate_under_the_same_business_identity() -
     assert changed.lineage_id != original.lineage_id
 
 
+def test_observation_date_versions_evidence_not_scoped_candidate_materiality() -> None:
+    next_date = date(2026, 8, 31)
+
+    original = _identity()
+    refreshed = _identity(as_of_date=next_date)
+
+    assert refreshed.business_identity_id == original.business_identity_id
+    assert refreshed.material_fingerprint == original.material_fingerprint
+    assert refreshed.candidate_id == original.candidate_id
+    assert refreshed.evidence_fingerprint != original.evidence_fingerprint
+
+
 def test_initial_candidate_identity_carries_explicit_version_posture() -> None:
     identity = _identity().initial_candidate_identity()
 
@@ -132,8 +153,10 @@ def test_business_scope_and_opportunity_kind_are_identity_boundaries() -> None:
 
 def test_unscoped_diagnostics_are_bounded_by_evaluation_date() -> None:
     identity = _identity(scope=None)
+    next_date_identity = _identity(scope=None, as_of_date=date(2026, 8, 31))
 
     assert identity.business_identity_id.startswith("opportunity_high_cash_")
+    assert next_date_identity.business_identity_id != identity.business_identity_id
 
 
 @pytest.mark.parametrize(
@@ -147,6 +170,12 @@ def test_unscoped_diagnostics_are_bounded_by_evaluation_date() -> None:
             {1: "0.18"},
             ValueError,
             "material fact names must be non-blank strings",
+        ),
+        (
+            "material_facts",
+            {"as_of_date": AS_OF_DATE.isoformat(), "cash_weight": "0.18"},
+            ValueError,
+            "observation-only facts cannot define economic materiality: as_of_date",
         ),
         ("material_facts", {"cash_weight": 0.18}, TypeError, "canonical scalar"),
     ),

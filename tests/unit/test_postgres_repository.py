@@ -14,7 +14,6 @@ from app.domain import (
     AIExplanationResult,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
-    CandidateChangeReason,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -129,90 +128,6 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
     )
     assert tuple(snapshot.outbox_events.values())[0].event_type == "idea.candidate.persisted.v1"
     assert connection.commits == 2
-
-
-def test_postgres_repository_versions_corrected_evidence_on_one_candidate_aggregate() -> None:
-    connection = FakePostgresConnection()
-    scope = access_scope()
-    candidate = high_cash_candidate(candidate_scope=scope)
-    corrected = high_cash_candidate(
-        candidate_scope=scope,
-        cashflow_hash="sha256:corrected-cashflow",
-    )
-    repository = PostgresIdeaRepository(connection)
-    repository.persist_candidate(
-        candidate,
-        idempotency_key="signal-ingestion:high-cash:001",
-        payload={"candidateId": candidate.candidate_id, "sourceVersion": "original"},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-
-    refreshed = PostgresIdeaRepository(connection).persist_candidate(
-        corrected,
-        idempotency_key="signal-ingestion:high-cash:002",
-        payload={"candidateId": corrected.candidate_id, "sourceVersion": "corrected"},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT + timedelta(minutes=5),
-    )
-    hydrated = PostgresIdeaRepository(connection).candidate_record_by_id(candidate.candidate_id)
-
-    assert refreshed.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
-    assert hydrated == refreshed.record
-    assert hydrated is not None
-    assert hydrated.candidate.identity.material_version == 1
-    assert hydrated.candidate.identity.evidence_version == 2
-    assert len(hydrated.version_history) == 2
-    assert len(connection.rows["idea_candidate_record"]) == 1
-    assert len(connection.rows["idea_candidate_version_history"]) == 2
-    assert connection.rows["idea_outbox_event"][-1]["event_type"] == (
-        "idea.candidate.evidence_refreshed.v1"
-    )
-
-
-def test_postgres_repository_keeps_evidence_only_terminal_correction_closed() -> None:
-    connection = FakePostgresConnection()
-    scope = access_scope()
-    candidate = replace(
-        high_cash_candidate(candidate_scope=scope),
-        lifecycle_status=IdeaLifecycleStatus.CLOSED,
-        review_posture=ReviewPosture.NO_ACTION,
-    )
-    corrected = high_cash_candidate(
-        candidate_scope=scope,
-        cashflow_hash="sha256:corrected-terminal-cashflow",
-    )
-    repository = PostgresIdeaRepository(connection)
-    repository.persist_candidate(
-        candidate,
-        idempotency_key="signal-ingestion:terminal-high-cash:001",
-        payload={"candidateId": candidate.candidate_id, "sourceVersion": "original"},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-
-    refreshed = PostgresIdeaRepository(connection).persist_candidate(
-        corrected,
-        idempotency_key="signal-ingestion:terminal-high-cash:002",
-        payload={"candidateId": corrected.candidate_id, "sourceVersion": "corrected"},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT + timedelta(minutes=5),
-    )
-    hydrated = PostgresIdeaRepository(connection).candidate_record_by_id(candidate.candidate_id)
-
-    assert refreshed.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
-    assert hydrated == refreshed.record
-    assert hydrated is not None
-    assert hydrated.candidate.lifecycle_status is IdeaLifecycleStatus.CLOSED
-    assert hydrated.candidate.review_posture is ReviewPosture.NO_ACTION
-    assert hydrated.candidate.identity.material_version == 1
-    assert hydrated.candidate.identity.evidence_version == 2
-    assert hydrated.candidate.identity.change_reason is CandidateChangeReason.EVIDENCE_CORRECTION
-    assert len(connection.rows["idea_candidate_record"]) == 1
-    assert len(connection.rows["idea_candidate_version_history"]) == 2
-    assert connection.rows["idea_outbox_event"][-1]["event_type"] == (
-        "idea.candidate.evidence_refreshed.v1"
-    )
 
 
 def test_postgres_repository_rejects_uncontracted_outbox_rows_on_load() -> None:

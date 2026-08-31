@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -23,6 +23,10 @@ from app.domain import (
     SuppressionReason,
     evaluate_high_cash_signal,
 )
+from app.domain.opportunity_identity import (
+    OPPORTUNITY_IDENTITY_POLICY_VERSION,
+    PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION,
+)
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
@@ -37,7 +41,13 @@ TERMINAL_STATE_EXPECTATIONS = (
 )
 
 
-def _source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef:
+def _source_ref(
+    product_id: str,
+    *,
+    content_hash: str | None = None,
+    as_of_date: date = AS_OF_DATE,
+    evaluated_at_utc: datetime = EVALUATED_AT,
+) -> SourceRef:
     route_by_product = {
         "lotus-core:PortfolioStateSnapshot:v1": "/integration/portfolios/{portfolio_id}/core-snapshot",
         "lotus-core:HoldingsAsOf:v1": "/portfolios/{portfolio_id}/cash-balances",
@@ -53,9 +63,9 @@ def _source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRe
         source_system=SourceSystem.LOTUS_CORE,
         product_version="v1",
         route=route_by_product[product_id],
-        as_of_date=AS_OF_DATE,
-        generated_at_utc=EVALUATED_AT,
-        content_hash=content_hash or f"sha256:{product_id}",
+        as_of_date=as_of_date,
+        generated_at_utc=evaluated_at_utc,
+        content_hash=content_hash or f"sha256:{product_id}:{as_of_date.isoformat()}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
@@ -65,25 +75,41 @@ def _candidate(
     *,
     cash_weight: Decimal = Decimal("0.18"),
     cashflow_hash: str | None = None,
+    as_of_date: date = AS_OF_DATE,
+    evaluated_at_utc: datetime = EVALUATED_AT,
 ) -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
     refs = (
-        _source_ref("lotus-core:PortfolioStateSnapshot:v1"),
-        _source_ref("lotus-core:HoldingsAsOf:v1"),
-        _source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+        _source_ref(
+            "lotus-core:PortfolioStateSnapshot:v1",
+            as_of_date=as_of_date,
+            evaluated_at_utc=evaluated_at_utc,
+        ),
+        _source_ref(
+            "lotus-core:HoldingsAsOf:v1",
+            as_of_date=as_of_date,
+            evaluated_at_utc=evaluated_at_utc,
+        ),
+        _source_ref(
+            "lotus-core:PortfolioCashMovementSummary:v1",
+            as_of_date=as_of_date,
+            evaluated_at_utc=evaluated_at_utc,
+        ),
         _source_ref(
             "lotus-core:PortfolioCashflowProjection:v1",
             content_hash=cashflow_hash,
+            as_of_date=as_of_date,
+            evaluated_at_utc=evaluated_at_utc,
         ),
     )
     evaluation = evaluate_high_cash_signal(
         HighCashSignalInput(
-            as_of_date=AS_OF_DATE,
+            as_of_date=as_of_date,
             source_reported_cash_weight=cash_weight,
             portfolio_state_ref=refs[0],
             holdings_ref=refs[1],
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
-            evaluated_at_utc=EVALUATED_AT,
+            evaluated_at_utc=evaluated_at_utc,
             access_scope=ReviewAccessScope(
                 tenant_id="tenant-sg-001",
                 book_id="book-private-bank-sg",
@@ -223,6 +249,109 @@ def test_evidence_only_correction_preserves_terminal_candidate_state(
     assert tuple(repository.snapshot().outbox_events.values())[-1].event_type == (
         "idea.candidate.evidence_refreshed.v1"
     )
+
+
+@pytest.mark.parametrize(("terminal_status", "terminal_posture"), TERMINAL_STATE_EXPECTATIONS)
+def test_next_day_unchanged_economics_preserve_terminal_candidate_state(
+    terminal_status: IdeaLifecycleStatus,
+    terminal_posture: ReviewPosture,
+) -> None:
+    candidate, refs = _candidate()
+    terminal_candidate = replace(
+        candidate,
+        lifecycle_status=terminal_status,
+        review_posture=terminal_posture,
+    )
+    next_day = datetime(2026, 6, 22, 10, 0, tzinfo=UTC)
+    refreshed_candidate, refreshed_refs = _candidate(
+        as_of_date=next_day.date(),
+        evaluated_at_utc=next_day,
+    )
+    repository = InMemoryIdeaRepository()
+    _persist(repository, terminal_candidate, refs, sequence=1)
+
+    refreshed = _persist(
+        repository,
+        refreshed_candidate,
+        refreshed_refs,
+        sequence=2,
+        occurred_at_utc=next_day,
+    )
+
+    assert refreshed.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    assert refreshed.record is not None
+    assert refreshed.record.candidate.lifecycle_status is terminal_status
+    assert refreshed.record.candidate.review_posture is terminal_posture
+    assert refreshed.record.candidate.identity.material_version == 1
+    assert refreshed.record.candidate.identity.evidence_version == 2
+    assert (
+        refreshed.record.candidate.identity.change_reason
+        is CandidateChangeReason.EVIDENCE_CORRECTION
+    )
+    assert len(refreshed.record.version_history) == 2
+    assert refreshed.record.audit_events[-1].event_type == "idea.candidate.evidence_refreshed"
+    assert tuple(repository.snapshot().outbox_events.values())[-1].event_type == (
+        "idea.candidate.evidence_refreshed.v1"
+    )
+
+
+@pytest.mark.parametrize(("terminal_status", "terminal_posture"), TERMINAL_STATE_EXPECTATIONS)
+def test_v2_identity_policy_backfill_preserves_terminal_state_without_false_reopen(
+    terminal_status: IdeaLifecycleStatus,
+    terminal_posture: ReviewPosture,
+) -> None:
+    incoming, refs = _candidate()
+    existing = replace(
+        incoming,
+        identity=replace(
+            incoming.identity,
+            policy_version=PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION,
+            material_fingerprint=f"sha256:{'a' * 64}",
+        ),
+        lifecycle_status=terminal_status,
+        review_posture=terminal_posture,
+    )
+    repository = InMemoryIdeaRepository()
+    _persist(repository, existing, refs, sequence=1)
+
+    migrated = _persist(
+        repository,
+        incoming,
+        refs,
+        sequence=2,
+        occurred_at_utc=datetime(2026, 6, 22, 10, 0, tzinfo=UTC),
+    )
+
+    assert migrated.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    assert migrated.record is not None
+    assert migrated.record.candidate.lifecycle_status is terminal_status
+    assert migrated.record.candidate.review_posture is terminal_posture
+    assert migrated.record.candidate.identity.policy_version == OPPORTUNITY_IDENTITY_POLICY_VERSION
+    assert migrated.record.candidate.identity.material_fingerprint == (
+        incoming.identity.material_fingerprint
+    )
+    assert migrated.record.candidate.identity.material_version == 1
+    assert migrated.record.candidate.identity.evidence_version == 2
+    assert (
+        migrated.record.candidate.identity.change_reason is CandidateChangeReason.MIGRATION_BACKFILL
+    )
+    assert migrated.record.audit_events[-1].event_type == "idea.candidate.evidence_refreshed"
+
+
+def test_unknown_identity_policy_change_fails_closed() -> None:
+    incoming, refs = _candidate()
+    existing = replace(
+        incoming,
+        identity=replace(incoming.identity, policy_version="idea-opportunity-identity-unknown"),
+    )
+    repository = InMemoryIdeaRepository()
+    accepted = _persist(repository, existing, refs, sequence=1)
+
+    conflict = _persist(repository, incoming, refs, sequence=2)
+
+    assert conflict.decision is CandidatePersistenceDecision.IDENTITY_CONFLICT
+    assert conflict.record == accepted.record
+    assert conflict.audit_event is None
 
 
 @pytest.mark.parametrize(("terminal_status", "terminal_posture"), TERMINAL_STATE_EXPECTATIONS)
