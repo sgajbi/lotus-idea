@@ -52,8 +52,9 @@ Implemented on `main`:
 7. `src/app/application/review_queue.py` now adds a thin application
    projection over candidate repository snapshots. It reads persisted candidate
    records from the Slice 06 repository contract, delegates ranking and
-   exclusions to `build_review_queue`, and applies snooze state without adding a
-   parallel queue implementation.
+   exclusions to `build_review_queue`, and derives authoritative active snooze
+   state from persisted governed review decisions without adding a parallel
+   queue implementation.
 8. `tests/unit/test_review_queue_application.py` proves snapshot-backed queue
    projection, expired-record exclusion, snooze exclusion, access-scope
    filtering, and timezone-aware evaluation validation.
@@ -79,8 +80,9 @@ Implemented on `main`:
     aggregate queue counts, exclusion counts, durable-storage posture, and
     certification blockers without creating a parallel queue implementation.
     Durable repositories can satisfy the diagnostic through the
-    `ReviewQueueReadinessProjectionRepository` aggregate contract; process-local
-    and snooze-aware evaluations retain the deterministic snapshot fallback.
+    `ReviewQueueReadinessProjectionRepository` aggregate contract. Both
+    process-local and PostgreSQL paths now classify persisted active snoozes;
+    durable readiness reports a real `snoozed` count.
 14. `GET /api/v1/review-queues/advisor/readiness` exposes that posture as a
     certified internal operator diagnostic requiring
     `idea.review.queue.readiness.read` plus the `operator` role. It returns
@@ -118,9 +120,9 @@ GitHub issue `#332` closes the queue paging race without adding a queue service:
 | Concern | Governed behavior |
 | --- | --- |
 | Visibility boundary | `evaluatedAtUtc` includes candidates whose `createdAtUtc` is equal to or earlier than the evaluation instant and excludes later candidates. Source `asOfDate` and evidence `generatedAtUtc` remain source-authority facts; queue paging does not reinterpret them. |
-| Snapshot identity | Page metadata returns opaque `rqs1_*` identity bound to evaluation time, effective scope, queue policy, accepted candidate score-policy set, snoozes, and the visible candidate-state fingerprint. It contains no database key, offset, portfolio id, or raw evidence. |
+| Snapshot identity | Page metadata returns opaque `rqs1_*` identity bound to evaluation time, effective scope, queue policy, accepted candidate score-policy set, applicable persisted snooze decisions, and the visible candidate-state fingerprint. It contains no database key, offset, portfolio id, or raw evidence. |
 | Continuation | `offset > 0` requires the page-1 `snapshotToken`. Missing and malformed tokens return stable `400` ProblemDetails. A valid token against changed visible state returns `409 review_queue_snapshot_conflict`. |
-| Concurrent change | PostgreSQL fingerprints before and after the bounded page query. Backdated inserts and lifecycle, suppression, score, or evidence mutations invalidate the snapshot; inserts created after the as-of boundary do not. |
+| Concurrent change | PostgreSQL fingerprints before and after the bounded page query. Backdated inserts and lifecycle, review/snooze, suppression, score, or evidence mutations invalidate the snapshot; inserts created after the as-of boundary do not. |
 | Adapter parity | In-memory and PostgreSQL paths share token construction and conflict policy. Unit, API integration, and real PostgreSQL tests prove equality, future exclusion, stale conflict, and future-insert stability. |
 | Modularity | Snapshot policy is a pure domain module; PostgreSQL queue operations are a cohesive adapter mixin. No runtime split is justified by current workload, isolation, ownership, or operability evidence. |
 

@@ -27,6 +27,10 @@ Implemented in this slice:
    execution, or client-communication authority.
 7. Queue projections react to review outcomes through lifecycle, posture,
    suppression, and snooze state without introducing persisted queue state.
+   Snooze authority comes from immutable persisted review decisions: the latest
+   decision applicable to the current material version suppresses queue
+   visibility until its exact wake-up boundary. Evidence refresh preserves the
+   decision; a new material version starts a new review cycle.
 8. `tests/unit/test_review_governance.py` covers advisor approval, entitlement
    failure, non-advisor denial, blocked-evidence approval denial, rejection,
    no-action, suppression, snooze, escalation, feedback provenance, safe audit

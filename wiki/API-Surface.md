@@ -246,7 +246,7 @@ operation telemetry never expose raw tenant IDs.
 
 Candidates created after the evaluation instant are not visible and do not
 invalidate that traversal. Backdated inserts and changes to visible lifecycle,
-review, suppression, score, or evidence state invalidate it. The token is
+review or persisted snooze, suppression, score, or evidence state invalidate it. The token is
 opaque and must not be decoded, persisted as a business identifier, or logged
 with portfolio/client context.
 
@@ -254,6 +254,12 @@ The token also binds the queue ranking-policy version and its accepted
 candidate score-policy set. A candidate with an absent or unknown score policy
 is excluded as `unrankable_score_policy`; it is never compared on the assumption
 that all numeric scores share one scale.
+
+An accepted adviser `snooze` action is authoritative from persisted review
+history. The candidate is absent strictly before `snoozedUntilUtc` and becomes
+eligible at that exact instant when other queue rules pass. Evidence refresh
+preserves the snooze; a new material version or recurrent reopen starts a new
+review cycle rather than inheriting stale queue suppression.
 
 | Control | Current expectation |
 | --- | --- |
