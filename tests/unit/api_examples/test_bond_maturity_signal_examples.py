@@ -47,6 +47,7 @@ def test_bond_maturity_examples_cover_every_domain_outcome_and_authority_boundar
         assert all(
             "route" not in ref and "contentHash" not in ref for ref in candidate["sourceRefs"]
         )
+        assert candidate["applicabilityExpiresAtUtc"] == "2026-07-11T00:00:00Z"
         assert examples["notEligible"]["candidate"] is None
         assert all(example["sourceAuthority"] == "lotus-core" for example in examples.values())
         assert all(example["supportedFeaturePromoted"] is False for example in examples.values())
