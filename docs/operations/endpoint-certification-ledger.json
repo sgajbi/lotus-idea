@@ -842,8 +842,8 @@
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_does_not_persist_blocked_evaluation",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_skips_not_eligible_evaluation",
         "tests/unit/api_examples/test_high_cash_signal_examples.py::test_high_cash_examples_match_ledger_and_generated_openapi",
-        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_missing_scope_before_persistence",
-        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_isolates_business_identity_by_economic_scope",
+        "tests/integration/test_high_cash_persistence_scope_api.py::test_high_cash_persist_api_rejects_missing_scope_before_persistence",
+        "tests/integration/test_high_cash_persistence_scope_api.py::test_high_cash_persist_api_isolates_business_identity_by_economic_scope",
         "tests/unit/test_idea_persistence.py::test_persist_candidate_rejects_unscoped_candidate_before_any_mutation",
         "tests/unit/test_service_contract.py::test_high_cash_persistence_openapi_requires_economic_access_scope"
       ],
