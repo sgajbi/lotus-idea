@@ -2,7 +2,7 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-08-30",
+  "asOfDate": "2026-08-31",
   "asOfTimezone": "UTC",
   "comparisonPolicy": {
     "mode": "dated_non_regression_v1",
@@ -22,14 +22,14 @@
   ],
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
-    "totalTrackedIssues": 152,
+    "totalTrackedIssues": 155,
     "openIssues": 27,
-    "closedIssues": 125,
+    "closedIssues": 128,
     "openStatusCounts": {
-      "open_blocked": 14,
+      "open_blocked": 12,
       "open_fixed_local": 0,
       "open_in_progress": 3,
-      "open_merged_main_qa_pending": 0,
+      "open_merged_main_qa_pending": 2,
       "open_pr_raised": 0,
       "open_ready": 0,
       "open_pending_final_closure": 1,
@@ -41,11 +41,17 @@
     "readyIssues": [],
     "inProgressIssues": [
       "sgajbi/lotus-idea#681",
+      "sgajbi/lotus-idea#685",
+      "sgajbi/lotus-idea#686"
+    ],
+    "mergedMainQaPendingIssues": [
       "sgajbi/lotus-idea#1155",
       "sgajbi/lotus-idea#1156"
     ],
-    "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
+      "sgajbi/lotus-idea#1170",
+      "sgajbi/lotus-idea#1169",
+      "sgajbi/lotus-idea#1168",
       "sgajbi/lotus-idea#1162",
       "sgajbi/lotus-idea#1154",
       "sgajbi/lotus-idea#1150",
@@ -88,15 +94,16 @@
   },
   "crossRepo": {
     "repositoriesChecked": 13,
-    "totalRfc0002Issues": 247,
+    "totalRfc0002Issues": 251,
     "openRfc0002Issues": 42,
-    "closedRfc0002Issues": 205,
-    "openBlockedIssues": 25,
+    "closedRfc0002Issues": 209,
+    "openBlockedIssues": 23,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
-      "status/blocked": 25,
-      "status/in-progress": 7,
-      "status/merged-main": 1,
+      "status/blocked": 23,
+      "status/in-progress": 3,
+      "status/merged-main": 6,
+      "status/ready": 1,
       "status/tracker": 9
     },
     "openIssueRefs": [
@@ -104,8 +111,8 @@
       "sgajbi/lotus-ai#122",
       "sgajbi/lotus-ai#126",
       "sgajbi/lotus-archive#55",
-      "sgajbi/lotus-gateway#691",
       "sgajbi/lotus-gateway#692",
+      "sgajbi/lotus-gateway#694",
       "sgajbi/lotus-idea#1155",
       "sgajbi/lotus-idea#1156",
       "sgajbi/lotus-idea#343",
@@ -149,15 +156,18 @@
   },
   "expectedCurrentFragments": {
     "ideaLedger": [
-      "152 tracked RFC-0002 issues",
-      "125 closed and 27 open",
-      "2026-08-30",
+      "155 tracked RFC-0002 issues",
+      "128 closed and 27 open",
+      "2026-08-31",
       "#681",
       "#1145",
       "#1150",
       "#1154",
       "#1155",
       "#1156",
+      "#1168",
+      "#1169",
+      "#1170",
       "#1162",
       "#1139",
       "#1131",
@@ -179,10 +189,10 @@
       "#1082"
     ],
     "crossRepo": [
-      "247 label-backed RFC-0002 issues",
-      "205 closed and 42 open",
-      "2026-08-30",
-      "25 `status/blocked`, 7 `status/in-progress`, 1 `status/merged-main`, 9 `status/tracker`",
+      "251 label-backed RFC-0002 issues",
+      "209 closed and 42 open",
+      "2026-08-31",
+      "23 `status/blocked`, 3 `status/in-progress`, 6 `status/merged-main`, 1 `status/ready`, 9 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

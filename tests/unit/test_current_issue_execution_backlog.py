@@ -57,22 +57,24 @@ def test_execution_backlog_tracks_product_quality_work() -> None:
     effectiveness = issues[1156]
     golden_evaluation = issues[1162]
 
-    assert feedback_quality["executionStatus"] == "open_in_progress"
+    assert feedback_quality["executionStatus"] == "open_merged_main_qa_pending"
     assert feedback_quality["rfcSlices"] == ["slice-08", "slice-16", "slice-17"]
     _assert_instruction_contains(
         feedback_quality,
         "idea-feedback-taxonomy-v1",
         "source-safe offline evaluation projection",
+        "status/merged-main pending canonical consumer QA",
         "no automatic policy",
         "sgajbi/lotus-workbench#953",
     )
 
-    assert effectiveness["executionStatus"] == "open_in_progress"
+    assert effectiveness["executionStatus"] == "open_merged_main_qa_pending"
     assert effectiveness["rfcSlices"] == ["slice-08", "slice-12", "slice-15", "slice-17"]
     _assert_instruction_contains(
         effectiveness,
         "opportunity-effectiveness-v1",
         "candidate-presentation-receipt-v1",
+        "status/merged-main pending canonical consumer QA",
         "sgajbi/lotus-workbench#954",
         "presentation proxy",
     )

@@ -155,7 +155,10 @@
     1154,
     1155,
     1156,
-    1162
+    1162,
+    1168,
+    1169,
+    1170
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -322,17 +325,18 @@
       "replace production IdP/session/token-claims evidence"
     ],
     "685": [
-      "Keep #685 open and status/blocked",
+      "Keep #685 open and status/in-progress",
+      "active writable Gateway/Workbench owner work, not an external blocker",
       "Core blockers #836, #840, #856, #873, and #882 are closed",
       "Core #882 / PR #924 supplied the previously missing DpmPortfolioUniverseCandidate:v1 source_batch_fingerprint/content_hash evidence",
       "Fresh exact-main Gateway/BFF-backed Workbench queue and candidate-detail browser evidence"
     ],
     "686": [
-      "Keep #686 open and status/blocked",
+      "Keep #686 open and status/in-progress",
+      "active writable Gateway/Workbench owner work, not an external blocker",
       "Workbench PR #501 merged the browser-action proof path",
       "Core #882 / PR #924 supplied deterministic source_batch_fingerprint/content_hash evidence",
-      "fresh exact-main Workbench live validation",
-      "This issue is not QA-pending"
+      "Fresh exact-main Workbench live validation"
     ],
     "687": [
       "Keep #687 open and status/blocked",
@@ -486,7 +490,7 @@
       "final RFC-0002 closure"
     ],
     "1155": [
-      "Keep #1155 open and status/in-progress",
+      "Keep #1155 open and status/merged-main pending canonical consumer QA",
       "PR #1159",
       "idea-feedback-taxonomy-v1",
       "tenant-scoped source-safe offline evaluation projection",
@@ -501,7 +505,7 @@
       "final RFC-0002 closure"
     ],
     "1156": [
-      "Keep #1156 open and status/in-progress",
+      "Keep #1156 open and status/merged-main pending canonical consumer QA",
       "PR #1160",
       "PR #1161",
       "opportunity-effectiveness-v1",
@@ -516,6 +520,53 @@
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1168": [
+      "Closed #1168 after QA passed",
+      "PR #1171",
+      "cdc9fbc0cd64a0dec3fffe7fb42be384a394f0df",
+      "Main Releasability run 33333214234",
+      "CodeQL run 33333206828",
+      "5,744 unit tests",
+      "99.01% combined coverage",
+      "wiki publication reached commit 944caae",
+      "strict DiffCount 0",
+      "exact persisted adviser review, feedback, and conversion-intent evidence",
+      "missing or ambiguous durable evidence fails closed",
+      "No assertion or threshold was weakened",
+      "no compatibility layer was added",
+      "final RFC-0002 closure"
+    ],
+    "1169": [
+      "Closed #1169 after QA passed",
+      "PR #1173",
+      "b923165ba1925eb59cbd3e74c9315c4f3659f7e7",
+      "Main Releasability run 33353245168",
+      "CodeQL run 33353237457",
+      "PostgreSQL lifecycle reload/replay",
+      "wiki publication reached commit da09f97",
+      "strict DiffCount 0",
+      "exact persisted lifecycle transition",
+      "missing or ambiguous evidence",
+      "No assertion or gate was weakened",
+      "no compatibility layer was added",
+      "final RFC-0002 closure"
+    ],
+    "1170": [
+      "Closed #1170 after QA passed",
+      "PR #1175",
+      "df26f7f18c1dafb0009f8294cf08b999d1681ca0",
+      "Main Releasability run 33360310207",
+      "CodeQL run 33360303951",
+      "5,774 unit tests",
+      "99.01% combined coverage",
+      "wiki publication reached commit 44c0940",
+      "strict DiffCount 0",
+      "same-key client-publication escalation conflicts",
+      "No assertion or threshold was weakened",
+      "no compatibility layer was added",
+      "Report/Render/Archive materialization",
+      "final RFC-0002 closure"
+    ],
     "1162": [
       "Closed #1162 after QA passed",
       "PR #1163",

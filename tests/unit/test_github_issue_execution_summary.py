@@ -136,7 +136,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         )
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
-    assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 14
+    assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 12
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
     assert (
         summary["counts"]["byExecutionStatus"]["closed_complete"]
@@ -160,8 +160,6 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         375,
         379,
         380,
-        685,
-        686,
         687,
         691,
         692,
@@ -285,7 +283,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"{issue_681_section}\n\n" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
-    assert "#681, #685" not in rendered
+    assert "#681, #685, #686" in rendered
     assert "#756" not in rendered
     for execution_status in (
         "open_in_progress",
@@ -301,9 +299,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Pending Final Closure Issues\n\n#683" in rendered
     assert "## Pending Post-Completion Issues\n\n#684" in rendered
     assert "## Blocked Issues" in rendered
-    assert (
-        "#343, #344, #345, #375, #379, #380, #685, #686, #687, #691, #692, #693, #699, #814"
-    ) in rendered
+    assert ("#343, #344, #345, #375, #379, #380, #687, #691, #692, #693, #699, #814") in rendered
     assert "Current issues: #340, #782" not in rendered
     assert "Current issues: #673, #681, #683, #684" in rendered
     assert "Current issues: #673, #681, #683, #684, #874" not in rendered
