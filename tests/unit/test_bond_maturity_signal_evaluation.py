@@ -275,3 +275,11 @@ def test_bond_maturity_policy_rejects_invalid_window() -> None:
             policy_version="bond-maturity-review-v2",
             maturity_window_days=0,
         )
+
+
+def test_bond_maturity_policy_requires_version() -> None:
+    with pytest.raises(ValueError, match="policy_version is required"):
+        BondMaturitySignalPolicy(
+            policy_version=" ",
+            maturity_window_days=30,
+        )

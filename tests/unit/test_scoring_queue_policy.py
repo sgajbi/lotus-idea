@@ -37,6 +37,7 @@ from app.domain import (
     score_candidate,
     score_inputs,
 )
+from app.domain.scoring import relative_threshold_score
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -189,6 +190,41 @@ def test_conflict_flags_apply_bounded_reasoned_penalty() -> None:
     assert breakdown.score == Decimal("65.75")
     assert breakdown.conflict_penalty_applied == Decimal("15")
     assert ReasonCode.CONFLICT_PENALTY in breakdown.reason_codes
+
+
+@pytest.mark.parametrize("weight", (Decimal("-0.01"), Decimal("1.01")))
+def test_scoring_input_rejects_out_of_range_weights(weight: Decimal) -> None:
+    with pytest.raises(ValueError, match="weight must be between 0 and 1"):
+        IdeaScoringInput(
+            component=ScoreComponent.MATERIALITY,
+            input_score=Decimal("80"),
+            weight=weight,
+        )
+
+
+def test_scoring_input_rejects_historical_fixed_policy_as_current_evidence() -> None:
+    with pytest.raises(ValueError, match="not a source-evidence scoring input"):
+        IdeaScoringInput(
+            component=ScoreComponent.LEGACY_FIXED_POLICY,
+            input_score=Decimal("80"),
+            weight=Decimal("1"),
+        )
+
+
+@pytest.mark.parametrize(
+    ("value", "threshold", "message"),
+    (
+        (Decimal("0.20"), Decimal("0"), "threshold must be positive"),
+        (Decimal("0.19"), Decimal("0.20"), "value must meet or exceed threshold"),
+    ),
+)
+def test_relative_threshold_scoring_fails_closed_outside_its_domain(
+    value: Decimal,
+    threshold: Decimal,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        relative_threshold_score(value, threshold)
 
 
 def test_score_candidate_attaches_policy_score_without_changing_lifecycle() -> None:

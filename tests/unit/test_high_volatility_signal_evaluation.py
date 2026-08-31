@@ -177,6 +177,16 @@ def test_high_volatility_non_ready_source_blocks_positive_claim() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,)
 
 
+def test_high_volatility_missing_supportability_blocks_positive_claim() -> None:
+    result = evaluate_high_volatility_signal(
+        volatility_input(risk_supportability_state=None),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
+
+
 def test_high_volatility_missing_source_metric_blocks_positive_claim() -> None:
     result = evaluate_high_volatility_signal(
         volatility_input(source_reported_volatility=None),

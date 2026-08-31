@@ -11,6 +11,8 @@ from tests.support.score_fixture import score_fixture
 
 from app.domain import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
+    CandidateChangeReason,
+    CandidateIdentity,
     ConversionOutcomeStatus,
     ConversionTarget,
     DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES,
@@ -494,6 +496,16 @@ def test_score_policy_requires_reason_codes() -> None:
         )
 
 
+def test_score_policy_requires_reconstructable_contributions() -> None:
+    with pytest.raises(ValueError, match="contributions is required"):
+        IdeaScore(
+            policy_version="idle-liquidity-v2",
+            score=Decimal("75"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            contributions=(),
+        )
+
+
 @pytest.mark.parametrize("score", [Decimal("-1"), Decimal("101")])
 def test_score_policy_rejects_out_of_bounds_values(score: Decimal) -> None:
     with pytest.raises(ValueError, match="score must be between 0 and 100"):
@@ -512,6 +524,12 @@ def test_score_contribution_rejects_mismatched_weighted_value() -> None:
             weight=Decimal("0.50"),
             contribution=Decimal("39.99"),
         )
+
+
+@pytest.mark.parametrize("weight", (Decimal("-0.01"), Decimal("1.01")))
+def test_score_contribution_rejects_out_of_range_weight(weight: Decimal) -> None:
+    with pytest.raises(ValueError, match="weight must be between 0 and 1"):
+        _score_contribution(weight=weight)
 
 
 def test_score_rejects_duplicate_components() -> None:
@@ -566,6 +584,41 @@ def test_score_reconstructs_zero_after_conflict_penalty_floor() -> None:
     )
 
     assert score.score == Decimal("0")
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    (
+        ({"material_fingerprint": "not-a-digest"}, "must use sha256"),
+        ({"material_version": 0}, "material_version must be positive"),
+        ({"evidence_version": 0}, "evidence_version must be positive"),
+        (
+            {"material_version": 2, "supersedes_material_version": 0},
+            "supersedes_material_version must be positive",
+        ),
+        (
+            {"material_version": 2, "supersedes_material_version": 2},
+            "supersedes_material_version must precede material_version",
+        ),
+    ),
+)
+def test_candidate_identity_rejects_invalid_version_lineage(
+    overrides: dict[str, object],
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "business_identity_id": "business-high-cash-001",
+        "policy_version": "opportunity-identity-v1",
+        "material_fingerprint": "sha256:material",
+        "material_version": 1,
+        "evidence_version": 1,
+        "change_reason": CandidateChangeReason.INITIAL_DETECTION,
+        "supersedes_material_version": None,
+    }
+    values.update(overrides)
+
+    with pytest.raises(ValueError, match=message):
+        CandidateIdentity(**values)  # type: ignore[arg-type]
 
 
 def _score_contribution(

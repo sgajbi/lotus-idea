@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 
@@ -105,6 +106,32 @@ def test_missing_suitability_score_reflects_requirement_and_blocker_posture() ->
     assert pending.candidate is not None and pending.candidate.score is not None
     assert blocked.candidate is not None and blocked.candidate.score is not None
     assert blocked.candidate.score.score > pending.candidate.score.score
+
+
+@pytest.mark.parametrize(
+    ("minimum_open_count", "open_count", "expected_relevance"),
+    (
+        (0, 0, Decimal("50")),
+        (3, 2, Decimal("50")),
+    ),
+)
+def test_missing_suitability_relevance_is_bounded_at_policy_edges(
+    minimum_open_count: int,
+    open_count: int,
+    expected_relevance: Decimal,
+) -> None:
+    result = evaluate_missing_suitability_context_signal(
+        suitability_input(open_requirement_count=open_count),
+        MissingSuitabilityContextSignalPolicy(
+            policy_version="missing-suitability-context-review-v2",
+            minimum_open_requirement_count=minimum_open_count,
+        ),
+    )
+
+    assert result.candidate is not None and result.candidate.score is not None
+    relevance = result.candidate.score.contributions[0]
+    assert relevance.component.value == "relevance"
+    assert relevance.input_score == expected_relevance
 
 
 def test_missing_suitability_source_correction_preserves_candidate_and_versions_evidence() -> None:
