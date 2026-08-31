@@ -48,7 +48,7 @@ learning without claiming that Workbench and Gateway are certified.
 
 `GET /api/v1/operations/opportunity-effectiveness` returns schema
 `lotus-idea.opportunity-effectiveness.v1` under methodology policy
-`idea-opportunity-effectiveness-v1`.
+`idea-opportunity-effectiveness-v2`.
 
 The population is economic opportunities first generated in the half-open UTC
 window `[windowStartUtc, windowEndUtc)`. Later review, feedback, conversion,
@@ -72,8 +72,8 @@ Presentation fields use two explicit postures:
 
 | Measurement status | Counts | Meaning |
 | --- | --- | --- |
-| `unavailable_consumer_certification_pending` | Both `null` | No qualifying receipt exists by the evaluation cutoff; zero must not be inferred |
-| `stored_consumer_certification_pending` | Non-null | Idea has eligible stored evidence, but canonical Gateway/Workbench certification remains outstanding |
+| `unavailable_consumer_certification_pending` | Counts and presentation rates are `null` | No qualifying receipt exists by the evaluation cutoff; zero must not be inferred |
+| `stored_consumer_certification_pending` | Counts and presentation rates are non-null | Idea has eligible stored evidence, but canonical Gateway/Workbench certification remains outstanding |
 
 `presentedOpportunityCount` counts distinct cohort candidates with at least one
 tenant-matched receipt at or before `evaluatedAtUtc`; repeated renders do not
@@ -82,6 +82,15 @@ once only when a rank-1 receipt precedes an `approve_for_conversion` decision
 for the exact same material/evidence version. Idea resolves that version to its
 durable evidence hash before attribution, so a pre-recurrence rank cannot be
 credited to a later-version approval.
+
+Methodology v2 adds the denominators needed to interpret those counts. The
+`presentationRate` is distinct presented opportunities divided by generated
+economic opportunities. `topRankedPresentedOpportunityCount` counts distinct
+cohort candidates observed at global rank 1, and `topRankedAcceptanceRate`
+divides exact-version rank-1 acceptances by that count. A stored presentation
+population with no rank-1 observation yields a `0 / 0` rate with `null` value;
+it is not reported as a rejection. Repeated receipts never inflate either
+denominator.
 
 ## Presentation Receipt Contract
 

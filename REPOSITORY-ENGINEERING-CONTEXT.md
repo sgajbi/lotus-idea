@@ -144,10 +144,13 @@ merged its Idea-owned governed feedback taxonomy and evaluation foundation,
 and #1156 was implementing versioned opportunity-effectiveness measurement plus
 immutable visible-render receipt evidence. The effectiveness read model now
 counts distinct candidates backed by eligible stored receipts and attributes
-rank-1 acceptance only to an approval for the exact receipt version. With no
-eligible receipt it retains null/unavailable semantics; with evidence it reports
-stored counts while Gateway `#692` and Workbench `#954` consumer certification
-remain outstanding. Queue retrieval must never be used as a shown proxy.
+rank-1 acceptance only to an approval for the exact receipt version. Methodology
+v2 also reports a generated-to-presented rate and an explicit distinct rank-1
+presentation denominator, so absence of a rank-1 observation remains different
+from rank-1 rejection. With no eligible receipt it retains null/unavailable
+semantics; with evidence it reports stored counts and rates while Gateway `#692`
+and Workbench `#954` consumer certification remain outstanding. Queue retrieval
+must never be used as a shown proxy.
 Migration `019` receipt
 evidence is covered by the complete 19-table lifecycle and recovery inventories,
 representative PostgreSQL restore state, and candidate/version/tenant/chronology
@@ -1963,10 +1966,13 @@ candidate within the governed cohort and cutoff. Rank-1 acceptance requires a
 presentation at or before an adviser approval whose evidence content hash
 matches the durable history entry for the receipt's material/evidence version.
 This fence prevents recurrence or evidence refresh from transferring rank
-credit across versions. Snapshot and PostgreSQL restore paths must preserve
-receipts associated with loaded candidate state; absence of qualifying receipts
-remains `null`/unavailable rather than a false zero. These measurements remain
-internal and `not_certified` until canonical consumer proof is complete.
+credit across versions. Methodology v2 exposes distinct rank-1 presentations as
+the acceptance denominator and returns a null-valued `0 / 0` rate when stored
+receipts contain no rank-1 observation; that condition is not a rejection.
+Snapshot and PostgreSQL restore paths must preserve receipts associated with
+loaded candidate state; absence of qualifying receipts remains
+`null`/unavailable rather than a false zero. These measurements remain internal
+and `not_certified` until canonical consumer proof is complete.
 
 AI model-risk operations proof is limited to implemented AI explanation
 telemetry and is classified as `source_contract`. Keep its builder, thin

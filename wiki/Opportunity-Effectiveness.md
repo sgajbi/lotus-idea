@@ -38,7 +38,8 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
 - Without qualifying receipt evidence, presentation counts remain `null` under
   `unavailable_consumer_certification_pending`; this means unavailable, not zero.
 - With qualifying stored evidence, the read model returns distinct presented
-  candidates and exact-version rank-1 acceptance under
+  candidates, the presentation rate, the distinct rank-1 presentation
+  denominator, and exact-version rank-1 acceptance rate under
   `stored_consumer_certification_pending`. Gateway/Workbench certification
   remains outstanding and the endpoint remains `not_certified`.
 
@@ -56,6 +57,9 @@ Repeated receipts for one candidate do not inflate presentation counts. A
 rank-1 acceptance is attributed only when the receipt precedes an adviser
 approval whose evidence hash resolves to the receipt's exact candidate version;
 an older recurrence version cannot receive credit for a later approval.
+The rank-1 acceptance denominator contains only candidates genuinely presented
+at global rank 1. If stored receipts exist but none is rank 1, the rate is
+`0 / 0` with a `null` value rather than a fabricated rejection rate.
 It is included in the complete data-lifecycle inventory and disaster-recovery
 representative fixture. Restore inspection fails on missing candidate/version
 lineage, tenant mismatch, or presentation time preceding the referenced
