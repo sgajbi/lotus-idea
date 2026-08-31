@@ -54,6 +54,12 @@ def high_cash_payload(*, suffix: str = "") -> dict[str, Any]:
             "cashMovementRef": refs[2],
             "cashflowProjectionRef": refs[3],
         },
+        "accessScope": {
+            "tenantId": "tenant-a",
+            "bookId": "book-advisor-001",
+            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "clientId": "client-001",
+        },
         "entitlementAllowed": True,
     }
 

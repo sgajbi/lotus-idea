@@ -150,7 +150,7 @@ def persisted_candidate_id(
     client: ManagedTestClient,
     *,
     idempotency_key: str,
-    scoped: bool = False,
+    scoped: bool = True,
 ) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
