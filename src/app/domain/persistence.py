@@ -68,6 +68,10 @@ from app.domain.lotus_ai_attestation_replay import LotusAIAttestationReplayIndex
 from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 
 
+class UnscopedCandidatePersistenceError(ValueError):
+    """Raised when a durable candidate write lacks economic access scope."""
+
+
 class InMemoryIdeaRepository(
     InMemoryIdeaLookupMixin,
     InMemoryAIExplanationRepositoryMixin,
@@ -127,6 +131,10 @@ class InMemoryIdeaRepository(
     ) -> CandidatePersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         _require_text(actor_subject, "actor_subject")
+        if candidate.access_scope is None:
+            raise UnscopedCandidatePersistenceError(
+                "candidate access scope is required for persistence"
+            )
         event_time = occurred_at_utc or datetime.now(UTC)
         _require_aware_utc(event_time, "occurred_at_utc")
 
@@ -1039,4 +1047,5 @@ __all__ = [
     "LifecyclePersistenceResult",
     "ReviewPersistenceDecision",
     "ReviewPersistenceResult",
+    "UnscopedCandidatePersistenceError",
 ]

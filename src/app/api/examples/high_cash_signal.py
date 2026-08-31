@@ -20,7 +20,7 @@ from app.api.idea_signal_models import (
     EvaluateHighCashSignalResponse,
     HighCashEvidenceRequest,
 )
-from app.api.signal_models import SourceRefRequest
+from app.api.signal_models import ReviewAccessScopeRequest, SourceRefRequest
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashFromCoreCommand,
@@ -66,7 +66,9 @@ _AS_OF_DATE = date(2026, 6, 21)
 _EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 _SOURCE_AUTHORITY = SourceSystem.LOTUS_CORE.value
 _TENANT_ID = "tenant-a"
+_BOOK_ID = "book-advisor-001"
 _PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+_CLIENT_ID = "client-001"
 
 
 def build_high_cash_evaluation_response_examples() -> dict[str, dict[str, Any]]:
@@ -206,6 +208,12 @@ def _persistence_command(
     return EvaluateAndPersistHighCashSignalCommand(
         evaluation=_evaluation_request(
             cash_weight=cash_weight,
+            access_scope=ReviewAccessScopeRequest(
+                tenantId=_TENANT_ID,
+                bookId=_BOOK_ID,
+                portfolioId=_PORTFOLIO_ID,
+                clientId=_CLIENT_ID,
+            ),
         ).to_command(),
         idempotency_key=idempotency_key,
         actor_subject="signal-ingestion-worker",
@@ -244,11 +252,13 @@ def _evaluation_request(
     *,
     cash_weight: Decimal | None,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    access_scope: ReviewAccessScopeRequest | None = None,
 ) -> EvaluateHighCashSignalRequest:
     return EvaluateHighCashSignalRequest(
         asOfDate=_AS_OF_DATE,
         evaluatedAtUtc=_EVALUATED_AT,
         sourceReportedCashWeight=cash_weight,
+        accessScope=access_scope,
         sourceEvidence=HighCashEvidenceRequest(
             portfolioStateRef=_source_ref_request(
                 "lotus-core:PortfolioStateSnapshot:v1",

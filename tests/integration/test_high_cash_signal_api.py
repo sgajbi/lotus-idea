@@ -80,6 +80,7 @@ def high_cash_payload(
     freshness: str = "current",
     entitlement_allowed: bool = True,
     cash_weight: str | None = "0.18",
+    scoped: bool = False,
 ) -> dict[str, Any]:
     payload = {
         "asOfDate": "2026-06-21",
@@ -95,6 +96,13 @@ def high_cash_payload(
         },
         "entitlementAllowed": entitlement_allowed,
     }
+    if scoped:
+        payload["accessScope"] = {
+            "tenantId": "tenant-a",
+            "bookId": "book-advisor-001",
+            "portfolioId": PORTFOLIO_ID,
+            "clientId": "client-001",
+        }
     return payload
 
 
@@ -844,7 +852,7 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-accepted-001"),
     )
 
@@ -865,6 +873,61 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
     assert payload["supportedFeaturePromoted"] is False
 
 
+def test_high_cash_persist_api_rejects_missing_scope_before_persistence() -> None:
+    reset_idea_repository_for_tests()
+    payload = high_cash_payload(scoped=True)
+    del payload["accessScope"]
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=payload,
+        headers=persistence_headers("persist-high-cash-api-unscoped-001"),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Request validation failed. Correct the request fields and retry.",
+    }
+    snapshot = get_idea_repository().snapshot()
+    assert snapshot.candidate_records == {}
+    assert snapshot.idempotency_records == {}
+    assert snapshot.outbox_events == {}
+
+
+def test_high_cash_persist_api_isolates_business_identity_by_economic_scope() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    tenant_a_payload = high_cash_payload(scoped=True)
+    tenant_b_payload = high_cash_payload(scoped=True)
+    tenant_b_payload["accessScope"] = {
+        "tenantId": "tenant-b",
+        "bookId": "book-advisor-002",
+        "portfolioId": "PB_SG_GLOBAL_BAL_002",
+        "clientId": "client-002",
+    }
+
+    tenant_a = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=tenant_a_payload,
+        headers=persistence_headers("persist-high-cash-api-tenant-a-001"),
+    )
+    tenant_b = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=tenant_b_payload,
+        headers=persistence_headers("persist-high-cash-api-tenant-b-001"),
+    )
+
+    assert (tenant_a.status_code, tenant_b.status_code) == (200, 200)
+    tenant_a_candidate = tenant_a.json()["persistence"]["candidateId"]
+    tenant_b_candidate = tenant_b.json()["persistence"]["candidateId"]
+    assert tenant_a_candidate != tenant_b_candidate
+    assert len(get_idea_repository().snapshot().candidate_records) == 2
+
+
 def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
@@ -873,7 +936,7 @@ def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> 
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=headers,
     )
 
@@ -892,7 +955,7 @@ def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> 
 def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
-    payload = high_cash_payload()
+    payload = high_cash_payload(scoped=True)
     payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
         "lotus-risk:ConcentrationRiskReport:v1"
@@ -917,7 +980,7 @@ def test_high_cash_persist_api_reports_durable_storage_when_repository_is_durabl
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-durable-001"),
     )
 
@@ -937,7 +1000,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
     try:
         response = client.post(
             "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-            json=high_cash_payload(),
+            json=high_cash_payload(scoped=True),
             headers={
                 **persistence_headers("persist-high-cash-api-prod-missing-db-001"),
                 TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
@@ -982,7 +1045,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_unavailable(
     try:
         response = client.post(
             "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-            json=high_cash_payload(),
+            json=high_cash_payload(scoped=True),
             headers={
                 **persistence_headers("persist-high-cash-api-prod-unavailable-db-001"),
                 TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
@@ -1015,13 +1078,13 @@ def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
     headers = persistence_headers("persist-high-cash-api-replay-001")
     first = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=headers,
     )
 
     replayed = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=headers,
     )
 
@@ -1038,13 +1101,13 @@ def test_high_cash_persist_api_returns_existing_candidate_for_new_retry_key() ->
     client = managed_test_client(app)
     first = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-first-key"),
     )
 
     duplicate = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-second-key"),
     )
 
@@ -1063,10 +1126,10 @@ def test_high_cash_persist_api_versions_corrected_evidence_without_duplicate_can
     client = managed_test_client(app)
     first = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-correction-first"),
     )
-    corrected_payload = high_cash_payload()
+    corrected_payload = high_cash_payload(scoped=True)
     projection_ref = corrected_payload["sourceEvidence"]["cashflowProjectionRef"]
     projection_ref["contentHash"] = "sha256:corrected-cashflow-projection"
 
@@ -1093,13 +1156,13 @@ def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload(
     headers = persistence_headers("persist-high-cash-api-conflict-001")
     client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight="0.18"),
+        json=high_cash_payload(cash_weight="0.18", scoped=True),
         headers=headers,
     )
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight="0.20"),
+        json=high_cash_payload(cash_weight="0.20", scoped=True),
         headers=headers,
     )
 
@@ -1119,7 +1182,7 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight=None),
+        json=high_cash_payload(cash_weight=None, scoped=True),
         headers=persistence_headers("persist-high-cash-api-blocked-001"),
     )
 
@@ -1135,7 +1198,7 @@ def test_high_cash_persist_api_skips_not_eligible_evaluation() -> None:
 
     response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight="0.05"),
+        json=high_cash_payload(cash_weight="0.05", scoped=True),
         headers=persistence_headers("persist-high-cash-api-not-eligible"),
     )
 
@@ -1153,7 +1216,7 @@ def test_high_cash_persist_api_requires_candidate_persistence_capability() -> No
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers={
             "X-Caller-Subject": "advisor-001",
             "X-Caller-Roles": "advisor",
@@ -1177,7 +1240,7 @@ def test_high_cash_persist_api_rejects_blank_idempotency_key_safely() -> None:
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=True),
         headers={
             "X-Caller-Subject": "signal-ingestion-worker",
             "X-Caller-Capabilities": "idea.candidate.persist",
