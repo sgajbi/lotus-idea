@@ -29,6 +29,11 @@ Current implemented scope:
    missing or ambiguous evidence fails closed as product-safe degraded
    recovery instead of returning a successful null or reconstructing an event
    from the request.
+9. conversion readiness is evaluated against an exact candidate snapshot. The
+   PostgreSQL candidate fence reloads current state, resolves legitimate replay
+   first, and rejects a distinct stale intent before lifecycle, audit, outbox,
+   idempotency, or conversion-intent evidence is written. When competing
+   intents race, the first commit is authoritative.
 
 The report conversion path now has one additional internal request foundation:
 
@@ -102,6 +107,7 @@ Implementation source:
 - `tests/unit/test_downstream_realization_application.py`
 - `tests/integration/test_downstream_realization_api.py`
 - `tests/integration/test_review_workflow_api.py`
+- `tests/integration/test_postgres_conversion_intent_fence_runtime.py`
 - `docs/operations/endpoint-certification-ledger.json`
 - `docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md`
 
