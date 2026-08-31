@@ -6,7 +6,10 @@ from typing import Any, Mapping
 
 from app.infrastructure.postgres_codecs import read_row_value
 from app.infrastructure.postgres_protocols import PostgresConnection
-from app.ports.idea_repository import OpportunityEffectivenessRepositorySummary
+from app.ports.idea_repository import (
+    OpportunityEffectivenessRepositorySummary,
+    OpportunityFamilyEffectivenessRepositorySummary,
+)
 
 
 def load_opportunity_effectiveness_summary(
@@ -71,6 +74,7 @@ def load_opportunity_effectiveness_summary(
         top_ranked_accepted_opportunity_count=_integer(
             row, "top_ranked_accepted_opportunity_count"
         ),
+        family_effectiveness=_family_effectiveness(row),
         family_counts=_counts(row, "family_counts"),
         score_band_counts=_counts(row, "score_band_counts"),
         latest_review_action_counts=_counts(row, "latest_review_action_counts"),
@@ -101,6 +105,44 @@ def _counts(row: Any, key: str) -> Mapping[str, int]:
             raise TypeError(f"{key} values must be integers")
         counts[item_key] = item_value
     return counts
+
+
+def _family_effectiveness(
+    row: Any,
+) -> tuple[OpportunityFamilyEffectivenessRepositorySummary, ...]:
+    value = read_row_value(row, "family_effectiveness")
+    if not isinstance(value, (list, tuple)):
+        raise TypeError("family_effectiveness must be an array")
+    result: list[OpportunityFamilyEffectivenessRepositorySummary] = []
+    fields = (
+        "generated_opportunity_count",
+        "presented_opportunity_count",
+        "reviewed_opportunity_count",
+        "approved_opportunity_count",
+        "rejected_opportunity_count",
+        "suppressed_opportunity_count",
+        "duplicate_suppressed_opportunity_count",
+        "feedback_opportunity_count",
+        "conversion_opportunity_count",
+        "conversion_intent_count",
+        "downstream_accepted_count",
+        "downstream_rejected_count",
+        "downstream_uncertain_count",
+    )
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise TypeError("family_effectiveness entries must be mappings")
+        family = item.get("family")
+        if not isinstance(family, str):
+            raise TypeError("family_effectiveness family must be a string")
+        counts: dict[str, int] = {}
+        for field in fields:
+            count = item.get(field)
+            if isinstance(count, bool) or not isinstance(count, int):
+                raise TypeError(f"family_effectiveness {field} must be an integer")
+            counts[field] = count
+        result.append(OpportunityFamilyEffectivenessRepositorySummary(family=family, **counts))
+    return tuple(result)
 
 
 def _decimals(row: Any, key: str) -> tuple[Decimal, ...]:
@@ -176,6 +218,7 @@ first_intents AS (
 current_outcomes AS (
     SELECT
         intent.conversion_intent_id,
+        intent.candidate_id,
         COALESCE(current_outcome.status, 'not_reported') AS status
     FROM intents AS intent
     CROSS JOIN parameters
@@ -282,6 +325,73 @@ invalid_temporal_facts AS (
     WHERE outcome.recorded_at_utc <= parameters.evaluated_at_utc
       AND outcome.recorded_at_utc < intent.requested_at_utc
 ),
+family_effectiveness AS (
+    SELECT
+        family,
+        COUNT(*)::INTEGER AS generated_opportunity_count,
+        (SELECT COUNT(DISTINCT receipt.candidate_id)::INTEGER
+         FROM presentation_receipts AS receipt
+         JOIN cohort AS presented_candidate USING (candidate_id)
+         WHERE presented_candidate.family = family_cohort.family)
+            AS presented_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM latest_reviews AS review
+         JOIN cohort AS reviewed_candidate USING (candidate_id)
+         WHERE reviewed_candidate.family = family_cohort.family)
+            AS reviewed_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM latest_reviews AS review
+         JOIN cohort AS reviewed_candidate USING (candidate_id)
+         WHERE reviewed_candidate.family = family_cohort.family
+           AND review.action = 'approve_for_conversion')
+            AS approved_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM latest_reviews AS review
+         JOIN cohort AS reviewed_candidate USING (candidate_id)
+         WHERE reviewed_candidate.family = family_cohort.family
+           AND review.action = 'reject')
+            AS rejected_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM cohort AS suppressed_candidate
+         LEFT JOIN latest_reviews AS review USING (candidate_id)
+         WHERE suppressed_candidate.family = family_cohort.family
+           AND (review.action = 'suppress'
+             OR (review.candidate_id IS NULL
+               AND suppressed_candidate.candidate_json->>'suppression_reason' IS NOT NULL)))
+            AS suppressed_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM cohort AS suppressed_candidate
+         LEFT JOIN latest_reviews AS review USING (candidate_id)
+         WHERE suppressed_candidate.family = family_cohort.family
+           AND ((review.action = 'suppress' AND review.suppression_reason = 'duplicate')
+             OR (review.candidate_id IS NULL
+               AND suppressed_candidate.candidate_json->>'suppression_reason' = 'duplicate')))
+            AS duplicate_suppressed_opportunity_count,
+        (SELECT COUNT(DISTINCT event.candidate_id)::INTEGER FROM feedback AS event
+         JOIN cohort AS feedback_candidate USING (candidate_id)
+         WHERE feedback_candidate.family = family_cohort.family)
+            AS feedback_opportunity_count,
+        (SELECT COUNT(DISTINCT intent.candidate_id)::INTEGER FROM intents AS intent
+         JOIN cohort AS conversion_candidate USING (candidate_id)
+         WHERE conversion_candidate.family = family_cohort.family)
+            AS conversion_opportunity_count,
+        (SELECT COUNT(*)::INTEGER FROM intents AS intent
+         JOIN cohort AS conversion_candidate USING (candidate_id)
+         WHERE conversion_candidate.family = family_cohort.family)
+            AS conversion_intent_count,
+        (SELECT COUNT(*)::INTEGER FROM current_outcomes AS outcome
+         JOIN cohort AS outcome_candidate USING (candidate_id)
+         WHERE outcome_candidate.family = family_cohort.family
+           AND outcome.status IN ('accepted', 'completed'))
+            AS downstream_accepted_count,
+        (SELECT COUNT(*)::INTEGER FROM current_outcomes AS outcome
+         JOIN cohort AS outcome_candidate USING (candidate_id)
+         WHERE outcome_candidate.family = family_cohort.family
+           AND outcome.status = 'rejected')
+            AS downstream_rejected_count,
+        (SELECT COUNT(*)::INTEGER FROM current_outcomes AS outcome
+         JOIN cohort AS outcome_candidate USING (candidate_id)
+         WHERE outcome_candidate.family = family_cohort.family
+           AND outcome.status IN ('not_reported', 'requested'))
+            AS downstream_uncertain_count
+    FROM cohort AS family_cohort
+    GROUP BY family
+),
 family_counts AS (
     SELECT family AS value, COUNT(*)::INTEGER AS count FROM cohort GROUP BY family
 ),
@@ -367,6 +477,9 @@ SELECT
      )) AS reconciled_submission_count,
     COALESCE((SELECT jsonb_object_agg(value, count) FROM family_counts), '{}'::JSONB)
         AS family_counts,
+    COALESCE((SELECT jsonb_agg(to_jsonb(family_effectiveness) ORDER BY family)
+              FROM family_effectiveness), '[]'::JSONB)
+        AS family_effectiveness,
     COALESCE((SELECT jsonb_object_agg(value, count) FROM score_band_counts), '{}'::JSONB)
         AS score_band_counts,
     COALESCE((SELECT jsonb_object_agg(value, count) FROM review_action_counts), '{}'::JSONB)

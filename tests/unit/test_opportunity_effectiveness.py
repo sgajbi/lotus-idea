@@ -179,6 +179,7 @@ def test_effectiveness_snapshot_produces_reproducible_source_safe_funnel_math() 
         OpportunityFamily.UNDERPERFORMANCE.value: 1,
         OpportunityFamily.CONCENTRATION.value: 1,
     }
+    _assert_family_effectiveness(first)
     assert _counts(first.score_band_counts) == {"critical": 1, "high": 1, "unranked": 1}
     assert _counts(first.latest_review_action_counts) == {
         ReviewAction.APPROVE_FOR_CONVERSION.value: 1,
@@ -300,6 +301,17 @@ def test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_
     assert projection.top_ranked_accepted_opportunity_count == 1
     assert projection.presentation_rate is not None
     assert projection.presentation_rate.to_payload() == {
+        "numerator": 1,
+        "denominator": 1,
+        "value": "1.000000",
+        "zeroDenominatorBehavior": "null",
+    }
+    assert len(projection.family_effectiveness) == 1
+    family_effectiveness = projection.family_effectiveness[0]
+    assert family_effectiveness.family is OpportunityFamily.HIGH_CASH
+    assert family_effectiveness.presented_opportunity_count == 1
+    assert family_effectiveness.presentation_rate is not None
+    assert family_effectiveness.presentation_rate.to_payload() == {
         "numerator": 1,
         "denominator": 1,
         "value": "1.000000",
@@ -997,6 +1009,36 @@ def _conversion_outcome(
         source_event_version=version,
         actor_subject="advise-sensitive-subject",
     )
+
+
+def _assert_family_effectiveness(snapshot: OpportunityEffectivenessSnapshot) -> None:
+    family_effectiveness = {item.family: item for item in snapshot.family_effectiveness}
+    high_cash = family_effectiveness[OpportunityFamily.HIGH_CASH]
+    assert high_cash.generated_opportunity_count == 1
+    assert high_cash.presented_opportunity_count is None
+    assert high_cash.presentation_rate is None
+    assert high_cash.reviewed_opportunity_count == 1
+    assert high_cash.approved_opportunity_count == 1
+    assert high_cash.feedback_opportunity_count == 1
+    assert high_cash.conversion_opportunity_count == 1
+    assert high_cash.downstream_accepted_count == 1
+    assert high_cash.review_rate.value == Decimal("1.000000")
+    assert high_cash.approval_rate.value == Decimal("1.000000")
+    assert high_cash.conversion_rate.value == Decimal("1.000000")
+    assert high_cash.downstream_accepted_rate.value == Decimal("1.000000")
+
+    concentration = family_effectiveness[OpportunityFamily.CONCENTRATION]
+    assert concentration.suppressed_opportunity_count == 1
+    assert concentration.duplicate_suppressed_opportunity_count == 1
+    assert concentration.suppression_rate.value == Decimal("1.000000")
+    assert concentration.duplicate_suppression_rate.value == Decimal("1.000000")
+    assert concentration.approval_rate.value == Decimal("0.000000")
+    assert concentration.conversion_rate.value is None
+
+    underperformance = family_effectiveness[OpportunityFamily.UNDERPERFORMANCE]
+    assert underperformance.rejected_opportunity_count == 1
+    assert underperformance.rejection_rate.value == Decimal("1.000000")
+    assert underperformance.feedback_rate.value == Decimal("1.000000")
 
 
 def _counts(items: tuple[EffectivenessDimensionCount, ...]) -> dict[str, int]:
