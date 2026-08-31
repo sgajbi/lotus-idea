@@ -608,6 +608,20 @@ PostgreSQL paths and surface only an aggregate readiness blocker. API
 `scorePolicyVersion` remains score provenance. These are internal bounded
 modules in the existing deployable, not a queue microservice.
 
+Production family scores are evidence-derived rather than family constants.
+Quantitative families translate source-reported threshold-relative magnitude
+into bounded materiality; bond maturity combines time-to-maturity urgency with
+source-reported affected-position count; allocation drift uses Manage
+workflow/lineage depth; and benchmark, risk-profile, suitability, and mandate
+families use explicit bounded source posture. Idea does not recalculate the
+upstream financial, performance, risk, suitability, or mandate facts. Every
+persisted score carries component input, weight, contribution, conflict
+penalty, reason codes, and policy version, and the scalar must exactly
+reconstruct from that breakdown. Candidate detail, signal, queue, and runtime
+evidence contracts expose the same provenance. Migration `021` explicitly
+marks known historical v1 scalar scores as `legacy_fixed_policy`; scalar-only,
+unknown-component, and unknown-policy payloads otherwise fail closed.
+
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 operator diagnostic for queue supportability. Durable PostgreSQL providers use
 a repository-side aggregate projection over `idea_candidate_record` for
