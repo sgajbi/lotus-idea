@@ -159,7 +159,8 @@
     1162,
     1168,
     1169,
-    1170
+    1170,
+    1178
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -566,6 +567,19 @@
       "No assertion or threshold was weakened",
       "no compatibility layer was added",
       "Report/Render/Archive materialization",
+      "final RFC-0002 closure"
+    ],
+    "1178": [
+      "Keep #1178 open and status/pr-open",
+      "PR #1179",
+      "evidence-derived family opportunity scoring",
+      "full typed score components",
+      "migration 021",
+      "99% combined coverage threshold",
+      "exact Idea main",
+      "wiki publication with strict DiffCount 0",
+      "No assertion or threshold may be weakened",
+      "no supported-feature promotion",
       "final RFC-0002 closure"
     ],
     "1162": [
