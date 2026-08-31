@@ -20,6 +20,7 @@ from app.domain import (
     ConversionPersistenceResult,
     InMemoryIdeaRepository,
     InvalidConversionOutcome,
+    ReviewAccessScope,
     SourceSystem,
     current_conversion_outcome,
     request_conversion_intent,
@@ -35,7 +36,15 @@ from tests.unit.test_conversion_governance import (
 
 def repository_with_conversion_intent() -> tuple[InMemoryIdeaRepository, str]:
     repository = InMemoryIdeaRepository()
-    source_candidate = candidate()
+    source_candidate = replace(
+        candidate(),
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-a",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+    )
     persisted = repository.persist_candidate(
         source_candidate,
         idempotency_key="candidate:conversion-outcome-workflow",

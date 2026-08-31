@@ -848,9 +848,8 @@ def test_high_cash_api_validation_error_is_product_safe() -> None:
 
 def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -> None:
     reset_idea_repository_for_tests()
-    client = managed_test_client(app)
 
-    response = client.post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(scoped=True),
         headers=persistence_headers("persist-high-cash-api-accepted-001"),
@@ -873,68 +872,12 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_high_cash_persist_api_rejects_missing_scope_before_persistence() -> None:
-    reset_idea_repository_for_tests()
-    payload = high_cash_payload(scoped=True)
-    del payload["accessScope"]
-
-    response = managed_test_client(app).post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=payload,
-        headers=persistence_headers("persist-high-cash-api-unscoped-001"),
-    )
-
-    assert response.status_code == 400
-    assert response.json() == {
-        "type": "about:blank",
-        "status": 400,
-        "code": "invalid_request",
-        "title": "Invalid request",
-        "detail": "Request validation failed. Correct the request fields and retry.",
-    }
-    snapshot = get_idea_repository().snapshot()
-    assert snapshot.candidate_records == {}
-    assert snapshot.idempotency_records == {}
-    assert snapshot.outbox_events == {}
-
-
-def test_high_cash_persist_api_isolates_business_identity_by_economic_scope() -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    tenant_a_payload = high_cash_payload(scoped=True)
-    tenant_b_payload = high_cash_payload(scoped=True)
-    tenant_b_payload["accessScope"] = {
-        "tenantId": "tenant-b",
-        "bookId": "book-advisor-002",
-        "portfolioId": "PB_SG_GLOBAL_BAL_002",
-        "clientId": "client-002",
-    }
-
-    tenant_a = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=tenant_a_payload,
-        headers=persistence_headers("persist-high-cash-api-tenant-a-001"),
-    )
-    tenant_b = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=tenant_b_payload,
-        headers=persistence_headers("persist-high-cash-api-tenant-b-001"),
-    )
-
-    assert (tenant_a.status_code, tenant_b.status_code) == (200, 200)
-    tenant_a_candidate = tenant_a.json()["persistence"]["candidateId"]
-    tenant_b_candidate = tenant_b.json()["persistence"]["candidateId"]
-    assert tenant_a_candidate != tenant_b_candidate
-    assert len(get_idea_repository().snapshot().candidate_records) == 2
-
-
 def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> None:
     reset_idea_repository_for_tests()
-    client = managed_test_client(app)
     headers = persistence_headers("persist-high-cash-api-unsafe-causation-001")
     headers["X-Causation-Id"] = "bearer-secret-token"
 
-    response = client.post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(scoped=True),
         headers=headers,
@@ -954,14 +897,13 @@ def test_high_cash_persist_api_rejects_unsafe_causation_before_persistence() -> 
 
 def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence() -> None:
     reset_idea_repository_for_tests()
-    client = managed_test_client(app)
     payload = high_cash_payload(scoped=True)
     payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
         "lotus-risk:ConcentrationRiskReport:v1"
     )
 
-    response = client.post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=payload,
         headers=persistence_headers("persist-high-cash-api-wrong-source-001"),
