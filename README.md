@@ -156,15 +156,16 @@ docker compose up -d --build
 Invoke-RestMethod http://127.0.0.1:8330/health/ready
 ```
 
-The app-owned Compose stack provisions PostgreSQL 18 on host port `55433`,
-persists it in a named volume, applies only pending checksum-verified migrations,
-and starts the API after migration success. The `worker` profile uses the same
-database. This is local runtime evidence, not production deployment, Workbench,
-data-product, client-publication, or supported-feature proof. Post-merge Main
-Releasability is the only registry-publish path: it builds the image under the Git commit SHA,
-pushes it to GHCR, records the registry digest in `release-evidence.json`,
-generates the runtime-dependency SBOM, passes the Trivy image scan, signs the
-digest with keyless Cosign, and publishes provenance and SBOM attestations.
+No bootstrap file is required: safe defaults are explicit in `docker-compose.yml`.
+An ignored `.env` file or shell variables may override them for another topology.
+
+The app-owned stack provisions PostgreSQL 18 on host port `55433`, persists it
+in a named volume, applies pending checksum-verified migrations, and then starts
+the API. Its `worker` profile uses the same database. This is local runtime
+evidence—not production deployment, Workbench, data-product, client-publication,
+or supported-feature proof. Only post-merge Main Releasability publishes the
+Git-SHA image to GHCR, records its digest, generates its runtime-dependency SBOM,
+scans and signs it, and publishes provenance and SBOM attestations.
 
 ## Validation And CI Lanes
 

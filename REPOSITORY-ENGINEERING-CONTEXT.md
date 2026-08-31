@@ -2276,8 +2276,11 @@ PostgreSQL 18, mounts the named volume at the major-version-supported
 API/optional worker roles against one explicit database URL. Local migration
 history is pending-only, advisory-lock serialized, transactional, and bound to
 version/name/content checksums so repeated Compose startup is safe and drift
-fails closed. Direct `uvicorn` without a database remains an explicitly
-ephemeral local/test path. Canonical Workbench automation consumes this app
+fails closed. Safe local settings are explicit in the Compose contract; no
+untracked bootstrap file is required, optional ignored `.env` values may
+override them, and `make compose-config-gate` resolves both API and worker
+profiles before image build. Direct `uvicorn` without a database remains an
+explicitly ephemeral local/test path. Canonical Workbench automation consumes this app
 contract and must not replace its persistence or migration ownership.
 
 Deployment migrations are a separate production-like control. Use
