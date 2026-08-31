@@ -7,11 +7,13 @@ from typing import Mapping, cast
 
 from app.domain import (
     DEFAULT_REVIEW_QUEUE_POLICY,
+    CandidatePersistenceRecord,
     IdeaRepositorySnapshot,
     QueueExclusion,
     QueueExclusionReason,
     QueueAccessScopeFilter,
     QueueSnooze,
+    ReviewAction,
     ReviewQueueSnapshotTokenRequiredError,
     ReviewQueueItem,
     ReviewQueueAudience,
@@ -41,7 +43,6 @@ MAX_REVIEW_QUEUE_PAGE_LIMIT = 100
 class BuildReviewQueueFromRepositoryCommand:
     evaluated_at_utc: datetime
     audience: ReviewQueueAudience = ReviewQueueAudience.ADVISOR
-    snoozes: tuple[QueueSnooze, ...] = ()
     access_scope_filter: QueueAccessScopeFilter | None = None
     limit: int = DEFAULT_REVIEW_QUEUE_PAGE_LIMIT
     offset: int = 0
@@ -64,7 +65,6 @@ class BuildReviewQueueFromRepositoryCommand:
             raise ReviewQueueSnapshotTokenRequiredError(
                 "snapshot_token is required when offset is greater than zero"
             )
-        object.__setattr__(self, "snoozes", tuple(self.snoozes))
 
 
 @dataclass(frozen=True)
@@ -144,7 +144,7 @@ def build_review_queue_from_repository(
     repository: CandidateSnapshotRepository,
     policy: ReviewQueuePolicy = DEFAULT_REVIEW_QUEUE_POLICY,
 ) -> ReviewQueuePage:
-    if not command.snoozes and isinstance(repository, ReviewQueueProjectionRepository):
+    if isinstance(repository, ReviewQueueProjectionRepository):
         repository_page = repository.review_queue_candidate_page(
             evaluated_at_utc=command.evaluated_at_utc,
             audience=command.audience,
@@ -176,7 +176,7 @@ def build_review_queue_readiness_snapshot(
         repository,
         ReviewQueueReadinessProjectionRepository,
     )
-    if repository_side_pagination_certified and not command.snoozes:
+    if repository_side_pagination_certified:
         readiness_repository = cast(ReviewQueueReadinessProjectionRepository, repository)
         readiness_summary = readiness_repository.review_queue_readiness_summary(
             evaluated_at_utc=command.evaluated_at_utc,
@@ -348,12 +348,16 @@ def _build_review_queue_from_snapshot(
         evaluated_at_utc=command.evaluated_at_utc,
     )
     candidates = tuple(record.candidate for record in visible_records)
+    snoozes = _active_snoozes(
+        visible_records,
+        evaluated_at_utc=command.evaluated_at_utc,
+    )
     queue = build_review_queue(
         candidates,
         audience=command.audience,
         policy=policy,
         evaluated_at_utc=command.evaluated_at_utc,
-        snoozes=command.snoozes,
+        snoozes=snoozes,
         access_scope_filter=command.access_scope_filter,
     )
     snapshot_identity = build_review_queue_snapshot_identity(
@@ -363,13 +367,55 @@ def _build_review_queue_from_snapshot(
         policy_version=queue.policy_version,
         rankable_score_policy_versions=policy.rankable_score_policy_versions,
         access_scope_filter=command.access_scope_filter,
-        snoozes=command.snoozes,
+        snoozes=snoozes,
     )
     require_matching_review_queue_snapshot(
         expected_token=command.snapshot_token,
         actual_token=snapshot_identity.token,
     )
     return queue, snapshot_identity.token
+
+
+def _active_snoozes(
+    records: tuple[CandidatePersistenceRecord, ...],
+    *,
+    evaluated_at_utc: datetime,
+) -> tuple[QueueSnooze, ...]:
+    active: list[QueueSnooze] = []
+    for record in records:
+        material_version = record.candidate.identity.material_version
+        material_started_at = min(
+            (
+                entry.recorded_at_utc
+                for entry in record.version_history
+                if entry.material_version == material_version
+            ),
+            default=record.candidate.created_at_utc,
+        )
+        applicable = tuple(
+            decision
+            for decision in record.review_decisions
+            if material_started_at <= decision.decided_at_utc <= evaluated_at_utc
+        )
+        if not applicable:
+            continue
+        latest = max(
+            applicable,
+            key=lambda decision: (decision.decided_at_utc, decision.review_id),
+        )
+        if (
+            latest.action is ReviewAction.SNOOZE
+            and latest.snoozed_until_utc is not None
+            and latest.snoozed_until_utc > evaluated_at_utc
+        ):
+            active.append(
+                QueueSnooze(
+                    candidate_id=record.candidate.candidate_id,
+                    snoozed_until_utc=latest.snoozed_until_utc,
+                    reason_codes=latest.reason_codes,
+                )
+            )
+    return tuple(active)
 
 
 def _page_review_queue(

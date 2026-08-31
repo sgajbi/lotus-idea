@@ -12,11 +12,17 @@ from app.domain import (
     IdeaLifecycleStatus,
     QueueExclusionReason,
     QueueAccessScopeFilter,
+    ReasonCode,
     ReviewQueueAudience,
     ReviewQueueSnapshotConflictError,
     ReviewAccessScope,
+    ReviewAction,
+    ReviewActorContext,
+    ReviewActorRole,
+    ReviewDecisionCommand,
     ReviewPosture,
     UnsupportedEvidenceReason,
+    apply_review_action,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_review_queue import (
@@ -38,6 +44,91 @@ QUEUE_EVALUATED_AT = EVALUATED_AT + timedelta(days=1)
 QUEUE_POLICY_VERSION = "idea-deterministic-ranking-v1"
 QUEUE_AUDIENCE = ReviewQueueAudience.ADVISOR
 RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v2",)
+
+
+def test_postgres_review_queue_enforces_persisted_snooze_until_exact_boundary() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = queue_candidate(index=1, candidate_scope=access_scope())
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:snooze-001",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    before = repository.review_queue_candidate_page(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    scope = access_scope()
+    snoozed_until = QUEUE_EVALUATED_AT + timedelta(hours=1)
+    review = apply_review_action(
+        candidate,
+        ReviewDecisionCommand(
+            review_id="review-snooze-001",
+            action=ReviewAction.SNOOZE,
+            actor=ReviewActorContext(
+                actor_subject="advisor-001",
+                role=ReviewActorRole.ADVISOR,
+                tenant_ids=frozenset({scope.tenant_id}),
+                book_ids=frozenset({scope.book_id}),
+                portfolio_ids=frozenset({scope.portfolio_id}),
+                client_ids=frozenset({scope.client_id}),
+            ),
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            decided_at_utc=EVALUATED_AT + timedelta(minutes=5),
+            snoozed_until_utc=snoozed_until,
+        ),
+    )
+    repository.record_review_action(
+        review,
+        idempotency_key="review-action:snooze:001",
+        payload={"reviewId": review.decision.review_id},
+    )
+
+    hidden = repository.review_queue_candidate_page(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+    )
+
+    assert hidden.candidate_records == ()
+    assert hidden.total_reviewable_item_count == 0
+    assert hidden.total_excluded_candidate_count == 1
+    assert readiness.exclusion_counts[QueueExclusionReason.SNOOZED.value] == 1
+    assert hidden.snapshot_token != before.snapshot_token
+
+    awakened = repository.review_queue_candidate_page(
+        evaluated_at_utc=snoozed_until,
+        audience=QUEUE_AUDIENCE,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    assert [record.candidate.candidate_id for record in awakened.candidate_records] == [
+        candidate.candidate_id
+    ]
 
 
 def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection() -> None:
@@ -414,7 +505,7 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
 def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> None:
     query = _review_queue_readiness_summary_query("FALSE")
 
-    assert query.count("%s") == 9
+    assert query.count("%s") == 12
     assert "WITH base AS" in query
     assert "classified AS" in query
     assert "duplicate_counts AS" in query
@@ -424,6 +515,7 @@ def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> No
     classification_order = (
         QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
         QueueExclusionReason.INVALID_STATE,
+        QueueExclusionReason.SNOOZED,
         QueueExclusionReason.SUPPRESSED,
         QueueExclusionReason.EXPIRED,
         QueueExclusionReason.CLOSED,
@@ -435,7 +527,7 @@ def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> No
     )
     reason_positions = [query.index(f"THEN '{reason.value}'") for reason in classification_order]
     assert reason_positions == sorted(reason_positions)
-    assert "(0)::integer AS snoozed" in query
+    assert "WHERE exclusion_reason = 'snoozed'" in query
     assert "(SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate" in query
 
 
@@ -490,11 +582,13 @@ def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     )
 
     assert params[0] == QUEUE_EVALUATED_AT
-    assert params[1] == ReviewPosture.ADVISOR_REVIEW_REQUIRED.value
-    assert isinstance(params[2], list)
-    assert params[4] == ["idle-liquidity-v2"]
-    assert isinstance(params[6], list)
-    assert params[6] == ["portfolio-001"]
+    assert params[1] == QUEUE_EVALUATED_AT
+    assert params[2] == ReviewPosture.ADVISOR_REVIEW_REQUIRED.value
+    assert isinstance(params[3], list)
+    assert params[5] == ReviewAction.SNOOZE.value
+    assert params[6] == QUEUE_EVALUATED_AT
+    assert params[7] == ["idle-liquidity-v2"]
+    assert params[9] == ["portfolio-001"]
 
 
 def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes() -> None:
@@ -523,7 +617,7 @@ def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes()
         predicate_sql.index(f"->>'{field_name}'")
         for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
     )
-    assert params[6:] == (
+    assert params[9:] == (
         ["tenant-001"],
         ["book-001"],
         ["portfolio-001"],
