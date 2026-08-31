@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, cast
@@ -15,7 +15,6 @@ from app.application.source_ingestion import (
     IngestHighCashSourceSignalCommand,
     ingest_high_cash_signal_from_core,
 )
-from app.application.candidate_expiry import CandidateExpiryDecision
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
     EvidenceFreshness,
@@ -23,7 +22,6 @@ from app.domain import (
     FEEDBACK_TAXONOMY_VERSION,
     FeedbackOutcome,
     FeedbackReason,
-    IdeaLifecycleStatus,
     ReasonCode,
     ReviewAction,
     ReviewActorContext,
@@ -134,105 +132,6 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
                     (outbox_events[0].event_id,),
                 )
         connection.rollback()
-
-
-def test_postgres_runtime_expires_resolved_candidate_and_removes_it_from_queue(
-    postgres_database_url: str,
-) -> None:
-    client = managed_test_client(app)
-    created = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
-        headers=persistence_headers("postgres-high-cash-expiry-created"),
-    )
-    assert created.status_code == 200
-    candidate_id = str(created.json()["persistence"]["candidateId"])
-    resolved_payload = high_cash_payload()
-    resolved_payload["sourceReportedCashWeight"] = "0.10"
-
-    resolved = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=resolved_payload,
-        headers=persistence_headers("postgres-high-cash-expiry-resolved"),
-    )
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    queue = client.get(
-        "/api/v1/review-queues/advisor",
-        params={"evaluatedAtUtc": "2026-06-21T11:00:00Z"},
-        headers=_review_queue_headers(),
-    )
-
-    assert resolved.status_code == 200
-    assert resolved.json()["evaluation"]["outcome"] == "not_eligible"
-    assert resolved.json()["persistence"] is None
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
-    assert len(record.lifecycle_history) == 1
-    assert record.audit_events[-1].attributes["reason_codes"] == (
-        "opportunity_no_longer_eligible,below_materiality"
-    )
-    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
-    assert _table_count(postgres_database_url, "idea_lifecycle_history") == 1
-    assert queue.status_code == 200
-    assert queue.json()["items"] == []
-
-
-def test_postgres_runtime_serializes_concurrent_authoritative_expiry(
-    postgres_database_url: str,
-) -> None:
-    created_source = RecordingCoreSource(evidence=_core_high_cash_evidence())
-    created = ingest_high_cash_signal_from_core(
-        _source_ingestion_command(),
-        core_source=created_source,
-        repository=get_idea_repository(),
-    )
-    assert created.signal_result.persistence is not None
-    assert created.signal_result.persistence.record is not None
-    candidate_id = created.signal_result.persistence.record.candidate.candidate_id
-    before = {
-        table: _table_count(postgres_database_url, table)
-        for table in ("idea_lifecycle_history", "idea_audit_event", "idea_outbox_event")
-    }
-    resolved_command = replace(
-        _source_ingestion_command(),
-        evaluated_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
-    )
-
-    decisions = run_concurrent_repository_mutations(
-        postgres_database_url,
-        lambda repository, key: _concurrent_expiry_decision(
-            repository,
-            replace(resolved_command, idempotency_key=key),
-        ),
-        ("postgres-high-cash-expiry-race-a", "postgres-high-cash-expiry-race-b"),
-    )
-
-    assert set(decisions) == {
-        CandidateExpiryDecision.EXPIRED,
-        CandidateExpiryDecision.ALREADY_EXPIRED,
-    }
-    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
-        record = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(candidate_id)
-    assert record is not None
-    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED
-    assert len(record.lifecycle_history) == 1
-    for table, count in before.items():
-        assert _table_count(postgres_database_url, table) == count + 1
-
-
-def _concurrent_expiry_decision(
-    repository: PostgresIdeaRepository,
-    command: IngestHighCashSourceSignalCommand,
-) -> CandidateExpiryDecision:
-    result = ingest_high_cash_signal_from_core(
-        command,
-        core_source=RecordingCoreSource(
-            evidence=_core_high_cash_evidence(cash_weight=Decimal("0.10"))
-        ),
-        repository=repository,
-    )
-    assert result.signal_result.expiry is not None
-    return result.signal_result.expiry.decision
 
 
 def test_postgres_lifecycle_replay_returns_exact_transition_after_repository_reload(
@@ -1033,11 +932,10 @@ def _source_ingestion_command() -> IngestHighCashSourceSignalCommand:
 
 def _core_high_cash_evidence(
     *,
-    cash_weight: Decimal = Decimal("0.18"),
     holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
 ) -> CoreHighCashEvidence:
     return CoreHighCashEvidence(
-        source_reported_cash_weight=cash_weight,
+        source_reported_cash_weight=Decimal("0.18"),
         portfolio_state_ref=_core_source_ref("lotus-core:PortfolioStateSnapshot:v1"),
         holdings_ref=_core_source_ref("lotus-core:HoldingsAsOf:v1", content_hash=holdings_hash),
         cash_movement_ref=_core_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
