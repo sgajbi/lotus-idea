@@ -548,8 +548,36 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
                             "reviewPosture": "advisor_review_required",
                             "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
                             "supportability": "ready",
-                            "score": "82",
-                            "scorePolicyVersion": "idle-liquidity-v1",
+                            "score": "82.50",
+                            "scorePolicyVersion": "idle-liquidity-v2",
+                            "scoreReasonCodes": [
+                                "high_cash_ratio",
+                                "review_required",
+                                "materiality_score",
+                                "evidence_quality_score",
+                                "freshness_score",
+                            ],
+                            "scoreComponents": [
+                                {
+                                    "component": "materiality",
+                                    "inputScore": "75.00",
+                                    "weight": "0.70",
+                                    "contribution": "52.50",
+                                },
+                                {
+                                    "component": "evidence_quality",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                                {
+                                    "component": "freshness",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                            ],
+                            "scoreConflictPenaltyApplied": "0",
                             "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {
@@ -612,8 +640,36 @@ HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
                             "reviewPosture": "advisor_review_required",
                             "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
                             "supportability": "ready",
-                            "score": "82",
-                            "scorePolicyVersion": "idle-liquidity-v1",
+                            "score": "82.50",
+                            "scorePolicyVersion": "idle-liquidity-v2",
+                            "scoreReasonCodes": [
+                                "high_cash_ratio",
+                                "review_required",
+                                "materiality_score",
+                                "evidence_quality_score",
+                                "freshness_score",
+                            ],
+                            "scoreComponents": [
+                                {
+                                    "component": "materiality",
+                                    "inputScore": "75.00",
+                                    "weight": "0.70",
+                                    "contribution": "52.50",
+                                },
+                                {
+                                    "component": "evidence_quality",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                                {
+                                    "component": "freshness",
+                                    "inputScore": "100",
+                                    "weight": "0.15",
+                                    "contribution": "15.00",
+                                },
+                            ],
+                            "scoreConflictPenaltyApplied": "0",
                             "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {
@@ -679,7 +735,7 @@ MANDATE_RESTRICTION_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_mandate_restriction_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "66",
-                            "scorePolicyVersion": "mandate-restriction-review-v1",
+                            "scorePolicyVersion": "mandate-restriction-review-v2",
                             "sourceSignalIds": ["signal_mandate_restriction_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {
@@ -772,8 +828,36 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
                                 "reviewPosture": "advisor_review_required",
                                 "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
                                 "supportability": "ready",
-                                "score": "82",
-                                "scorePolicyVersion": "idle-liquidity-v1",
+                                "score": "82.50",
+                                "scorePolicyVersion": "idle-liquidity-v2",
+                                "scoreReasonCodes": [
+                                    "high_cash_ratio",
+                                    "review_required",
+                                    "materiality_score",
+                                    "evidence_quality_score",
+                                    "freshness_score",
+                                ],
+                                "scoreComponents": [
+                                    {
+                                        "component": "materiality",
+                                        "inputScore": "75.00",
+                                        "weight": "0.70",
+                                        "contribution": "52.50",
+                                    },
+                                    {
+                                        "component": "evidence_quality",
+                                        "inputScore": "100",
+                                        "weight": "0.15",
+                                        "contribution": "15.00",
+                                    },
+                                    {
+                                        "component": "freshness",
+                                        "inputScore": "100",
+                                        "weight": "0.15",
+                                        "contribution": "15.00",
+                                    },
+                                ],
+                                "scoreConflictPenaltyApplied": "0",
                                 "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
                                 "sourceRefs": [
                                     {

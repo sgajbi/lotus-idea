@@ -19,6 +19,12 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringPolicy,
+    current_complete_materiality_inputs,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -155,11 +161,7 @@ def _candidate_result(inputs: _HighVolatilityCandidateInputs) -> SignalEvaluatio
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=inputs.policy.policy_version,
-            score=inputs.policy.candidate_score,
-            reason_codes=(ReasonCode.VOLATILITY_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_high_volatility_score(inputs),
         access_scope=inputs.source_input.access_scope,
         created_at_utc=inputs.source_input.evaluated_at_utc,
         updated_at_utc=inputs.source_input.evaluated_at_utc,
@@ -170,6 +172,19 @@ def _candidate_result(inputs: _HighVolatilityCandidateInputs) -> SignalEvaluatio
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _high_volatility_score(inputs: _HighVolatilityCandidateInputs) -> IdeaScore:
+    volatility = inputs.source_input.source_reported_volatility
+    if volatility is None:
+        raise ValueError("eligible high-volatility scoring requires source_reported_volatility")
+    return score_inputs(
+        current_complete_materiality_inputs(
+            relative_threshold_score(volatility, inputs.policy.volatility_threshold)
+        ),
+        policy=IdeaScoringPolicy(policy_version=inputs.policy.policy_version),
+        reason_codes=(ReasonCode.VOLATILITY_ATTENTION, ReasonCode.REVIEW_REQUIRED),
     )
 
 

@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
@@ -34,7 +35,6 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
-    IdeaScore,
     InvalidAIExplanationRequest,
     InvalidAIWorkflowPack,
     InvalidAIWorkflowOutput,
@@ -123,7 +123,7 @@ def candidate(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet(supportability=supportability),
         source_signal_ids=("signal-ai-001", "signal-ai-002"),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("84"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.QUEUE_PRIORITY),
@@ -203,6 +203,9 @@ def test_ai_request_redacts_source_routes_and_raw_source_hashes() -> None:
     assert request.redacted_evidence.evidence_packet_id == "iep_ai_test"
     assert request.redacted_evidence.evidence_content_hash == "sha256:ai-redacted-evidence"
     assert request.redacted_evidence.source_signal_count == 2
+    assert source_candidate.score is not None
+    assert request.redacted_evidence.score_contributions == source_candidate.score.contributions
+    assert request.redacted_evidence.score_conflict_penalty_applied == Decimal("0")
     assert request.reason_codes == (ReasonCode.AI_REDACTION_APPLIED,)
     assert request.redacted_evidence.source_refs[0].product_id == (
         "lotus-core:PortfolioStateSnapshot:v1"
@@ -211,6 +214,16 @@ def test_ai_request_redacts_source_routes_and_raw_source_hashes() -> None:
     assert not hasattr(request.redacted_evidence.source_refs[0], "content_hash")
     assert source_candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW
     assert source_candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
+
+
+def test_redacted_ai_evidence_rejects_partial_score_provenance() -> None:
+    redacted = RedactedIdeaEvidence.from_candidate(candidate())
+
+    with pytest.raises(
+        ValueError,
+        match="score policy, scalar, contributions, and conflict penalty must be provided together",
+    ):
+        replace(redacted, score_contributions=())
 
 
 def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:

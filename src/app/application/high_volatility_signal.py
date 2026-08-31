@@ -74,7 +74,6 @@ class _HighVolatilitySourceEvaluation:
 DEFAULT_HIGH_VOLATILITY_POLICY = HighVolatilitySignalPolicy(
     policy_version=CandidateScorePolicyVersion.HIGH_VOLATILITY.value,
     volatility_threshold=Decimal("12.00"),
-    candidate_score=Decimal("72"),
 )
 
 

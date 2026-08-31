@@ -67,7 +67,12 @@ def test_concentration_risk_signal_api_returns_review_candidate() -> None:
     assert payload["sourceAuthority"] == "lotus-risk"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "concentration-attention-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "concentration-attention-v2"
+    assert [component["component"] for component in payload["candidate"]["scoreComponents"]] == [
+        "materiality",
+        "evidence_quality",
+        "freshness",
+    ]
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-risk:ConcentrationRiskReport:v1"
     }
@@ -302,7 +307,7 @@ def test_concentration_risk_signal_from_source_api_returns_review_candidate(
     assert payload["family"] == "concentration"
     assert payload["sourceAuthority"] == "lotus-risk"
     assert payload["supportedFeaturePromoted"] is False
-    assert payload["candidate"]["scorePolicyVersion"] == "concentration-attention-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "concentration-attention-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-risk:ConcentrationRiskReport:v1"
     }

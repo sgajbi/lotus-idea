@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
@@ -29,7 +30,6 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
-    IdeaScore,
     InMemoryIdeaRepository,
     LineageRef,
     OpportunityFamily,
@@ -92,7 +92,7 @@ def review_candidate(candidate_id: str = "idea-review-001") -> IdeaCandidate:
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=("signal-review-workflow-001",),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("82"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),

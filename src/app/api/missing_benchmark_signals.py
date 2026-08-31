@@ -296,7 +296,7 @@ MISSING_BENCHMARK_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_missing_benchmark_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "68",
-                            "scorePolicyVersion": "missing-benchmark-review-v1",
+                            "scorePolicyVersion": "missing-benchmark-review-v2",
                             "sourceSignalIds": ["signal_missing_benchmark_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {
@@ -356,7 +356,7 @@ MISSING_BENCHMARK_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_missing_benchmark_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "68",
-                            "scorePolicyVersion": "missing-benchmark-review-v1",
+                            "scorePolicyVersion": "missing-benchmark-review-v2",
                             "sourceSignalIds": ["signal_missing_benchmark_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

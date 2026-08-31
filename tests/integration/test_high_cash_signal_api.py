@@ -568,7 +568,13 @@ def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
     assert payload["sourceAuthority"] == "lotus-core"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["family"] == "high_cash"
-    assert payload["candidate"]["scorePolicyVersion"] == "idle-liquidity-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "idle-liquidity-v2"
+    assert payload["candidate"]["score"] == "82.50"
+    assert [component["component"] for component in payload["candidate"]["scoreComponents"]] == [
+        "materiality",
+        "evidence_quality",
+        "freshness",
+    ]
     assert payload["candidate"]["sourceRefs"][0] == {
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "sourceSystem": "lotus-core",

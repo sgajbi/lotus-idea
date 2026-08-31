@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 from app.application.downstream_realization import (
     DownstreamRealizationStatus,
@@ -26,7 +27,6 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
-    IdeaScore,
     InMemoryIdeaRepository,
     LineageRef,
     OpportunityFamily,
@@ -727,7 +727,7 @@ def candidate() -> IdeaCandidate:
             created_at_utc=EVALUATED_AT,
         ),
         source_signal_ids=("signal-downstream-001",),
-        score=IdeaScore(
+        score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("88"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),

@@ -29,9 +29,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> LowIncomeSignalPolicy:
     return LowIncomeSignalPolicy(
-        policy_version="cashflow-liquidity-review-v1",
+        policy_version="cashflow-liquidity-review-v2",
         projected_cumulative_cashflow_threshold=Decimal("-10000"),
-        candidate_score=Decimal("68"),
     )
 
 
@@ -100,6 +99,19 @@ def test_low_income_positive_case_creates_review_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED)
+
+
+def test_low_income_score_increases_with_projected_cashflow_shortfall() -> None:
+    boundary = evaluate_low_income_signal(
+        low_income_input(min_projected_cumulative_cashflow=Decimal("-10000")), policy()
+    )
+    severe = evaluate_low_income_signal(
+        low_income_input(min_projected_cumulative_cashflow=Decimal("-30000")), policy()
+    )
+
+    assert boundary.candidate is not None and boundary.candidate.score is not None
+    assert severe.candidate is not None and severe.candidate.score is not None
+    assert severe.candidate.score.score > boundary.candidate.score.score
 
 
 def test_low_income_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -255,12 +267,14 @@ def test_low_income_requires_timezone_aware_evaluation_time() -> None:
         )
 
 
-def test_low_income_policy_rejects_positive_shortfall_threshold() -> None:
+@pytest.mark.parametrize("threshold", [Decimal("0"), Decimal("1")])
+def test_low_income_policy_rejects_non_negative_shortfall_threshold(
+    threshold: Decimal,
+) -> None:
     with pytest.raises(ValueError, match="projected_cumulative_cashflow_threshold"):
         LowIncomeSignalPolicy(
-            policy_version="cashflow-liquidity-review-v1",
-            projected_cumulative_cashflow_threshold=Decimal("1"),
-            candidate_score=Decimal("68"),
+            policy_version="cashflow-liquidity-review-v2",
+            projected_cumulative_cashflow_threshold=threshold,
         )
 
 
@@ -269,14 +283,4 @@ def test_low_income_policy_requires_policy_version() -> None:
         LowIncomeSignalPolicy(
             policy_version=" ",
             projected_cumulative_cashflow_threshold=Decimal("-10000"),
-            candidate_score=Decimal("68"),
-        )
-
-
-def test_low_income_policy_rejects_out_of_range_score() -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        LowIncomeSignalPolicy(
-            policy_version="cashflow-liquidity-review-v1",
-            projected_cumulative_cashflow_threshold=Decimal("-10000"),
-            candidate_score=Decimal("101"),
         )

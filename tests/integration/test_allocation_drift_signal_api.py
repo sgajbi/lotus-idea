@@ -66,7 +66,7 @@ def test_allocation_drift_signal_api_returns_pm_review_candidate() -> None:
     assert payload["sourceAuthority"] == "lotus-manage"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "pm_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "allocation-drift-mandate-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "allocation-drift-mandate-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-manage:PortfolioActionRegister:v1"
     }
@@ -288,7 +288,7 @@ def test_allocation_drift_signal_from_source_api_returns_pm_review_candidate(
     assert payload["family"] == "allocation_drift"
     assert payload["sourceAuthority"] == "lotus-manage"
     assert payload["supportedFeaturePromoted"] is False
-    assert payload["candidate"]["scorePolicyVersion"] == "allocation-drift-mandate-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "allocation-drift-mandate-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-manage:PortfolioActionRegister:v1",
         "lotus-performance:MandatePerformanceHealthContext:v1",

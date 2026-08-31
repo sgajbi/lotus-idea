@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 
@@ -29,9 +28,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> MissingSuitabilityContextSignalPolicy:
     return MissingSuitabilityContextSignalPolicy(
-        policy_version="missing-suitability-context-review-v1",
+        policy_version="missing-suitability-context-review-v2",
         minimum_open_requirement_count=1,
-        candidate_score=Decimal("68"),
     )
 
 
@@ -91,6 +89,22 @@ def test_missing_suitability_context_creates_compliance_review_candidate() -> No
         ReasonCode.SUITABILITY_CONTEXT_MISSING,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_missing_suitability_score_reflects_requirement_and_blocker_posture() -> None:
+    pending = evaluate_missing_suitability_context_signal(
+        suitability_input(
+            open_requirement_count=1,
+            blocked_requirement_count=0,
+            sign_off_blocker_count=0,
+        ),
+        policy(),
+    )
+    blocked = evaluate_missing_suitability_context_signal(suitability_input(), policy())
+
+    assert pending.candidate is not None and pending.candidate.score is not None
+    assert blocked.candidate is not None and blocked.candidate.score is not None
+    assert blocked.candidate.score.score > pending.candidate.score.score
 
 
 def test_missing_suitability_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -238,34 +252,25 @@ def test_missing_suitability_context_rejects_negative_counts_and_naive_time() ->
 
 
 @pytest.mark.parametrize(
-    ("policy_version", "minimum_open_requirement_count", "candidate_score", "message"),
+    ("policy_version", "minimum_open_requirement_count", "message"),
     [
-        (" ", 1, Decimal("68"), "policy_version is required"),
+        (" ", 1, "policy_version is required"),
         (
-            "missing-suitability-context-review-v1",
+            "missing-suitability-context-review-v2",
             -1,
-            Decimal("68"),
             "minimum_open_requirement_count must be non-negative",
-        ),
-        (
-            "missing-suitability-context-review-v1",
-            1,
-            Decimal("101"),
-            "candidate_score must be between 0 and 100",
         ),
     ],
 )
 def test_missing_suitability_policy_rejects_invalid_configuration(
     policy_version: str,
     minimum_open_requirement_count: int,
-    candidate_score: Decimal,
     message: str,
 ) -> None:
     with pytest.raises(ValueError, match=message):
         MissingSuitabilityContextSignalPolicy(
             policy_version=policy_version,
             minimum_open_requirement_count=minimum_open_requirement_count,
-            candidate_score=candidate_score,
         )
 
 

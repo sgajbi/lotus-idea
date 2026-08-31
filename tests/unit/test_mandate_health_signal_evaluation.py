@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
 
 import pytest
 
@@ -28,10 +27,9 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> MandateHealthSignalPolicy:
     return MandateHealthSignalPolicy(
-        policy_version="allocation-drift-mandate-review-v1",
+        policy_version="allocation-drift-mandate-review-v2",
         minimum_workflow_decision_count=1,
         minimum_lineage_edge_count=1,
-        candidate_score=Decimal("70"),
     )
 
 
@@ -112,6 +110,19 @@ def test_mandate_health_positive_case_creates_pm_review_candidate() -> None:
         ReasonCode.ALLOCATION_DRIFT_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_mandate_health_score_increases_with_supported_workflow_and_lineage_depth() -> None:
+    boundary = evaluate_mandate_health_signal(
+        mandate_input(workflow_decision_count=1, lineage_edge_count=1), policy()
+    )
+    extensive = evaluate_mandate_health_signal(
+        mandate_input(workflow_decision_count=3, lineage_edge_count=4), policy()
+    )
+
+    assert boundary.candidate is not None and boundary.candidate.score is not None
+    assert extensive.candidate is not None and extensive.candidate.score is not None
+    assert extensive.candidate.score.score > boundary.candidate.score.score
 
 
 def test_mandate_health_preserves_source_owned_performance_and_risk_refs() -> None:
@@ -324,18 +335,16 @@ def test_mandate_health_requires_timezone_aware_evaluation_time() -> None:
 def test_mandate_health_policy_rejects_negative_threshold() -> None:
     with pytest.raises(ValueError, match="minimum_workflow_decision_count"):
         MandateHealthSignalPolicy(
-            policy_version="allocation-drift-mandate-review-v1",
+            policy_version="allocation-drift-mandate-review-v2",
             minimum_workflow_decision_count=-1,
             minimum_lineage_edge_count=1,
-            candidate_score=Decimal("70"),
         )
 
     with pytest.raises(ValueError, match="minimum_lineage_edge_count"):
         MandateHealthSignalPolicy(
-            policy_version="allocation-drift-mandate-review-v1",
+            policy_version="allocation-drift-mandate-review-v2",
             minimum_workflow_decision_count=1,
             minimum_lineage_edge_count=-1,
-            candidate_score=Decimal("70"),
         )
 
 
@@ -345,16 +354,4 @@ def test_mandate_health_policy_requires_version() -> None:
             policy_version=" ",
             minimum_workflow_decision_count=1,
             minimum_lineage_edge_count=1,
-            candidate_score=Decimal("70"),
-        )
-
-
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_mandate_health_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score"):
-        MandateHealthSignalPolicy(
-            policy_version="allocation-drift-mandate-review-v1",
-            minimum_workflow_decision_count=1,
-            minimum_lineage_edge_count=1,
-            candidate_score=score,
         )

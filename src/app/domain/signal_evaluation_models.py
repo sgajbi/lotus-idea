@@ -26,15 +26,12 @@ class SignalEvaluationOutcome(StrEnum):
 class HighCashSignalPolicy:
     policy_version: str
     cash_weight_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.cash_weight_threshold < Decimal("0") or self.cash_weight_threshold > Decimal("1"):
-            raise ValueError("cash_weight_threshold must be between 0 and 1")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+        if self.cash_weight_threshold <= Decimal("0") or self.cash_weight_threshold > Decimal("1"):
+            raise ValueError("cash_weight_threshold must be greater than 0 and at most 1")
 
 
 @dataclass(frozen=True)
@@ -42,7 +39,6 @@ class ConcentrationRiskSignalPolicy:
     policy_version: str
     top_position_weight_threshold: Decimal
     top_issuer_weight_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
@@ -51,27 +47,22 @@ class ConcentrationRiskSignalPolicy:
             ("top_position_weight_threshold", self.top_position_weight_threshold),
             ("top_issuer_weight_threshold", self.top_issuer_weight_threshold),
         ):
-            if threshold < Decimal("0") or threshold > Decimal("1"):
-                raise ValueError(f"{field_name} must be between 0 and 1")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+            if threshold <= Decimal("0") or threshold > Decimal("1"):
+                raise ValueError(f"{field_name} must be greater than 0 and at most 1")
 
 
 @dataclass(frozen=True)
 class UnderperformanceSignalPolicy:
     policy_version: str
     active_return_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.active_return_threshold < Decimal("-1") or self.active_return_threshold > Decimal(
+        if self.active_return_threshold < Decimal("-1") or self.active_return_threshold >= Decimal(
             "0"
         ):
-            raise ValueError("active_return_threshold must be between -1 and 0")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+            raise ValueError("active_return_threshold must be between -1 and 0, excluding 0")
 
 
 @dataclass(frozen=True)
@@ -79,7 +70,6 @@ class MandateHealthSignalPolicy:
     policy_version: str
     minimum_workflow_decision_count: int
     minimum_lineage_edge_count: int
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
@@ -88,38 +78,30 @@ class MandateHealthSignalPolicy:
             raise ValueError("minimum_workflow_decision_count must be non-negative")
         if self.minimum_lineage_edge_count < 0:
             raise ValueError("minimum_lineage_edge_count must be non-negative")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
 
 
 @dataclass(frozen=True)
 class HighVolatilitySignalPolicy:
     policy_version: str
     volatility_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.volatility_threshold < Decimal("0"):
-            raise ValueError("volatility_threshold must be non-negative")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+        if self.volatility_threshold <= Decimal("0"):
+            raise ValueError("volatility_threshold must be positive")
 
 
 @dataclass(frozen=True)
 class DrawdownReviewSignalPolicy:
     policy_version: str
     max_drawdown_threshold: Decimal
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.max_drawdown_threshold > Decimal("0"):
-            raise ValueError("max_drawdown_threshold must be zero or negative")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
+        if self.max_drawdown_threshold >= Decimal("0"):
+            raise ValueError("max_drawdown_threshold must be negative")
 
 
 @dataclass(frozen=True)

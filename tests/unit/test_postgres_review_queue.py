@@ -37,7 +37,7 @@ from tests.unit.test_postgres_repository import (
 QUEUE_EVALUATED_AT = EVALUATED_AT + timedelta(days=1)
 QUEUE_POLICY_VERSION = "idea-deterministic-ranking-v1"
 QUEUE_AUDIENCE = ReviewQueueAudience.ADVISOR
-RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v1",)
+RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v2",)
 
 
 def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection() -> None:
@@ -492,7 +492,7 @@ def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     assert params[0] == QUEUE_EVALUATED_AT
     assert params[1] == ReviewPosture.ADVISOR_REVIEW_REQUIRED.value
     assert isinstance(params[2], list)
-    assert params[4] == ["idle-liquidity-v1"]
+    assert params[4] == ["idle-liquidity-v2"]
     assert isinstance(params[6], list)
     assert params[6] == ["portfolio-001"]
 

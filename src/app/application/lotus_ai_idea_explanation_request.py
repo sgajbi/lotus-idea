@@ -54,6 +54,20 @@ def build_lotus_ai_idea_explanation_input(
             "supportability": evidence.supportability.value,
             "score_policy_version": evidence.score_policy_version,
             "score": str(evidence.score) if evidence.score is not None else None,
+            "score_components": [
+                {
+                    "component": contribution.component.value,
+                    "input_score": str(contribution.input_score),
+                    "weight": str(contribution.weight),
+                    "contribution": str(contribution.contribution),
+                }
+                for contribution in evidence.score_contributions
+            ],
+            "score_conflict_penalty_applied": (
+                str(evidence.score_conflict_penalty_applied)
+                if evidence.score_conflict_penalty_applied is not None
+                else None
+            ),
             "source_signal_count": evidence.source_signal_count,
             "reason_codes": [reason.value for reason in evidence.reason_codes],
             "source_refs": [

@@ -26,7 +26,6 @@ from app.domain import (
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
-    IdeaScore,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
@@ -43,6 +42,7 @@ from app.domain import (
 )
 from app.domain.persistence_models import CandidatePersistenceRecord
 from tests.support.candidate_identity import initial_candidate_identity
+from tests.support.score_fixture import score_fixture
 
 
 FIXTURE_WINDOW_START = datetime(2026, 6, 21, 8, 0, tzinfo=UTC)
@@ -111,7 +111,7 @@ def candidate_fixture(
         evidence_packet=evidence,
         source_signal_ids=(f"signal-{candidate_id}",),
         score=(
-            IdeaScore(
+            score_fixture(
                 policy_version=_score_policy(family),
                 score=score,
                 reason_codes=(ReasonCode.QUEUE_PRIORITY,),
@@ -366,9 +366,9 @@ def golden_effectiveness_snapshot() -> IdeaRepositorySnapshot:
 
 def _score_policy(family: OpportunityFamily) -> str:
     return {
-        OpportunityFamily.HIGH_CASH: "idle-liquidity-v1",
-        OpportunityFamily.UNDERPERFORMANCE: "underperformance-review-v1",
-        OpportunityFamily.CONCENTRATION: "concentration-attention-v1",
+        OpportunityFamily.HIGH_CASH: "idle-liquidity-v2",
+        OpportunityFamily.UNDERPERFORMANCE: "underperformance-review-v2",
+        OpportunityFamily.CONCENTRATION: "concentration-attention-v2",
     }.get(family, "idea-weighted-evidence-score-v1")
 
 

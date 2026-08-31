@@ -58,8 +58,7 @@ def test_benchmark_assignment_diagnostic_has_deterministic_precedence(
 
 def policy() -> MissingBenchmarkSignalPolicy:
     return MissingBenchmarkSignalPolicy(
-        policy_version="missing-benchmark-review-v1",
-        candidate_score=Decimal("68"),
+        policy_version="missing-benchmark-review-v2",
     )
 
 
@@ -117,9 +116,32 @@ def test_missing_benchmark_gap_creates_reproducible_review_candidate() -> None:
     assert first.candidate.evidence_packet.lineage_ref.source_refs == first.signal.source_refs
     assert first.candidate.evidence_packet.lineage_ref.content_hash.startswith("sha256:")
     assert first.candidate.score is not None
-    assert first.candidate.score.policy_version == "missing-benchmark-review-v1"
-    assert first.candidate.score.score == Decimal("68")
-    assert first.candidate.score.reason_codes == first.reason_codes
+    assert first.candidate.score.policy_version == "missing-benchmark-review-v2"
+    assert first.candidate.score.score == Decimal("100.00")
+    assert [item.component.value for item in first.candidate.score.contributions] == [
+        "relevance",
+        "evidence_quality",
+        "freshness",
+    ]
+
+
+def test_missing_benchmark_score_reflects_diagnostic_severity() -> None:
+    version_missing = evaluate_missing_benchmark_signal(
+        missing_benchmark_input(
+            benchmark_identity_resolved=True,
+            assignment_effective_for_as_of_date=True,
+            assignment_status="ACTIVE",
+            assignment_version_present=False,
+        ),
+        policy(),
+    )
+    identity_missing = evaluate_missing_benchmark_signal(missing_benchmark_input(), policy())
+
+    assert version_missing.candidate is not None
+    assert version_missing.candidate.score is not None
+    assert identity_missing.candidate is not None
+    assert identity_missing.candidate.score is not None
+    assert identity_missing.candidate.score.score > version_missing.candidate.score.score
 
 
 def test_missing_benchmark_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -250,14 +272,4 @@ def test_missing_benchmark_policy_rejects_blank_version() -> None:
     with pytest.raises(ValueError, match="policy_version is required"):
         MissingBenchmarkSignalPolicy(
             policy_version=" ",
-            candidate_score=Decimal("68"),
-        )
-
-
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_missing_benchmark_policy_rejects_out_of_range_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        MissingBenchmarkSignalPolicy(
-            policy_version="missing-benchmark-review-v1",
-            candidate_score=score,
         )

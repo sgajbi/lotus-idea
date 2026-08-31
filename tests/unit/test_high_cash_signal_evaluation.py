@@ -28,9 +28,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> HighCashSignalPolicy:
     return HighCashSignalPolicy(
-        policy_version="idle-liquidity-v1",
+        policy_version="idle-liquidity-v2",
         cash_weight_threshold=Decimal("0.12"),
-        candidate_score=Decimal("82"),
     )
 
 
@@ -111,6 +110,14 @@ def test_high_cash_positive_case_creates_reproducible_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.candidate.evidence_packet.lineage_ref.source_refs
+    assert first.candidate.score is not None
+    assert first.candidate.score.policy_version == "idle-liquidity-v2"
+    assert first.candidate.score.score == Decimal("82.50")
+    assert [item.component.value for item in first.candidate.score.contributions] == [
+        "materiality",
+        "evidence_quality",
+        "freshness",
+    ]
     assert first.reason_codes == (
         ReasonCode.HIGH_CASH_RATIO,
         ReasonCode.CASH_SOURCE_READY,
@@ -268,13 +275,12 @@ def test_high_cash_rejects_invalid_source_reported_weight() -> None:
         )
 
 
-@pytest.mark.parametrize("threshold", [Decimal("-0.01"), Decimal("1.01")])
+@pytest.mark.parametrize("threshold", [Decimal("-0.01"), Decimal("0"), Decimal("1.01")])
 def test_high_cash_policy_rejects_invalid_threshold(threshold: Decimal) -> None:
     with pytest.raises(ValueError, match="cash_weight_threshold"):
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=threshold,
-            candidate_score=Decimal("82"),
         )
 
 
@@ -283,15 +289,17 @@ def test_high_cash_policy_requires_version() -> None:
         HighCashSignalPolicy(
             policy_version=" ",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         )
 
 
-@pytest.mark.parametrize("score", [Decimal("-1"), Decimal("101")])
-def test_high_cash_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
-            cash_weight_threshold=Decimal("0.12"),
-            candidate_score=score,
-        )
+def test_high_cash_score_increases_with_source_reported_materiality() -> None:
+    threshold = evaluate_high_cash_signal(high_cash_input(cash_weight=Decimal("0.12")), policy())
+    materially_higher = evaluate_high_cash_signal(
+        high_cash_input(cash_weight=Decimal("0.24")),
+        policy(),
+    )
+
+    assert threshold.candidate is not None and threshold.candidate.score is not None
+    assert materially_higher.candidate is not None and materially_higher.candidate.score is not None
+    assert threshold.candidate.score.score == Decimal("65.00")
+    assert materially_higher.candidate.score.score == Decimal("100.00")

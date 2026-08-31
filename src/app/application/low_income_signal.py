@@ -53,7 +53,6 @@ class EvaluateLowIncomeFromCoreCommand:
 DEFAULT_LOW_INCOME_POLICY = LowIncomeSignalPolicy(
     policy_version=CandidateScorePolicyVersion.LOW_INCOME.value,
     projected_cumulative_cashflow_threshold=Decimal("-10000"),
-    candidate_score=Decimal("68"),
 )
 
 

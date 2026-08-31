@@ -17,10 +17,12 @@ from app.domain.ideas import (
     OpportunitySignal,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import IdeaScoringInput, IdeaScoringPolicy, score_inputs
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -47,13 +49,10 @@ _NON_ACTIONABLE_RESTRICTION_STATUSES = {
 @dataclass(frozen=True)
 class MandateRestrictionSignalPolicy:
     policy_version: str
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
 
 
 @dataclass(frozen=True)
@@ -179,11 +178,7 @@ def _candidate_result(
         review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.MANDATE_RESTRICTION_REVIEW, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_mandate_restriction_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -194,6 +189,40 @@ def _candidate_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _mandate_restriction_score(
+    source_input: MandateRestrictionSignalInput,
+    policy: MandateRestrictionSignalPolicy,
+) -> IdeaScore:
+    status = (source_input.restriction_status or "").strip().upper()
+    relevance_by_status = {
+        "BREACHED": Decimal("100"),
+        "BLOCKED": Decimal("95"),
+        "POLICY_CHANGED": Decimal("85"),
+        "RESTRICTION_CHANGED": Decimal("85"),
+        "REVIEW_REQUIRED": Decimal("75"),
+        "PENDING_REVIEW": Decimal("70"),
+    }
+    relevance = relevance_by_status.get(status, Decimal("65"))
+    if source_input.actionability_blocked:
+        urgency = Decimal("100")
+    elif status in {"BREACHED", "BLOCKED"}:
+        urgency = Decimal("95")
+    elif source_input.changed_since_last_review:
+        urgency = Decimal("85")
+    else:
+        urgency = Decimal("70")
+    return score_inputs(
+        (
+            IdeaScoringInput(ScoreComponent.RELEVANCE, relevance, Decimal("0.55")),
+            IdeaScoringInput(ScoreComponent.URGENCY, urgency, Decimal("0.25")),
+            IdeaScoringInput(ScoreComponent.EVIDENCE_QUALITY, Decimal("100"), Decimal("0.10")),
+            IdeaScoringInput(ScoreComponent.FRESHNESS, Decimal("100"), Decimal("0.10")),
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.MANDATE_RESTRICTION_REVIEW, ReasonCode.REVIEW_REQUIRED),
     )
 
 

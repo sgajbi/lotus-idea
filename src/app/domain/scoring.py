@@ -9,6 +9,8 @@ from app.domain.ideas import (
     IdeaCandidate,
     IdeaScore,
     ReasonCode,
+    ScoreComponent,
+    ScoreContribution,
 )
 
 
@@ -31,30 +33,32 @@ def _quantize(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-class ScoreComponent(StrEnum):
-    MATERIALITY = "materiality"
-    URGENCY = "urgency"
-    CONFIDENCE = "confidence"
-    EVIDENCE_QUALITY = "evidence_quality"
-    FRESHNESS = "freshness"
-    RELEVANCE = "relevance"
-    DOWNSTREAM_FIT = "downstream_fit"
-
-
 class CandidateScorePolicyVersion(StrEnum):
-    ALLOCATION_DRIFT = "allocation-drift-mandate-review-v1"
-    BOND_MATURITY = "bond-maturity-review-v1"
-    LOW_INCOME = "cashflow-liquidity-review-v1"
-    CONCENTRATION = "concentration-attention-v1"
-    DRAWDOWN_REVIEW = "drawdown-review-attention-v1"
-    HIGH_VOLATILITY = "high-volatility-attention-v1"
+    ALLOCATION_DRIFT_LEGACY = "allocation-drift-mandate-review-v1"
+    ALLOCATION_DRIFT = "allocation-drift-mandate-review-v2"
+    BOND_MATURITY_LEGACY = "bond-maturity-review-v1"
+    BOND_MATURITY = "bond-maturity-review-v2"
+    LOW_INCOME_LEGACY = "cashflow-liquidity-review-v1"
+    LOW_INCOME = "cashflow-liquidity-review-v2"
+    CONCENTRATION_LEGACY = "concentration-attention-v1"
+    CONCENTRATION = "concentration-attention-v2"
+    DRAWDOWN_REVIEW_LEGACY = "drawdown-review-attention-v1"
+    DRAWDOWN_REVIEW = "drawdown-review-attention-v2"
+    HIGH_VOLATILITY_LEGACY = "high-volatility-attention-v1"
+    HIGH_VOLATILITY = "high-volatility-attention-v2"
     WEIGHTED_EVIDENCE = "idea-weighted-evidence-score-v1"
-    HIGH_CASH = "idle-liquidity-v1"
-    MANDATE_RESTRICTION = "mandate-restriction-review-v1"
-    MISSING_BENCHMARK = "missing-benchmark-review-v1"
-    MISSING_RISK_PROFILE = "missing-risk-profile-review-v1"
-    MISSING_SUITABILITY = "missing-suitability-context-review-v1"
-    UNDERPERFORMANCE = "underperformance-review-v1"
+    HIGH_CASH_LEGACY = "idle-liquidity-v1"
+    HIGH_CASH = "idle-liquidity-v2"
+    MANDATE_RESTRICTION_LEGACY = "mandate-restriction-review-v1"
+    MANDATE_RESTRICTION = "mandate-restriction-review-v2"
+    MISSING_BENCHMARK_LEGACY = "missing-benchmark-review-v1"
+    MISSING_BENCHMARK = "missing-benchmark-review-v2"
+    MISSING_RISK_PROFILE_LEGACY = "missing-risk-profile-review-v1"
+    MISSING_RISK_PROFILE = "missing-risk-profile-review-v2"
+    MISSING_SUITABILITY_LEGACY = "missing-suitability-context-review-v1"
+    MISSING_SUITABILITY = "missing-suitability-context-review-v2"
+    UNDERPERFORMANCE_LEGACY = "underperformance-review-v1"
+    UNDERPERFORMANCE = "underperformance-review-v2"
 
 
 DEFAULT_RANKABLE_SCORE_POLICY_VERSIONS: tuple[str, ...] = tuple(
@@ -63,148 +67,133 @@ DEFAULT_RANKABLE_SCORE_POLICY_VERSIONS: tuple[str, ...] = tuple(
 
 
 @dataclass(frozen=True)
-class IdeaScoringInputs:
-    materiality: Decimal
-    urgency: Decimal
-    confidence: Decimal
-    evidence_quality: Decimal
-    freshness: Decimal
-    relevance: Decimal
-    downstream_fit: Decimal
-    has_conflict_flags: bool = False
+class IdeaScoringInput:
+    component: ScoreComponent
+    input_score: Decimal
+    weight: Decimal
 
     def __post_init__(self) -> None:
-        for field_name, value in (
-            ("materiality", self.materiality),
-            ("urgency", self.urgency),
-            ("confidence", self.confidence),
-            ("evidence_quality", self.evidence_quality),
-            ("freshness", self.freshness),
-            ("relevance", self.relevance),
-            ("downstream_fit", self.downstream_fit),
-        ):
-            _require_score(value, field_name)
+        _require_score(self.input_score, "input_score")
+        if self.weight < Decimal("0") or self.weight > Decimal("1"):
+            raise ValueError("weight must be between 0 and 1")
+        if self.component is ScoreComponent.LEGACY_FIXED_POLICY:
+            raise ValueError("legacy_fixed_policy is not a source-evidence scoring input")
 
 
 @dataclass(frozen=True)
 class IdeaScoringPolicy:
     policy_version: str
-    materiality_weight: Decimal = Decimal("0.20")
-    urgency_weight: Decimal = Decimal("0.15")
-    confidence_weight: Decimal = Decimal("0.15")
-    evidence_quality_weight: Decimal = Decimal("0.15")
-    freshness_weight: Decimal = Decimal("0.10")
-    relevance_weight: Decimal = Decimal("0.10")
-    downstream_fit_weight: Decimal = Decimal("0.15")
     conflict_penalty: Decimal = Decimal("15")
 
     def __post_init__(self) -> None:
         _require_text(self.policy_version, "policy_version")
-        weights = (
-            self.materiality_weight,
-            self.urgency_weight,
-            self.confidence_weight,
-            self.evidence_quality_weight,
-            self.freshness_weight,
-            self.relevance_weight,
-            self.downstream_fit_weight,
-        )
-        if sum(weights, Decimal("0")) != Decimal("1.00"):
-            raise ValueError("score weights must sum to 1.00")
         _require_score(self.conflict_penalty, "conflict_penalty")
-
-
-@dataclass(frozen=True)
-class ScoreContribution:
-    component: ScoreComponent
-    input_score: Decimal
-    weight: Decimal
-    contribution: Decimal
-
-
-@dataclass(frozen=True)
-class ScoreBreakdown:
-    policy_version: str
-    final_score: Decimal
-    reason_codes: tuple[ReasonCode, ...]
-    contributions: tuple[ScoreContribution, ...]
-    conflict_penalty_applied: Decimal = Decimal("0")
 
 
 DEFAULT_SCORING_POLICY = IdeaScoringPolicy(
     policy_version=CandidateScorePolicyVersion.WEIGHTED_EVIDENCE.value
 )
 
-_SCORE_REASON_CODES: tuple[ReasonCode, ...] = (
-    ReasonCode.MATERIALITY_SCORE,
-    ReasonCode.URGENCY_SCORE,
-    ReasonCode.CONFIDENCE_SCORE,
-    ReasonCode.EVIDENCE_QUALITY_SCORE,
-    ReasonCode.FRESHNESS_SCORE,
-    ReasonCode.RELEVANCE_SCORE,
-    ReasonCode.DOWNSTREAM_FIT_SCORE,
-)
+_SCORE_REASON_CODE_BY_COMPONENT: dict[ScoreComponent, ReasonCode] = {
+    ScoreComponent.MATERIALITY: ReasonCode.MATERIALITY_SCORE,
+    ScoreComponent.URGENCY: ReasonCode.URGENCY_SCORE,
+    ScoreComponent.CONFIDENCE: ReasonCode.CONFIDENCE_SCORE,
+    ScoreComponent.EVIDENCE_QUALITY: ReasonCode.EVIDENCE_QUALITY_SCORE,
+    ScoreComponent.FRESHNESS: ReasonCode.FRESHNESS_SCORE,
+    ScoreComponent.RELEVANCE: ReasonCode.RELEVANCE_SCORE,
+    ScoreComponent.DOWNSTREAM_FIT: ReasonCode.DOWNSTREAM_FIT_SCORE,
+}
 
 
 def score_candidate(
     candidate: IdeaCandidate,
-    inputs: IdeaScoringInputs,
+    inputs: tuple[IdeaScoringInput, ...],
     *,
     policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
+    has_conflict_flags: bool = False,
+    reason_codes: tuple[ReasonCode, ...] = (),
     scored_at_utc: datetime | None = None,
-) -> tuple[IdeaCandidate, ScoreBreakdown]:
+) -> tuple[IdeaCandidate, IdeaScore]:
     scored_at = scored_at_utc or datetime.now(UTC)
     _require_aware_utc(scored_at, "scored_at_utc")
-    breakdown = score_inputs(inputs, policy=policy)
+    score = score_inputs(
+        inputs,
+        policy=policy,
+        has_conflict_flags=has_conflict_flags,
+        reason_codes=reason_codes,
+    )
     scored_candidate = replace(
         candidate,
-        score=IdeaScore(
-            policy_version=breakdown.policy_version,
-            score=breakdown.final_score,
-            reason_codes=breakdown.reason_codes,
-        ),
+        score=score,
         updated_at_utc=scored_at,
     )
-    return scored_candidate, breakdown
+    return scored_candidate, score
 
 
 def score_inputs(
-    inputs: IdeaScoringInputs,
+    inputs: tuple[IdeaScoringInput, ...],
     *,
     policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
-) -> ScoreBreakdown:
-    weighted_components = (
-        (ScoreComponent.MATERIALITY, inputs.materiality, policy.materiality_weight),
-        (ScoreComponent.URGENCY, inputs.urgency, policy.urgency_weight),
-        (ScoreComponent.CONFIDENCE, inputs.confidence, policy.confidence_weight),
-        (
-            ScoreComponent.EVIDENCE_QUALITY,
-            inputs.evidence_quality,
-            policy.evidence_quality_weight,
-        ),
-        (ScoreComponent.FRESHNESS, inputs.freshness, policy.freshness_weight),
-        (ScoreComponent.RELEVANCE, inputs.relevance, policy.relevance_weight),
-        (ScoreComponent.DOWNSTREAM_FIT, inputs.downstream_fit, policy.downstream_fit_weight),
-    )
+    has_conflict_flags: bool = False,
+    reason_codes: tuple[ReasonCode, ...] = (),
+) -> IdeaScore:
     contributions = tuple(
         ScoreContribution(
-            component=component,
-            input_score=input_score,
-            weight=weight,
-            contribution=_quantize(input_score * weight),
+            component=scoring_input.component,
+            input_score=scoring_input.input_score,
+            weight=scoring_input.weight,
+            contribution=_quantize(scoring_input.input_score * scoring_input.weight),
         )
-        for component, input_score, weight in weighted_components
+        for scoring_input in inputs
     )
     total = sum((contribution.contribution for contribution in contributions), Decimal("0"))
-    penalty = policy.conflict_penalty if inputs.has_conflict_flags else Decimal("0")
-    final_score = max(Decimal("0"), _quantize(total - penalty))
-    reason_codes = _SCORE_REASON_CODES + (
-        (ReasonCode.CONFLICT_PENALTY,) if inputs.has_conflict_flags else ()
+    penalty = policy.conflict_penalty if has_conflict_flags else Decimal("0")
+    final_score = min(Decimal("100"), max(Decimal("0"), _quantize(total - penalty)))
+    score_reason_codes = (
+        reason_codes
+        + tuple(
+            _SCORE_REASON_CODE_BY_COMPONENT[contribution.component]
+            for contribution in contributions
+        )
+        + ((ReasonCode.CONFLICT_PENALTY,) if has_conflict_flags else ())
     )
-    return ScoreBreakdown(
+    return IdeaScore(
         policy_version=policy.policy_version,
-        final_score=final_score,
-        reason_codes=reason_codes,
+        score=final_score,
+        reason_codes=score_reason_codes,
         contributions=contributions,
         conflict_penalty_applied=penalty,
+    )
+
+
+def relative_threshold_score(value: Decimal, threshold: Decimal) -> Decimal:
+    """Map threshold attainment to 50 and twice-threshold severity to 100."""
+    if threshold <= Decimal("0"):
+        raise ValueError("threshold must be positive")
+    if value < threshold:
+        raise ValueError("value must meet or exceed threshold")
+    relative_excess = (value - threshold) / threshold
+    return min(Decimal("100"), _quantize(Decimal("50") + Decimal("50") * relative_excess))
+
+
+def current_complete_materiality_inputs(
+    materiality_score: Decimal,
+) -> tuple[IdeaScoringInput, ...]:
+    """Build the shared inputs for eligible current, complete quantitative evidence."""
+    return (
+        IdeaScoringInput(
+            component=ScoreComponent.MATERIALITY,
+            input_score=materiality_score,
+            weight=Decimal("0.70"),
+        ),
+        IdeaScoringInput(
+            component=ScoreComponent.EVIDENCE_QUALITY,
+            input_score=Decimal("100"),
+            weight=Decimal("0.15"),
+        ),
+        IdeaScoringInput(
+            component=ScoreComponent.FRESHNESS,
+            input_score=Decimal("100"),
+            weight=Decimal("0.15"),
+        ),
     )

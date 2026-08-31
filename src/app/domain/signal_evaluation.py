@@ -16,10 +16,18 @@ from app.domain.ideas import (
     OpportunitySignal,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringInput,
+    IdeaScoringPolicy,
+    current_complete_materiality_inputs,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation_common import (
     blocked_signal_result,
     temporal_blocked_signal_result,
@@ -205,14 +213,28 @@ def _high_cash_candidate(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_high_cash_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
+    )
+
+
+def _high_cash_score(
+    source_input: HighCashSignalInput,
+    policy: HighCashSignalPolicy,
+) -> IdeaScore:
+    cash_weight = _bounded_optional_weight(
+        source_input.source_reported_cash_weight,
+        "source_reported_cash_weight",
+    )
+    if cash_weight is None:
+        raise ValueError("eligible high-cash scoring requires source_reported_cash_weight")
+    materiality_score = relative_threshold_score(cash_weight, policy.cash_weight_threshold)
+    return score_inputs(
+        current_complete_materiality_inputs(materiality_score),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
     )
 
 
@@ -378,11 +400,7 @@ def _concentration_risk_candidate_created_result(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.CONCENTRATION_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_concentration_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -393,6 +411,28 @@ def _concentration_risk_candidate_created_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _concentration_score(
+    source_input: ConcentrationRiskSignalInput,
+    policy: ConcentrationRiskSignalPolicy,
+) -> IdeaScore:
+    observed_thresholds = (
+        (source_input.top_position_weight_current, policy.top_position_weight_threshold),
+        (source_input.top_issuer_weight_current, policy.top_issuer_weight_threshold),
+    )
+    materiality_scores = tuple(
+        relative_threshold_score(observed, threshold)
+        for observed, threshold in observed_thresholds
+        if observed is not None and observed >= threshold
+    )
+    if not materiality_scores:
+        raise ValueError("eligible concentration scoring requires a threshold breach")
+    return score_inputs(
+        current_complete_materiality_inputs(max(materiality_scores)),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.CONCENTRATION_ATTENTION, ReasonCode.REVIEW_REQUIRED),
     )
 
 
@@ -582,14 +622,26 @@ def _underperformance_candidate(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_underperformance_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
+    )
+
+
+def _underperformance_score(
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+) -> IdeaScore:
+    active_return = source_input.source_reported_active_return
+    if active_return is None:
+        raise ValueError("eligible underperformance scoring requires source_reported_active_return")
+    return score_inputs(
+        current_complete_materiality_inputs(
+            relative_threshold_score(abs(active_return), abs(policy.active_return_threshold))
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION, ReasonCode.REVIEW_REQUIRED),
     )
 
 
@@ -742,11 +794,7 @@ def _mandate_health_candidate_created_result(
         review_posture=ReviewPosture.PM_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.ALLOCATION_DRIFT_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_mandate_health_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -758,6 +806,50 @@ def _mandate_health_candidate_created_result(
         signal=signal,
         candidate=candidate,
     )
+
+
+def _mandate_health_score(
+    source_input: MandateHealthSignalInput,
+    policy: MandateHealthSignalPolicy,
+) -> IdeaScore:
+    workflow_count = source_input.workflow_decision_count
+    lineage_count = source_input.lineage_edge_count
+    if workflow_count is None or lineage_count is None:
+        raise ValueError("eligible mandate-health scoring requires workflow and lineage counts")
+    return score_inputs(
+        (
+            IdeaScoringInput(
+                component=ScoreComponent.RELEVANCE,
+                input_score=_count_threshold_score(
+                    workflow_count,
+                    policy.minimum_workflow_decision_count,
+                ),
+                weight=Decimal("0.55"),
+            ),
+            IdeaScoringInput(
+                component=ScoreComponent.EVIDENCE_QUALITY,
+                input_score=_count_threshold_score(
+                    lineage_count, policy.minimum_lineage_edge_count
+                ),
+                weight=Decimal("0.30"),
+            ),
+            IdeaScoringInput(
+                component=ScoreComponent.FRESHNESS,
+                input_score=Decimal("100"),
+                weight=Decimal("0.15"),
+            ),
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.ALLOCATION_DRIFT_ATTENTION, ReasonCode.REVIEW_REQUIRED),
+    )
+
+
+def _count_threshold_score(count: int, threshold: int) -> Decimal:
+    if count < 0 or threshold < 0:
+        raise ValueError("count and threshold must be non-negative")
+    if threshold == 0:
+        return Decimal("100") if count > 0 else Decimal("50")
+    return relative_threshold_score(Decimal(count), Decimal(threshold))
 
 
 def _mandate_health_source_refs(

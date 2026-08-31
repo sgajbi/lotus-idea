@@ -279,6 +279,24 @@ REQUIRED_MIGRATIONS = (
             "DROP COLUMN IF EXISTS provider_retention_confirmation_id",
         ),
     ),
+    MigrationContract(
+        version="021",
+        forward_path=MIGRATIONS_DIR / "021_candidate_score_breakdown.sql",
+        rollback_path=MIGRATIONS_DIR / "021_candidate_score_breakdown.rollback.sql",
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "UPDATE idea_candidate_record",
+            "legacy_fixed_policy",
+            "ck_idea_candidate_record_score_breakdown",
+            "VALIDATE CONSTRAINT ck_idea_candidate_record_score_breakdown",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS ck_idea_candidate_record_score_breakdown",
+            "#- '{score,contributions}'",
+            "legacy_fixed_policy",
+        ),
+    ),
 )
 
 

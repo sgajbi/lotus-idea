@@ -28,9 +28,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> UnderperformanceSignalPolicy:
     return UnderperformanceSignalPolicy(
-        policy_version="underperformance-review-v1",
+        policy_version="underperformance-review-v2",
         active_return_threshold=Decimal("-0.005"),
-        candidate_score=Decimal("74"),
     )
 
 
@@ -99,6 +98,19 @@ def test_underperformance_positive_case_creates_reproducible_candidate() -> None
         ReasonCode.UNDERPERFORMANCE_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_underperformance_score_increases_with_source_reported_shortfall() -> None:
+    boundary = evaluate_underperformance_signal(
+        underperformance_input(active_return=Decimal("-0.005")), policy()
+    )
+    severe = evaluate_underperformance_signal(
+        underperformance_input(active_return=Decimal("-0.020")), policy()
+    )
+
+    assert boundary.candidate is not None and boundary.candidate.score is not None
+    assert severe.candidate is not None and severe.candidate.score is not None
+    assert severe.candidate.score.score > boundary.candidate.score.score
 
 
 def test_underperformance_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -225,12 +237,12 @@ def test_underperformance_requires_timezone_aware_evaluation_time() -> None:
         evaluate_underperformance_signal(invalid_input, policy())
 
 
-def test_underperformance_policy_rejects_positive_threshold() -> None:
+@pytest.mark.parametrize("threshold", [Decimal("0"), Decimal("0.01")])
+def test_underperformance_policy_rejects_non_negative_threshold(threshold: Decimal) -> None:
     with pytest.raises(ValueError, match="active_return_threshold"):
         UnderperformanceSignalPolicy(
-            policy_version="underperformance-review-v1",
-            active_return_threshold=Decimal("0.01"),
-            candidate_score=Decimal("74"),
+            policy_version="underperformance-review-v2",
+            active_return_threshold=threshold,
         )
 
 
@@ -239,15 +251,4 @@ def test_underperformance_policy_requires_version() -> None:
         UnderperformanceSignalPolicy(
             policy_version=" ",
             active_return_threshold=Decimal("-0.005"),
-            candidate_score=Decimal("74"),
-        )
-
-
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_underperformance_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score"):
-        UnderperformanceSignalPolicy(
-            policy_version="underperformance-review-v1",
-            active_return_threshold=Decimal("-0.005"),
-            candidate_score=score,
         )

@@ -29,9 +29,8 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> DrawdownReviewSignalPolicy:
     return DrawdownReviewSignalPolicy(
-        policy_version="drawdown-review-attention-v1",
+        policy_version="drawdown-review-attention-v2",
         max_drawdown_threshold=Decimal("-0.08"),
-        candidate_score=Decimal("72"),
     )
 
 
@@ -93,6 +92,19 @@ def test_drawdown_review_positive_case_creates_source_safe_candidate() -> None:
         ReasonCode.DRAWDOWN_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_drawdown_review_score_increases_with_source_reported_drawdown() -> None:
+    boundary = evaluate_drawdown_review_signal(
+        drawdown_input(source_reported_max_drawdown=Decimal("-0.08")), policy()
+    )
+    severe = evaluate_drawdown_review_signal(
+        drawdown_input(source_reported_max_drawdown=Decimal("-0.24")), policy()
+    )
+
+    assert boundary.candidate is not None and boundary.candidate.score is not None
+    assert severe.candidate is not None and severe.candidate.score is not None
+    assert severe.candidate.score.score > boundary.candidate.score.score
 
 
 def test_drawdown_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -199,22 +211,15 @@ def test_drawdown_review_rejects_positive_source_drawdown() -> None:
         )
 
 
-def test_drawdown_review_policy_validates_threshold_and_score() -> None:
-    with pytest.raises(ValueError, match="max_drawdown_threshold"):
-        DrawdownReviewSignalPolicy(
-            policy_version="drawdown-review-attention-v1",
-            max_drawdown_threshold=Decimal("0.01"),
-            candidate_score=Decimal("72"),
-        )
+def test_drawdown_review_policy_validates_threshold_and_version() -> None:
+    for invalid_threshold in (Decimal("0"), Decimal("0.01")):
+        with pytest.raises(ValueError, match="max_drawdown_threshold"):
+            DrawdownReviewSignalPolicy(
+                policy_version="drawdown-review-attention-v2",
+                max_drawdown_threshold=invalid_threshold,
+            )
     with pytest.raises(ValueError, match="policy_version is required"):
         DrawdownReviewSignalPolicy(
             policy_version=" ",
             max_drawdown_threshold=Decimal("-0.08"),
-            candidate_score=Decimal("72"),
-        )
-    with pytest.raises(ValueError, match="candidate_score"):
-        DrawdownReviewSignalPolicy(
-            policy_version="drawdown-review-attention-v1",
-            max_drawdown_threshold=Decimal("-0.08"),
-            candidate_score=Decimal("100.01"),
         )

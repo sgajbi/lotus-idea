@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-
 from app.domain import (
     CandidateScorePolicyVersion,
     MissingRiskProfileSignalInput,
@@ -59,7 +57,6 @@ class MissingRiskProfileSourceEvaluation:
 
 DEFAULT_MISSING_RISK_PROFILE_POLICY = MissingRiskProfileSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MISSING_RISK_PROFILE.value,
-    candidate_score=Decimal("64"),
 )
 
 

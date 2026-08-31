@@ -263,8 +263,8 @@ def test_build_review_queue_from_repository_pages_reviewable_items_deterministic
         repository=repository,
     )
 
-    assert [item.candidate.candidate_id for item in first_page.items] == [sorted(candidate_ids)[0]]
-    assert [item.candidate.candidate_id for item in second_page.items] == [sorted(candidate_ids)[1]]
+    assert [item.candidate.candidate_id for item in first_page.items] == [candidate_ids[2]]
+    assert [item.candidate.candidate_id for item in second_page.items] == [candidate_ids[1]]
     assert first_page.page.total_reviewable_item_count == 3
     assert first_page.page.returned_item_count == 1
     assert first_page.page.next_offset == 1

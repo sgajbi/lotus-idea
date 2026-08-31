@@ -77,7 +77,6 @@ DEFAULT_CONCENTRATION_RISK_POLICY = ConcentrationRiskSignalPolicy(
     policy_version=CandidateScorePolicyVersion.CONCENTRATION.value,
     top_position_weight_threshold=Decimal("0.15"),
     top_issuer_weight_threshold=Decimal("0.20"),
-    candidate_score=Decimal("78"),
 )
 
 

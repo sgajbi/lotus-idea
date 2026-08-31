@@ -268,7 +268,7 @@ def test_mandate_restriction_signal_from_source_api_returns_review_candidate(
     assert payload["sourceAuthority"] == "lotus-advise"
     assert payload["supportedFeaturePromoted"] is False
     assert payload["candidate"]["reviewPosture"] == "compliance_review_required"
-    assert payload["candidate"]["scorePolicyVersion"] == "mandate-restriction-review-v1"
+    assert payload["candidate"]["scorePolicyVersion"] == "mandate-restriction-review-v2"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
         "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
     }

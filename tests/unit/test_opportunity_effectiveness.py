@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from tests.support.score_fixture import score_fixture
+
 from app.application.opportunity_effectiveness import (
     EffectivenessDimensionCount,
     OpportunityEffectivenessBoundExceeded,
@@ -39,7 +41,6 @@ from app.domain import (
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
-    IdeaScore,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
@@ -539,8 +540,8 @@ def _candidate(
         evidence_packet=evidence,
         source_signal_ids=(f"signal-{candidate_id}",),
         score=(
-            IdeaScore(
-                policy_version="idle-liquidity-v1",
+            score_fixture(
+                policy_version="idle-liquidity-v2",
                 score=score,
                 reason_codes=(ReasonCode.QUEUE_PRIORITY,),
             )

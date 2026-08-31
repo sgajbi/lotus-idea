@@ -130,7 +130,17 @@ def _insert_legacy_feedback(connection: psycopg.Connection[dict[str, object]]) -
                     ),
                     'score', jsonb_build_object(
                         'policy_version', 'idle-liquidity-v1',
-                        'score', '82'
+                        'score', '82',
+                        'reason_codes', jsonb_build_array('queue_priority'),
+                        'contributions', jsonb_build_array(
+                            jsonb_build_object(
+                                'component', 'legacy_fixed_policy',
+                                'input_score', '82',
+                                'weight', '1',
+                                'contribution', '82'
+                            )
+                        ),
+                        'conflict_penalty_applied', '0'
                     ),
                     'evidence_packet', jsonb_build_object('supportability', 'ready')
                 ),

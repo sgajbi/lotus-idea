@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import (
@@ -17,10 +17,17 @@ from app.domain.ideas import (
     OpportunitySignal,
     ReasonCode,
     ReviewPosture,
+    ScoreComponent,
     SourceRef,
     UnsupportedEvidenceReason,
 )
 from app.domain.opportunity_identity import OpportunityIdentity, build_opportunity_identity
+from app.domain.scoring import (
+    IdeaScoringInput,
+    IdeaScoringPolicy,
+    relative_threshold_score,
+    score_inputs,
+)
 from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -32,15 +39,12 @@ from app.domain.signal_evaluation import (
 class BondMaturitySignalPolicy:
     policy_version: str
     maturity_window_days: int
-    candidate_score: Decimal
 
     def __post_init__(self) -> None:
         if not self.policy_version.strip():
             raise ValueError("policy_version is required")
         if self.maturity_window_days < 1 or self.maturity_window_days > 366:
             raise ValueError("maturity_window_days must be between 1 and 366")
-        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
-            raise ValueError("candidate_score must be between 0 and 100")
 
 
 @dataclass(frozen=True)
@@ -169,11 +173,7 @@ def _candidate_created_result(
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.MATURITY_WINDOW, ReasonCode.REVIEW_REQUIRED),
-        ),
+        score=_bond_maturity_score(source_input, policy),
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
@@ -184,6 +184,37 @@ def _candidate_created_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _bond_maturity_score(
+    source_input: BondMaturitySignalInput,
+    policy: BondMaturitySignalPolicy,
+) -> IdeaScore:
+    maturity_date = source_input.source_reported_next_maturity_date
+    position_count = source_input.source_reported_maturing_position_count
+    if maturity_date is None or position_count is None or position_count < 1:
+        raise ValueError("eligible bond-maturity scoring requires maturity date and position count")
+    days_to_maturity = (maturity_date - source_input.as_of_date).days
+    urgency = (
+        Decimal("50")
+        + Decimal("50")
+        * Decimal(policy.maturity_window_days - days_to_maturity)
+        / Decimal(policy.maturity_window_days)
+    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return score_inputs(
+        (
+            IdeaScoringInput(ScoreComponent.URGENCY, urgency, Decimal("0.55")),
+            IdeaScoringInput(
+                ScoreComponent.MATERIALITY,
+                relative_threshold_score(Decimal(position_count), Decimal("1")),
+                Decimal("0.25"),
+            ),
+            IdeaScoringInput(ScoreComponent.EVIDENCE_QUALITY, Decimal("100"), Decimal("0.10")),
+            IdeaScoringInput(ScoreComponent.FRESHNESS, Decimal("100"), Decimal("0.10")),
+        ),
+        policy=IdeaScoringPolicy(policy_version=policy.policy_version),
+        reason_codes=(ReasonCode.MATURITY_WINDOW, ReasonCode.REVIEW_REQUIRED),
     )
 
 

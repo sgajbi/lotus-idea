@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 
@@ -28,8 +27,7 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def policy() -> MandateRestrictionSignalPolicy:
     return MandateRestrictionSignalPolicy(
-        policy_version="mandate-restriction-review-v1",
-        candidate_score=Decimal("66"),
+        policy_version="mandate-restriction-review-v2",
     )
 
 
@@ -83,6 +81,29 @@ def test_mandate_restriction_posture_creates_reproducible_review_candidate() -> 
         ReasonCode.MANDATE_RESTRICTION_REVIEW,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_mandate_restriction_score_reflects_bounded_status_and_blocking_posture() -> None:
+    pending = evaluate_mandate_restriction_signal(
+        restriction_input(
+            restriction_status="PENDING_REVIEW",
+            changed_since_last_review=False,
+            actionability_blocked=False,
+        ),
+        policy(),
+    )
+    breached = evaluate_mandate_restriction_signal(
+        restriction_input(
+            restriction_status="BREACHED",
+            changed_since_last_review=False,
+            actionability_blocked=True,
+        ),
+        policy(),
+    )
+
+    assert pending.candidate is not None and pending.candidate.score is not None
+    assert breached.candidate is not None and breached.candidate.score is not None
+    assert breached.candidate.score.score > pending.candidate.score.score
 
 
 def test_mandate_restriction_source_correction_preserves_candidate_and_versions_evidence() -> None:
@@ -223,15 +244,6 @@ def test_mandate_restriction_requires_timezone_aware_evaluation_time() -> None:
         )
 
 
-@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
-def test_mandate_restriction_policy_rejects_out_of_range_score(score: Decimal) -> None:
-    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
-        MandateRestrictionSignalPolicy(
-            policy_version="mandate-restriction-review-v1",
-            candidate_score=score,
-        )
-
-
 def test_mandate_restriction_policy_rejects_blank_version() -> None:
     with pytest.raises(ValueError, match="policy_version is required"):
-        MandateRestrictionSignalPolicy(policy_version=" ", candidate_score=Decimal("66"))
+        MandateRestrictionSignalPolicy(policy_version=" ")

@@ -309,7 +309,7 @@ ALLOCATION_DRIFT_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_allocation_drift_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "70",
-                            "scorePolicyVersion": "allocation-drift-mandate-review-v1",
+                            "scorePolicyVersion": "allocation-drift-mandate-review-v2",
                             "sourceSignalIds": ["signal_allocation_drift_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

@@ -281,7 +281,7 @@ DRAWDOWN_REVIEW_EVALUATE_ROUTE: RouteMetadata = {
                             "evidencePacketId": "iep_drawdown_review_8d57adbf52f7f5a7",
                             "supportability": "ready",
                             "score": "72",
-                            "scorePolicyVersion": "drawdown-review-attention-v1",
+                            "scorePolicyVersion": "drawdown-review-attention-v2",
                             "sourceSignalIds": ["signal_drawdown_review_8d57adbf52f7f5a7"],
                             "sourceRefs": [
                                 {

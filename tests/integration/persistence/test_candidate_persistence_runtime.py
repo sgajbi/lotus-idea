@@ -190,6 +190,63 @@ def test_candidate_identity_migration_backfills_existing_rows_deterministically(
     assert record.version_history[0].evidence_hash == evidence_hash
 
 
+def test_candidate_score_migration_marks_historical_fixed_scores_explicitly(
+    postgres_database_url: str,
+) -> None:
+    candidate = _high_cash_candidate("historical-score-backfill")
+    assert candidate.score is not None
+    candidate_payload = idea_candidate_to_json(candidate)
+    assert candidate_payload["score"] is not None
+    candidate_payload["score"]["policy_version"] = "idle-liquidity-v1"
+    candidate_payload["score"].pop("contributions")
+    candidate_payload["score"].pop("conflict_penalty_applied")
+    migration = next(
+        step
+        for step in discover_migrations(Path(__file__).resolve().parents[3] / "migrations")
+        if step.version == "021"
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        persisted = repository.persist_candidate(
+            candidate,
+            idempotency_key="candidate:historical-score-backfill",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="migration-test",
+            occurred_at_utc=candidate.updated_at_utc,
+        )
+    assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            for statement in migration_statements(migration, MigrationDirection.ROLLBACK):
+                cursor.execute(statement)
+            cursor.execute(
+                "UPDATE idea_candidate_record SET candidate_json = %s WHERE candidate_id = %s",
+                (Jsonb(candidate_payload), candidate.candidate_id),
+            )
+            for statement in migration_statements(migration, MigrationDirection.APPLY):
+                cursor.execute(statement)
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        record = (
+            PostgresIdeaRepository(cast(PostgresConnection, connection))
+            .snapshot()
+            .candidate_records[candidate.candidate_id]
+        )
+
+    assert record.candidate.score is not None
+    assert record.candidate.score.policy_version == "idle-liquidity-v1"
+    assert record.candidate.score.score == candidate.score.score
+    assert record.candidate.score.conflict_penalty_applied == Decimal("0")
+    assert len(record.candidate.score.contributions) == 1
+    contribution = record.candidate.score.contributions[0]
+    assert contribution.component.value == "legacy_fixed_policy"
+    assert contribution.input_score == candidate.score.score
+    assert contribution.weight == Decimal("1")
+    assert contribution.contribution == candidate.score.score
+
+
 def _high_cash_candidate(
     scope_suffix: str,
     *,
@@ -238,9 +295,8 @@ def _high_cash_candidate(
             ),
         ),
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
     assert result.candidate is not None

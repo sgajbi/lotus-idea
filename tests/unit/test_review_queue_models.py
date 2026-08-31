@@ -57,10 +57,21 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
     item = response["items"][0]
     assert item["rank"] == 1
     assert item["candidate"]["family"] == "high_cash"
-    assert item["candidate"]["score"] == "82"
-    assert item["candidate"]["scorePolicyVersion"] == "idle-liquidity-v1"
+    assert item["candidate"]["score"] == "82.50"
+    assert item["candidate"]["scorePolicyVersion"] == "idle-liquidity-v2"
     assert item["policyVersion"] == "idea-deterministic-ranking-v1"
-    assert item["reasonCodes"] == ("high_cash_ratio", "review_required")
+    assert item["reasonCodes"] == (
+        "high_cash_ratio",
+        "review_required",
+        "materiality_score",
+        "evidence_quality_score",
+        "freshness_score",
+    )
+    assert [component["component"] for component in item["candidate"]["scoreComponents"]] == [
+        "materiality",
+        "evidence_quality",
+        "freshness",
+    ]
     assert response["exclusions"] == ()
     assert "route" not in str(response)
     assert "contentHash" not in str(response)

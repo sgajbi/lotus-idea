@@ -82,9 +82,8 @@ def _candidate(
             ),
         ),
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
     assert evaluation.candidate is not None

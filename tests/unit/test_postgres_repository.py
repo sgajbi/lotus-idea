@@ -987,9 +987,8 @@ def high_cash_candidate(
             access_scope=candidate_scope,
         ),
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
     assert result.candidate is not None

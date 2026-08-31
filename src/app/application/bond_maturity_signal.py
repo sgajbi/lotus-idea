@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-
 from app.domain import (
     CandidateScorePolicyVersion,
     BondMaturitySignalInput,
@@ -53,7 +51,6 @@ class EvaluateBondMaturityFromCoreCommand:
 DEFAULT_BOND_MATURITY_POLICY = BondMaturitySignalPolicy(
     policy_version=CandidateScorePolicyVersion.BOND_MATURITY.value,
     maturity_window_days=30,
-    candidate_score=Decimal("70"),
 )
 
 
