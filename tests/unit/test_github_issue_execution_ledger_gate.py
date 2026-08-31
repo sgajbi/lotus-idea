@@ -358,13 +358,11 @@ def test_rfc0002_github_issue_execution_ledger_declares_evidence_only_sync_polic
 
     policy = payload["policy"]["evidenceOnlySyncPrRule"]
 
-    assert "Evidence-only Slice 18 synchronization PRs" in policy
-    assert "must not recursively require another source-sync PR" in policy
-    assert "final PR evidence comment" in policy
-    assert "exact-main Main Releasability run" in policy
-    assert "branch/worktree hygiene" in policy
-    assert "If the PR changes implementation truth" in policy
-    assert "source-controlled ledger/docs/wiki/context update is required" in policy
+    assert "Do not create routine post-merge source-sync PRs" in policy
+    assert "owning GitHub issue or PR" in policy
+    assert "generated or immutable CI/release artifacts" in policy
+    assert "inside an implementation PR" in policy
+    assert "periodic Slice 18 reconciliation sweep" in policy
 
 
 def test_rfc0002_github_issue_execution_ledger_requires_evidence_only_sync_policy(
@@ -372,20 +370,17 @@ def test_rfc0002_github_issue_execution_ledger_requires_evidence_only_sync_polic
 ) -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
-    payload["policy"]["evidenceOnlySyncPrRule"] = (
-        "Evidence-only Slice 18 synchronization PRs can use comments."
-    )
+    payload["policy"]["evidenceOnlySyncPrRule"] = "Source-sync PRs can use comments."
 
     errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
 
     assert (
         "policy.evidenceOnlySyncPrRule missing required evidence "
-        "`Evidence-only Slice 18 synchronization PRs must not recursively "
-        "require another source-sync PR for their own post-merge evidence`"
+        "`Do not create routine post-merge source-sync PRs`"
     ) in errors
     assert (
         "policy.evidenceOnlySyncPrRule missing required evidence "
-        "`source-controlled ledger/docs/wiki/context update is required`"
+        "`periodic Slice 18 reconciliation sweep`"
     ) in errors
 
 

@@ -634,6 +634,18 @@ PostgreSQL paths and surface only an aggregate readiness blocker. API
 `scorePolicyVersion` remains score provenance. These are internal bounded
 modules in the existing deployable, not a queue microservice.
 
+Time-bound applicability is evidence-backed candidate truth, not a UI timer.
+The bond-maturity family derives `applicabilityExpiresAtUtc` only from Core's
+source-reported contractual maturity date: the opportunity remains active
+through that UTC calendar date and expires at 00:00 UTC the following day.
+Candidate JSON, detail, queue, replay, readiness, audit, and PostgreSQL
+rehydration preserve the same boundary; both queue implementations treat
+equality as expired. Evidence-only correction cannot move or remove the
+boundary because the maturity date is a material identity fact. A changed
+contractual maturity date creates a new material version and uses the governed
+recurrence/reopen path. This does not introduce a scheduler, market-calendar
+calculation, tenant-timezone inference, or source-freshness substitution.
+
 Production family scores are evidence-derived rather than family constants.
 Quantitative families translate source-reported threshold-relative magnitude
 into bounded materiality; bond maturity combines time-to-maturity urgency with

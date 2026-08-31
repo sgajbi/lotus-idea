@@ -295,16 +295,20 @@ Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
 #681 evidence in the
 [#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
 and completed remote/local branch cleanup.
-Evidence-only Slice 18 synchronization PRs must not recursively require another
-source-sync PR solely to record their own post-merge evidence. PR #845 is the
-current example: it merged to `909f045251a300326ed772c3b676509011237cc8`,
+Routine post-merge source-sync PRs are prohibited when their only purpose is to
+copy volatile PR numbers, run ids, exact-main SHAs, issue counts, image digests,
+or lifecycle labels already owned by GitHub or generated evidence. Record that
+evidence on the owning issue/PR and in immutable CI/release artifacts. PR #845
+is a historical example of the former recursion stop: it merged to
+`909f045251a300326ed772c3b676509011237cc8`,
 passed exact-main Main Releasability `30729531793`, published wiki commit
 `41cf454` with strict `DiffCount 0`, completed branch hygiene, and recorded its
 final #681 evidence in the
 [#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
-If an evidence-sync PR changes implementation truth, blocker state, support
-posture, wiki source, context, or policy, source-controlled ledger/docs/wiki
-truth must still be updated in the next implementation-bearing slice.
+Durable product, architecture, blocker, support, or execution-policy truth must
+be updated inside the implementation PR when it changes. Later durable
+corrections are batched in a periodic Slice 18 reconciliation sweep rather than
+firing after every merge.
 Platform PR `sgajbi/lotus-platform#646` then merged the reusable keep-open PR
 guidance hardening on platform main
 `c041a7e13358feb322b8e92b3827f3ed2a834b43`; exact-main Main Releasability run
@@ -579,6 +583,9 @@ Current implementation includes these bounded foundations:
    high volatility, drawdown review, missing suitability, missing risk profile,
    mandate/restriction, low income / liquidity shortfall, and missing
    benchmark review,
+   with bond-maturity applicability retained from the Core-reported contractual
+   maturity date through candidate persistence, detail, replay, and exact-boundary
+   queue/readiness exclusion,
 3. source-adapter and receipt-bound runtime-evidence foundations for selected
    Core, Risk, Performance, Advise, and Manage evidence families,
 4. durable repository support with PostgreSQL migrations and source-safe
@@ -1691,10 +1698,12 @@ run
 GitHub open/closed state and lifecycle labels so reopened, blocked,
 in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
 drift silently.
-When partial Slice 18 documentation, issue-automation, or posture PRs merge,
-update the `#681` ledger instruction with exact PR, main SHA, mainline run,
-wiki decision/publication, branch-cleanup evidence, and no-claim boundary in
-the same source change. The current pinned rollup includes PR #765
+Do not update source after each merge merely to transcribe exact PR, SHA, run,
+wiki-publication, branch-cleanup, count, digest, or label evidence. Put those
+facts on the owning GitHub issue or PR. Treat the pinned rollup below as
+historical evidence, not a template for new per-merge source churn. Later
+durable reconciliation belongs in a periodic Slice 18 sweep. The historical
+rollup includes PR #765
 (`3ab78c4e9ba23b08eec5396f0641acf21c98f74a`, Main Releasability
 `30411606383`, `lotus-idea.wiki` commit `0aea688`), PR #767, PR #768, PR #769,
 PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability

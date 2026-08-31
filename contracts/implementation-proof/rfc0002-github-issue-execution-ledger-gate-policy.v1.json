@@ -163,10 +163,11 @@
     1178
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
-    "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
-    "final PR evidence comment",
-    "If the PR changes implementation truth, blocker state, support posture, wiki source, context, or policy",
-    "source-controlled ledger/docs/wiki/context update is required"
+    "Do not create routine post-merge source-sync PRs",
+    "owning GitHub issue or PR",
+    "generated or immutable CI/release artifacts",
+    "inside an implementation PR",
+    "periodic Slice 18 reconciliation sweep"
   ],
   "requiredOpenIssueEvidence": {
     "343": [
