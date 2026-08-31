@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
 from app.application.advise_policy_runtime_evidence import (
     validate_advise_policy_runtime_envelope,
 )
+from app.application.runtime_evidence import SCORE_RECEIPT_KEYS, score_receipt_is_valid
 from app.application.mandate_restriction_signal import (
     mandate_restriction_review_ready_from_advise_diagnostic,
 )
@@ -27,6 +27,9 @@ _EVALUATION_KEYS = frozenset(
         "unsupportedReasons",
         "policyVersion",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "restrictionReviewRequired",
         "candidateIdHash",
         "signalIdHash",
@@ -84,13 +87,8 @@ def _evaluation_receipt_is_valid(
     workflow: Mapping[str, Any],
     evaluation: Mapping[str, Any],
 ) -> bool:
-    try:
-        score = Decimal(str(evaluation.get("candidateScore")))
-    except (InvalidOperation, TypeError, ValueError):
-        return False
     if (
-        score < Decimal("0")
-        or score > Decimal("100")
+        not SCORE_RECEIPT_KEYS.issubset(evaluation)
         or evaluation.get("family") != "mandate_restriction"
         or evaluation.get("unsupportedReasons") != []
     ):
@@ -99,6 +97,8 @@ def _evaluation_receipt_is_valid(
         _optional_text(workflow.get("adviseDiagnostic"))
     )
     if evaluation.get("restrictionReviewRequired") is not review_required:
+        return False
+    if not score_receipt_is_valid(evaluation, candidate_expected=review_required):
         return False
     if review_required:
         return (

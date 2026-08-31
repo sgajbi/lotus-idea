@@ -21,6 +21,7 @@ from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
+    score_receipt,
     sha256_json,
 )
 from app.domain import MissingSuitabilityContextSignalPolicy, SignalEvaluationOutcome, SourceSystem
@@ -30,7 +31,7 @@ from app.ports.advise_sources import AdviseOpportunitySourcePort
 
 ADVISE_MISSING_SUITABILITY_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF"
 ADVISE_MISSING_SUITABILITY_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.advise-missing-suitability.runtime-execution.v2"
+    "lotus-idea.advise-missing-suitability.runtime-execution.v3"
 )
 ADVISE_MISSING_SUITABILITY_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_advise_policy_live_source_proof_missing",
@@ -166,7 +167,7 @@ def _evaluation_receipt(
         "unsupportedReasons": [reason.value for reason in evaluation.unsupported_reasons],
         "policyVersion": result.policy.policy_version,
         "minimumOpenRequirementCount": result.policy.minimum_open_requirement_count,
-        "candidateScore": str(result.policy.candidate_score),
+        **score_receipt(candidate.score if candidate is not None else None),
         "suitabilityContextMissing": candidate is not None,
         "candidateIdHash": identity_hash(candidate.candidate_id) if candidate else None,
         "signalIdHash": identity_hash(signal.signal_id) if signal else None,

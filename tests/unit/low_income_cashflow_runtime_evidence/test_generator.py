@@ -29,7 +29,7 @@ def test_generator_writes_source_safe_qualified_artifact(
 
     assert result == 0
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["schemaVersion"] == "lotus-idea.low-income-cashflow.runtime-execution.v2"
+    assert payload["schemaVersion"] == "lotus-idea.low-income-cashflow.runtime-execution.v3"
     assert payload["execution"]["status"] == "completed"
     assert payload["execution"]["evaluationReceipt"]["outcome"] == "candidate_created"
     assert payload["aggregateBlockersSatisfied"] == [

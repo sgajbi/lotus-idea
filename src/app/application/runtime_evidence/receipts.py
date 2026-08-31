@@ -5,7 +5,7 @@ import hashlib
 import json
 from typing import Any
 
-from app.domain import SourceRef
+from app.domain import IdeaScore, SourceRef
 
 
 def source_ref_material(ref: SourceRef) -> dict[str, Any]:
@@ -27,6 +27,32 @@ def source_ref_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
         return None
     material = source_ref_material(ref)
     return {**material, "receiptDigest": sha256_json(material)}
+
+
+def score_receipt(score: IdeaScore | None) -> dict[str, Any]:
+    """Project the governed score without inventing one for non-candidate outcomes."""
+    return {
+        "candidateScore": str(score.score) if score is not None else None,
+        "scoreReasonCodes": (
+            [reason.value for reason in score.reason_codes] if score is not None else []
+        ),
+        "scoreComponents": (
+            [
+                {
+                    "component": item.component.value,
+                    "inputScore": str(item.input_score),
+                    "weight": str(item.weight),
+                    "contribution": str(item.contribution),
+                }
+                for item in score.contributions
+            ]
+            if score is not None
+            else []
+        ),
+        "scoreConflictPenaltyApplied": (
+            str(score.conflict_penalty_applied) if score is not None else None
+        ),
+    }
 
 
 def identity_hash(value: str) -> str:

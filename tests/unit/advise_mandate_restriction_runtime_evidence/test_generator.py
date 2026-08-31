@@ -38,7 +38,7 @@ def test_generator_writes_source_safe_qualified_artifact(
     assert len(source.requests) == 1
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["schemaVersion"] == (
-        "lotus-idea.advise-mandate-restriction.runtime-execution.v2"
+        "lotus-idea.advise-mandate-restriction.runtime-execution.v3"
     )
     assert payload["execution"]["status"] == "completed"
     assert payload["execution"]["evaluationReceipt"]["outcome"] == "candidate_created"

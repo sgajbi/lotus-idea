@@ -11,6 +11,7 @@ from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
+    score_receipt,
     sha256_json,
     source_ref_receipt,
 )
@@ -38,7 +39,7 @@ from app.ports.core_sources import (
 
 LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF"
 LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.low-income-cashflow.runtime-execution.v2"
+    "lotus-idea.low-income-cashflow.runtime-execution.v3"
 )
 LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_live_core_cashflow_source_proof_missing",
@@ -574,6 +575,7 @@ def _runtime_receipt(runtime: CoreSourceProductRuntimeEvidence) -> dict[str, Any
 
 def _evaluation_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, Any]:
     evaluation = result.evaluation
+    candidate = evaluation.candidate
     material = {
         "family": evaluation.family.value,
         "outcome": evaluation.outcome.value,
@@ -583,7 +585,7 @@ def _evaluation_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, A
         "projectedCumulativeCashflowThreshold": str(
             result.policy.projected_cumulative_cashflow_threshold
         ),
-        "candidateScore": str(result.policy.candidate_score),
+        **score_receipt(candidate.score if candidate is not None else None),
         "candidateIdHash": (
             identity_hash(evaluation.candidate.candidate_id) if evaluation.candidate else None
         ),

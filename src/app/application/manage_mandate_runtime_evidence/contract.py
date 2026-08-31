@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
-from app.application.runtime_evidence import sha256_json
+from app.application.runtime_evidence import score_receipt_is_valid, sha256_json
 from app.application.manage_mandate_runtime_evidence.runtime_execution import (
     MANAGE_MANDATE_REMAINING_BLOCKERS,
     MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED,
@@ -100,6 +99,9 @@ _EVALUATION_KEYS = frozenset(
         "minimumWorkflowDecisionCount",
         "minimumLineageEdgeCount",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "candidateIdHash",
         "signalIdHash",
         "evidencePacketIdHash",
@@ -373,14 +375,12 @@ def _evaluation_outcome_is_valid(
         for value in (minimum_workflow, minimum_lineage)
     ):
         return False
-    try:
-        Decimal(str(evaluation.get("candidateScore")))
-    except (InvalidOperation, ValueError):
-        return False
     should_create = (
         action["workflowDecisionCount"] >= minimum_workflow
         and action["lineageEdgeCount"] >= minimum_lineage
     )
+    if not score_receipt_is_valid(evaluation, candidate_expected=should_create):
+        return False
     if should_create:
         return (
             evaluation.get("outcome") == "candidate_created"

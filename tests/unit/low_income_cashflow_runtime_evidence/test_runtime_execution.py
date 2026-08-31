@@ -421,7 +421,6 @@ def test_runtime_execution_rejects_policy_result_drift() -> None:
         policy=LowIncomeSignalPolicy(
             policy_version="cashflow-liquidity-review-v2",
             projected_cumulative_cashflow_threshold=Decimal("-20000"),
-            candidate_score=Decimal("68"),
         ),
     )
 

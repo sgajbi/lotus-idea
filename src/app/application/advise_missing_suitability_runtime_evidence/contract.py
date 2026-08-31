@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
 from app.application.advise_policy_runtime_evidence import (
     validate_advise_policy_runtime_envelope,
 )
+from app.application.runtime_evidence import score_receipt_is_valid
 from app.domain import missing_suitability_review_required_from_workflow
 
 from .runtime_execution import (
@@ -26,6 +26,9 @@ _EVALUATION_KEYS = frozenset(
         "policyVersion",
         "minimumOpenRequirementCount",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "suitabilityContextMissing",
         "candidateIdHash",
         "signalIdHash",
@@ -81,17 +84,11 @@ def _evaluation_receipt_is_valid(
     workflow: Mapping[str, Any],
     evaluation: Mapping[str, Any],
 ) -> bool:
-    try:
-        score = Decimal(str(evaluation.get("candidateScore")))
-    except (InvalidOperation, TypeError, ValueError):
-        return False
     minimum_open = evaluation.get("minimumOpenRequirementCount")
     if (
         not isinstance(minimum_open, int)
         or isinstance(minimum_open, bool)
         or minimum_open < 0
-        or score < Decimal("0")
-        or score > Decimal("100")
         or evaluation.get("family") != "missing_suitability_context"
         or evaluation.get("unsupportedReasons") != []
     ):
@@ -123,6 +120,8 @@ def _evaluation_receipt_is_valid(
         minimum_open_requirement_count=minimum_open,
     )
     if evaluation.get("suitabilityContextMissing") is not context_missing:
+        return False
+    if not score_receipt_is_valid(evaluation, candidate_expected=context_missing):
         return False
     if context_missing:
         return (

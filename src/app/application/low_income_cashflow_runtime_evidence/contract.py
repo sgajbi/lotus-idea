@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
-from app.application.runtime_evidence import sha256_json
+from app.application.runtime_evidence import score_receipt_is_valid, sha256_json
 from app.application.low_income_cashflow_runtime_evidence.runtime_execution import (
     LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS,
     LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
@@ -123,6 +123,9 @@ _EVALUATION_KEYS = frozenset(
         "policyVersion",
         "projectedCumulativeCashflowThreshold",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "candidateIdHash",
         "signalIdHash",
         "evaluationDigest",
@@ -341,10 +344,11 @@ def _evaluation_is_valid(evaluation: Mapping[str, Any], projection: Mapping[str,
     try:
         minimum = Decimal(str(projection.get("minimumProjectedCumulativeCashflow")))
         threshold = Decimal(str(evaluation.get("projectedCumulativeCashflowThreshold")))
-        Decimal(str(evaluation.get("candidateScore")))
     except (InvalidOperation, ValueError):
         return False
     candidate_expected = minimum <= threshold
+    if not score_receipt_is_valid(evaluation, candidate_expected=candidate_expected):
+        return False
     if candidate_expected:
         return (
             evaluation.get("outcome") == "candidate_created"

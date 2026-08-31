@@ -17,7 +17,13 @@ from app.application.missing_risk_profile_signal import (
     MissingRiskProfileSourceEvaluation,
     evaluate_missing_risk_profile_readiness_from_advise,
 )
-from app.application.runtime_evidence import format_utc, identity_hash, require_aware, sha256_json
+from app.application.runtime_evidence import (
+    format_utc,
+    identity_hash,
+    require_aware,
+    score_receipt,
+    sha256_json,
+)
 from app.domain import (
     MissingRiskProfileSignalPolicy,
     SignalEvaluationOutcome,
@@ -30,7 +36,7 @@ from app.ports.advise_sources import AdviseOpportunitySourcePort
 
 ADVISE_MISSING_RISK_PROFILE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF"
 ADVISE_MISSING_RISK_PROFILE_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.advise-missing-risk-profile.runtime-execution.v2"
+    "lotus-idea.advise-missing-risk-profile.runtime-execution.v3"
 )
 ADVISE_MISSING_RISK_PROFILE_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_advise_risk_profile_live_source_proof_missing",
@@ -168,7 +174,7 @@ def _evaluation_receipt(
         "reasonCodes": [code.value for code in evaluation.reason_codes],
         "unsupportedReasons": [reason.value for reason in evaluation.unsupported_reasons],
         "policyVersion": result.policy.policy_version,
-        "candidateScore": str(result.policy.candidate_score),
+        **score_receipt(candidate.score if candidate is not None else None),
         "riskProfilePosture": posture.value if posture is not None else None,
         "riskProfileReviewRequired": posture is not None and posture.value != "CURRENT",
         "candidateIdHash": identity_hash(candidate.candidate_id) if candidate else None,

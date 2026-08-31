@@ -27,7 +27,7 @@ def test_generator_writes_source_safe_qualified_artifact(
     assert result == 0
     assert len(source.requests) == 1
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["schemaVersion"] == "lotus-idea.manage-mandate.runtime-execution.v3"
+    assert payload["schemaVersion"] == "lotus-idea.manage-mandate.runtime-execution.v4"
     assert payload["execution"]["status"] == "completed"
     assert payload["execution"]["evaluationReceipt"]["outcome"] == "candidate_created"
     serialized = json.dumps(payload)

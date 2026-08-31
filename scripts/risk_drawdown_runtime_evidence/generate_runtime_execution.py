@@ -143,7 +143,6 @@ def _policy(args: argparse.Namespace) -> DrawdownReviewSignalPolicy:
     return DrawdownReviewSignalPolicy(
         policy_version=DEFAULT_DRAWDOWN_REVIEW_POLICY.policy_version,
         max_drawdown_threshold=Decimal(args.max_drawdown_threshold),
-        candidate_score=DEFAULT_DRAWDOWN_REVIEW_POLICY.candidate_score,
     )
 
 
