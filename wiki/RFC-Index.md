@@ -126,9 +126,9 @@ Current RFC-0002 implementation-start baseline:
    Protected execution and rollout-health proof remain open. This does not claim
    downstream execution or supported-feature readiness.
 8. Slice 07 queue-policy foundations are implemented on `main` through PR
-   `#383`; issue `#1178` owns the evidence-derived family-scoring correction
-   and remains open until its implementation is merged and exact-main/wiki
-   closure passes. Candidate score policies and queue ranking policy are
+   `#383`; issue `#1178` is closed after PR `#1179` merged the
+   evidence-derived family-scoring correction and exact-main release,
+   CodeQL, wiki publication/parity, and branch cleanup passed. Candidate score policies and queue ranking policy are
    separately versioned. Production families now derive bounded components
    from authoritative magnitude, urgency, workflow depth, or source posture;
    full breakdowns persist and surface through existing APIs. Migration `021`

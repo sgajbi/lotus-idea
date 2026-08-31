@@ -313,7 +313,7 @@
     {
       "patternId": "opportunity_quality_golden_evaluation",
       "title": "Cross-family opportunity quality needs independently authored golden expectations over production policy paths.",
-      "currentLedgerIssueNumbers": [1178],
+      "currentLedgerIssueNumbers": [],
       "relatedIssueNumbers": [699, 1154, 1155, 1156, 1178],
       "rfcSlices": ["slice-05", "slice-07", "slice-16", "slice-17"],
       "durableControls": [

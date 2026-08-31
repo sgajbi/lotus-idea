@@ -1492,10 +1492,10 @@
       "issueNumber": 1178,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1178",
       "rfcSlices": ["slice-07"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1178 open and status/pr-open while PR #1179 implements evidence-derived family opportunity scoring. The implementation replaces fixed production-family score constants with versioned family policy, persists full typed score components and exact reconstruction provenance through migration 021, exposes the breakdown through existing API resources, and preserves eligibility and ReviewQueuePolicy as separate authorities. Closure remains pending every PR gate, including the unchanged 99% combined coverage threshold and Docker build, rebase merge to exact Idea main, Main Releasability and CodeQL for the exact merged SHA, repo-authored wiki publication with strict DiffCount 0, independent QA, and local/remote branch cleanup. No assertion or threshold may be weakened, no compatibility layer or AI decision authority is introduced, and no supported-feature promotion or final RFC-0002 closure is claimed."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1178 after QA passed for evidence-derived family opportunity scoring. PR #1179 rebase-merged to exact Idea main 384e330727c6e36df9c17bc30910170e95942105. The implementation replaces fixed production-family score constants with versioned family policy, persists full typed score components and exact reconstruction provenance through migration 021, exposes that breakdown through existing API resources, certifies receipt-bound runtime score evidence, and preserves eligibility and ReviewQueuePolicy as separate authorities. Main Releasability run 33390835524 and CodeQL run 33390825582 passed for that exact SHA, including 5,839 unit tests, integration and E2E lanes, PostgreSQL runtime proof, the unchanged 99% combined coverage threshold, vulnerability scanning, runtime smoke, immutable image publication, signing, SBOM, provenance, release and license identity, and CI signal evidence. The certified image is ghcr.io/sgajbi/lotus-idea@sha256:91199afb237249a1805a7b2b47cdeccce42cd8d4d2ac4c08c216414529faba03. Repo-authored wiki source was published to lotus-idea.wiki commit ebf49a1bc41215358ffcd633fe17fa6bc3471cd2 with strict DiffCount 0. The implementation branch is absent locally and remotely, one clean main worktree remains, and no unmerged remote branch exists. No assertion or threshold was weakened, no compatibility layer or AI decision authority was introduced, supported features remain unchanged, and no final RFC-0002 closure is claimed."
     },
     {
       "issueNumber": 1162,
