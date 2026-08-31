@@ -54,7 +54,7 @@ def reconcile_candidate(
             candidate=None,
         )
 
-    if existing.lifecycle_status in REOPENABLE_TERMINAL_STATUSES:
+    if material_changed and existing.lifecycle_status in REOPENABLE_TERMINAL_STATUSES:
         return CandidateReconciliation(
             decision=CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED,
             candidate=_new_material_version(

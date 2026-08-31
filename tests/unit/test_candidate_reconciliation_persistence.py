@@ -4,6 +4,8 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 
+import pytest
+
 from app.domain import (
     CandidateChangeReason,
     CandidatePersistenceDecision,
@@ -25,6 +27,14 @@ from app.domain import (
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+TERMINAL_STATE_EXPECTATIONS = (
+    (IdeaLifecycleStatus.ACCEPTED, ReviewPosture.APPROVED_FOR_CONVERSION),
+    (IdeaLifecycleStatus.REJECTED, ReviewPosture.REJECTED),
+    (IdeaLifecycleStatus.EXPIRED, ReviewPosture.NO_ACTION),
+    (IdeaLifecycleStatus.EXECUTED, ReviewPosture.APPROVED_FOR_CONVERSION),
+    (IdeaLifecycleStatus.CLOSED, ReviewPosture.NO_ACTION),
+)
 
 
 def _source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef:
@@ -174,16 +184,61 @@ def test_material_change_creates_version_and_clears_prior_suppression() -> None:
     assert changed.record.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
 
 
-def test_changed_evidence_reopens_terminal_candidate_as_recurrent_condition() -> None:
+@pytest.mark.parametrize(("terminal_status", "terminal_posture"), TERMINAL_STATE_EXPECTATIONS)
+def test_evidence_only_correction_preserves_terminal_candidate_state(
+    terminal_status: IdeaLifecycleStatus,
+    terminal_posture: ReviewPosture,
+) -> None:
     candidate, refs = _candidate()
-    expired_candidate = replace(
+    terminal_candidate = replace(
         candidate,
-        lifecycle_status=IdeaLifecycleStatus.EXPIRED,
-        review_posture=ReviewPosture.NO_ACTION,
+        lifecycle_status=terminal_status,
+        review_posture=terminal_posture,
     )
-    recurrent_candidate, recurrent_refs = _candidate(cashflow_hash="sha256:recurrent-cashflow")
+    corrected_candidate, corrected_refs = _candidate(cashflow_hash="sha256:corrected-cashflow")
     repository = InMemoryIdeaRepository()
-    _persist(repository, expired_candidate, refs, sequence=1)
+    _persist(repository, terminal_candidate, refs, sequence=1)
+
+    corrected = _persist(
+        repository,
+        corrected_candidate,
+        corrected_refs,
+        sequence=2,
+        occurred_at_utc=datetime(2026, 6, 22, 10, 0, tzinfo=UTC),
+    )
+
+    assert corrected.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    assert corrected.record is not None
+    assert corrected.record.candidate.lifecycle_status is terminal_status
+    assert corrected.record.candidate.review_posture is terminal_posture
+    assert corrected.record.candidate.identity.material_version == 1
+    assert corrected.record.candidate.identity.evidence_version == 2
+    assert (
+        corrected.record.candidate.identity.change_reason
+        is CandidateChangeReason.EVIDENCE_CORRECTION
+    )
+    assert len(corrected.record.version_history) == 2
+    assert corrected.record.version_history[-1].source_lifecycle_status is terminal_status
+    assert corrected.record.audit_events[-1].event_type == "idea.candidate.evidence_refreshed"
+    assert tuple(repository.snapshot().outbox_events.values())[-1].event_type == (
+        "idea.candidate.evidence_refreshed.v1"
+    )
+
+
+@pytest.mark.parametrize(("terminal_status", "terminal_posture"), TERMINAL_STATE_EXPECTATIONS)
+def test_material_change_reopens_terminal_candidate_as_recurrent_condition(
+    terminal_status: IdeaLifecycleStatus,
+    terminal_posture: ReviewPosture,
+) -> None:
+    candidate, refs = _candidate()
+    terminal_candidate = replace(
+        candidate,
+        lifecycle_status=terminal_status,
+        review_posture=terminal_posture,
+    )
+    recurrent_candidate, recurrent_refs = _candidate(cash_weight=Decimal("0.21"))
+    repository = InMemoryIdeaRepository()
+    _persist(repository, terminal_candidate, refs, sequence=1)
 
     reopened = _persist(
         repository,
@@ -202,6 +257,14 @@ def test_changed_evidence_reopens_terminal_candidate_as_recurrent_condition() ->
     assert (
         reopened.record.candidate.identity.change_reason
         is CandidateChangeReason.RECURRENT_CONDITION
+    )
+    assert reopened.record.candidate.identity.supersedes_material_version == 1
+    assert reopened.record.version_history[-1].source_lifecycle_status is terminal_status
+    assert reopened.record.audit_events[-1].event_type == (
+        "idea.candidate.recurrent_condition_reopened"
+    )
+    assert tuple(repository.snapshot().outbox_events.values())[-1].event_type == (
+        "idea.candidate.recurrent_condition_reopened.v1"
     )
 
 
