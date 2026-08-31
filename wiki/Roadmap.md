@@ -128,11 +128,14 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome history/current posture with append-only correction, no-authority
-    conversion boundaries, and a certified
+    conversion boundaries, exact persisted outcome evidence on acceptance and
+    resource-identity replay with fail-closed corruption handling, and a certified
     downstream realization readiness contract-plan diagnostic,
 15. RFC-0002 Slice 13 partially implements internal report evidence-pack
     request governance for reviewed report conversion intents, source summaries,
     retention refs, Report/Render/Archive authority refs, idempotency, audit,
+    exact persisted request evidence on acceptance and replay with fail-closed
+    missing/ambiguous handling,
     a certified internal API foundation, and operator-visible
     Report/Render/Archive blocker reporting, plus bounded `lotus-report`
     materialization proof consumption when sibling evidence is present,

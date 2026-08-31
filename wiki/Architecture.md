@@ -550,6 +550,14 @@ It is not a runtime service split. Conversion remains a review-gated local
 intent/outcome posture and does not grant downstream execution, suitability,
 compliance, rebalance, render/archive, or client-communication authority.
 
+The conversion and report-evidence application use cases apply one shared
+persisted-action invariant: accepted and replayed success must resolve exactly
+one command/identity-bound action from the returned candidate record. API
+responses project that persisted object directly. They do not retain transient
+domain creation wrappers, reconstruct an audit event from request input, or
+return a successful null resource; missing or ambiguous evidence becomes
+product-safe degraded recovery.
+
 `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` is the
 certified internal lifecycle transition API foundation. It requires
 `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the

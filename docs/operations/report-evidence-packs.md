@@ -39,8 +39,17 @@ The endpoint:
 4. requires reviewed, approved, ready evidence,
 5. records source summaries, evidence hash, retention policy ref, and safe audit
    event,
-6. reports `durableStorageBacked` from the active repository provider,
-7. returns `supportedFeaturePromoted=false`.
+6. returns the exact persisted request for accepted and idempotent replay
+   success after requiring exactly one match across report-pack identity,
+   conversion intent, actor, idempotency key, purpose, reason codes, request
+   time, and retention reference,
+7. binds the forbidden client-publication request flag into the idempotency
+   fingerprint, so a same-key retry cannot escalate an evidence-only request
+   into apparent publication authority,
+8. fails closed as `503 service_recovery_degraded` when otherwise-successful
+   persistence contains zero or multiple matching requests,
+9. reports `durableStorageBacked` from the active repository provider,
+10. returns `supportedFeaturePromoted=false`.
 
 ## Boundaries
 
@@ -80,7 +89,9 @@ Current proof lives in:
 3. `tests/integration/test_review_workflow_api.py`,
 4. `tests/integration/test_postgres_runtime_integration.py`,
 5. `tests/unit/test_service_contract.py`,
-6. `docs/operations/endpoint-certification-ledger.json`.
+6. `tests/unit/test_report_evidence_workflow_application.py`,
+7. `tests/integration/test_persisted_action_evidence_api.py`,
+8. `docs/operations/endpoint-certification-ledger.json`.
 
 Promotion requires deploy evidence, certified long-running scheduled source-worker
 proof, live source-adapter proof, downstream acceptance tests, render/archive proof,

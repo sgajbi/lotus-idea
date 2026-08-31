@@ -255,6 +255,15 @@ Implemented in this slice:
     preserves suitability, rebalance/execution, report-rendering/archive,
     client-publication, production-identity, supported-feature, legal/privacy
     approval, and certification-closure claims as false.
+34. Conversion outcome acceptance and resource-identity replay now return the
+    exact persisted `GovernedConversionOutcome` selected by the complete
+    source-event identity. A successful persistence decision with no matching
+    outcome or more than one matching outcome fails closed as product-safe
+    degraded recovery. The API and OpenAPI success contract is non-null, and
+    focused tests prove accepted/replayed equality with no duplicate candidate,
+    audit, or outbox mutation. This improves retry reconstruction without
+    granting the downstream authority that remains with Advise, Manage, or
+    Report.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
