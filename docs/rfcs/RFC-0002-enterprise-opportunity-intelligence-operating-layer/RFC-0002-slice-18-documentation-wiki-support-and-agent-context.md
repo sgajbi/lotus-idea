@@ -418,9 +418,8 @@ repository, and duplicate/superseded posture.
 Issue `#681` now adds
 `contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
 and `make rfc0002-github-issue-execution-ledger-gate` as the durable
-RFC-0002 issue execution ledger. The ledger covers the current RFC execution
-issues and now reconciles every GitHub issue carrying the `rfc/RFC-0002` label,
-including legacy blocker issues `#340`, `#343`, `#344`, `#345`, `#375`,
+RFC-0002 legacy issue execution ledger. The ledger preserves and validates its
+historical governed issue set, including blocker issues `#340`, `#343`, `#344`, `#345`, `#375`,
 `#379`, `#380`, and closed OpenAPI certification issue `#542` alongside the
 slice execution set `#673` through `#704` where applicable. It fails closed when
 an open or partial issue allows PR auto-close, lacks a `Keep #<issue> open`
@@ -429,6 +428,14 @@ truth with open-issue wording. This prevents future source-contract or
 evidence-consumption PRs from using `Closes`, `Fixes`, or `Resolves` for work
 that still lacks live runtime, downstream, publication, support, or
 supported-feature evidence.
+
+New RFC-labeled product issues remain GitHub-owned and do not require a matching
+source-ledger row. Durable product, architecture, API, operational, wiki, and
+context truth belongs in the implementation PR. Volatile PR numbers, run IDs,
+main SHAs, image digests, counts, and issue lifecycle labels belong in GitHub,
+generated posture tooling, and immutable CI/release artifacts. Post-merge
+evidence alone does not justify a source-sync PR; Slice 18 batches durable
+reconciliation rather than firing after every product merge.
 
 Slice 18 also adds `make rfc0002-github-issue-pr-text-gate`, backed by
 `scripts/github_issue_pr_text_gate.py`, as the pull-request title/body
@@ -457,8 +464,9 @@ with current GitHub issue state and lifecycle labels, so reopened issues,
 blocked issues, in-progress issues, open tracker issues,
 merged-main-QA-pending issues, and closed-complete issues cannot drift silently
 away from the durable execution ledger. It also fails when a GitHub issue is
-labeled `rfc/RFC-0002` but missing from the ledger, or when a ledger issue lacks
-the RFC label in GitHub. Parent `open_tracker` issues now require
+represented in the legacy ledger but lacks its RFC label in GitHub. Additional
+RFC-labeled GitHub issues do not require ledger transcription. Parent
+`open_tracker` issues now require
 `status/tracker`; the #681 anchor carries the current execution label, such as
 `status/pr-open` while a Slice 18 synchronization PR is open and
 `status/in-progress` between PRs. Future partial Slice 18 PRs must keep the

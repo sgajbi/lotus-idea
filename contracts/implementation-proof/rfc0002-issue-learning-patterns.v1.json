@@ -9,6 +9,7 @@
     {
       "patternId": "github_execution_control_and_context_sync",
       "title": "GitHub issue state, closure wording, docs, wiki, and agent-context truth must remain executable and mainline-backed.",
+      "currentSteeringRule": "GitHub is authoritative for volatile execution state. Validate every historical source-ledger row against GitHub, but do not require new RFC-labeled GitHub issues to be transcribed into the legacy ledger. Put durable product, architecture, API, operations, wiki, and context truth in the implementation PR; keep PR numbers, run IDs, main SHAs, image digests, counts, lifecycle labels, and closure evidence in GitHub, generated posture, and immutable CI/release artifacts. Do not create routine post-merge source-sync PRs; batch durable Slice 18 reconciliation. This rule supersedes historical source-mirroring instructions retained in the legacy futureAgentRule narrative.",
       "currentLedgerIssueNumbers": [673, 681, 683, 684],
       "relatedIssueNumbers": [681, 854, 871, 874, 883, 890, 892, 929, 944, 950, 953, 956, 960, 1003, 1071, 1119, 1121, 1123, 1125, 1127, 1129, 1131, 1139],
       "rfcSlices": ["slice-18", "slice-20", "slice-21"],
@@ -133,8 +134,8 @@
     {
       "patternId": "economic_candidate_identity_and_evidence_versioning",
       "title": "Business candidate identity must remain stable while evidence, material condition, and transport identity evolve independently.",
-      "currentLedgerIssueNumbers": [1181],
-      "relatedIssueNumbers": [326, 330, 333, 382, 1154],
+      "currentLedgerIssueNumbers": [],
+      "relatedIssueNumbers": [326, 330, 333, 382, 1154, 1181],
       "rfcSlices": ["slice-03", "slice-05", "slice-06", "slice-07"],
       "durableControls": [
         {

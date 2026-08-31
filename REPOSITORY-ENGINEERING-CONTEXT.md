@@ -187,8 +187,11 @@ those non-regression invariants hold, so normal issue delivery cannot make the
 snapshot recursively invalidate itself. The shared GitHub issue
 inventory used by both the local Idea issue-state audit and cross-repository
 posture command first queries each repository issue total and rejects incomplete
-cardinality, so a newly RFC-labeled issue beyond a fixed list window cannot be
-hidden by ledger-only backfill or a larger fixed cap. Open blocked ledger entries
+cardinality, so newly RFC-labeled issues remain visible in GitHub-backed live
+posture without requiring source-ledger transcription. The execution ledger is
+a one-way compatibility control for its historical entries: every ledger row
+must reconcile to GitHub, but additional GitHub-owned issues need not be copied
+into source. Open blocked ledger entries
 now use canonical `currentBlockerIssueRefs` values when they assert a specific
 external issue as current; the live state audit fails if a declared blocker is
 missing or closed, preventing historical Core or dependency narratives from

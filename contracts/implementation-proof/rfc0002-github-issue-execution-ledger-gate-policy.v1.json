@@ -160,8 +160,7 @@
     1168,
     1169,
     1170,
-    1178,
-    1181
+    1178
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -170,18 +169,6 @@
     "source-controlled ledger/docs/wiki/context update is required"
   ],
   "requiredOpenIssueEvidence": {
-    "1181": [
-      "Keep #1181 open and status/in-progress",
-      "requires accessScope",
-      "evaluation-only diagnostics",
-      "repository mutation boundary",
-      "candidate, idempotency, audit, or outbox mutation",
-      "distinct business candidate identities",
-      "PostgreSQL runtime proof",
-      "production identity-provider/session authority",
-      "supported-feature promotion",
-      "final RFC-0002 completion"
-    ],
     "343": [
       "Keep #343 open and status/blocked",
       "versioned DR contract",
