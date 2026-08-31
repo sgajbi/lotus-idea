@@ -119,6 +119,7 @@ class GovernedConversionIntent:
 
 @dataclass(frozen=True)
 class ConversionIntentResult:
+    source_candidate: IdeaCandidate
     candidate: IdeaCandidate
     conversion_intent: GovernedConversionIntent
     audit_event: AuditEvent
@@ -241,6 +242,7 @@ def request_conversion_intent(
         },
     )
     return ConversionIntentResult(
+        source_candidate=candidate,
         candidate=transitioned_candidate,
         conversion_intent=governed_intent,
         audit_event=audit_event,
