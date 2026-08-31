@@ -259,7 +259,15 @@ Implemented first-wave internal scope:
 14. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
-   conflict errors, and repository-derived `durableStorageBacked` posture.
+   conflict errors, and repository-derived `durableStorageBacked` posture. Its
+   persistence-specific request contract requires complete `accessScope`, while
+   evaluation-only requests may remain explicitly diagnostic and unscoped. The
+   repository independently rejects an unscoped candidate before candidate,
+   idempotency, audit, or outbox mutation, so alternate application callers
+   cannot bypass the HTTP invariant. Distinct tenant/portfolio scopes produce
+   distinct business candidate identities even when their economic evidence is
+   otherwise equivalent. This hardening does not add production authentication,
+   identity-provider authority, or supported-feature promotion.
 15. `src/app/application/candidate_lifecycle.py` and
    `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
    lifecycle transition orchestration over the same repository contract.

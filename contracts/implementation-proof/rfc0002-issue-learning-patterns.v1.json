@@ -133,7 +133,7 @@
     {
       "patternId": "economic_candidate_identity_and_evidence_versioning",
       "title": "Business candidate identity must remain stable while evidence, material condition, and transport identity evolve independently.",
-      "currentLedgerIssueNumbers": [],
+      "currentLedgerIssueNumbers": [1181],
       "relatedIssueNumbers": [326, 330, 333, 382, 1154],
       "rfcSlices": ["slice-03", "slice-05", "slice-06", "slice-07"],
       "durableControls": [
@@ -144,6 +144,10 @@
         {
           "type": "persistence-policy",
           "ref": "src/app/domain/candidate_reconciliation.py"
+        },
+        {
+          "type": "persistence-policy",
+          "ref": "src/app/domain/persistence.py"
         },
         {
           "type": "migration",
@@ -158,6 +162,10 @@
           "ref": "tests/unit/test_candidate_deduplication_boundary.py"
         },
         {
+          "type": "test",
+          "ref": "tests/integration/test_high_cash_signal_api.py"
+        },
+        {
           "type": "test-fixture-boundary",
           "ref": "tests/integration/postgres_runtime_support.py"
         },
@@ -170,7 +178,7 @@
           "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#candidate-identity-and-evidence-versioning"
         }
       ],
-      "futureAgentRule": "Derive businessIdentityId only from stable tenant, portfolio, opportunity-family, and governed economic-scope meaning. Keep source content hashes, source routes, transport idempotency keys, reason-code order, and representation-only fields out of business identity while preserving them in evidence lineage. Treat equivalent evidence as an evidence-version refresh, material economic change as a material version, and a resolved condition that later returns as a recurrent reopen with an explicit why-back reason. Reconcile these transitions atomically at the repository boundary, prove concurrent PostgreSQL behavior, and reject caller-supplied duplicate authority at every request and worker-manifest boundary. Direct PostgreSQL fixtures must satisfy the current identity-column and candidate-payload contract; fixtures that need distinct opportunities must vary governed economic scope rather than source hashes. Preserve manual review suppression and snooze as review posture; do not conflate either with evaluator-level duplicate detection. When execution status changes, run the dedicated current-backlog assertion and the full unit lane so durable governance cannot drift from live delivery state. Update migrations, API/OpenAPI, RFC/docs/wiki/context, and the execution ledger together without promoting a supported feature.",
+      "futureAgentRule": "Derive businessIdentityId only from stable tenant, portfolio, opportunity-family, and governed economic-scope meaning. Keep source content hashes, source routes, transport idempotency keys, reason-code order, and representation-only fields out of business identity while preserving them in evidence lineage. Treat unscoped evaluation as diagnostic only: every durable candidate writer must require complete economic access scope, and the repository boundary must reject missing scope before candidate, idempotency, audit, or outbox mutation. Treat equivalent evidence as an evidence-version refresh, material economic change as a material version, and a resolved condition that later returns as a recurrent reopen with an explicit why-back reason. Reconcile these transitions atomically at the repository boundary, prove concurrent PostgreSQL behavior, and reject caller-supplied duplicate authority at every request and worker-manifest boundary. Direct PostgreSQL fixtures must satisfy the current identity-column and candidate-payload contract; fixtures that need distinct opportunities must vary governed economic scope rather than source hashes. Preserve manual review suppression and snooze as review posture; do not conflate either with evaluator-level duplicate detection. When execution status changes, run the dedicated current-backlog assertion and the full unit lane so durable governance cannot drift from live delivery state. Update migrations, API/OpenAPI, RFC/docs/wiki/context, and the execution ledger together without promoting a supported feature.",
       "nonClaimBoundaries": [
         "Stable Idea business identity does not transfer ownership of source financial facts or calculations from Core, Risk, Performance, Advise, or Manage.",
         "Repository reconciliation and local PostgreSQL proof do not certify Gateway/Workbench behavior, production identity/session authority, or supported-feature promotion."
