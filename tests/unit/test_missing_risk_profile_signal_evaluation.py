@@ -18,6 +18,7 @@ from app.domain import (
     SourceSystem,
     UnsupportedEvidenceReason,
     evaluate_missing_risk_profile_signal,
+    risk_profile_posture_from_advise_diagnostic,
 )
 
 
@@ -63,6 +64,10 @@ def risk_profile_input(
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
     )
+
+
+def test_absent_advise_diagnostic_has_no_inferred_risk_profile_posture() -> None:
+    assert risk_profile_posture_from_advise_diagnostic(None) is None
 
 
 def test_missing_risk_profile_gap_creates_reproducible_review_candidate() -> None:
