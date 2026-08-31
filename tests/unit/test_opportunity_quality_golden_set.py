@@ -163,6 +163,24 @@ def test_golden_set_detects_evidence_only_terminal_reopen_regression() -> None:
     )
 
 
+def test_golden_set_detects_next_day_economic_change_as_material() -> None:
+    golden_set = deepcopy(load_golden_set())
+    scenario = next(
+        item
+        for item in golden_set["lifecycleExpectations"]
+        if item["scenarioId"] == "expired-next-day-unchanged-stays-terminal"
+    )
+    scenario["incoming"]["cashWeight"] = "0.21"
+
+    errors = evaluate_golden_set(golden_set)
+
+    assert any(
+        "expired-next-day-unchanged-stays-terminal decision expected 'evidence_refreshed', "
+        "got 'recurrent_condition_reopened'" in error
+        for error in errors
+    )
+
+
 def test_golden_set_rejects_production_derived_expectations() -> None:
     golden_set = deepcopy(load_golden_set())
     golden_set["authorship"]["expectedResultsDerivedFromProductionCode"] = True

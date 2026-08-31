@@ -273,7 +273,6 @@ def _stable_missing_benchmark_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "benchmark_identity_resolved": source_input.benchmark_identity_resolved,
             "assignment_effective_for_as_of_date": (
                 source_input.assignment_effective_for_as_of_date

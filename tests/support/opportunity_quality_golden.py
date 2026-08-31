@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
@@ -37,6 +37,7 @@ from app.domain import (
     MissingSuitabilityContextSignalInput,
     OpportunityFamily,
     ReviewPosture,
+    ReviewAccessScope,
     ReviewQueueAudience,
     ScoreComponent,
     SourceRef,
@@ -195,6 +196,10 @@ def _evaluate_lifecycle_expectation(
 ) -> tuple[str, ...]:
     initial_facts = scenario["initial"]
     incoming_facts = scenario["incoming"]
+    incoming_date = as_of_date + timedelta(days=incoming_facts.get("asOfDateOffsetDays", 0))
+    incoming_evaluated_at = evaluated_at + timedelta(
+        days=incoming_facts.get("asOfDateOffsetDays", 0)
+    )
     initial = _high_cash_candidate(
         cash_weight=Decimal(initial_facts["cashWeight"]),
         cashflow_hash=initial_facts["evidenceHash"],
@@ -214,15 +219,15 @@ def _evaluate_lifecycle_expectation(
     incoming = _high_cash_candidate(
         cash_weight=Decimal(incoming_facts["cashWeight"]),
         cashflow_hash=incoming_facts["evidenceHash"],
-        as_of_date=as_of_date,
-        evaluated_at=evaluated_at,
+        as_of_date=incoming_date,
+        evaluated_at=incoming_evaluated_at,
     )
     reconciliation = reconcile_candidate(
         existing=initial,
         incoming=incoming,
         existing_evidence_hash=initial.evidence_packet.lineage_ref.content_hash,
         incoming_evidence_hash=incoming.evidence_packet.lineage_ref.content_hash,
-        occurred_at_utc=evaluated_at,
+        occurred_at_utc=incoming_evaluated_at,
     )
     expected = scenario["expected"]
     scenario_id = scenario["scenarioId"]
@@ -745,6 +750,12 @@ def _high_cash_candidate(
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=evaluated_at,
+            access_scope=ReviewAccessScope(
+                tenant_id="tenant-golden-private-bank",
+                book_id="book-golden-advisory",
+                portfolio_id="portfolio-golden-lifecycle",
+                client_id="client-golden-lifecycle",
+            ),
         ),
         DEFAULT_HIGH_CASH_POLICY,
     )

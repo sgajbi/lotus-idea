@@ -302,7 +302,6 @@ def _stable_identity(
         as_of_date=source_input.as_of_date,
         access_scope=source_input.access_scope,
         material_facts={
-            "as_of_date": source_input.as_of_date.isoformat(),
             "blocked_requirement_count": source_input.blocked_requirement_count,
             "client_ready_publication": (source_input.client_ready_publication or "")
             .strip()

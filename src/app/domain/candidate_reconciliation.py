@@ -10,6 +10,10 @@ from app.domain.ideas import (
     IdeaLifecycleStatus,
 )
 from app.domain.persistence_models import CandidatePersistenceDecision
+from app.domain.opportunity_identity import (
+    OPPORTUNITY_IDENTITY_POLICY_VERSION,
+    PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION,
+)
 
 
 REOPENABLE_TERMINAL_STATUSES = frozenset(
@@ -38,10 +42,25 @@ def reconcile_candidate(
     occurred_at_utc: datetime,
 ) -> CandidateReconciliation:
     """Reconcile one detected condition against its governed business aggregate."""
-    if not _same_business_aggregate(existing, incoming):
+    if not _same_business_scope(existing, incoming):
         return CandidateReconciliation(
             decision=CandidatePersistenceDecision.IDENTITY_CONFLICT,
             candidate=None,
+        )
+
+    if existing.identity.policy_version != incoming.identity.policy_version:
+        if not _is_supported_policy_upgrade(existing, incoming):
+            return CandidateReconciliation(
+                decision=CandidatePersistenceDecision.IDENTITY_CONFLICT,
+                candidate=None,
+            )
+        return CandidateReconciliation(
+            decision=CandidatePersistenceDecision.EVIDENCE_REFRESHED,
+            candidate=_backfill_identity_policy(
+                existing=existing,
+                incoming=incoming,
+                occurred_at_utc=occurred_at_utc,
+            ),
         )
 
     material_changed = (
@@ -96,13 +115,43 @@ def reconcile_candidate(
     )
 
 
-def _same_business_aggregate(existing: IdeaCandidate, incoming: IdeaCandidate) -> bool:
+def _same_business_scope(existing: IdeaCandidate, incoming: IdeaCandidate) -> bool:
     return (
         incoming.candidate_id == existing.candidate_id
         and incoming.identity.business_identity_id == existing.identity.business_identity_id
-        and incoming.identity.policy_version == existing.identity.policy_version
         and incoming.family is existing.family
         and incoming.access_scope == existing.access_scope
+    )
+
+
+def _is_supported_policy_upgrade(existing: IdeaCandidate, incoming: IdeaCandidate) -> bool:
+    return (
+        existing.identity.policy_version == PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION
+        and incoming.identity.policy_version == OPPORTUNITY_IDENTITY_POLICY_VERSION
+    )
+
+
+def _backfill_identity_policy(
+    *,
+    existing: IdeaCandidate,
+    incoming: IdeaCandidate,
+    occurred_at_utc: datetime,
+) -> IdeaCandidate:
+    identity = replace(
+        incoming.identity,
+        material_version=existing.identity.material_version,
+        evidence_version=existing.identity.evidence_version + 1,
+        change_reason=CandidateChangeReason.MIGRATION_BACKFILL,
+        supersedes_material_version=existing.identity.supersedes_material_version,
+    )
+    return replace(
+        incoming,
+        identity=identity,
+        lifecycle_status=existing.lifecycle_status,
+        review_posture=existing.review_posture,
+        suppression_reason=existing.suppression_reason,
+        created_at_utc=existing.created_at_utc,
+        updated_at_utc=max(existing.updated_at_utc, occurred_at_utc),
     )
 
 
