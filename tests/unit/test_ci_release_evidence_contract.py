@@ -24,6 +24,53 @@ def test_compose_passes_complete_runtime_contract() -> None:
     )
 
 
+def test_compose_runtime_contract_rejects_required_untracked_env_file() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace("required: false", "required: true", 1)
+
+    errors = validate_compose_runtime_contract(degraded)
+
+    assert (
+        "docker-compose.yml must not require an untracked env file for clean-checkout startup"
+        in errors
+    )
+    assert (
+        "docker-compose.yml must provide optional .env overrides for the API and worker" in errors
+    )
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "docker compose config --quiet",
+        "docker compose --profile worker config --quiet",
+    ],
+)
+def test_release_contract_requires_clean_checkout_compose_gate(command: str) -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    degraded = makefile.replace(f"\t{command}\n", "", 1)
+
+    assert degraded != makefile
+    assert (
+        "Makefile compose-config-gate must validate clean-checkout Compose resolution "
+        f"with `{command}`"
+    ) in validate_release_evidence_targets(degraded)
+
+
+def test_release_contract_requires_docker_build_to_run_compose_gate() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    degraded = makefile.replace(
+        "docker-build: compose-config-gate",
+        "docker-build:",
+        1,
+    )
+
+    assert degraded != makefile
+    assert "Makefile docker-build target must depend on compose-config-gate" in (
+        validate_release_evidence_targets(degraded)
+    )
+
+
 def test_compose_build_identity_rejects_missing_commit_and_run_id() -> None:
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     degraded = compose.replace(
@@ -655,10 +702,14 @@ def test_ci_contract_gate_blocks_secret_like_docker_build_args() -> None:
 def test_ci_contract_gate_blocks_makefile_image_push_targets() -> None:
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
     degraded = makefile.replace(
-        "docker-build:\n",
-        "docker-push:\n\tdocker push $(CONTAINER_IMAGE_NAME)\n\ndocker-build:\n",
+        "docker-build: compose-config-gate\n",
+        (
+            "docker-push:\n\tdocker push $(CONTAINER_IMAGE_NAME)\n\n"
+            "docker-build: compose-config-gate\n"
+        ),
     )
 
+    assert degraded != makefile
     assert "Makefile must not push images; registry publication is CI-only" in (
         validate_release_evidence_targets(degraded)
     )

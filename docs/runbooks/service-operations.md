@@ -40,7 +40,8 @@
 | `make dependency-refresh` | Install from Python root pins without a stale runtime-lock constraint, then regenerate `requirements/runtime-resolved.lock.txt` and `requirements/requirements.txt` for a coherent dependency update PR. |
 | `make container-image-scan` | Scan the built `lotus-idea:<git-sha>` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
 | `make caller-context-contract-gate` | Validate that caller authorization headers are bound through the shared trusted caller-context provenance guard before production-like use. |
-| `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
+| `make compose-config-gate` | Resolve the base and worker-profile Compose contracts from committed files before build or startup. |
+| `docker compose up --build` | Clean-checkout local container entrypoint using explicit Compose defaults and optional ignored `.env` overrides. |
 
 ## Local Docker Compose
 
@@ -52,11 +53,13 @@ non-release posture truthfully, but repository responses report
 `durableStorageBacked=true`. Workbench canonical automation orchestrates this
 same contract; it does not supply Idea persistence.
 
-Committed safe defaults come from `.env.example`; ignored `.env` values may
-override source URLs, the database URL, host port, or local logging:
+Safe local defaults are explicit in `docker-compose.yml`, so a clean checkout
+needs no bootstrap environment file. Shell variables or an ignored `.env` file
+may override source URLs, the database URL, or host port when the local topology
+requires it. Validate both API and worker profiles before starting containers:
 
 ```powershell
-Copy-Item .env.example .env
+make compose-config-gate
 docker compose up --build
 ```
 
@@ -70,6 +73,11 @@ The scheduled source-ingestion worker remains opt-in:
 ```powershell
 docker compose --profile worker up --build
 ```
+
+The worker inherits the same explicit database, runtime-profile, and Core query
+defaults as the API. Its committed manifest path remains worker-specific; use
+shell variables or the optional `.env` override only when testing another
+source topology.
 
 This path proves standalone startup, durable local persistence, restart-safe
 migrations, and operator ergonomics only. It does not certify production

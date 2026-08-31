@@ -135,7 +135,19 @@ def _validate_release_image_defaults(makefile: str) -> list[str]:
 
 def _validate_docker_build_target(makefile: str) -> list[str]:
     errors: list[str] = []
+    compose_config_gate = _target_block(makefile, "compose-config-gate")
     docker_build = _target_block(makefile, "docker-build")
+    for command in (
+        "docker compose config --quiet",
+        "docker compose --profile worker config --quiet",
+    ):
+        if command not in compose_config_gate:
+            errors.append(
+                "Makefile compose-config-gate must validate clean-checkout Compose "
+                f"resolution with `{command}`"
+            )
+    if not docker_build.startswith("docker-build: compose-config-gate"):
+        errors.append("Makefile docker-build target must depend on compose-config-gate")
     if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
         errors.append("Makefile docker-build target must pass governed Docker base image")
     for fragment, error in {
@@ -321,6 +333,15 @@ def validate_compose_runtime_contract(compose: str) -> list[str]:
         for fragment, label in required_persistence.items()
         if fragment not in compose
     )
+    optional_override = "      - path: .env\n        required: false"
+    if compose.count(optional_override) != 2:
+        errors.append(
+            "docker-compose.yml must provide optional .env overrides for the API and worker"
+        )
+    if "required: true" in compose:
+        errors.append(
+            "docker-compose.yml must not require an untracked env file for clean-checkout startup"
+        )
     return errors
 
 

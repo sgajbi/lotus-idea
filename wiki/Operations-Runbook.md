@@ -140,6 +140,9 @@ worker entrypoint over the same run-once worker path, and `docker-compose.yml`
 declares the opt-in `lotus-idea-source-ingestion-worker` service. The app-owned
 Compose contract starts PostgreSQL 18 with a named volume at
 `/var/lib/postgresql`, runs migrations once, and then starts the API.
+Safe local settings are explicit in `docker-compose.yml`; no untracked bootstrap
+file is required, while ignored `.env` values remain optional overrides.
+`make compose-config-gate` validates the base and worker profiles before build.
 `docker compose up -d --build` is standalone; canonical Workbench automation
 orchestrates the same contract rather than supplying Idea persistence.
 `docker compose --profile worker up -d --build` adds the worker against the same
