@@ -5,6 +5,7 @@ from typing import Any, Mapping, Sequence
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ideas import EvidenceSupportability, IdeaLifecycleStatus, ReviewPosture
+from app.domain.review_governance import ReviewAction
 from app.domain.review_queue import (
     QueueExclusionReason,
     ReviewQueueAudience,
@@ -179,8 +180,11 @@ def load_review_queue_readiness_summary(
     )
     params = (
         evaluated_at_utc,
+        evaluated_at_utc,
         audience.required_posture.value,
         *access_scope_params,
+        ReviewAction.SNOOZE.value,
+        evaluated_at_utc,
         ReviewPosture.SUPPRESSED.value,
         IdeaLifecycleStatus.EXPIRED.value,
         IdeaLifecycleStatus.CLOSED.value,
@@ -268,11 +272,13 @@ def _review_queue_candidate_predicates(
         "lifecycle_status = ANY(%s)",
         "review_posture <> %s",
         "(candidate_json->>'suppression_reason') IS NULL",
+        "NOT COALESCE(latest_review_action = %s AND latest_snoozed_until_utc > %s, FALSE)",
         "(candidate_json->'score') IS NOT NULL",
         "(candidate_json->'score'->>'policy_version') = ANY(%s)",
         "(candidate_json->'evidence_packet'->>'supportability') <> %s",
     ]
     params: list[Any] = [
+        evaluated_at_utc,
         evaluated_at_utc,
         audience.required_posture.value,
         [
@@ -286,6 +292,8 @@ def _review_queue_candidate_predicates(
             )
         ],
         ReviewPosture.SUPPRESSED.value,
+        ReviewAction.SNOOZE.value,
+        evaluated_at_utc,
         list(rankable_score_policy_versions),
         EvidenceSupportability.BLOCKED.value,
     ]
@@ -332,8 +340,12 @@ def _access_scope_mismatch_predicate(
 def _review_queue_candidate_cte(predicate_sql: str) -> str:
     return f"""
         WITH base AS (
-            SELECT candidate_id, lifecycle_status, review_posture, evidence_hash,
+            SELECT candidate.candidate_id, lifecycle_status, review_posture, evidence_hash,
                    candidate_json, persisted_at_utc,
+                   latest_review.latest_review_action,
+                   latest_review.latest_snoozed_until_utc,
+                   latest_review.latest_review_decided_at_utc,
+                   latest_review.latest_review_decision_id,
                    COALESCE(
                        (
                            SELECT string_agg(signal.value, ',' ORDER BY signal.value)
@@ -341,11 +353,12 @@ def _review_queue_candidate_cte(predicate_sql: str) -> str:
                                candidate_json->'source_signal_ids'
                            ) AS signal(value)
                        ),
-                       candidate_id
+                       candidate.candidate_id
                    ) AS source_signal_key,
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
-            FROM idea_candidate_record
+            FROM idea_candidate_record AS candidate
+            {_latest_review_lateral_join()}
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
               AND review_posture = %s
         ),
@@ -375,7 +388,14 @@ def _review_queue_count_query(predicate_sql: str) -> str:
                 COALESCE(
                     (
                         SELECT string_agg(
-                            md5(candidate_id || '|' || evidence_hash || '|' || candidate_json::text),
+                            md5(
+                                candidate_id || '|' || evidence_hash || '|' ||
+                                candidate_json::text || '|' ||
+                                COALESCE(latest_review_action, '') || '|' ||
+                                COALESCE(latest_review_decided_at_utc::text, '') || '|' ||
+                                COALESCE(latest_snoozed_until_utc::text, '') || '|' ||
+                                COALESCE(latest_review_decision_id, '')
+                            ),
                             '' ORDER BY candidate_id
                         )
                         FROM base
@@ -385,6 +405,32 @@ def _review_queue_count_query(predicate_sql: str) -> str:
             ) AS snapshot_fingerprint
         """
     )
+
+
+def _latest_review_lateral_join() -> str:
+    return """
+            LEFT JOIN LATERAL (
+                SELECT review.action AS latest_review_action,
+                       (review.decision_json->>'snoozed_until_utc')::timestamptz
+                           AS latest_snoozed_until_utc,
+                       review.decided_at_utc AS latest_review_decided_at_utc,
+                       review.review_decision_id AS latest_review_decision_id
+                FROM idea_review_decision AS review
+                WHERE review.candidate_id = candidate.candidate_id
+                  AND review.decided_at_utc <= %s
+                  AND review.decided_at_utc >= COALESCE(
+                      (
+                          SELECT MIN(history.recorded_at_utc)
+                          FROM idea_candidate_version_history AS history
+                          WHERE history.candidate_id = candidate.candidate_id
+                            AND history.material_version = candidate.material_version
+                      ),
+                      (candidate.candidate_json->>'created_at_utc')::timestamptz
+                  )
+                ORDER BY review.decided_at_utc DESC, review.review_decision_id DESC
+                LIMIT 1
+            ) AS latest_review ON TRUE
+        """
 
 
 def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str:
@@ -423,9 +469,11 @@ def _review_queue_readiness_candidate_ctes(access_scope_mismatch_sql: str) -> st
 
 
 def _review_queue_base_candidate_select() -> str:
-    return """
-            SELECT candidate_id, lifecycle_status, review_posture,
+    return f"""
+            SELECT candidate.candidate_id, lifecycle_status, review_posture,
                    candidate_json,
+                   latest_review.latest_review_action,
+                   latest_review.latest_snoozed_until_utc,
                    COALESCE(
                        (
                            SELECT string_agg(signal.value, ',' ORDER BY signal.value)
@@ -433,11 +481,12 @@ def _review_queue_base_candidate_select() -> str:
                                candidate_json->'source_signal_ids'
                            ) AS signal(value)
                        ),
-                       candidate_id
+                       candidate.candidate_id
                    ) AS source_signal_key,
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
-            FROM idea_candidate_record
+            FROM idea_candidate_record AS candidate
+            {_latest_review_lateral_join()}
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
               AND review_posture = %s
         """
@@ -451,6 +500,9 @@ def _review_queue_readiness_exclusion_case(access_scope_mismatch_sql: str) -> st
                             THEN '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}'
                         WHEN NOT {compatible_state_sql}
                             THEN '{QueueExclusionReason.INVALID_STATE.value}'
+                        WHEN latest_review_action = %s
+                            AND latest_snoozed_until_utc > %s
+                            THEN '{QueueExclusionReason.SNOOZED.value}'
                         WHEN review_posture = %s
                             OR (candidate_json->>'suppression_reason') IS NOT NULL
                            THEN '{QueueExclusionReason.SUPPRESSED.value}'
@@ -502,7 +554,7 @@ def _review_queue_readiness_summary_select() -> str:
             {_queue_exclusion_count_projection(QueueExclusionReason.SUPPRESSED)},
             (SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate,
             {_queue_exclusion_count_projection(QueueExclusionReason.EXPIRED)},
-            (0)::integer AS snoozed,
+            {_queue_exclusion_count_projection(QueueExclusionReason.SNOOZED)},
             {_queue_exclusion_count_projection(QueueExclusionReason.CLOSED)},
             {_queue_exclusion_count_projection(QueueExclusionReason.REJECTED)},
             {_queue_exclusion_count_projection(QueueExclusionReason.UNSUPPORTED_EVIDENCE)},

@@ -26,8 +26,11 @@ from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     QueueExclusionReason,
-    QueueSnooze,
     ReasonCode,
+    ReviewAction,
+    ReviewActorContext,
+    ReviewActorRole,
+    ReviewDecisionCommand,
     ReviewQueueSnapshotConflictError,
     ReviewQueuePolicy,
     ReviewQueueAudience,
@@ -36,6 +39,7 @@ from app.domain import (
     SourceSystem,
     build_review_queue,
     build_review_queue_snapshot_identity,
+    apply_review_action,
     visible_review_queue_candidate_records,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
@@ -68,6 +72,7 @@ def high_cash_command(
     cash_weight: Decimal,
     suffix: str = "",
     candidate_scope: ReviewAccessScope | None = None,
+    evaluated_at_utc: datetime = EVALUATED_AT,
 ) -> EvaluateHighCashSignalCommand:
     return EvaluateHighCashSignalCommand(
         as_of_date=AS_OF_DATE,
@@ -82,7 +87,7 @@ def high_cash_command(
         cashflow_projection_ref=source_ref(
             "lotus-core:PortfolioCashflowProjection:v1", content_hash_suffix=suffix
         ),
-        evaluated_at_utc=EVALUATED_AT,
+        evaluated_at_utc=evaluated_at_utc,
         access_scope=candidate_scope,
     )
 
@@ -123,6 +128,40 @@ def persist_high_cash_candidate(
     assert result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
     assert result.persistence.record is not None
     return result.persistence.record.candidate.candidate_id
+
+
+def record_snooze(
+    repository: InMemoryIdeaRepository,
+    candidate_id: str,
+    *,
+    snoozed_until_utc: datetime,
+    review_id: str = "review-snooze-001",
+) -> None:
+    candidate = repository.snapshot().candidate_records[candidate_id].candidate
+    assert candidate.access_scope is not None
+    result = apply_review_action(
+        candidate,
+        ReviewDecisionCommand(
+            review_id=review_id,
+            action=ReviewAction.SNOOZE,
+            actor=ReviewActorContext(
+                actor_subject="advisor-001",
+                role=ReviewActorRole.ADVISOR,
+                tenant_ids=frozenset({candidate.access_scope.tenant_id}),
+                book_ids=frozenset({candidate.access_scope.book_id}),
+                portfolio_ids=frozenset({candidate.access_scope.portfolio_id}),
+                client_ids=frozenset({candidate.access_scope.client_id}),
+            ),
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            decided_at_utc=EVALUATED_AT,
+            snoozed_until_utc=snoozed_until_utc,
+        ),
+    )
+    repository.record_review_action(
+        result,
+        idempotency_key=f"review-action:snooze:{review_id}",
+        payload={"reviewId": result.decision.review_id},
+    )
 
 
 def test_build_review_queue_from_repository_projects_persisted_candidates() -> None:
@@ -708,17 +747,15 @@ def test_build_review_queue_from_repository_removes_terminal_candidate_from_acti
 def test_build_review_queue_from_repository_applies_snooze_projection() -> None:
     repository = InMemoryIdeaRepository()
     candidate_id = persist_high_cash_candidate(repository)
+    record_snooze(
+        repository,
+        candidate_id,
+        snoozed_until_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
+    )
 
     queue = build_review_queue_from_repository(
         BuildReviewQueueFromRepositoryCommand(
-            evaluated_at_utc=EVALUATED_AT,
-            snoozes=(
-                QueueSnooze(
-                    candidate_id=candidate_id,
-                    snoozed_until_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
-                    reason_codes=(ReasonCode.REVIEW_REQUIRED,),
-                ),
-            ),
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 30, tzinfo=UTC),
         ),
         repository=repository,
     )
@@ -726,6 +763,73 @@ def test_build_review_queue_from_repository_applies_snooze_projection() -> None:
     assert queue.items == ()
     assert queue.exclusions[0].candidate_id == candidate_id
     assert queue.exclusions[0].reason is QueueExclusionReason.SNOOZED
+
+    awakened = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
+        ),
+        repository=repository,
+    )
+    assert [item.candidate.candidate_id for item in awakened.items] == [candidate_id]
+
+
+def test_snooze_survives_evidence_refresh_but_not_new_material_version() -> None:
+    repository = InMemoryIdeaRepository()
+    scope = access_scope()
+    candidate_id = persist_high_cash_candidate(repository, candidate_scope=scope)
+    record_snooze(
+        repository,
+        candidate_id,
+        snoozed_until_utc=datetime(2026, 6, 21, 12, 0, tzinfo=UTC),
+    )
+    corrected = evaluate_and_persist_high_cash_signal(
+        EvaluateAndPersistHighCashSignalCommand(
+            evaluation=high_cash_command(
+                cash_weight=Decimal("0.18"),
+                suffix="-corrected",
+                candidate_scope=scope,
+                evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            ),
+            idempotency_key="signal-ingestion:high-cash:evidence-refresh",
+            actor_subject="signal-ingestion-worker",
+        ),
+        repository=repository,
+    )
+    assert corrected.persistence is not None
+    assert corrected.persistence.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+
+    still_snoozed = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 30, tzinfo=UTC),
+        ),
+        repository=repository,
+    )
+    assert still_snoozed.items == ()
+    assert still_snoozed.exclusions[0].reason is QueueExclusionReason.SNOOZED
+
+    changed = evaluate_and_persist_high_cash_signal(
+        EvaluateAndPersistHighCashSignalCommand(
+            evaluation=high_cash_command(
+                cash_weight=Decimal("0.21"),
+                suffix="-changed",
+                candidate_scope=scope,
+                evaluated_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
+            ),
+            idempotency_key="signal-ingestion:high-cash:material-change",
+            actor_subject="signal-ingestion-worker",
+        ),
+        repository=repository,
+    )
+    assert changed.persistence is not None
+    assert changed.persistence.decision is CandidatePersistenceDecision.MATERIAL_VERSION_CREATED
+
+    reopened = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 31, tzinfo=UTC),
+        ),
+        repository=repository,
+    )
+    assert [item.candidate.candidate_id for item in reopened.items] == [candidate_id]
 
 
 def test_build_review_queue_from_repository_requires_timezone_aware_evaluation_time() -> None:

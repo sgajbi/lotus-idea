@@ -26,14 +26,18 @@ def review_queue_count_rows(
     visible_rows = _review_queue_visible_rows(
         connection,
         params[0],
-        required_posture=params[1],
+        required_posture=params[2],
     )
     rows = _review_queue_ordered_rows(connection, query, params)
     return [
         {
             "total_reviewable_item_count": len(rows),
             "total_excluded_candidate_count": len(visible_rows) - len(rows),
-            "snapshot_fingerprint": _review_queue_snapshot_fingerprint(visible_rows),
+            "snapshot_fingerprint": _review_queue_snapshot_fingerprint(
+                connection,
+                visible_rows,
+                evaluated_at_utc=params[0],
+            ),
         }
     ]
 
@@ -60,19 +64,21 @@ def review_queue_readiness_summary_rows(
         if f"->>'{field_name}'" in query
     )
     evaluated_at_utc = params[0]
-    required_posture = params[1]
+    required_posture = params[2]
     scope_values = {
         field_name: set(values)
-        for field_name, values in zip(scope_fields, params[2 : 2 + len(scope_fields)], strict=True)
+        for field_name, values in zip(scope_fields, params[3 : 3 + len(scope_fields)], strict=True)
     }
-    offset = 2 + len(scope_fields)
-    suppressed_posture = params[offset]
-    expired_status = params[offset + 1]
-    closed_status = params[offset + 2]
-    rejected_status = params[offset + 3]
-    blocked_supportability = params[offset + 4]
-    rankable_score_policy_versions = set(params[offset + 5])
-    lifecycle_statuses = set(params[offset + 6])
+    offset = 3 + len(scope_fields)
+    snooze_action = params[offset]
+    snooze_evaluated_at_utc = params[offset + 1]
+    suppressed_posture = params[offset + 2]
+    expired_status = params[offset + 3]
+    closed_status = params[offset + 4]
+    rejected_status = params[offset + 5]
+    blocked_supportability = params[offset + 6]
+    rankable_score_policy_versions = set(params[offset + 7])
+    lifecycle_statuses = set(params[offset + 8])
     exclusion_counts = {reason.value: 0 for reason in QueueExclusionReason}
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
@@ -90,6 +96,13 @@ def review_queue_readiness_summary_rows(
             scored_candidate_count += 1
         exclusion_reason = _review_queue_row_exclusion_reason(
             row,
+            latest_review=_latest_applicable_review(
+                connection,
+                row,
+                evaluated_at_utc=snooze_evaluated_at_utc,
+            ),
+            snooze_action=snooze_action,
+            evaluated_at_utc=snooze_evaluated_at_utc,
             lifecycle_statuses=lifecycle_statuses,
             suppressed_posture=suppressed_posture,
             expired_status=expired_status,
@@ -128,18 +141,20 @@ def _review_queue_ordered_rows(
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
     evaluated_at_utc = params[0]
-    required_posture = params[1]
-    lifecycle_statuses = set(params[2])
-    suppressed_posture = params[3]
-    rankable_score_policy_versions = set(params[4])
-    blocked_supportability = params[5]
+    required_posture = params[2]
+    lifecycle_statuses = set(params[3])
+    suppressed_posture = params[4]
+    snooze_action = params[5]
+    snooze_evaluated_at_utc = params[6]
+    rankable_score_policy_versions = set(params[7])
+    blocked_supportability = params[8]
     scope_fields = tuple(
         field_name
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
     scope_values = {
-        field_name: set(values) for field_name, values in zip(scope_fields, params[6:], strict=True)
+        field_name: set(values) for field_name, values in zip(scope_fields, params[9:], strict=True)
     }
     eligible_rows = [
         row
@@ -150,6 +165,13 @@ def _review_queue_ordered_rows(
         )
         if _review_queue_row_is_eligible(
             row,
+            latest_review=_latest_applicable_review(
+                connection,
+                row,
+                evaluated_at_utc=snooze_evaluated_at_utc,
+            ),
+            snooze_action=snooze_action,
+            evaluated_at_utc=snooze_evaluated_at_utc,
             lifecycle_statuses=lifecycle_statuses,
             suppressed_posture=suppressed_posture,
             blocked_supportability=blocked_supportability,
@@ -178,12 +200,18 @@ def _review_queue_visible_rows(
     ]
 
 
-def _review_queue_snapshot_fingerprint(rows: list[dict[str, Any]]) -> str:
+def _review_queue_snapshot_fingerprint(
+    connection: FakeReviewQueueConnection,
+    rows: list[dict[str, Any]],
+    *,
+    evaluated_at_utc: datetime,
+) -> str:
     material = "".join(
         hashlib.md5(  # noqa: S324 - mirrors PostgreSQL's non-security change fingerprint
             (
                 f"{row['candidate_id']}|{row['evidence_hash']}|"
-                f"{json.dumps(row['candidate_json'], sort_keys=True, separators=(',', ':'))}"
+                f"{json.dumps(row['candidate_json'], sort_keys=True, separators=(',', ':'))}|"
+                f"{_review_fingerprint_material(_latest_applicable_review(connection, row, evaluated_at_utc=evaluated_at_utc))}"
             ).encode("utf-8"),
             usedforsecurity=False,
         ).hexdigest()
@@ -195,6 +223,9 @@ def _review_queue_snapshot_fingerprint(rows: list[dict[str, Any]]) -> str:
 def _review_queue_row_exclusion_reason(
     row: dict[str, Any],
     *,
+    latest_review: dict[str, Any] | None,
+    snooze_action: str,
+    evaluated_at_utc: datetime,
     lifecycle_statuses: set[str],
     suppressed_posture: str,
     expired_status: str,
@@ -213,6 +244,8 @@ def _review_queue_row_exclusion_reason(
             return QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value
     if not _review_queue_row_has_compatible_state(row):
         return QueueExclusionReason.INVALID_STATE.value
+    if _review_is_active_snooze(latest_review, snooze_action, evaluated_at_utc):
+        return QueueExclusionReason.SNOOZED.value
     if row["review_posture"] == suppressed_posture:
         return QueueExclusionReason.SUPPRESSED.value
     if candidate_json.get("suppression_reason") is not None:
@@ -237,6 +270,9 @@ def _review_queue_row_exclusion_reason(
 def _review_queue_row_is_eligible(
     row: dict[str, Any],
     *,
+    latest_review: dict[str, Any] | None,
+    snooze_action: str,
+    evaluated_at_utc: datetime,
     lifecycle_statuses: set[str],
     suppressed_posture: str,
     blocked_supportability: str,
@@ -245,6 +281,8 @@ def _review_queue_row_is_eligible(
 ) -> bool:
     candidate_json = row["candidate_json"]
     if not _review_queue_row_has_compatible_state(row):
+        return False
+    if _review_is_active_snooze(latest_review, snooze_action, evaluated_at_utc):
         return False
     if row["lifecycle_status"] not in lifecycle_statuses:
         return False
@@ -263,6 +301,60 @@ def _review_queue_row_is_eligible(
         if access_scope is None or access_scope.get(field_name) not in expected_values:
             return False
     return True
+
+
+def _latest_applicable_review(
+    connection: FakeReviewQueueConnection,
+    candidate_row: dict[str, Any],
+    *,
+    evaluated_at_utc: datetime,
+) -> dict[str, Any] | None:
+    material_version = candidate_row["material_version"]
+    material_history = [
+        row
+        for row in connection.rows["idea_candidate_version_history"]
+        if row["candidate_id"] == candidate_row["candidate_id"]
+        and row["material_version"] == material_version
+    ]
+    material_started_at = min(
+        (row["recorded_at_utc"] for row in material_history),
+        default=datetime.fromisoformat(candidate_row["candidate_json"]["created_at_utc"]),
+    )
+    applicable = [
+        row
+        for row in connection.rows["idea_review_decision"]
+        if row["candidate_id"] == candidate_row["candidate_id"]
+        and material_started_at <= row["decided_at_utc"] <= evaluated_at_utc
+    ]
+    return max(
+        applicable,
+        key=lambda row: (row["decided_at_utc"], row["review_decision_id"]),
+        default=None,
+    )
+
+
+def _review_is_active_snooze(
+    review: dict[str, Any] | None,
+    snooze_action: str,
+    evaluated_at_utc: datetime,
+) -> bool:
+    if review is None or review["action"] != snooze_action:
+        return False
+    snoozed_until = review["decision_json"].get("snoozed_until_utc")
+    return snoozed_until is not None and datetime.fromisoformat(snoozed_until) > evaluated_at_utc
+
+
+def _review_fingerprint_material(review: dict[str, Any] | None) -> str:
+    if review is None:
+        return "||"
+    return "|".join(
+        (
+            review["action"],
+            review["decided_at_utc"].isoformat(),
+            str(review["decision_json"].get("snoozed_until_utc") or ""),
+            review["review_decision_id"],
+        )
+    )
 
 
 def _review_queue_row_has_compatible_state(row: dict[str, Any]) -> bool:

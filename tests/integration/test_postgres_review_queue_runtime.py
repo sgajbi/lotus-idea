@@ -7,6 +7,49 @@ from tests.support.http import managed_test_client
 from app.main import app
 
 
+def test_postgres_review_queue_honors_persisted_snooze_until_exact_boundary(
+    postgres_database_url: str,
+) -> None:
+    del postgres_database_url
+    client = managed_test_client(app)
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(suffix=""),
+        headers=_persistence_headers("postgres-review-queue-snooze-candidate"),
+    )
+    assert persisted.status_code == 200
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    snoozed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json={
+            "reviewId": "postgres-review-snooze-001",
+            "action": "snooze",
+            "reasonCodes": ["review_required"],
+            "decidedAtUtc": "2026-06-21T10:05:00Z",
+            "snoozedUntilUtc": "2026-06-21T11:00:00Z",
+        },
+        headers=_snooze_headers(),
+    )
+    assert snoozed.status_code == 200
+
+    hidden = client.get(
+        "/api/v1/review-queues/advisor",
+        params={"evaluatedAtUtc": "2026-06-21T10:30:00Z", "limit": 10},
+        headers=_review_queue_headers(),
+    )
+    assert hidden.status_code == 200
+    assert hidden.json()["items"] == []
+    assert hidden.json()["page"]["totalExcludedCandidateCount"] == 1
+
+    awakened = client.get(
+        "/api/v1/review-queues/advisor",
+        params={"evaluatedAtUtc": "2026-06-21T11:00:00Z", "limit": 10},
+        headers=_review_queue_headers(),
+    )
+    assert awakened.status_code == 200
+    assert [item["candidate"]["candidateId"] for item in awakened.json()["items"]] == [candidate_id]
+
+
 def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token(
     postgres_database_url: str,
 ) -> None:
@@ -136,4 +179,19 @@ def _review_queue_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.queue.read",
         "X-Correlation-Id": "corr-postgres-review-queue-snapshot-read",
+    }
+
+
+def _snooze_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.review.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
+        "X-Correlation-Id": "corr-postgres-review-queue-snooze",
+        "X-Trace-Id": "trace-postgres-review-queue-snooze",
+        "Idempotency-Key": "postgres-review-queue-snooze-001",
     }
