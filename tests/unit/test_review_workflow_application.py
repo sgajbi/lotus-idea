@@ -31,6 +31,7 @@ from app.domain import (
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     InMemoryIdeaRepository,
+    InvalidReviewAction,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
@@ -46,6 +47,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     SuppressionReason,
+    apply_review_action,
     record_feedback,
 )
 
@@ -282,6 +284,43 @@ def test_apply_review_action_to_repository_replays_before_reapplying_domain_tran
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.review_decisions) == 1
+
+
+def test_stale_review_result_cannot_overwrite_a_committed_terminal_decision() -> None:
+    repository = repository_with_candidate()
+    source_record = repository.candidate_record_by_id("idea-review-001")
+    assert source_record is not None
+    stale_approval = apply_review_action(
+        source_record.candidate,
+        decision_command(
+            ReviewAction.APPROVE_FOR_CONVERSION,
+            review_id="review-stale-approval-001",
+        ),
+    )
+    rejection = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=decision_command(
+                ReviewAction.REJECT,
+                review_id="review-committed-rejection-001",
+            ),
+            idempotency_key="review-action:committed-rejection:001",
+        ),
+        repository=repository,
+    )
+    before_stale_attempt = repository.snapshot()
+
+    with pytest.raises(InvalidReviewAction) as stale_conflict:
+        repository.record_review_action(
+            stale_approval,
+            idempotency_key="review-action:stale-approval:001",
+            payload={"reviewId": stale_approval.decision.review_id},
+        )
+
+    assert rejection.persistence.decision is ReviewPersistenceDecision.ACCEPTED
+    assert stale_conflict.value.lifecycle_status is IdeaLifecycleStatus.REJECTED
+    assert stale_conflict.value.review_posture is ReviewPosture.REJECTED
+    assert repository.snapshot() == before_stale_attempt
 
 
 def test_review_replay_fails_closed_when_persisted_decision_is_missing() -> None:

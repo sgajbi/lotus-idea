@@ -262,6 +262,7 @@ class GovernedReviewDecision:
 
 @dataclass(frozen=True)
 class ReviewActionResult:
+    source_candidate: IdeaCandidate
     candidate: IdeaCandidate
     decision: GovernedReviewDecision
     audit_event: AuditEvent
@@ -515,6 +516,7 @@ def apply_review_action(
         outcome="accepted",
     )
     return ReviewActionResult(
+        source_candidate=candidate,
         candidate=updated_candidate,
         decision=decision,
         audit_event=audit_event,

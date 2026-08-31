@@ -13,6 +13,7 @@ from app.domain.persistence_models import (
 )
 from app.domain.review_governance import (
     FeedbackResult,
+    InvalidReviewAction,
     ReviewActionResult,
     ReviewMutationIdentity,
     feedback_mutation_identity_from_event,
@@ -68,6 +69,12 @@ class InMemoryReviewWorkflowRepositoryMixin:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.NOT_FOUND,
                 record=None,
+            )
+        if record.candidate != result.source_candidate:
+            raise InvalidReviewAction(
+                result.decision.action,
+                record.candidate.lifecycle_status,
+                record.candidate.review_posture,
             )
 
         history = record.lifecycle_history
