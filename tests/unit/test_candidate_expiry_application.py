@@ -179,6 +179,15 @@ def test_due_expiry_uses_persisted_exact_boundary(
     )
 
 
+def test_due_expiry_is_non_mutating_when_candidate_is_absent() -> None:
+    repository = _ControlledExpiryRepository(records=(None,))
+
+    result = expire_candidate_if_due(expiry_command(), repository=repository)
+
+    assert result.decision is CandidateExpiryDecision.NOT_FOUND
+    assert result.persistence is None
+
+
 def _candidate_record(
     status: IdeaLifecycleStatus = IdeaLifecycleStatus.GENERATED,
     applicability_expires_at_utc: datetime | None = None,
