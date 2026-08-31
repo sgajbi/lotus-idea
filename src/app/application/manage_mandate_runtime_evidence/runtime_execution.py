@@ -10,6 +10,7 @@ from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
+    score_receipt,
     sha256_json,
     source_ref_receipt,
 )
@@ -34,7 +35,7 @@ from app.ports.manage_sources import (
 )
 
 MANAGE_MANDATE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF"
-MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.manage-mandate.runtime-execution.v3"
+MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.manage-mandate.runtime-execution.v4"
 MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_portfolio_scoped_manage_source_proof_missing",
     "opportunity_archetype_mandate_performance_health_source_ref_missing",
@@ -422,6 +423,7 @@ def _source_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
 def _evaluation_receipt(result: ManageMandateReadinessResult) -> dict[str, Any]:
     evaluation = result.source_evaluation.evaluation
     evidence = result.source_evaluation.evidence
+    candidate = evaluation.candidate
     material = {
         "family": evaluation.family.value,
         "outcome": evaluation.outcome.value,
@@ -430,7 +432,7 @@ def _evaluation_receipt(result: ManageMandateReadinessResult) -> dict[str, Any]:
         "policyVersion": result.policy.policy_version,
         "minimumWorkflowDecisionCount": result.policy.minimum_workflow_decision_count,
         "minimumLineageEdgeCount": result.policy.minimum_lineage_edge_count,
-        "candidateScore": str(result.policy.candidate_score),
+        **score_receipt(candidate.score if candidate is not None else None),
         "candidateIdHash": (
             identity_hash(evaluation.candidate.candidate_id) if evaluation.candidate else None
         ),

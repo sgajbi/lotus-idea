@@ -448,9 +448,8 @@ def _declared_product_ids() -> set[str]:
 
 def _policy() -> HighCashSignalPolicy:
     return HighCashSignalPolicy(
-        policy_version="idle-liquidity-v1",
+        policy_version="idle-liquidity-v2",
         cash_weight_threshold=Decimal("0.12"),
-        candidate_score=Decimal("82"),
     )
 
 

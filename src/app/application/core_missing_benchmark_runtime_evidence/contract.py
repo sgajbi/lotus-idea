@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
-from app.application.runtime_evidence import non_authority_claims_are_valid, sha256_json
+from app.application.runtime_evidence import (
+    non_authority_claims_are_valid,
+    score_receipt_is_valid,
+    sha256_json,
+)
 from app.domain import benchmark_assignment_diagnostic
 from app.domain.proof_evidence import EvidenceClass, parse_timezone_aware_datetime
 
@@ -89,6 +92,9 @@ _EVALUATION_KEYS = frozenset(
         "unsupportedReasons",
         "policyVersion",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "requestReceiptDigest",
         "assignmentStateDigest",
         "missingBenchmarkReviewRequired",
@@ -267,10 +273,6 @@ def _evaluation_is_valid(
     source: Mapping[str, Any],
     request: Mapping[str, Any],
 ) -> bool:
-    try:
-        score = Decimal(str(evaluation.get("candidateScore")))
-    except (InvalidOperation, TypeError, ValueError):
-        return False
     ready = source.get("assignmentDiagnostic") == "core_benchmark_assignment_ready"
     if (
         not _digest_is_valid(evaluation, "evaluationDigest")
@@ -283,8 +285,7 @@ def _evaluation_is_valid(
         or evaluation.get("policyVersion") != request.get("policyVersion")
         or evaluation.get("family") != "missing_benchmark"
         or evaluation.get("unsupportedReasons") != []
-        or score < Decimal("0")
-        or score > Decimal("100")
+        or not score_receipt_is_valid(evaluation, candidate_expected=not ready)
     ):
         return False
     if ready:

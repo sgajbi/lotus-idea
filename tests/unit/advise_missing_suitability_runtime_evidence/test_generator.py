@@ -56,7 +56,7 @@ def test_generator_invokes_one_source_fetch_and_writes_closed_v2_artifact(
     assert len(source.requests) == 1
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["schemaVersion"] == (
-        "lotus-idea.advise-missing-suitability.runtime-execution.v2"
+        "lotus-idea.advise-missing-suitability.runtime-execution.v3"
     )
     assert payload["evidenceClass"] == "runtime_execution"
     assert payload["execution"]["qualificationBlockers"] == []

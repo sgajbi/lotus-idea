@@ -14,6 +14,7 @@ from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
+    score_receipt,
     sha256_json,
     source_ref_material,
 )
@@ -31,7 +32,7 @@ from app.ports.core_sources import (
 
 CORE_MISSING_BENCHMARK_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF"
 CORE_MISSING_BENCHMARK_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.core-missing-benchmark.runtime-execution.v2"
+    "lotus-idea.core-missing-benchmark.runtime-execution.v3"
 )
 CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_missing_benchmark_live_core_source_proof_missing",
@@ -226,7 +227,7 @@ def _evaluation_receipt(
         "reasonCodes": [code.value for code in evaluation.reason_codes],
         "unsupportedReasons": [reason.value for reason in evaluation.unsupported_reasons],
         "policyVersion": result.policy.policy_version,
-        "candidateScore": str(result.policy.candidate_score),
+        **score_receipt(candidate.score if candidate is not None else None),
         "requestReceiptDigest": request_receipt["requestDigest"],
         "assignmentStateDigest": _assignment_state_digest(source_receipt),
         "missingBenchmarkReviewRequired": (

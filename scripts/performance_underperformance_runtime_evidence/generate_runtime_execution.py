@@ -152,7 +152,6 @@ def _policy(args: argparse.Namespace) -> UnderperformanceSignalPolicy:
     return UnderperformanceSignalPolicy(
         policy_version=DEFAULT_UNDERPERFORMANCE_POLICY.policy_version,
         active_return_threshold=Decimal(args.active_return_threshold),
-        candidate_score=DEFAULT_UNDERPERFORMANCE_POLICY.candidate_score,
     )
 
 

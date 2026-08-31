@@ -143,7 +143,6 @@ def _policy(args: argparse.Namespace) -> HighVolatilitySignalPolicy:
     return HighVolatilitySignalPolicy(
         policy_version=DEFAULT_HIGH_VOLATILITY_POLICY.policy_version,
         volatility_threshold=Decimal(args.volatility_threshold),
-        candidate_score=DEFAULT_HIGH_VOLATILITY_POLICY.candidate_score,
     )
 
 

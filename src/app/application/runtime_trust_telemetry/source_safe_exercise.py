@@ -25,9 +25,8 @@ def build_source_safe_runtime_trust_telemetry_repository(
     result = evaluate_high_cash_signal(
         _high_cash_input(generated_at_utc=generated_at_utc),
         HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
+            policy_version="idle-liquidity-v2",
             cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
         ),
     )
     if result.outcome is not SignalEvaluationOutcome.CANDIDATE_CREATED or result.candidate is None:

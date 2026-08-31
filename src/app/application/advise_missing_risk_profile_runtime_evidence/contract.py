@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
 from app.application.advise_policy_runtime_evidence import (
     validate_advise_policy_runtime_envelope,
 )
+from app.application.runtime_evidence import score_receipt_is_valid
 from app.domain import (
     RiskProfilePosture,
     missing_risk_profile_review_required_from_diagnostic,
@@ -29,6 +29,9 @@ _EVALUATION_KEYS = frozenset(
         "unsupportedReasons",
         "policyVersion",
         "candidateScore",
+        "scoreReasonCodes",
+        "scoreComponents",
+        "scoreConflictPenaltyApplied",
         "riskProfilePosture",
         "riskProfileReviewRequired",
         "candidateIdHash",
@@ -87,27 +90,25 @@ def _evaluation_receipt_is_valid(
     workflow: Mapping[str, Any],
     evaluation: Mapping[str, Any],
 ) -> bool:
-    try:
-        score = Decimal(str(evaluation.get("candidateScore")))
-    except (InvalidOperation, TypeError, ValueError):
-        return False
     diagnostic = workflow.get("adviseDiagnostic")
     posture = risk_profile_posture_from_advise_diagnostic(
         diagnostic if isinstance(diagnostic, str) else None
     )
-    review_required = missing_risk_profile_review_required_from_diagnostic(
+    review_required_value = missing_risk_profile_review_required_from_diagnostic(
         diagnostic if isinstance(diagnostic, str) else None
     )
+    if not isinstance(review_required_value, bool):
+        return False
+    review_required: bool = review_required_value
     if (
         posture is None
-        or review_required is None
-        or score < Decimal("0")
-        or score > Decimal("100")
         or evaluation.get("family") != "missing_risk_profile"
         or evaluation.get("unsupportedReasons") != []
         or evaluation.get("riskProfilePosture") != posture.value
         or evaluation.get("riskProfileReviewRequired") is not review_required
     ):
+        return False
+    if not score_receipt_is_valid(evaluation, candidate_expected=review_required):
         return False
     if review_required:
         return (
