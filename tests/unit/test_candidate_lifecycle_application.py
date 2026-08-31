@@ -126,7 +126,14 @@ def test_unsuccessful_lifecycle_results_do_not_claim_persisted_transition_eviden
 
 @pytest.mark.parametrize(
     "evidence_posture",
-    ["missing", "ambiguous", "malformed", "contradictory"],
+    [
+        "missing",
+        "ambiguous",
+        "malformed",
+        "rejected_outcome",
+        "blank_reason",
+        "contradictory",
+    ],
 )
 def test_successful_lifecycle_transition_fails_closed_without_one_valid_persisted_event(
     evidence_posture: str,
@@ -145,6 +152,19 @@ def test_successful_lifecycle_transition_fails_closed_without_one_valid_persiste
         audit_events = (
             *record.audit_events[:-1],
             replace(lifecycle_event, attributes={"transition_id": command.transition_id}),
+        )
+    elif evidence_posture == "rejected_outcome":
+        audit_events = (
+            *record.audit_events[:-1],
+            replace(lifecycle_event, outcome="rejected"),
+        )
+    elif evidence_posture == "blank_reason":
+        audit_events = (
+            *record.audit_events[:-1],
+            replace(
+                lifecycle_event,
+                attributes={**lifecycle_event.attributes, "reason_codes": "review_required,"},
+            ),
         )
     else:
         audit_events = (
