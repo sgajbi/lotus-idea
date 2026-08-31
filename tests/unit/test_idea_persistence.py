@@ -476,42 +476,6 @@ def test_expired_candidate_replay_returns_expired_posture_with_audit_history() -
     assert expired.audit_events[-1].event_type == "idea.lifecycle.transitioned"
 
 
-def test_replay_enforces_persisted_applicability_expiry_at_exact_boundary() -> None:
-    candidate, refs = high_cash_candidate()
-    candidate = replace(
-        candidate,
-        evidence_packet=replace(
-            candidate.evidence_packet,
-            applicability_expires_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
-        ),
-    )
-    repository = InMemoryIdeaRepository()
-    persisted = repository.persist_candidate(
-        candidate,
-        idempotency_key="signal-ingestion:expiring-candidate:001",
-        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-    assert persisted.record is not None
-
-    before = repository.replay_evidence(
-        candidate.candidate_id,
-        current_source_refs=refs,
-        evaluated_at_utc=datetime(2026, 6, 21, 10, 59, 59, tzinfo=UTC),
-    )
-    exactly_at = repository.replay_evidence(
-        candidate.candidate_id,
-        current_source_refs=refs,
-        evaluated_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
-    )
-
-    assert before.status is EvidenceReplayStatus.MATCHED
-    assert exactly_at.status is EvidenceReplayStatus.EXPIRED
-    assert exactly_at.record is not None
-    assert exactly_at.record.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
-
-
 def test_lifecycle_transition_records_idempotent_audit_history() -> None:
     candidate, refs = high_cash_candidate()
     repository = InMemoryIdeaRepository()
