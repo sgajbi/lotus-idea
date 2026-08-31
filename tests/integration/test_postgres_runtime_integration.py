@@ -60,6 +60,9 @@ from tests.integration.postgres_runtime_support import (
 from tests.support.postgres_conversion_outcome_runtime import (
     assert_postgres_conversion_outcome_identity_and_source_version_runtime_proof,
 )
+from tests.support.postgres_downstream_action_evidence_runtime import (
+    assert_postgres_downstream_action_evidence_runtime_proof,
+)
 
 
 POSTGRES_SCHEMA_TABLES = (
@@ -422,8 +425,11 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     _assert_review_action_persists_and_replays(client, candidate_id)
     _assert_feedback_persists(client, candidate_id)
     _assert_conversion_intent_persists_and_replays(client, candidate_id)
-    _assert_conversion_outcome_persists(client)
-    _assert_report_evidence_pack_persists_and_replays(client, candidate_id)
+    assert_postgres_downstream_action_evidence_runtime_proof(
+        client,
+        candidate_id,
+        postgres_database_url,
+    )
 
     _assert_workflow_table_counts(postgres_database_url)
     _assert_workflow_outbox_lineage(postgres_database_url)
@@ -521,49 +527,6 @@ def _assert_conversion_intent_persists_and_replays(
     assert replayed_conversion.status_code == 200
     assert replayed_conversion.json()["durableStorageBacked"] is True
     assert replayed_conversion.json()["persistence"]["decision"] == "replayed"
-
-
-def _assert_conversion_outcome_persists(client: ManagedTestClient) -> None:
-    outcome = client.post(
-        "/api/v1/conversion-intents/conversion-report-001/outcomes",
-        json=_conversion_outcome_payload(),
-        headers=_conversion_outcome_headers("postgres-runtime-proof-conversion-outcome-001"),
-    )
-    assert outcome.status_code == 200
-    assert outcome.json()["durableStorageBacked"] is True
-    assert outcome.json()["persistence"]["decision"] == "accepted"
-
-
-def _assert_report_evidence_pack_persists_and_replays(
-    client: ManagedTestClient, candidate_id: str
-) -> None:
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    report_headers = _report_evidence_pack_headers(
-        "postgres-runtime-proof-report-evidence-pack-001"
-    )
-    report_payload = _report_evidence_pack_payload()
-    report_pack = client.post(
-        "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
-        json=report_payload,
-        headers=report_headers,
-    )
-    assert report_pack.status_code == 200
-    report_response = report_pack.json()
-    assert report_response["durableStorageBacked"] is True
-    assert report_response["persistence"]["decision"] == "accepted"
-    assert report_response["reportEvidencePack"]["candidateId"] == candidate_id
-    assert report_response["reportEvidencePack"]["createsRenderedOutput"] is False
-    assert report_response["reportEvidencePack"]["createsArchiveRecord"] is False
-
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    replayed_report_pack = client.post(
-        "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
-        json=report_payload,
-        headers=report_headers,
-    )
-    assert replayed_report_pack.status_code == 200
-    assert replayed_report_pack.json()["durableStorageBacked"] is True
-    assert replayed_report_pack.json()["persistence"]["decision"] == "replayed"
 
 
 def _assert_workflow_table_counts(postgres_database_url: str) -> None:
@@ -1057,26 +1020,6 @@ def _conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def _conversion_outcome_headers(idempotency_key: str) -> dict[str, str]:
-    return {
-        "X-Caller-Subject": "lotus-report-worker",
-        "X-Caller-Capabilities": "idea.conversion.outcome.record",
-        "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-outcome",
-        "X-Trace-Id": "trace-postgres-runtime-proof-conversion-outcome",
-        "Idempotency-Key": idempotency_key,
-    }
-
-
-def _report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
-    return {
-        "X-Caller-Subject": "advisor-001",
-        "X-Caller-Capabilities": "idea.report-evidence-pack.request",
-        "X-Correlation-Id": "corr-postgres-runtime-proof-report-pack",
-        "X-Trace-Id": "trace-postgres-runtime-proof-report-pack",
-        "Idempotency-Key": idempotency_key,
-    }
-
-
 def _ai_explanation_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -1151,28 +1094,6 @@ def _conversion_intent_payload() -> dict[str, Any]:
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
-    }
-
-
-def _conversion_outcome_payload() -> dict[str, Any]:
-    return {
-        "conversionOutcomeId": "conversion-report-outcome-001",
-        "sourceEventVersion": 1,
-        "status": "accepted",
-        "sourceSystem": "lotus-report",
-        "downstreamReference": "report-evidence-pack-001",
-        "recordedAtUtc": "2026-06-21T10:20:00Z",
-    }
-
-
-def _report_evidence_pack_payload() -> dict[str, Any]:
-    return {
-        "reportEvidencePackId": "report-evidence-pack-001",
-        "purpose": "client_review_report_section",
-        "reasonCodes": ["review_approved_for_conversion"],
-        "requestedAtUtc": "2026-06-21T10:25:00Z",
-        "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
-        "clientReadyPublicationRequested": False,
     }
 
 

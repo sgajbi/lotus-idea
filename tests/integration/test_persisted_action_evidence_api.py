@@ -7,6 +7,7 @@ from tests.support.http import managed_test_client
 
 from app.api import candidate_lifecycle as candidate_lifecycle_api
 from app.api import conversion_governance as conversion_governance_api
+from app.api import report_evidence as report_evidence_api
 from app.api import review_workflow as review_workflow_api
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.main import app
@@ -15,12 +16,16 @@ from tests.integration.test_review_workflow_api import (
     approve_candidate_for_conversion,
     conversion_intent_headers,
     conversion_intent_payload,
+    conversion_outcome_headers,
+    conversion_outcome_payload,
     feedback_headers,
     feedback_payload,
     lifecycle_headers,
     lifecycle_payload,
     persisted_candidate_id,
     review_headers,
+    report_evidence_pack_headers,
+    report_evidence_pack_payload,
     suppress_review_payload,
 )
 
@@ -125,6 +130,68 @@ def test_conversion_intent_api_fails_safely_when_persisted_evidence_is_unavailab
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
         json=conversion_intent_payload(),
         headers=conversion_intent_headers("conversion-intent-api-missing-evidence-001"),
+    )
+
+    _assert_product_safe_degraded_response(response)
+
+
+def test_conversion_outcome_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-outcome-evidence-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    conversion_intent_id = "conversion-outcome-evidence-001"
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=conversion_intent_id),
+        headers=conversion_intent_headers("conversion-outcome-evidence-intent-001"),
+    )
+    assert intent.status_code == 200
+    monkeypatch.setattr(
+        conversion_governance_api,
+        "record_conversion_outcome_to_repository",
+        _raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/outcomes",
+        json=conversion_outcome_payload(
+            conversion_outcome_id="conversion-outcome-evidence-result-001"
+        ),
+        headers=conversion_outcome_headers("conversion-outcome-evidence-request-001"),
+    )
+
+    _assert_product_safe_degraded_response(response)
+
+
+def test_report_evidence_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-report-evidence-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    conversion_intent_id = "conversion-report-evidence-001"
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=conversion_intent_id),
+        headers=conversion_intent_headers("conversion-report-evidence-intent-001"),
+    )
+    assert intent.status_code == 200
+    monkeypatch.setattr(
+        report_evidence_api,
+        "request_report_evidence_pack_to_repository",
+        _raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/report-evidence-packs",
+        json=report_evidence_pack_payload(
+            report_evidence_pack_id="report-evidence-persisted-result-001"
+        ),
+        headers=report_evidence_pack_headers("report-evidence-persisted-request-001"),
     )
 
     _assert_product_safe_degraded_response(response)

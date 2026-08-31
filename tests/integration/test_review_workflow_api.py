@@ -1139,7 +1139,7 @@ def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_re
 
     assert first.status_code == 200
     assert replayed.status_code == 200
-    assert replayed.json()["conversionOutcome"] is None
+    assert replayed.json()["conversionOutcome"] == first.json()["conversionOutcome"]
     assert replayed.json()["persistence"]["decision"] == "replayed"
     assert wrong_source.status_code == 409
     assert wrong_source.json()["code"] == "conversion_outcome_conflict"

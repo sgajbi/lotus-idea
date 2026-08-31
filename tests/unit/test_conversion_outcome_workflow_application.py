@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import timedelta
+from typing import Any
 
 import pytest
 
@@ -9,17 +11,20 @@ from app.application.conversion_workflow import (
     RecordConversionOutcomeToRepositoryCommand,
     record_conversion_outcome_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     CandidatePersistenceDecision,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
+    ConversionPersistenceResult,
     InMemoryIdeaRepository,
     InvalidConversionOutcome,
     SourceSystem,
     current_conversion_outcome,
     request_conversion_intent,
 )
+from app.ports.idea_repository import ConversionOutcomeWorkflowRepository
 from tests.unit.test_conversion_governance import (
     OUTCOME_AT,
     REQUESTED_AT,
@@ -76,7 +81,7 @@ def outcome_command(
 
 
 def record_outcome(
-    repository: InMemoryIdeaRepository,
+    repository: ConversionOutcomeWorkflowRepository,
     conversion_intent_id: str,
     outcome: ConversionOutcomeCommand,
     *,
@@ -106,7 +111,12 @@ def test_conversion_outcome_identity_replays_across_transport_keys_without_side_
     after_replay = repository.snapshot()
 
     assert first.persistence.decision is ConversionPersistenceDecision.ACCEPTED
-    assert replayed.outcome_result is None
+    assert first.conversion_outcome is not None
+    assert first.persistence.record is not None
+    assert first.conversion_outcome is first.persistence.record.conversion_outcomes[-1]
+    assert replayed.conversion_outcome == first.conversion_outcome
+    assert replayed.persistence.record is not None
+    assert replayed.conversion_outcome is replayed.persistence.record.conversion_outcomes[-1]
     assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
     assert after_replay.candidate_records == before_replay.candidate_records
     assert after_replay.outbox_events == before_replay.outbox_events
@@ -135,7 +145,7 @@ def test_conversion_outcome_identity_conflicts_on_changed_source_fact() -> None:
         idempotency_key="outcome:changed",
     )
 
-    assert conflict.outcome_result is None
+    assert conflict.conversion_outcome is None
     assert conflict.persistence.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT
     assert repository.snapshot() == before_conflict
 
@@ -215,3 +225,135 @@ def test_terminal_outcome_requires_explicit_append_only_correction() -> None:
     outcomes = repository.conversion_outcomes_for_intent(intent_id)
     assert len(outcomes) == 2
     assert current_conversion_outcome(outcomes) == outcomes[-1]
+
+
+def test_conversion_outcome_replay_fails_closed_when_persisted_outcome_is_missing() -> None:
+    repository, intent_id = repository_with_conversion_intent()
+    record = repository.candidate_record_for_conversion_intent(intent_id)
+    assert record is not None
+    replay_repository = PrecheckedConversionOutcomeRepository(
+        repository,
+        ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=record,
+        ),
+    )
+
+    with pytest.raises(PersistedActionEvidenceUnavailable, match="exactly one persisted action"):
+        record_outcome(
+            replay_repository,
+            intent_id,
+            outcome_command(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="missing-persisted-outcome",
+                version=1,
+            ),
+            idempotency_key="outcome:missing-persisted-evidence",
+        )
+
+
+def test_conversion_outcome_success_fails_closed_without_candidate_record() -> None:
+    repository, intent_id = repository_with_conversion_intent()
+    replay_repository = PrecheckedConversionOutcomeRepository(
+        repository,
+        ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=None,
+        ),
+    )
+
+    with pytest.raises(PersistedActionEvidenceUnavailable, match="no candidate record"):
+        record_outcome(
+            replay_repository,
+            intent_id,
+            outcome_command(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="missing-candidate-record-outcome",
+                version=1,
+            ),
+            idempotency_key="outcome:missing-candidate-record",
+        )
+
+
+def test_conversion_outcome_replay_fails_closed_when_persisted_outcome_is_ambiguous() -> None:
+    repository, intent_id = repository_with_conversion_intent()
+    outcome = outcome_command(
+        ConversionOutcomeStatus.ACCEPTED,
+        outcome_id="ambiguous-persisted-outcome",
+        version=1,
+    )
+    accepted = record_outcome(repository, intent_id, outcome, idempotency_key="outcome:accepted")
+    assert accepted.persistence.record is not None
+    assert accepted.conversion_outcome is not None
+    ambiguous_record = replace(
+        accepted.persistence.record,
+        conversion_outcomes=(accepted.conversion_outcome, accepted.conversion_outcome),
+    )
+    replay_repository = PrecheckedConversionOutcomeRepository(
+        repository,
+        ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=ambiguous_record,
+        ),
+    )
+
+    with pytest.raises(PersistedActionEvidenceUnavailable, match="exactly one persisted action"):
+        record_outcome(
+            replay_repository,
+            intent_id,
+            outcome,
+            idempotency_key="outcome:ambiguous-persisted-evidence",
+        )
+
+
+def test_conversion_outcome_success_result_guard_rejects_missing_evidence() -> None:
+    with pytest.raises(PersistedActionEvidenceUnavailable, match="no persisted conversion outcome"):
+        ConversionOutcomeWorkflowResult(
+            conversion_outcome=None,
+            persistence=ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.REPLAYED,
+                record=None,
+            ),
+        ).require_conversion_outcome()
+
+
+@pytest.mark.parametrize(
+    ("conversion_intent_id", "idempotency_key"),
+    ((" ", "outcome:valid-key"), ("conversion-report-001", " ")),
+)
+def test_conversion_outcome_repository_command_rejects_blank_identity(
+    conversion_intent_id: str,
+    idempotency_key: str,
+) -> None:
+    with pytest.raises(ValueError, match="is required"):
+        RecordConversionOutcomeToRepositoryCommand(
+            conversion_intent_id=conversion_intent_id,
+            outcome=outcome_command(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="blank-boundary-outcome",
+                version=1,
+            ),
+            idempotency_key=idempotency_key,
+        )
+
+
+class PrecheckedConversionOutcomeRepository:
+    def __init__(
+        self,
+        repository: InMemoryIdeaRepository,
+        prechecked: ConversionPersistenceResult,
+    ) -> None:
+        self._repository = repository
+        self._prechecked = prechecked
+
+    def conversion_intent_by_id(self, conversion_intent_id: str) -> Any:
+        return self._repository.conversion_intent_by_id(conversion_intent_id)
+
+    def conversion_outcomes_for_intent(self, conversion_intent_id: str) -> Any:
+        return self._repository.conversion_outcomes_for_intent(conversion_intent_id)
+
+    def precheck_conversion_outcome_mutation(self, **kwargs: Any) -> ConversionPersistenceResult:
+        return self._prechecked
+
+    def record_conversion_outcome(self, *args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("prechecked replay must not persist another outcome")

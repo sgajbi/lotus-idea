@@ -19,63 +19,59 @@ REPORT_EVIDENCE_PACK_SUCCESS_EXAMPLE_SUMMARIES = {
 
 
 def build_report_evidence_pack_response_examples() -> dict[str, dict[str, Any]]:
+    accepted = _validated_report_evidence_pack_response(
+        {
+            "reportEvidencePack": {
+                "reportEvidencePackId": "report-evidence-pack-001",
+                "conversionIntentId": "conversion-report-001",
+                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                "purpose": "client_review_report_section",
+                "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                "evidenceContentHash": "sha256:evidence-lineage",
+                "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
+                "sourceSummaries": [
+                    {
+                        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+                        "sourceSystem": "lotus-core",
+                        "productVersion": "v1",
+                        "asOfDate": "2026-06-21",
+                        "generatedAtUtc": "2026-06-21T10:00:00Z",
+                        "contentHash": "sha256:portfolio-state",
+                        "dataQualityStatus": "complete",
+                        "freshness": "current",
+                    }
+                ],
+                "reasonCodes": ["review_approved_for_conversion"],
+                "reportSourceAuthority": "lotus-report",
+                "renderSourceAuthority": "lotus-render",
+                "archiveSourceAuthority": "lotus-archive",
+                "boundary": "request_only",
+                "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
+                "requestedAtUtc": "2026-06-21T10:25:00Z",
+                "grantsClientPublicationAuthority": False,
+                "createsRenderedOutput": False,
+                "createsArchiveRecord": False,
+            },
+            "persistence": {
+                "decision": "accepted",
+                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                "lifecycleStatus": "converted_to_report",
+                "reviewPosture": "approved_for_conversion",
+                "auditEventType": "idea.report_evidence_pack.requested",
+            },
+            "durableStorageBacked": False,
+            "supportedFeaturePromoted": False,
+        }
+    )
     return {
-        "accepted": _validated_report_evidence_pack_response(
-            {
-                "reportEvidencePack": {
-                    "reportEvidencePackId": "report-evidence-pack-001",
-                    "conversionIntentId": "conversion-report-001",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "purpose": "client_review_report_section",
-                    "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                    "evidenceContentHash": "sha256:evidence-lineage",
-                    "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
-                    "sourceSummaries": [
-                        {
-                            "productId": "lotus-core:PortfolioStateSnapshot:v1",
-                            "sourceSystem": "lotus-core",
-                            "productVersion": "v1",
-                            "asOfDate": "2026-06-21",
-                            "generatedAtUtc": "2026-06-21T10:00:00Z",
-                            "contentHash": "sha256:portfolio-state",
-                            "dataQualityStatus": "complete",
-                            "freshness": "current",
-                        }
-                    ],
-                    "reasonCodes": ["review_approved_for_conversion"],
-                    "reportSourceAuthority": "lotus-report",
-                    "renderSourceAuthority": "lotus-render",
-                    "archiveSourceAuthority": "lotus-archive",
-                    "boundary": "request_only",
-                    "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
-                    "requestedAtUtc": "2026-06-21T10:25:00Z",
-                    "grantsClientPublicationAuthority": False,
-                    "createsRenderedOutput": False,
-                    "createsArchiveRecord": False,
-                },
-                "persistence": {
-                    "decision": "accepted",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.report_evidence_pack.requested",
-                },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
-            }
-        ),
+        "accepted": accepted,
         "replayed": _validated_report_evidence_pack_response(
             {
-                "reportEvidencePack": None,
+                **accepted,
                 "persistence": {
+                    **accepted["persistence"],
                     "decision": "replayed",
-                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                    "lifecycleStatus": "converted_to_report",
-                    "reviewPosture": "approved_for_conversion",
-                    "auditEventType": "idea.report_evidence_pack.requested",
                 },
-                "durableStorageBacked": False,
-                "supportedFeaturePromoted": False,
             }
         ),
     }

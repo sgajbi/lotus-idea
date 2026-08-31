@@ -128,8 +128,9 @@ async def record_conversion_intent(
                 causation_id=x_causation_id,
             )
         except PersistedActionEvidenceUnavailable:
-            return _conversion_intent_persisted_evidence_problem(
-                durable_storage_backed=context.durable_storage_backed
+            return _conversion_persisted_evidence_problem(
+                operation=IdeaOperation.CONVERSION_INTENT,
+                durable_storage_backed=context.durable_storage_backed,
             )
     except (PermissionDeniedError, ConversionAccessScopeDenied):
         return _conversion_intent_permission_denied_response()
@@ -227,12 +228,13 @@ def _conversion_intent_invalid_request_response() -> JSONResponse:
     )
 
 
-def _conversion_intent_persisted_evidence_problem(
+def _conversion_persisted_evidence_problem(
     *,
+    operation: IdeaOperation,
     durable_storage_backed: bool,
 ) -> JSONResponse:
     emit_conversion_operation_event(
-        IdeaOperation.CONVERSION_INTENT,
+        operation,
         OperationOutcome.BLOCKED,
         error_code="service_recovery_degraded",
         durable_storage_backed=durable_storage_backed,
@@ -296,18 +298,24 @@ async def record_conversion_outcome(
         )
         if isinstance(context, JSONResponse):
             return context
-        result = record_conversion_outcome_to_repository(
-            request.to_command(
-                conversion_intent_id=conversion_intent_id,
-                caller=context.caller,
-                idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
+        try:
+            result = record_conversion_outcome_to_repository(
+                request.to_command(
+                    conversion_intent_id=conversion_intent_id,
+                    caller=context.caller,
+                    idempotency_key=idempotency_key,
+                    event_lineage=event_lineage_from_request(
+                        http_request,
+                        causation_id=x_causation_id,
+                    ),
                 ),
-            ),
-            repository=context.repository,
-        )
+                repository=context.repository,
+            )
+        except PersistedActionEvidenceUnavailable:
+            return _conversion_persisted_evidence_problem(
+                operation=IdeaOperation.CONVERSION_OUTCOME,
+                durable_storage_backed=context.durable_storage_backed,
+            )
     except PermissionDeniedError:
         return conversion_permission_denied_response(
             operation=IdeaOperation.CONVERSION_OUTCOME,
@@ -334,10 +342,8 @@ async def record_conversion_outcome(
     if problem is not None:
         return problem
     return ConversionOutcomeApiResponse(
-        conversionOutcome=(
-            ConversionOutcomeResponse.from_domain(result.outcome_result.conversion_outcome)
-            if result.outcome_result is not None
-            else None
+        conversionOutcome=ConversionOutcomeResponse.from_domain(
+            result.require_conversion_outcome()
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=context.durable_storage_backed,
@@ -403,7 +409,9 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
         "idea conversion intent. Source-event identity and version are independent of the "
         "transport idempotency key; legal progression and append-only corrections are "
         "validated before persistence. The route verifies that the reporting source system "
-        "matches the target source authority, writes audit evidence, and remains an "
+        "matches the target source authority, writes audit evidence, and returns the exact "
+        "persisted conversion outcome for accepted and replayed success. Missing or ambiguous "
+        "persisted evidence fails closed. The route remains an "
         "internal foundation. Process-local writes are allowed only for local/test "
         "profiles; production-like profiles require LOTUS_IDEA_DATABASE_URL. "
         "Downstream contracts, Gateway, "
@@ -414,7 +422,7 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
     "tags": ["Idea Conversion"],
     "responses": {
         200: {
-            "description": "Conversion outcome accepted or replayed through the internal repository foundation.",
+            "description": "Conversion outcome accepted or replayed with the exact persisted Idea-owned outcome.",
             "content": {
                 "application/json": {
                     "example": build_conversion_outcome_response_examples()["accepted"]
