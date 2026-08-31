@@ -15,6 +15,7 @@ promoted.
 | Symptom | Check first | Escalate to |
 | --- | --- | --- |
 | Service is unavailable | `/health/live`, container logs, runtime profile | [Getting Started](Getting-Started), `docs/runbooks/service-operations.md` |
+| Fresh Compose build reports that `lotus-idea:local` already exists | `make compose-config-gate`; confirm only `lotus-idea-migrations` owns `build: *lotus-idea-build` | `docs/runbooks/service-operations.md`, Idea #1142 |
 | Readiness is degraded | `/health/ready`, `/api/v1/implementation-proof/readiness` | [Troubleshooting](Troubleshooting), `docs/operations/implementation-proof-readiness.md` |
 | Database recovery or cutover is active | `/health/ready`, `LOTUS_IDEA_RECOVERY_POSTURE` | [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery) |
 | Durable writes fail | `LOTUS_IDEA_DATABASE_URL`, repository readiness, migration history | `docs/operations/persistence.md` |
@@ -42,6 +43,7 @@ promoted.
 | `make deployment-migration-contract-gate` | Exact-image migration workflow, history, evidence, Docker closure, and anti-bypass contract. |
 | `make disaster-recovery-proof-gate` | Restore integrity, RPO/RTO, replay, fencing, and no-mutation evidence. |
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
+| `make compose-config-gate` | Base and worker-profile resolution plus the single-writer shared-image contract. |
 | `make supported-features-gate` | Confirms no unproved support claim is promoted. |
 | `make supported-feature-promotion-contract-gate` | Confirms gate, readiness API, and generated artifact use one promotion evaluator. |
 | `make service-slo-capacity-contract-gate` | Validates service objectives, capacity budgets, safe labels, dashboard, and rule inventory. |

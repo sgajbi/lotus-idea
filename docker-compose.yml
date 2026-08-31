@@ -32,6 +32,8 @@ services:
 
   lotus-idea-migrations:
     image: lotus-idea:local
+    # This dependency service is the sole producer of the shared application image.
+    # API and worker containers consume the exact artifact after migrations succeed.
     build: *lotus-idea-build
     environment:
       LOTUS_IDEA_DATABASE_URL: "${LOTUS_IDEA_DATABASE_URL:-postgresql://lotus_idea:lotus_idea@lotus-idea-postgres:5432/lotus_idea}"
@@ -43,7 +45,6 @@ services:
 
   lotus-idea:
     image: lotus-idea:local
-    build: *lotus-idea-build
     ports:
       - "8330:8330"
     env_file:
@@ -90,7 +91,6 @@ services:
       retries: 10
   lotus-idea-source-ingestion-worker:
     image: lotus-idea:local
-    build: *lotus-idea-build
     restart: on-failure
     profiles:
       - worker
