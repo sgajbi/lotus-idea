@@ -330,7 +330,57 @@ def test_authoritative_non_eligible_reevaluation_expires_existing_candidate_once
     )
     assert repeated.expiry is not None
     assert repeated.expiry.decision is CandidateExpiryDecision.ALREADY_EXPIRED
-    assert len(repository.snapshot().candidate_records[candidate_id].lifecycle_history) == 1
+    snapshot = repository.snapshot()
+    assert len(snapshot.candidate_records[candidate_id].lifecycle_history) == 1
+    assert f"candidate-expiry:{candidate_id}:material-version:1" in snapshot.idempotency_records
+
+
+def test_non_eligible_evaluation_without_candidate_is_non_mutating() -> None:
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_high_cash_signal(
+        persist_command(evaluation=command(cash_weight=Decimal("0.10"))),
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert result.expiry is not None
+    assert result.expiry.decision is CandidateExpiryDecision.NOT_FOUND
+    assert repository.snapshot().candidate_records == {}
+
+
+def test_authoritative_non_eligible_reevaluation_preserves_closed_candidate() -> None:
+    repository = InMemoryIdeaRepository()
+    created = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+    assert created.persistence is not None
+    assert created.persistence.record is not None
+    candidate_id = created.persistence.record.candidate.candidate_id
+    repository.transition_candidate(
+        candidate_id,
+        IdeaLifecycleStatus.CLOSED,
+        actor_subject="candidate-closure-test",
+        occurred_at_utc=EVALUATED_AT + timedelta(minutes=30),
+    )
+
+    result = evaluate_and_persist_high_cash_signal(
+        persist_command(
+            evaluation=replace(
+                command(cash_weight=Decimal("0.10")),
+                evaluated_at_utc=EVALUATED_AT + timedelta(hours=1),
+            ),
+            idempotency_key="signal-ingestion:high-cash:pb-001:closed",
+        ),
+        repository=repository,
+    )
+
+    assert result.expiry is not None
+    assert result.expiry.decision is CandidateExpiryDecision.TERMINAL_STATE_PRESERVED
+    record = repository.snapshot().candidate_records[candidate_id]
+    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.CLOSED
+    assert len(record.lifecycle_history) == 1
 
 
 def test_blocked_reevaluation_does_not_expire_existing_candidate() -> None:

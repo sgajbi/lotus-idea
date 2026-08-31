@@ -172,9 +172,9 @@ def evaluate_and_persist_high_cash_signal(
                 evaluation=evaluation,
                 as_of_date=command.evaluation.as_of_date,
                 access_scope=command.evaluation.access_scope,
-                idempotency_key=command.idempotency_key,
                 actor_subject=command.actor_subject,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                event_lineage=command.event_lineage,
                 repository=repository,
             ),
         )
@@ -259,7 +259,6 @@ def evaluate_and_persist_high_cash_signal_from_core(
                     tenant_id=command.evaluation.tenant_id,
                     portfolio_id=command.evaluation.portfolio_id,
                 ),
-                idempotency_key=command.idempotency_key,
                 actor_subject=command.actor_subject,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 repository=repository,
@@ -286,9 +285,9 @@ def _expire_non_eligible_high_cash(
     evaluation: SignalEvaluationResult,
     as_of_date: date,
     access_scope: ReviewAccessScope | None,
-    idempotency_key: str,
     actor_subject: str,
     evaluated_at_utc: datetime,
+    event_lineage: EventLineageContext | None = None,
     repository: CandidateEvaluationRepository,
 ) -> CandidateExpiryResult | None:
     if evaluation.outcome is not SignalEvaluationOutcome.NOT_ELIGIBLE:
@@ -305,10 +304,10 @@ def _expire_non_eligible_high_cash(
     return expire_candidate(
         ExpireCandidateCommand(
             candidate_id=business_identity.candidate_id,
-            idempotency_key=f"{idempotency_key}:expire",
             actor_subject=actor_subject,
             evaluated_at_utc=evaluated_at_utc,
             reason_codes=reason_codes,
+            event_lineage=event_lineage,
         ),
         repository=repository,
     )
