@@ -201,6 +201,7 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     result = apply_review_action(source_candidate, command)
     identity = review_mutation_identity_from_command(source_candidate, command)
 
+    assert result.source_candidate is source_candidate
     assert identity == result.decision.mutation_identity
     assert identity != replace(identity, candidate_id="idea-review-002")
     assert identity != replace(identity, event_name=ReviewAction.REJECT.value)
