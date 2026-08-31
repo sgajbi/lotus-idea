@@ -871,10 +871,12 @@ feature.
 The internal application layer can now evaluate high-cash evidence and persist
 created candidates through the Slice 06 idempotency/audit repository contract.
 Repeated requests with the same idempotency payload replay, changed payloads
-conflict, and blocked or not-eligible evaluations do not mutate
-state. The evaluate-and-persist API exposes this as an internal certified
-foundation and reports repository-backed storage posture from the active
-provider; it is not a supported product workflow.
+conflict, and blocked evaluations do not mutate state. A source-authoritative
+high-cash `not_eligible` reevaluation expires the matching active candidate
+through the existing lifecycle, audit, and outbox boundary; candidate plus
+material version fence concurrent expiry. The evaluate-and-persist API exposes
+this as an internal certified foundation and reports repository-backed storage
+posture from the active provider; it is not a supported product workflow.
 
 The internal application layer can now also replay persisted candidate evidence
 posture against caller-supplied current source refs. This is an operator

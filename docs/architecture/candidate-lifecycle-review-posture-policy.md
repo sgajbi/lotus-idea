@@ -61,6 +61,21 @@ making deployment depend on immediate cleanup of historical records. Queue and
 readiness SQL independently excludes those historical rows as `invalid_state`,
 so they cannot become advisor work items.
 
+### Evidence-driven expiry
+
+For the persisted high-cash family, a source-authoritative `not_eligible`
+reevaluation transitions the matching active economic candidate to `expired`.
+The transition uses stable business identity plus material version as its
+idempotency boundary, writes through the existing lifecycle/audit/outbox
+contract, and normalizes review posture to `no_action`. Concurrent or repeated
+resolution evidence therefore creates one expiry transition.
+
+`blocked` is deliberately different: missing, stale, unavailable, conflicting,
+or unauthorized evidence cannot prove resolution and never expires the
+candidate. Missing candidates and already-terminal candidates are also left
+unchanged. A later eligible condition returns only through the governed
+material-recurrence path; evidence-only refresh cannot reopen the candidate.
+
 ## Legacy Reconciliation
 
 Operations should reconcile quarantine entries in this order:

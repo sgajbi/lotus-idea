@@ -34,8 +34,17 @@ The endpoint proves the service can:
 3. fail closed before mutation when the manifest, Core query URL, or Core
    query-control-plane URL is missing or invalid,
 4. execute the existing domain batch runner when runtime state is configured,
-5. return aggregate decision counts only,
-6. emit bounded `source_ingestion_run_once` operation events.
+5. expire the matching active high-cash candidate when current, supported Core
+   evidence authoritatively evaluates as `not_eligible`, while leaving blocked
+   evidence non-mutating,
+6. return aggregate decision counts only,
+7. emit bounded `source_ingestion_run_once` operation events.
+
+The worker still reports that item as `skipped_not_eligible` because no new
+candidate was persisted. The existing candidate's lifecycle history, audit,
+outbox event, and queue exclusion are the durable reconciliation evidence.
+Expiry idempotency is keyed by candidate and material version rather than the
+worker request key, so concurrent reruns cannot create duplicate transitions.
 
 `make trusted-tenant-context-gate` prevents the API, application, port,
 adapter, persistence, worker, and telemetry contracts from drifting apart.

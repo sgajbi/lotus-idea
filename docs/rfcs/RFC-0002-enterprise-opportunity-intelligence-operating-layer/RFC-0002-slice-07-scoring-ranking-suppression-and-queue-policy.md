@@ -202,6 +202,24 @@ backfill that preserves candidate identity, material version, lifecycle,
 review, and suppression posture rather than manufacturing a deployment-time
 recurrence.
 
+## Authoritative Resolution And Expiry
+
+High-cash evaluation now closes the stale-work gap between eligibility and the
+review queue. Current, supported Core evidence that evaluates as
+`not_eligible` rebuilds the scoped economic candidate identity without
+requiring obsolete material or evidence facts, then expires the matching active
+candidate through the existing lifecycle, audit, and outbox boundary. The
+candidate plus material version form the expiry idempotency identity, separate
+from transport request keys, so concurrent resolution observations produce one
+transition.
+
+Blocked, missing, unauthorized, stale, or otherwise unsupported evidence does
+not establish that the opportunity resolved and remains non-mutating. Missing
+and already-terminal candidates are preserved. The adviser queue excludes the
+expired record, evidence-only refresh preserves expiry, and a genuinely changed
+eligible condition reopens only as the next governed material version with the
+existing recurrence reason.
+
 ## Remaining Gaps
 
 Workbench realization, broader review audiences, data-product certification,
