@@ -1088,11 +1088,14 @@ Materially distinct normal API outcomes must be published from DTO-validated,
 code-owned examples and checked against both OpenAPI and the endpoint
 certification ledger. For feedback, accepted and business-resource replay are
 separate HTTP 200 modes; do not collapse replay into prose or a single accepted
-example. Successful review-action, feedback, and conversion-intent replays
+example. Successful lifecycle-transition, review-action, feedback, and
+conversion-intent replays
 must return the exact persisted business event; missing or ambiguous persisted
 evidence fails closed and must never be represented as a successful null-event
-response. Review actions, conversion intents, and conversion outcomes follow
-the same rule, as does report evidence-pack request recording. Keep sibling
+response. Malformed lifecycle audit evidence also fails closed instead of being
+reconstructed from the request. Review actions, conversion intents, and
+conversion outcomes follow the same rule, as does report evidence-pack request
+recording. Keep sibling
 capability contracts in
 `app.api.examples.review_workflow`,
 `app.api.examples.conversion_workflow`, `app.api.examples.report_evidence`,

@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
+    recovery_posture_problem,
 )
 from app.api.idempotency import validate_idempotency_key
 from app.api.event_lineage import (
@@ -36,8 +37,11 @@ from app.api.runtime_dependencies import (
 )
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
+    CandidateLifecycleTransitionWorkflowResult,
+    PersistedLifecycleTransition,
     apply_candidate_lifecycle_transition_to_repository,
 )
+from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     EventLineageContext,
     IdeaLifecycleStatus,
@@ -47,6 +51,7 @@ from app.domain import (
     ReasonCode,
     validate_caller_settable_lifecycle_status,
 )
+from app.domain.recovery_posture import ServiceRecoveryPosture
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.ports.idea_repository import CandidateLifecycleRepository
@@ -147,6 +152,20 @@ class CandidateLifecycleTransitionSummaryResponse(CamelModel):
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
 
+    @classmethod
+    def from_application(
+        cls,
+        transition: PersistedLifecycleTransition,
+    ) -> "CandidateLifecycleTransitionSummaryResponse":
+        return cls(
+            transitionId=transition.transition_id,
+            candidateId=transition.candidate_id,
+            lifecycleStatus=transition.lifecycle_status,
+            changedAtUtc=transition.changed_at_utc,
+            reasonCodes=transition.reason_codes,
+            grantsDownstreamAuthority=False,
+        )
+
 
 class LifecyclePersistenceSummaryResponse(CamelModel):
     decision: LifecyclePersistenceDecision
@@ -172,7 +191,7 @@ class LifecyclePersistenceSummaryResponse(CamelModel):
 
 
 class CandidateLifecycleTransitionResponse(CamelModel):
-    transition: CandidateLifecycleTransitionSummaryResponse | None = None
+    transition: CandidateLifecycleTransitionSummaryResponse
     persistence: LifecyclePersistenceSummaryResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -198,11 +217,13 @@ async def record_candidate_lifecycle_transition(
         x_caller_capabilities=x_caller_capabilities,
         x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
     )
+    durable_storage_backed = False
     try:
         _validate_lifecycle_request_authority(caller, idempotency_key)
         repository_context = _lifecycle_repository_context_or_problem()
         if isinstance(repository_context, JSONResponse):
             return repository_context
+        durable_storage_backed = repository_context.durable_storage_backed
         result = _apply_lifecycle_transition(
             request,
             candidate_id=candidate_id,
@@ -229,6 +250,10 @@ async def record_candidate_lifecycle_transition(
             title="Lifecycle transition conflict",
             detail="The lifecycle transition is not valid for the current idea candidate state.",
         )
+    except PersistedActionEvidenceUnavailable:
+        return _lifecycle_persisted_evidence_problem(
+            durable_storage_backed=durable_storage_backed,
+        )
     except ValueError:
         _emit_lifecycle_operation_event(
             OperationOutcome.INVALID_REQUEST,
@@ -241,23 +266,21 @@ async def record_candidate_lifecycle_transition(
             detail="Correct the lifecycle transition request and retry.",
         )
 
-    problem = _problem_for_lifecycle_persistence(result)
+    problem = _problem_for_lifecycle_persistence(result.persistence)
     if problem is not None:
         _emit_lifecycle_operation_event(
-            _operation_outcome_from_lifecycle_decision(result.decision),
-            _error_code_from_lifecycle_decision(result.decision),
-            repository_context.durable_storage_backed,
+            _operation_outcome_from_lifecycle_decision(result.persistence.decision),
+            _error_code_from_lifecycle_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_lifecycle_operation_event(
-        _operation_outcome_from_lifecycle_decision(result.decision),
-        durable_storage_backed=repository_context.durable_storage_backed,
+        _operation_outcome_from_lifecycle_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return _candidate_lifecycle_response(
-        request,
-        candidate_id=candidate_id,
         result=result,
-        durable_storage_backed=repository_context.durable_storage_backed,
+        durable_storage_backed=durable_storage_backed,
     )
 
 
@@ -310,7 +333,7 @@ def _apply_lifecycle_transition(
     http_request: Request,
     x_causation_id: EventCausationHeader,
     repository_context: _LifecycleRepositoryContext,
-) -> LifecyclePersistenceResult:
+) -> CandidateLifecycleTransitionWorkflowResult:
     return apply_candidate_lifecycle_transition_to_repository(
         _lifecycle_transition_command(
             request,
@@ -345,39 +368,17 @@ def _lifecycle_transition_command(
 
 
 def _candidate_lifecycle_response(
-    request: CandidateLifecycleTransitionRequest,
     *,
-    candidate_id: str,
-    result: LifecyclePersistenceResult,
+    result: CandidateLifecycleTransitionWorkflowResult,
     durable_storage_backed: bool,
 ) -> CandidateLifecycleTransitionResponse:
     return CandidateLifecycleTransitionResponse(
-        transition=_candidate_lifecycle_transition_summary(
-            request,
-            candidate_id=candidate_id,
-            result=result,
+        transition=CandidateLifecycleTransitionSummaryResponse.from_application(
+            result.require_transition()
         ),
-        persistence=LifecyclePersistenceSummaryResponse.from_result(result),
+        persistence=LifecyclePersistenceSummaryResponse.from_result(result.persistence),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
-    )
-
-
-def _candidate_lifecycle_transition_summary(
-    request: CandidateLifecycleTransitionRequest,
-    *,
-    candidate_id: str,
-    result: LifecyclePersistenceResult,
-) -> CandidateLifecycleTransitionSummaryResponse | None:
-    if result.decision is not LifecyclePersistenceDecision.ACCEPTED:
-        return None
-    return CandidateLifecycleTransitionSummaryResponse(
-        transitionId=request.transition_id,
-        candidateId=candidate_id,
-        lifecycleStatus=request.target_lifecycle_status.to_domain_status(),
-        changedAtUtc=request.changed_at_utc,
-        reasonCodes=tuple(reason.value for reason in request.reason_codes),
-        grantsDownstreamAuthority=False,
     )
 
 
@@ -408,6 +409,18 @@ def _problem_for_lifecycle_persistence(
 
 def _permission_denied(detail: str) -> JSONResponse:
     return permission_denied_problem(detail)
+
+
+def _lifecycle_persisted_evidence_problem(
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse:
+    _emit_lifecycle_operation_event(
+        OperationOutcome.BLOCKED,
+        "service_recovery_degraded",
+        durable_storage_backed,
+    )
+    return recovery_posture_problem(ServiceRecoveryPosture.DEGRADED)
 
 
 def _emit_lifecycle_operation_event(
@@ -455,7 +468,9 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
         "through the RFC-0002 Slice 06 lifecycle and audit foundation. The route requires "
         "a lifecycle transition capability and Idempotency-Key, applies the canonical "
         "domain lifecycle transition graph, writes lifecycle history plus audit evidence, "
-        "and does not grant downstream proposal, manage-review, report, suitability, "
+        "returns the exact persisted transition on accepted and replayed success, and fails "
+        "closed when that persisted evidence cannot be resolved uniquely. It does not "
+        "grant downstream proposal, manage-review, report, suitability, "
         "execution, or client-communication authority."
     ),
     "status_code": status.HTTP_200_OK,

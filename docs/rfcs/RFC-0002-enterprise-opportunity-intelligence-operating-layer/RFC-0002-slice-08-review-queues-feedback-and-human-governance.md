@@ -146,6 +146,16 @@ Implemented in this slice:
     candidate, audit, outbox, and resource behavior. No migration is required
     because the governed events were already persisted, and supported-feature
     posture remains unchanged.
+30. GitHub issue `#1169` applies the same exact-evidence invariant to candidate
+    lifecycle transitions. Accepted and idempotently replayed success resolve
+    one persisted `idea.lifecycle.transitioned` audit event by candidate and
+    `transitionId`, then return its stored target status, occurrence time, and
+    reason codes. The API no longer reconstructs accepted evidence from the
+    request or returns `transition=null` on replay. Missing, ambiguous, or
+    malformed persisted evidence fails closed with product-safe degraded
+    recovery. PostgreSQL reload proof preserves the same response without a
+    second lifecycle-history, audit, outbox, or idempotency mutation. No schema
+    migration is required because the exact evidence was already durable.
 
 Validation evidence from the implementation slice:
 

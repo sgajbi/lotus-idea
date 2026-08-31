@@ -5,6 +5,7 @@ from typing import Any, NoReturn, Protocol
 import pytest
 from tests.support.http import managed_test_client
 
+from app.api import candidate_lifecycle as candidate_lifecycle_api
 from app.api import conversion_governance as conversion_governance_api
 from app.api import review_workflow as review_workflow_api
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
@@ -16,6 +17,8 @@ from tests.integration.test_review_workflow_api import (
     conversion_intent_payload,
     feedback_headers,
     feedback_payload,
+    lifecycle_headers,
+    lifecycle_payload,
     persisted_candidate_id,
     review_headers,
     suppress_review_payload,
@@ -58,6 +61,27 @@ def test_review_action_api_fails_safely_when_persisted_evidence_is_unavailable(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
         json=suppress_review_payload(),
         headers=review_headers("review-action-api-missing-evidence-001"),
+    )
+
+    _assert_product_safe_degraded_response(response)
+
+
+def test_lifecycle_api_fails_safely_when_persisted_evidence_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-evidence-001")
+    monkeypatch.setattr(
+        candidate_lifecycle_api,
+        "apply_candidate_lifecycle_transition_to_repository",
+        _raise_unavailable,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=lifecycle_headers("lifecycle-api-missing-evidence-001"),
     )
 
     _assert_product_safe_degraded_response(response)

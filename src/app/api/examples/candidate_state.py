@@ -48,7 +48,14 @@ def build_candidate_lifecycle_response_examples() -> dict[str, dict[str, Any]]:
         ),
         "replayed": _validated_candidate_lifecycle_response(
             {
-                "transition": None,
+                "transition": {
+                    "transitionId": "lifecycle-ready-for-review-001",
+                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                    "lifecycleStatus": "ready_for_review",
+                    "changedAtUtc": "2026-06-21T10:04:00Z",
+                    "reasonCodes": ["review_required"],
+                    "grantsDownstreamAuthority": False,
+                },
                 "persistence": {
                     "decision": "replayed",
                     "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
