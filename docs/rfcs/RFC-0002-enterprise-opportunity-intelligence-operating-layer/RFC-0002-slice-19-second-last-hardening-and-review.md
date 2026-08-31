@@ -1274,8 +1274,10 @@ whole-store snapshot:
    PostgreSQL providers compute readiness counts over `idea_candidate_record`
    without hydrating whole repository snapshots or unrelated state families.
    The application keeps the deterministic snapshot fallback for process-local
-   repositories and snooze-aware evaluations. This is design modularity inside
-   the existing service, not a separate runtime queue-readiness process.
+   repositories. Issue `#1188` subsequently moved authoritative persisted
+   snooze evaluation into both that path and the bounded PostgreSQL projection.
+   This is design modularity inside the existing service, not a separate runtime
+   queue-readiness process.
 7. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, PM/compliance queue
    support, external-publication authority, or supported-feature promotion.

@@ -34,6 +34,15 @@ v2 candidate rows upgrade on their first governed v3 re-evaluation as a
 `migration_backfill`: tenant/business identity, material version, lifecycle,
 review posture, and suppression posture are preserved; unknown policy changes
 fail closed as identity conflicts.
+Persisted adviser snooze decisions are authoritative queue state. The advisor
+queue reads the latest governed review decision applicable to the current
+material version and excludes the candidate strictly before
+`snoozedUntilUtc`; the candidate becomes eligible at the exact boundary when
+all other queue rules pass. Evidence refresh preserves the snooze because the
+economic opportunity is unchanged. A new material version or recurrent reopen
+starts a new review cycle and does not inherit an older-version snooze. Both
+process-local and PostgreSQL projections apply this rule, and snooze changes
+participate in queue snapshot identity and readiness exclusion counts.
 `scripts/run_source_ingestion_worker.py` now provides a versioned
 manifest-backed run-once CLI, and `make source-ingestion-worker-check`
 validates the example manifest and source-safe check-only output contract

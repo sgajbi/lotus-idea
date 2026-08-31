@@ -1026,9 +1026,9 @@ For durable reads, prefer bounded projections over whole repository snapshots:
 
 When adding another read path or aggregate diagnostic, first ask whether the
 query needs a bounded projection contract. Avoid `snapshot()` for narrow
-PostgreSQL reads unless the provider is process-local, the request needs
-in-memory-only policy state such as snoozes, or the flow is still explicitly
-legacy.
+PostgreSQL reads unless the provider is process-local or the flow is still
+explicitly legacy. Adviser snoozes are persisted review decisions and belong
+in the bounded queue projection; callers must not reconstruct or supply them.
 
 Advisor queue paging uses one temporal contract across both providers:
 
@@ -1036,8 +1036,8 @@ Advisor queue paging uses one temporal contract across both providers:
 2. source `asOfDate` and evidence `generatedAtUtc` retain source-authority
    semantics and are not queue visibility fields,
 3. page zero issues opaque identity bound to evaluation time, effective scope,
-   queue ranking policy, accepted candidate score-policy set, snoozes, and
-   visible candidate state,
+   queue ranking policy, accepted candidate score-policy set, applicable
+   persisted snooze decisions, and visible candidate state,
 4. positive offsets require that identity and fail with a stable conflict when
    visible state changes,
 5. PostgreSQL verifies the fingerprint around the bounded page query, while

@@ -424,8 +424,10 @@ access-scope identifiers. It also reports whether repository-side queue
 pagination has been certified. Durable PostgreSQL queue reads use
 expression-index-backed tenant/book/portfolio/client scope predicates for the
 bounded repository-side candidate projection, and durable readiness diagnostics
-use an aggregate candidate-record projection when snoozes are absent instead of
-hydrating unrelated repository state. It remains `not_certified` until
+use a bounded candidate-and-latest-review projection, including authoritative
+persisted snoozes, instead of hydrating unrelated repository state. Active
+snoozes are counted and excluded until their exact wake-up boundary. It remains
+`not_certified` until
 Workbench proof, data-product certification, runtime trust telemetry, and
 supported-feature promotion exist. The first bounded Gateway
 advisor queue route now forwards platform caller-context scope headers, and the
@@ -898,8 +900,9 @@ advisor queue readiness diagnostic. It returns aggregate queue counts,
 exclusion counts, durable-storage posture, repository-side readiness posture,
 and certification blockers for operators without exposing candidate identifiers
 or access-scope identifiers. Durable PostgreSQL providers compute this through
-an aggregate over `idea_candidate_record` when snoozes are absent; process-local
-and snooze-aware evaluations retain the deterministic domain snapshot path.
+a bounded aggregate over candidates and their latest applicable persisted
+review decision; process-local repositories derive the same snooze posture from
+their immutable review history.
 It is not a Gateway route, Workbench proof, PM/compliance queue surface,
 data-product certification, client-ready publication, or supported-feature
 promotion.
