@@ -82,7 +82,7 @@ def high_cash_payload(
     cash_weight: str | None = "0.18",
     scoped: bool = False,
 ) -> dict[str, Any]:
-    payload = {
+    payload: dict[str, Any] = {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "sourceReportedCashWeight": cash_weight,
