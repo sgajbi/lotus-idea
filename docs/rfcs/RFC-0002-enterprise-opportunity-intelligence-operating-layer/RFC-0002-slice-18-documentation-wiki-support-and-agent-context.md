@@ -667,10 +667,10 @@ exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
 Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
-`DiffCount 0`; after the PR #828/#829 evidence-sync cycle, current source truth
-records 54 tracked RFC-0002 issues, 29 closed complete, 25 open, no
+`DiffCount 0`. At that historical PR #828/#829 evidence-sync point, source
+truth recorded 54 tracked RFC-0002 issues, 29 closed complete, 25 open, no
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
-14 `open_blocked` issues. #681 is active after PR #829 reached exact main
+14 `open_blocked` issues. #681 was active after PR #829 reached exact main
 `b9793a6e119a7510cd8aa881ad37abefe3612a81`, and #814 is currently blocked by
 Core in-window aggregation readiness issue `sgajbi/lotus-core#873`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
@@ -705,6 +705,19 @@ Slice 18 source-truth synchronization only: #681 and #380 stay open. Fresh
 canonical validation after Core PR #858 reopened Core #836 because positions
 data quality remained `UNKNOWN` despite ready/current Core diagnostics, and
 supported-feature promotion remains unclaimed.
+
+The 2026-08-31 source-truth reconciliation records 155 Idea RFC-0002 issues:
+128 closed complete and 27 open, including 12 `open_blocked`, 3
+`open_in_progress`, 2 `open_merged_main_qa_pending`, 1 pending final closure, 1
+pending post-completion decision, and 8 trackers. #681/#685/#686 are in
+progress; #1155/#1156 are merged-main pending canonical consumer QA; and
+#1168/#1169/#1170 are closed after exact persisted action evidence passed
+exact-main release, wiki publication/parity, and branch hygiene. The live state
+audit passes, the blocker classifier excludes #685/#686 because their work is
+writable in Gateway/Workbench, and the cross-repository snapshot records 251
+label-backed issues, 209 closed and 42 open, with 23 genuinely external or
+protected blockers and 0 app-actionable blocked issues. This reconciliation
+does not promote support or close Slice 18.
 
 PR #824 then synchronized that Core #836 canonical QA-failure posture through
 Idea main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
