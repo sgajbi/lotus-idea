@@ -93,6 +93,19 @@ def test_in_memory_repository_records_and_replays_exact_receipt() -> None:
     assert replayed.receipt == receipt
 
 
+def test_in_memory_repository_snapshot_preserves_presentation_receipts_across_restart() -> None:
+    repository = _repository()
+    receipt = _receipt()
+    repository.record_presentation_receipt(receipt)
+
+    restarted = InMemoryIdeaRepository(repository.snapshot())
+    replayed = restarted.record_presentation_receipt(receipt)
+
+    assert restarted.snapshot().presentation_receipts == {receipt.receipt_id: receipt}
+    assert replayed.decision is PresentationReceiptDecision.REPLAYED
+    assert replayed.receipt == receipt
+
+
 def test_in_memory_repository_reports_identity_conflict_without_overwrite() -> None:
     repository = _repository()
     receipt = _receipt()

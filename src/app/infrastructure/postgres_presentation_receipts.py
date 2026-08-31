@@ -123,7 +123,69 @@ def _load_receipt(
     rows = cursor.fetchall()
     if not rows:
         return None
-    row = rows[0]
+    return _receipt_from_row(rows[0])
+
+
+def load_presentation_receipts(
+    cursor: PostgresCursor,
+) -> dict[str, CandidatePresentationReceipt]:
+    cursor.execute(
+        """
+        SELECT receipt.receipt_id, receipt.candidate_id, receipt.tenant_id,
+               receipt.presented_at_utc, receipt.rank_at_presentation,
+               receipt.visible_candidate_count, receipt.queue_snapshot_digest,
+               receipt.queue_policy_version, receipt.ranking_policy_version,
+               receipt.candidate_material_version, receipt.candidate_evidence_version,
+               receipt.schema_version, receipt.surface, receipt.producer
+        FROM idea_candidate_presentation_receipt AS receipt
+        LEFT JOIN idea_data_lifecycle_control AS lifecycle
+          ON lifecycle.candidate_id = receipt.candidate_id
+        WHERE COALESCE(lifecycle.held_from_state, lifecycle.state, 'active')
+              NOT IN ('erased', 'purged')
+        ORDER BY receipt.presented_at_utc, receipt.receipt_id
+        """
+    )
+    receipts: dict[str, CandidatePresentationReceipt] = {}
+    for row in cursor.fetchall():
+        receipt = _receipt_from_row(row)
+        receipts[receipt.receipt_id] = receipt
+    return receipts
+
+
+def insert_presentation_receipt_snapshot(
+    cursor: PostgresCursor,
+    receipt: CandidatePresentationReceipt,
+) -> None:
+    cursor.execute(
+        """
+        INSERT INTO idea_candidate_presentation_receipt (
+            receipt_id, candidate_id, tenant_id, presented_at_utc,
+            rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
+            queue_policy_version, ranking_policy_version, candidate_material_version,
+            candidate_evidence_version, schema_version, surface, producer
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            receipt.receipt_id,
+            receipt.candidate_id,
+            receipt.tenant_id,
+            receipt.presented_at_utc,
+            receipt.rank_at_presentation,
+            receipt.visible_candidate_count,
+            receipt.queue_snapshot_digest,
+            receipt.queue_policy_version,
+            receipt.ranking_policy_version,
+            receipt.candidate_material_version,
+            receipt.candidate_evidence_version,
+            receipt.schema_version,
+            receipt.surface,
+            receipt.producer,
+        ),
+    )
+
+
+def _receipt_from_row(row: object) -> CandidatePresentationReceipt:
     return CandidatePresentationReceipt(
         receipt_id=str(read_row_value(row, "receipt_id")),
         candidate_id=str(read_row_value(row, "candidate_id")),
@@ -142,4 +204,8 @@ def _load_receipt(
     )
 
 
-__all__ = ["PostgresPresentationReceiptRepositoryMixin"]
+__all__ = [
+    "PostgresPresentationReceiptRepositoryMixin",
+    "insert_presentation_receipt_snapshot",
+    "load_presentation_receipts",
+]

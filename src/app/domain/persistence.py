@@ -107,6 +107,7 @@ class InMemoryIdeaRepository(
             )
             self._outbox_events.update(snapshot.outbox_events)
             self._downstream_submission_records.update(snapshot.downstream_submission_records)
+            self._presentation_receipts.update(snapshot.presentation_receipts)
             self._lotus_ai_attestation_replay.restore(
                 (lineage.request_id, lineage.attestation_receipt)
                 for record in self._candidate_records.values()
@@ -797,6 +798,7 @@ class InMemoryIdeaRepository(
             ai_explanation_lineage_candidates=self._ai_explanation_lineage_candidates,
             outbox_events=self._outbox_events,
             downstream_submission_records=self._downstream_submission_records,
+            presentation_receipts=self._presentation_receipts,
         )
 
     def _record_for_idempotency_key(

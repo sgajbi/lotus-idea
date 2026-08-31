@@ -18,6 +18,7 @@ from app.domain import (
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
     ConversionTarget,
+    CandidatePresentationReceipt,
     DownstreamSubmissionPosture,
     EvidenceFreshness,
     FeedbackCommand,
@@ -233,6 +234,41 @@ def test_postgres_repository_snapshot_replacement_clears_presentation_receipts_f
     )
     candidate_delete = connection.executed_sql.index("delete from idea_candidate_record")
     assert receipt_delete < candidate_delete
+
+
+def test_postgres_repository_snapshot_round_trip_preserves_presentation_receipts() -> None:
+    source = PostgresIdeaRepository(FakePostgresConnection())
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    source.persist_candidate(
+        candidate,
+        idempotency_key="candidate:presentation-snapshot",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    receipt = CandidatePresentationReceipt(
+        receipt_id="receipt-presentation-snapshot",
+        candidate_id=candidate.candidate_id,
+        tenant_id="tenant-001",
+        presented_at_utc=EVALUATED_AT,
+        rank_at_presentation=1,
+        visible_candidate_count=1,
+        queue_snapshot_digest=f"sha256:{'9' * 64}",
+        queue_policy_version="idea-review-queue-v1",
+        ranking_policy_version="idea-score-v2",
+        candidate_material_version=candidate.identity.material_version,
+        candidate_evidence_version=candidate.identity.evidence_version,
+    )
+    snapshot = replace(
+        source.snapshot(),
+        presentation_receipts={receipt.receipt_id: receipt},
+    )
+    target = PostgresIdeaRepository(FakePostgresConnection())
+
+    target.replace_snapshot(snapshot)
+    restored = target.snapshot()
+
+    assert restored.presentation_receipts == {receipt.receipt_id: receipt}
 
 
 def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() -> None:

@@ -96,6 +96,8 @@ from app.infrastructure.postgres_opportunity_effectiveness import (
 )
 from app.infrastructure.postgres_presentation_receipts import (
     PostgresPresentationReceiptRepositoryMixin,
+    insert_presentation_receipt_snapshot,
+    load_presentation_receipts,
 )
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
@@ -511,6 +513,7 @@ class PostgresIdeaRepository(
             self._attach_audit_events(cursor, candidate_records)
             outbox_events = self._load_outbox_events(cursor)
             downstream_submission_records = self._load_downstream_submission_records(cursor)
+            presentation_receipts = load_presentation_receipts(cursor)
             self._attach_review_decisions(cursor, candidate_records)
             self._attach_feedback_events(cursor, candidate_records)
             conversion_intent_candidates = self._attach_conversion_intents(
@@ -535,6 +538,7 @@ class PostgresIdeaRepository(
             ai_explanation_lineage_candidates=ai_explanation_lineage_candidates,
             outbox_events=outbox_events,
             downstream_submission_records=downstream_submission_records,
+            presentation_receipts=presentation_receipts,
         )
 
     def replace_snapshot(self, snapshot: IdeaRepositorySnapshot) -> None:
@@ -574,6 +578,8 @@ class PostgresIdeaRepository(
                     self._insert_outbox_event(cursor, outbox_event)
                 for record in snapshot.downstream_submission_records.values():
                     self._insert_downstream_submission_record(cursor, record)
+                for receipt in snapshot.presentation_receipts.values():
+                    insert_presentation_receipt_snapshot(cursor, receipt)
             self._connection.commit()
         except Exception:
             self._connection.rollback()

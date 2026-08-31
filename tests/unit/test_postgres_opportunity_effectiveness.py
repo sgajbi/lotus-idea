@@ -27,6 +27,8 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
     assert summary.generated_opportunity_count == 3
     assert summary.family_counts == {"high_cash": 2, "underperformance": 1}
     assert summary.current_downstream_outcome_counts == {"accepted": 1}
+    assert summary.presented_opportunity_count == 2
+    assert summary.top_ranked_accepted_opportunity_count == 1
     assert summary.detection_to_review_seconds == (Decimal("60.0"), Decimal("120.0"))
     assert connection.cursor_instance.params == (
         "tenant-a",
@@ -47,6 +49,7 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
     (
         ("invalid_temporal_fact_count", "temporally invalid"),
         ("invalid_outcome_history_count", "quarantined conversion outcomes"),
+        ("invalid_presentation_fact_count", "invalid presentation evidence"),
     ),
 )
 def test_postgres_effectiveness_projection_fails_closed_on_invalid_durable_facts(
@@ -179,6 +182,8 @@ def _summary_row() -> dict[str, Any]:
         "recurrent_opportunity_count": 0,
         "recurrent_detection_count": 0,
         "reconciled_submission_count": 0,
+        "presented_opportunity_count": 2,
+        "top_ranked_accepted_opportunity_count": 1,
         "family_counts": {"high_cash": 2, "underperformance": 1},
         "score_band_counts": {"critical": 2, "high": 1},
         "latest_review_action_counts": {"approve_for_conversion": 1, "reject": 1},
@@ -189,6 +194,7 @@ def _summary_row() -> dict[str, Any]:
         "approval_to_conversion_seconds": [Decimal("30.0")],
         "invalid_temporal_fact_count": 0,
         "invalid_outcome_history_count": 0,
+        "invalid_presentation_fact_count": 0,
     }
 
 

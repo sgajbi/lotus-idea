@@ -41,6 +41,9 @@ def load_opportunity_effectiveness_summary(
     invalid_outcome_history_count = _integer(row, "invalid_outcome_history_count")
     if invalid_outcome_history_count:
         raise RuntimeError("opportunity effectiveness contains quarantined conversion outcomes")
+    invalid_presentation_fact_count = _integer(row, "invalid_presentation_fact_count")
+    if invalid_presentation_fact_count:
+        raise RuntimeError("opportunity effectiveness contains invalid presentation evidence")
     return OpportunityEffectivenessRepositorySummary(
         generated_opportunity_count=_integer(row, "generated_opportunity_count"),
         reviewed_opportunity_count=_integer(row, "reviewed_opportunity_count"),
@@ -61,6 +64,10 @@ def load_opportunity_effectiveness_summary(
         recurrent_opportunity_count=_integer(row, "recurrent_opportunity_count"),
         recurrent_detection_count=_integer(row, "recurrent_detection_count"),
         reconciled_submission_count=_integer(row, "reconciled_submission_count"),
+        presented_opportunity_count=_integer(row, "presented_opportunity_count"),
+        top_ranked_accepted_opportunity_count=_integer(
+            row, "top_ranked_accepted_opportunity_count"
+        ),
         family_counts=_counts(row, "family_counts"),
         score_band_counts=_counts(row, "score_band_counts"),
         latest_review_action_counts=_counts(row, "latest_review_action_counts"),
@@ -195,6 +202,53 @@ recurrent AS (
       AND history.recorded_at_utc <= parameters.evaluated_at_utc
     GROUP BY history.candidate_id
 ),
+presentation_receipts AS (
+    SELECT DISTINCT
+        receipt.receipt_id,
+        receipt.candidate_id,
+        receipt.presented_at_utc,
+        receipt.rank_at_presentation,
+        COALESCE(
+            history.evidence_hash,
+            cohort.candidate_json->'evidence_packet'->'lineage_ref'->>'content_hash'
+        ) AS evidence_hash
+    FROM idea_candidate_presentation_receipt AS receipt
+    JOIN cohort USING (candidate_id)
+    LEFT JOIN idea_candidate_version_history AS history
+      ON history.candidate_id = receipt.candidate_id
+     AND history.material_version = receipt.candidate_material_version
+     AND history.evidence_version = receipt.candidate_evidence_version
+     AND history.recorded_at_utc <= receipt.presented_at_utc
+    CROSS JOIN parameters
+    WHERE receipt.tenant_id = parameters.tenant_id
+      AND receipt.presented_at_utc <= parameters.evaluated_at_utc
+),
+invalid_presentation_facts AS (
+    SELECT receipt.receipt_id
+    FROM idea_candidate_presentation_receipt AS receipt
+    JOIN cohort USING (candidate_id)
+    CROSS JOIN parameters
+    WHERE receipt.presented_at_utc <= parameters.evaluated_at_utc
+      AND (
+          receipt.tenant_id <> parameters.tenant_id
+          OR receipt.presented_at_utc < cohort.generated_at_utc
+          OR (
+              NOT EXISTS (
+                  SELECT 1
+                  FROM idea_candidate_version_history AS history
+                  WHERE history.candidate_id = receipt.candidate_id
+                    AND history.material_version = receipt.candidate_material_version
+                    AND history.evidence_version = receipt.candidate_evidence_version
+                    AND history.recorded_at_utc <= receipt.presented_at_utc
+              )
+              AND NOT (
+                  cohort.material_version = receipt.candidate_material_version
+                  AND cohort.evidence_version = receipt.candidate_evidence_version
+                  AND cohort.updated_at_utc <= receipt.presented_at_utc
+              )
+          )
+      )
+),
 invalid_temporal_facts AS (
     SELECT review.review_decision_id AS fact_id
     FROM idea_review_decision AS review JOIN cohort USING (candidate_id)
@@ -283,6 +337,21 @@ SELECT
     (SELECT COUNT(*)::INTEGER FROM recurrent) AS recurrent_opportunity_count,
     COALESCE((SELECT SUM(detection_count)::INTEGER FROM recurrent), 0)
         AS recurrent_detection_count,
+    (SELECT COUNT(DISTINCT candidate_id)::INTEGER FROM presentation_receipts)
+        AS presented_opportunity_count,
+    (SELECT COUNT(DISTINCT receipt.candidate_id)::INTEGER
+     FROM presentation_receipts AS receipt
+     CROSS JOIN parameters
+     WHERE receipt.rank_at_presentation = 1
+       AND EXISTS (
+           SELECT 1
+           FROM idea_review_decision AS review
+           WHERE review.candidate_id = receipt.candidate_id
+             AND review.action = 'approve_for_conversion'
+             AND review.decision_json->>'evidence_content_hash' = receipt.evidence_hash
+             AND review.decided_at_utc >= receipt.presented_at_utc
+             AND review.decided_at_utc <= parameters.evaluated_at_utc
+       )) AS top_ranked_accepted_opportunity_count,
     (SELECT COUNT(*)::INTEGER FROM submissions AS submission CROSS JOIN parameters
      WHERE EXISTS (
          SELECT 1 FROM jsonb_array_elements(submission.audit_json) AS audit
@@ -315,7 +384,9 @@ SELECT
     (SELECT COUNT(*)::INTEGER FROM invalid_temporal_facts) AS invalid_temporal_fact_count,
     (SELECT COUNT(DISTINCT quarantine.conversion_intent_id)::INTEGER
      FROM idea_conversion_outcome_quarantine AS quarantine
-     JOIN intents USING (conversion_intent_id)) AS invalid_outcome_history_count
+     JOIN intents USING (conversion_intent_id)) AS invalid_outcome_history_count,
+    (SELECT COUNT(*)::INTEGER FROM invalid_presentation_facts)
+        AS invalid_presentation_fact_count
 """
 
 

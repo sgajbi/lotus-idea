@@ -166,11 +166,44 @@ def test_opportunity_effectiveness_api_uses_bounded_durable_projection(
     ]
 
 
+def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_without_certifying(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = _ProjectionRepository(
+        _summary(
+            generated_opportunity_count=3,
+            presented_opportunity_count=2,
+            top_ranked_accepted_opportunity_count=1,
+        )
+    )
+    monkeypatch.setattr(opportunity_effectiveness_api, "get_idea_repository", lambda: repository)
+
+    response = managed_test_client(app).get(
+        "/api/v1/operations/opportunity-effectiveness",
+        params=_params(),
+        headers=_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["presentation"] == {
+        "measurementStatus": "stored_consumer_certification_pending",
+        "presentedOpportunityCount": 2,
+        "topRankedAcceptedOpportunityCount": 1,
+    }
+    assert response.json()["certificationStatus"] == "not_certified"
+    assert response.json()["supportedFeaturePromoted"] is False
+
+
 @pytest.mark.parametrize(
     "summary_overrides",
     (
         {"generated_opportunity_count": -1},
         {"detection_to_review_seconds": (Decimal("-1"),)},
+        {
+            "presented_opportunity_count": 1,
+            "top_ranked_accepted_opportunity_count": 2,
+        },
+        {"presented_opportunity_count": 1},
     ),
 )
 def test_opportunity_effectiveness_api_fails_closed_on_corrupt_projection_facts(
@@ -284,6 +317,8 @@ def _summary(**overrides: Any) -> OpportunityEffectivenessRepositorySummary:
         "recurrent_opportunity_count": 0,
         "recurrent_detection_count": 0,
         "reconciled_submission_count": 0,
+        "presented_opportunity_count": 0,
+        "top_ranked_accepted_opportunity_count": 0,
         "family_counts": {},
         "score_band_counts": {},
         "latest_review_action_counts": {},

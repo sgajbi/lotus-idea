@@ -137,6 +137,8 @@ class OpportunityEffectivenessRepositorySummary:
     recurrent_opportunity_count: int
     recurrent_detection_count: int
     reconciled_submission_count: int
+    presented_opportunity_count: int
+    top_ranked_accepted_opportunity_count: int
     family_counts: Mapping[str, int]
     score_band_counts: Mapping[str, int]
     latest_review_action_counts: Mapping[str, int]
