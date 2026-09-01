@@ -13,6 +13,7 @@ from scripts.proof_worktree_import_guard import ensure_worktree_imports
 ensure_worktree_imports(__file__)
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -56,7 +57,7 @@ def high_cash_candidate(*, portfolio_id: str = "portfolio-dr-fixture") -> IdeaCa
             access_scope=_access_scope(portfolio_id),
         ),
         HighCashSignalPolicy(
-            policy_version="dr-fixture-idle-liquidity-v2",
+            policy_version=CandidateScorePolicyVersion.HIGH_CASH.value,
             cash_weight_threshold=Decimal("0.12"),
         ),
     )

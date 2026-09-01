@@ -30,6 +30,7 @@ from app.domain import (  # noqa: E402
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionPosture,
+    DownstreamSubmissionResourceType,
     OutboxRecoveryDecision,
     outbox_recovery_request_payload,
 )
@@ -134,8 +135,15 @@ def validate_restore_resume_safety(
     passed = (
         candidate_replay.decision is CandidatePersistenceDecision.REPLAYED
         and recovery_replay.decision is OutboxRecoveryDecision.REPLAYED
-        and set(downstream_decisions.values())
-        == {DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED.value}
+        and downstream_decisions
+        == {
+            DownstreamSubmissionResourceType.CONVERSION_INTENT.value: (
+                DownstreamSubmissionClaimDecision.REPLAYED.value
+            ),
+            DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK.value: (
+                DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED.value
+            ),
+        }
         and stale_finalize.decision is DownstreamSubmissionMutationDecision.LEASE_CONFLICT
         and no_mutation
     )

@@ -750,7 +750,7 @@ class PostgresIdeaRepository(
                    target, source_authority, status, downstream_failure_reason,
                    correlation_id, trace_id, submitted_at_utc, support_reference,
                    attempt_count, updated_at_utc, lease_owner, lease_attempt_id,
-                   lease_expires_at_utc, audit_json
+                   lease_expires_at_utc, audit_json, owner_receipt_json
             FROM idea_downstream_submission
             ORDER BY submitted_at_utc, idempotency_key
             """
