@@ -122,6 +122,43 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     assert "source_route" not in rendered
 
 
+def test_advise_adapter_preserves_terminal_rejection_receipt() -> None:
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            202,
+            json={
+                "intake_receipt_accepted": False,
+                "intake_id": "ipi_rejected_001",
+                "realization_id": "ipr_rejected_001",
+                "review_work_id": None,
+                "source_event_version": 1,
+                "source_evidence_fingerprint": "sha256:evidence-redacted",
+            },
+        )
+
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/idea-intake",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client("https://advise.example", httpx.MockTransport(handler)),
+    )
+
+    outcome = adapter.submit_proposal_intent(
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
+    )
+
+    assert outcome.posture is DownstreamRealizationOutcomePosture.REJECTED
+    assert outcome.failure_reason == "downstream_rejected"
+    assert outcome.owner_receipt is not None
+    assert outcome.owner_receipt.owner_request_id == "ipi_rejected_001"
+    assert outcome.owner_receipt.owner_realization_id == "ipr_rejected_001"
+    assert outcome.owner_receipt.owner_work_id is None
+
+
 def test_advise_adapter_reads_and_validates_exact_owner_history_in_trusted_scope() -> None:
     captured: dict[str, Any] = {}
 
@@ -134,9 +171,7 @@ def test_advise_adapter_reads_and_validates_exact_owner_history_in_trusted_scope
         DownstreamRealizationAdapterConfig(
             base_url="https://advise.example",
             submit_path="/advisory/proposals/idea-intake",
-            history_path_template=(
-                "/advisory/proposals/idea-intake/{intake_id}/realization"
-            ),
+            history_path_template=("/advisory/proposals/idea-intake/{intake_id}/realization"),
             source_authority=SourceSystem.LOTUS_ADVISE,
             advise_service_context=advise_service_context(),
         ),
@@ -150,9 +185,7 @@ def test_advise_adapter_reads_and_validates_exact_owner_history_in_trusted_scope
         trace_id="trace-history",
     )
 
-    assert captured["path"] == (
-        "/advisory/proposals/idea-intake/ipi_idea_receipt_001/realization"
-    )
+    assert captured["path"] == ("/advisory/proposals/idea-intake/ipi_idea_receipt_001/realization")
     assert captured["headers"]["x-portfolio-id"] == "PB_SG_GLOBAL_BAL_001"
     assert captured["headers"]["x-authorized-portfolio-id"] == "PB_SG_GLOBAL_BAL_001"
     assert captured["headers"]["x-correlation-id"] == "corr-history"
@@ -172,9 +205,7 @@ def test_advise_adapter_fails_closed_on_non_contiguous_owner_history() -> None:
         DownstreamRealizationAdapterConfig(
             base_url="https://advise.example",
             submit_path="/advisory/proposals/idea-intake",
-            history_path_template=(
-                "/advisory/proposals/idea-intake/{intake_id}/realization"
-            ),
+            history_path_template=("/advisory/proposals/idea-intake/{intake_id}/realization"),
             source_authority=SourceSystem.LOTUS_ADVISE,
             advise_service_context=advise_service_context(),
         ),
@@ -865,8 +896,7 @@ def advise_service_context() -> AdviseRealizationServiceContext:
         legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
         capabilities=(
-            "advisory.idea_proposal_intake.accept,"
-            "advisory.idea_proposal_realization.read"
+            "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
         ),
     )
 

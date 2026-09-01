@@ -24,6 +24,7 @@ from app.infrastructure.downstream_client import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
 )
 
@@ -275,12 +276,17 @@ class HttpAdviseProposalRealizationClient:
                 "X-Authorized-Portfolio-Id": access_scope.portfolio_id,
             }
         )
-        payload = self._client.get_json(
-            self._config.history_path_template.format(intake_id=normalized_intake_id),
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-            additional_headers=headers,
-        )
+        try:
+            payload = self._client.get_json(
+                self._config.history_path_template.format(intake_id=normalized_intake_id),
+                correlation_id=correlation_id,
+                trace_id=trace_id,
+                additional_headers=headers,
+            )
+        except DownstreamServiceError as exc:
+            raise DownstreamRealizationReadError(
+                "authoritative Advise realization history is unavailable"
+            ) from exc
         return _advise_realization_history_from_payload(payload)
 
     def close(self) -> None:
@@ -426,23 +432,25 @@ def _advise_outcome_from_receipt(
     payload: Mapping[str, Any],
 ) -> DownstreamRealizationOutcome:
     accepted = payload.get("intake_receipt_accepted")
+    receipt = DownstreamOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id=_required_response_text(payload, "intake_id"),
+        owner_realization_id=_required_response_text(payload, "realization_id"),
+        owner_work_id=_optional_response_text(payload, "review_work_id"),
+        source_event_version=_required_response_int(payload, "source_event_version"),
+        source_evidence_fingerprint=_required_response_text(
+            payload,
+            "source_evidence_fingerprint",
+        ),
+    )
     if accepted is False:
-        return DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
+        return DownstreamRealizationOutcome.rejected_by_downstream(
+            "downstream_rejected",
+            owner_receipt=receipt,
+        )
     if accepted is not True:
         raise ValueError("intake_receipt_accepted must be boolean")
-    return DownstreamRealizationOutcome.accepted_by_downstream(
-        DownstreamOwnerReceipt(
-            owner_authority=SourceSystem.LOTUS_ADVISE,
-            owner_request_id=_required_response_text(payload, "intake_id"),
-            owner_realization_id=_required_response_text(payload, "realization_id"),
-            owner_work_id=_optional_response_text(payload, "review_work_id"),
-            source_event_version=_required_response_int(payload, "source_event_version"),
-            source_evidence_fingerprint=_required_response_text(
-                payload,
-                "source_evidence_fingerprint",
-            ),
-        )
-    )
+    return DownstreamRealizationOutcome.accepted_by_downstream(receipt)
 
 
 def _required_response_text(payload: Mapping[str, Any], field_name: str) -> str:
