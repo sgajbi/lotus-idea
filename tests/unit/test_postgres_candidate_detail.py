@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from app.domain import IdeaLifecycleStatus
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
@@ -126,3 +128,10 @@ def test_postgres_repository_loads_only_candidate_scoped_downstream_submissions(
     assert len(matching_queries) == 1
     assert "idea_conversion_intent" in matching_queries[0]
     assert "idea_report_evidence_pack_request" in matching_queries[0]
+
+
+def test_postgres_candidate_submission_projection_rejects_blank_candidate_id() -> None:
+    repository = PostgresIdeaRepository(FakePostgresConnection())
+
+    with pytest.raises(ValueError, match="candidate_id is required"):
+        repository.downstream_submissions_for_candidate(" ")
