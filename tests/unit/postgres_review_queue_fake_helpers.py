@@ -73,13 +73,14 @@ def review_queue_readiness_summary_rows(
     applicability_evaluated_at_utc = params[offset]
     snooze_action = params[offset + 1]
     snooze_evaluated_at_utc = params[offset + 2]
-    suppressed_posture = params[offset + 3]
-    expired_status = params[offset + 4]
-    closed_status = params[offset + 5]
-    rejected_status = params[offset + 6]
-    blocked_supportability = params[offset + 7]
-    rankable_score_policy_versions = set(params[offset + 8])
-    lifecycle_statuses = set(params[offset + 9])
+    duplicate_suppression_reason = params[offset + 3]
+    suppressed_posture = params[offset + 4]
+    expired_status = params[offset + 5]
+    closed_status = params[offset + 6]
+    rejected_status = params[offset + 7]
+    blocked_supportability = params[offset + 8]
+    rankable_score_policy_versions = set(params[offset + 9])
+    lifecycle_statuses = set(params[offset + 10])
     exclusion_counts = {reason.value: 0 for reason in QueueExclusionReason}
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
@@ -106,6 +107,7 @@ def review_queue_readiness_summary_rows(
             evaluated_at_utc=snooze_evaluated_at_utc,
             applicability_evaluated_at_utc=applicability_evaluated_at_utc,
             lifecycle_statuses=lifecycle_statuses,
+            duplicate_suppression_reason=duplicate_suppression_reason,
             suppressed_posture=suppressed_posture,
             expired_status=expired_status,
             closed_status=closed_status,
@@ -119,16 +121,10 @@ def review_queue_readiness_summary_rows(
         else:
             exclusion_counts[exclusion_reason] += 1
 
-    winners_by_signal: dict[str, dict[str, Any]] = {}
-    for row in sorted(eligible_rows, key=_review_queue_source_signal_sort_key):
-        signal_key = _source_signal_key(row)
-        winners_by_signal.setdefault(signal_key, row)
-    duplicate_count = len(eligible_rows) - len(winners_by_signal)
-    exclusion_counts[QueueExclusionReason.DUPLICATE.value] = duplicate_count
     return [
         {
             "candidate_snapshot_count": len(visible_rows),
-            "reviewable_item_count": len(winners_by_signal),
+            "reviewable_item_count": len(eligible_rows),
             "excluded_candidate_count": sum(exclusion_counts.values()),
             "scored_candidate_count": scored_candidate_count,
             "unscored_candidate_count": unscored_candidate_count,
@@ -184,11 +180,7 @@ def _review_queue_ordered_rows(
             scope_values=scope_values,
         )
     ]
-    winners_by_signal: dict[str, dict[str, Any]] = {}
-    for row in sorted(eligible_rows, key=_review_queue_source_signal_sort_key):
-        signal_key = _source_signal_key(row)
-        winners_by_signal.setdefault(signal_key, row)
-    return sorted(winners_by_signal.values(), key=_review_queue_sort_key)
+    return sorted(eligible_rows, key=_review_queue_sort_key)
 
 
 def _review_queue_visible_rows(
@@ -201,7 +193,11 @@ def _review_queue_visible_rows(
         row
         for row in connection.rows["idea_candidate_record"]
         if datetime.fromisoformat(row["candidate_json"]["created_at_utc"]) <= evaluated_at_utc
-        and (required_posture is None or row["review_posture"] == required_posture)
+        and (
+            required_posture is None
+            or row["review_posture"] == required_posture
+            or row["candidate_json"].get("suppression_reason") is not None
+        )
     ]
 
 
@@ -233,6 +229,7 @@ def _review_queue_row_exclusion_reason(
     evaluated_at_utc: datetime,
     applicability_evaluated_at_utc: datetime,
     lifecycle_statuses: set[str],
+    duplicate_suppression_reason: str,
     suppressed_posture: str,
     expired_status: str,
     closed_status: str,
@@ -254,6 +251,8 @@ def _review_queue_row_exclusion_reason(
         return QueueExclusionReason.EXPIRED.value
     if _review_is_active_snooze(latest_review, snooze_action, evaluated_at_utc):
         return QueueExclusionReason.SNOOZED.value
+    if candidate_json.get("suppression_reason") == duplicate_suppression_reason:
+        return QueueExclusionReason.DUPLICATE.value
     if row["review_posture"] == suppressed_posture:
         return QueueExclusionReason.SUPPRESSED.value
     if candidate_json.get("suppression_reason") is not None:
@@ -385,23 +384,6 @@ def _review_queue_row_has_compatible_state(row: dict[str, Any]) -> bool:
     return candidate_state_is_compatible(lifecycle_status, review_posture)
 
 
-def _review_queue_source_signal_sort_key(
-    row: dict[str, Any],
-) -> tuple[str, Decimal, str, str]:
-    score = Decimal(str(row["candidate_json"]["score"]["score"]))
-    return (
-        _source_signal_key(row),
-        -score,
-        row["candidate_json"]["created_at_utc"],
-        row["candidate_id"],
-    )
-
-
 def _review_queue_sort_key(row: dict[str, Any]) -> tuple[Decimal, str, str]:
     score = Decimal(str(row["candidate_json"]["score"]["score"]))
     return (-score, row["candidate_json"]["created_at_utc"], row["candidate_id"])
-
-
-def _source_signal_key(row: dict[str, Any]) -> str:
-    signals = row["candidate_json"].get("source_signal_ids") or [row["candidate_id"]]
-    return ",".join(sorted(str(signal) for signal in signals))

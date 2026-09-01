@@ -393,6 +393,7 @@ def test_suppress_and_snooze_update_queue_projection() -> None:
     assert queue.items == ()
     assert {exclusion.reason for exclusion in queue.exclusions} == {
         QueueExclusionReason.SNOOZED,
+        QueueExclusionReason.SUPPRESSED,
     }
 
 

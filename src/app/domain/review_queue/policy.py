@@ -16,6 +16,7 @@ from app.domain.ideas import (
     IdeaLifecycleStatus,
     ReasonCode,
     ReviewPosture,
+    SuppressionReason,
 )
 from app.domain.scoring import DEFAULT_RANKABLE_SCORE_POLICY_VERSIONS
 
@@ -191,7 +192,10 @@ def build_review_queue(
     exclusions: list[QueueExclusion] = []
     eligible_candidates: list[IdeaCandidate] = []
     for candidate in candidates:
-        if candidate.review_posture is not audience.required_posture:
+        if (
+            candidate.review_posture is not audience.required_posture
+            and candidate.suppression_reason is None
+        ):
             continue
         exclusion = _queue_exclusion_for_candidate(
             candidate,
@@ -205,21 +209,7 @@ def build_review_queue(
         else:
             exclusions.append(exclusion)
 
-    winners_by_signal: dict[tuple[str, ...], IdeaCandidate] = {}
-    for candidate in sorted(eligible_candidates, key=_queue_sort_key):
-        signal_key = tuple(sorted(candidate.source_signal_ids))
-        if signal_key in winners_by_signal:
-            exclusions.append(
-                QueueExclusion(
-                    candidate_id=candidate.candidate_id,
-                    reason=QueueExclusionReason.DUPLICATE,
-                    detail=f"duplicate source signals already represented by {signal_key}",
-                )
-            )
-            continue
-        winners_by_signal[signal_key] = candidate
-
-    ranked_candidates = sorted(winners_by_signal.values(), key=_queue_sort_key)
+    ranked_candidates = sorted(eligible_candidates, key=_queue_sort_key)
     items = tuple(
         ReviewQueueItem(
             rank=index + 1,
@@ -289,6 +279,12 @@ def _queue_exclusion_for_candidate(
             candidate_id=candidate.candidate_id,
             reason=QueueExclusionReason.SNOOZED,
             detail=f"snoozed until {snooze.snoozed_until_utc.isoformat()}",
+        )
+    if candidate.suppression_reason is SuppressionReason.DUPLICATE:
+        return QueueExclusion(
+            candidate_id=candidate.candidate_id,
+            reason=QueueExclusionReason.DUPLICATE,
+            detail="candidate is explicitly suppressed as duplicate adviser work",
         )
     if (
         candidate.suppression_reason is not None

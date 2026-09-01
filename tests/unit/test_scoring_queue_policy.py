@@ -369,8 +369,14 @@ def test_review_queue_ranks_candidates_from_explicitly_approved_score_policies()
 
 def test_review_queue_excludes_in_audience_failures_and_omits_other_audiences() -> None:
     active = candidate("idea-active")
+    duplicate = candidate(
+        "idea-duplicate",
+        review_posture=ReviewPosture.SUPPRESSED,
+        suppression_reason=SuppressionReason.DUPLICATE,
+    )
     suppressed = candidate(
         "idea-suppressed",
+        review_posture=ReviewPosture.SUPPRESSED,
         suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
     )
     blocked = candidate("idea-blocked", supportability=EvidenceSupportability.BLOCKED)
@@ -383,7 +389,7 @@ def test_review_queue_excludes_in_audience_failures_and_omits_other_audiences() 
     unscored = candidate("idea-unscored", score=None)
 
     queue = build_review_queue(
-        (active, suppressed, blocked, expired, snoozed, unscored),
+        (active, duplicate, suppressed, blocked, expired, snoozed, unscored),
         policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
         snoozes=(
@@ -397,6 +403,7 @@ def test_review_queue_excludes_in_audience_failures_and_omits_other_audiences() 
 
     assert [item.candidate.candidate_id for item in queue.items] == ["idea-active"]
     assert {exclusion.reason for exclusion in queue.exclusions} == {
+        QueueExclusionReason.DUPLICATE,
         QueueExclusionReason.SUPPRESSED,
         QueueExclusionReason.UNSUPPORTED_EVIDENCE,
         QueueExclusionReason.SNOOZED,
@@ -430,27 +437,29 @@ def test_review_queue_excludes_scores_from_a_different_policy_version() -> None:
     )
 
 
-def test_review_queue_deduplicates_source_signals_and_keeps_highest_ranked_candidate() -> None:
-    lower_duplicate = candidate(
-        "idea-duplicate-lower",
+def test_review_queue_preserves_distinct_candidates_with_shared_source_lineage() -> None:
+    lower_ranked = candidate(
+        "idea-shared-lineage-lower",
         score=Decimal("70"),
         source_signal_ids=("shared-signal",),
     )
-    higher_duplicate = candidate(
-        "idea-duplicate-higher",
+    higher_ranked = candidate(
+        "idea-shared-lineage-higher",
         score=Decimal("90"),
         source_signal_ids=("shared-signal",),
     )
 
     queue = build_review_queue(
-        (lower_duplicate, higher_duplicate),
+        (lower_ranked, higher_ranked),
         policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
     )
 
-    assert [item.candidate.candidate_id for item in queue.items] == ["idea-duplicate-higher"]
-    assert queue.exclusions[0].candidate_id == "idea-duplicate-lower"
-    assert queue.exclusions[0].reason is QueueExclusionReason.DUPLICATE
+    assert [item.candidate.candidate_id for item in queue.items] == [
+        "idea-shared-lineage-higher",
+        "idea-shared-lineage-lower",
+    ]
+    assert queue.exclusions == ()
 
 
 def test_expired_snooze_returns_candidate_to_queue() -> None:
