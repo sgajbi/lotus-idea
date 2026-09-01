@@ -1,0 +1,29 @@
+name: Main Releasability Tag Reclamation
+
+on:
+  workflow_run:
+    workflows: ["Main Releasability"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  reclaim:
+    name: Reclaim Consumed Dispatch Tag
+    if: >-
+      startsWith(
+        github.event.workflow_run.head_branch,
+        'main-releasability-'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Delete consumed immutable dispatch tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISPATCH_REF: ${{ github.event.workflow_run.head_branch }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GITHUB_REF_TYPE: tag
+        run: python scripts/reclaim_main_releasability_tag.py
