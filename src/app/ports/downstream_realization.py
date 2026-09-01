@@ -19,6 +19,10 @@ class DownstreamRealizationOutcomePosture(StrEnum):
     UNKNOWN = "unknown"
 
 
+class DownstreamRealizationReadError(RuntimeError):
+    """Raised when authoritative downstream history cannot be read."""
+
+
 @dataclass(frozen=True)
 class DownstreamOwnerReceipt:
     """Source-safe identity returned by the service that accepted durable work."""
@@ -59,8 +63,11 @@ class DownstreamRealizationOutcome:
         else:
             if self.failure_reason is None or not self.failure_reason.strip():
                 raise ValueError("non-accepted outcome requires failure_reason")
-            if self.owner_receipt is not None:
-                raise ValueError("non-accepted outcome forbids owner_receipt")
+            if (
+                self.posture is DownstreamRealizationOutcomePosture.UNKNOWN
+                and self.owner_receipt is not None
+            ):
+                raise ValueError("unknown outcome forbids owner_receipt")
 
     @property
     def accepted(self) -> bool:
@@ -77,12 +84,17 @@ class DownstreamRealizationOutcome:
         )
 
     @classmethod
-    def rejected_by_downstream(cls, failure_reason: str) -> "DownstreamRealizationOutcome":
+    def rejected_by_downstream(
+        cls,
+        failure_reason: str,
+        owner_receipt: DownstreamOwnerReceipt | None = None,
+    ) -> "DownstreamRealizationOutcome":
         if not failure_reason.strip():
             raise ValueError("failure_reason is required")
         return cls(
             posture=DownstreamRealizationOutcomePosture.REJECTED,
             failure_reason=failure_reason,
+            owner_receipt=owner_receipt,
         )
 
     @classmethod

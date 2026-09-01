@@ -82,8 +82,11 @@ def advise_realization_submission_blocker(
         return "advise_realization_requires_advise_target"
     if submission.source_authority is not SourceSystem.LOTUS_ADVISE:
         return "advise_realization_requires_advise_authority"
-    if submission.status is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
-        return "advise_realization_requires_accepted_submission"
+    if submission.status not in {
+        DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+    }:
+        return "advise_realization_requires_terminal_owner_submission"
     receipt = submission.owner_receipt
     if receipt is None:
         return "advise_realization_owner_receipt_missing"

@@ -14,8 +14,10 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
 )
-from app.infrastructure.downstream_client import DownstreamServiceError
-from app.ports.downstream_realization import AdviseProposalRealizationReader
+from app.ports.downstream_realization import (
+    AdviseProposalRealizationReader,
+    DownstreamRealizationReadError,
+)
 from app.ports.idea_repository import DownstreamSubmissionRepository
 
 
@@ -93,7 +95,7 @@ def reconcile_advise_realization_history(
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
         )
-    except DownstreamServiceError:
+    except DownstreamRealizationReadError:
         return _result(
             AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE,
             blocker="advise_realization_owner_unavailable",
@@ -112,9 +114,7 @@ def reconcile_advise_realization_history(
     )
     if identity_blocker is not None:
         return _result(AdviseRealizationReconciliationStatus.CONFLICT, blocker=identity_blocker)
-    existing = repository.advise_realization_history_by_support_reference(
-        command.support_reference
-    )
+    existing = repository.advise_realization_history_by_support_reference(command.support_reference)
     mutation = repository.persist_advise_realization_history(
         support_reference=command.support_reference,
         history=history,
@@ -146,8 +146,11 @@ def _submission_eligibility_blocker(submission: DownstreamSubmissionRecord) -> s
         return "advise_realization_requires_advise_target"
     if submission.source_authority is not SourceSystem.LOTUS_ADVISE:
         return "advise_realization_requires_advise_authority"
-    if submission.status is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
-        return "advise_realization_requires_accepted_submission"
+    if submission.status not in {
+        DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+    }:
+        return "advise_realization_requires_terminal_owner_submission"
     if submission.owner_receipt is None:
         return "advise_realization_owner_receipt_missing"
     return None

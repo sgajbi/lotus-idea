@@ -10,6 +10,7 @@ from app.domain import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -88,6 +89,31 @@ def test_finalize_requires_the_claim_lease_and_preserves_audit() -> None:
     assert accepted.record is not None
     assert accepted.record.status is DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM
     assert accepted.record.audit_history[-1].action is DownstreamSubmissionAuditAction.FINALIZED
+
+
+def test_rejected_submission_preserves_authoritative_owner_receipt() -> None:
+    receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id="ipi_rejected_001",
+        owner_realization_id="ipr_rejected_001",
+        owner_work_id=None,
+        source_event_version=1,
+        source_evidence_fingerprint="sha256:evidence-redacted",
+    )
+
+    result = finalize_downstream_submission(
+        _claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="downstream_rejected",
+        owner_receipt=receipt,
+    )
+
+    assert result.decision is DownstreamSubmissionMutationDecision.ACCEPTED
+    assert result.record is not None
+    assert result.record.owner_receipt == receipt
 
 
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:

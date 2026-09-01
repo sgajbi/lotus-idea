@@ -1,4 +1,4 @@
--- Persist the source-safe owner receipt returned for accepted downstream work.
+-- Persist source-safe owner receipts for terminal accepted or rejected downstream work.
 
 ALTER TABLE idea_downstream_submission
     ADD COLUMN IF NOT EXISTS owner_receipt_json JSONB;
@@ -6,7 +6,7 @@ ALTER TABLE idea_downstream_submission
 ALTER TABLE idea_downstream_submission
     ADD CONSTRAINT ck_idea_downstream_submission_owner_receipt CHECK (
         owner_receipt_json IS NULL OR (
-            status = 'accepted_by_downstream'
+            status IN ('accepted_by_downstream', 'rejected_by_downstream')
             AND jsonb_typeof(owner_receipt_json) = 'object'
             AND owner_receipt_json ?& ARRAY[
                 'ownerAuthority',

@@ -263,8 +263,11 @@ def finalize_downstream_submission(
     }:
         raise ValueError("unsupported downstream submission final posture")
     if owner_receipt is not None:
-        if posture is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
-            raise ValueError("owner_receipt requires accepted downstream posture")
+        if posture not in {
+            DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+            DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+        }:
+            raise ValueError("owner_receipt requires a terminal downstream posture")
         if owner_receipt.owner_authority is not record.source_authority:
             raise ValueError("owner_receipt authority must match source_authority")
     action = (
@@ -445,8 +448,11 @@ def _validate_posture(record: DownstreamSubmissionRecord) -> None:
     ):
         raise ValueError(f"{record.status.value} downstream submission forbids a failure reason")
     if record.owner_receipt is not None:
-        if record.status is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
-            raise ValueError("owner_receipt requires accepted downstream posture")
+        if record.status not in {
+            DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+            DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+        }:
+            raise ValueError("owner_receipt requires a terminal downstream posture")
         if record.owner_receipt.owner_authority is not record.source_authority:
             raise ValueError("owner_receipt authority must match source_authority")
 

@@ -28,6 +28,7 @@ from app.domain import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
 )
 from tests.unit.test_downstream_realization_application import (
@@ -130,6 +131,41 @@ def test_reconcile_advise_history_denies_scope_before_owner_call() -> None:
     assert reader.calls == 0
 
 
+def test_reconcile_terminal_rejection_persists_owner_history() -> None:
+    repository, support_reference = _repository_with_rejected_submission()
+    reader = StubAdviseReader(_rejected_history())
+
+    result = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    assert result.appended_outcome_count == 1
+    assert result.history is not None
+    assert result.history.current_status is AdviseProposalRealizationStatus.REJECTED_BEFORE_WORK
+    assert result.history.review_work_id is None
+    assert result.history.proposal_record_created is False
+
+
+def test_reconcile_maps_owner_read_failure_without_infrastructure_dependency() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+
+    class UnavailableReader:
+        def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
+            raise DownstreamRealizationReadError("owner unavailable")
+
+    result = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=UnavailableReader(),
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE
+    assert result.blocker == "advise_realization_owner_unavailable"
+
+
 def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]:
     repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
     result = submit_conversion_intent_to_downstream(
@@ -151,6 +187,36 @@ def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]
                     source_event_version=1,
                     source_evidence_fingerprint="sha256:downstream-evidence",
                 )
+            )
+        ),
+        manage_client=None,
+    )
+    assert result.support_reference is not None
+    return repository, result.support_reference
+
+
+def _repository_with_rejected_submission() -> tuple[InMemoryIdeaRepository, str]:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    result = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-advise-owner-rejected-001",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+            submitted_at_utc=RECORDED_AT,
+        ),
+        repository=repository,
+        advise_client=CapturingAdviseClient(
+            DownstreamRealizationOutcome.rejected_by_downstream(
+                "downstream_rejected",
+                owner_receipt=DownstreamOwnerReceipt(
+                    owner_authority=SourceSystem.LOTUS_ADVISE,
+                    owner_request_id="ipi_001",
+                    owner_realization_id="ipr_001",
+                    owner_work_id=None,
+                    source_event_version=1,
+                    source_evidence_fingerprint="sha256:downstream-evidence",
+                ),
             )
         ),
         manage_client=None,
@@ -233,4 +299,41 @@ def _history(*, version: int) -> AdviseProposalRealizationHistory:
         created_at_utc=RECORDED_AT,
         updated_at_utc=final.occurred_at_utc,
         outcomes=tuple(outcomes),
+    )
+
+
+def _rejected_history() -> AdviseProposalRealizationHistory:
+    outcome = AdviseProposalRealizationOutcome(
+        outcome_id="ipro_rejected_001",
+        source_event_version=1,
+        status=AdviseProposalRealizationStatus.REJECTED_BEFORE_WORK,
+        reason_code="idea_intake_rejected_before_work",
+        occurred_at_utc=RECORDED_AT,
+        review_work_id=None,
+        proposal_id=None,
+        terminal=True,
+    )
+    return AdviseProposalRealizationHistory(
+        realization_id="ipr_001",
+        intake_id="ipi_001",
+        review_work_id=None,
+        review_work_status=None,
+        source_authority="lotus-idea",
+        realization_authority="lotus-advise",
+        tenant_id="tenant-sg",
+        legal_entity_code="SGPB",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        idea_candidate_id="idea-downstream-001",
+        conversion_intent_id="conversion-advise_proposal-001",
+        source_evidence_fingerprint="sha256:downstream-evidence",
+        current_status=AdviseProposalRealizationStatus.REJECTED_BEFORE_WORK,
+        current_source_event_version=1,
+        proposal_id=None,
+        proposal_record_created=False,
+        suitability_authority_granted=False,
+        order_created=False,
+        client_publication_authorized=False,
+        created_at_utc=RECORDED_AT,
+        updated_at_utc=RECORDED_AT,
+        outcomes=(outcome,),
     )
