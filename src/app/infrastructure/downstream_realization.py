@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from collections.abc import Callable, Mapping
 from typing import Any, Protocol
 
 from app.domain import (
+    AdviseProposalRealizationHistory,
+    AdviseProposalRealizationOutcome,
+    AdviseProposalRealizationStatus,
+    AdviseProposalReviewWorkStatus,
     ConversionTarget,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
@@ -165,6 +169,7 @@ class DownstreamRealizationAdapterConfig:
     base_url: str
     submit_path: str
     source_authority: SourceSystem
+    history_path_template: str | None = None
     timeout_seconds: float = 2.0
     max_connections: int = 20
     max_keepalive_connections: int = 10
@@ -183,6 +188,19 @@ class DownstreamRealizationAdapterConfig:
             raise DownstreamRealizationConfigurationError(
                 "submit_path must not include query string or fragment."
             )
+        if self.history_path_template is not None:
+            if not self.history_path_template.startswith("/"):
+                raise DownstreamRealizationConfigurationError(
+                    "history_path_template must start with '/'."
+                )
+            if self.history_path_template.count("{intake_id}") != 1:
+                raise DownstreamRealizationConfigurationError(
+                    "history_path_template must contain one {intake_id} placeholder."
+                )
+            if "?" in self.history_path_template or "#" in self.history_path_template:
+                raise DownstreamRealizationConfigurationError(
+                    "history_path_template must not include query string or fragment."
+                )
         try:
             DownstreamClientConfig(
                 base_url=self.base_url,
@@ -234,6 +252,36 @@ class HttpAdviseProposalRealizationClient:
             additional_headers=self._advise_service_context.request_headers(),
             accepted_response_mapper=_advise_outcome_from_receipt,
         )
+
+    def load_proposal_realization(
+        self,
+        *,
+        intake_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        if self._config.history_path_template is None:
+            raise DownstreamRealizationConfigurationError(
+                "advise realization history_path_template is required."
+            )
+        normalized_intake_id = intake_id.strip()
+        if not normalized_intake_id or not normalized_intake_id.isprintable():
+            raise ValueError("intake_id is required")
+        headers = self._advise_service_context.request_headers()
+        headers.update(
+            {
+                "X-Portfolio-Id": access_scope.portfolio_id,
+                "X-Authorized-Portfolio-Id": access_scope.portfolio_id,
+            }
+        )
+        payload = self._client.get_json(
+            self._config.history_path_template.format(intake_id=normalized_intake_id),
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+            additional_headers=headers,
+        )
+        return _advise_realization_history_from_payload(payload)
 
     def close(self) -> None:
         self._client.close()
@@ -418,6 +466,92 @@ def _required_response_int(payload: Mapping[str, Any], field_name: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
         raise ValueError(f"{field_name} must be a positive integer")
     return value
+
+
+def _required_response_bool(payload: Mapping[str, Any], field_name: str) -> bool:
+    value = payload.get(field_name)
+    if not isinstance(value, bool):
+        raise ValueError(f"{field_name} must be boolean")
+    return value
+
+
+def _required_response_datetime(payload: Mapping[str, Any], field_name: str) -> datetime:
+    value = _required_response_text(payload, field_name)
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must be ISO-8601") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != UTC.utcoffset(parsed):
+        raise ValueError(f"{field_name} must be UTC")
+    return parsed
+
+
+def _advise_realization_history_from_payload(
+    payload: Mapping[str, Any],
+) -> AdviseProposalRealizationHistory:
+    raw_outcomes = payload.get("outcomes")
+    if not isinstance(raw_outcomes, list):
+        raise ValueError("outcomes must be an array")
+    review_work_status = _optional_response_text(payload, "review_work_status")
+    return AdviseProposalRealizationHistory(
+        realization_id=_required_response_text(payload, "realization_id"),
+        intake_id=_required_response_text(payload, "intake_id"),
+        review_work_id=_optional_response_text(payload, "review_work_id"),
+        review_work_status=(
+            AdviseProposalReviewWorkStatus(review_work_status)
+            if review_work_status is not None
+            else None
+        ),
+        source_authority=_required_response_text(payload, "source_authority"),
+        realization_authority=_required_response_text(payload, "realization_authority"),
+        tenant_id=_required_response_text(payload, "tenant_id"),
+        legal_entity_code=_required_response_text(payload, "legal_entity_code"),
+        portfolio_id=_required_response_text(payload, "portfolio_id"),
+        idea_candidate_id=_required_response_text(payload, "idea_candidate_id"),
+        conversion_intent_id=_required_response_text(payload, "conversion_intent_id"),
+        source_evidence_fingerprint=_required_response_text(
+            payload,
+            "source_evidence_fingerprint",
+        ),
+        current_status=AdviseProposalRealizationStatus(
+            _required_response_text(payload, "current_status")
+        ),
+        current_source_event_version=_required_response_int(
+            payload,
+            "current_source_event_version",
+        ),
+        proposal_id=_optional_response_text(payload, "proposal_id"),
+        proposal_record_created=_required_response_bool(payload, "proposal_record_created"),
+        suitability_authority_granted=_required_response_bool(
+            payload,
+            "suitability_authority_granted",
+        ),
+        order_created=_required_response_bool(payload, "order_created"),
+        client_publication_authorized=_required_response_bool(
+            payload,
+            "client_publication_authorized",
+        ),
+        created_at_utc=_required_response_datetime(payload, "created_at"),
+        updated_at_utc=_required_response_datetime(payload, "updated_at"),
+        outcomes=tuple(_advise_realization_outcome_from_payload(item) for item in raw_outcomes),
+    )
+
+
+def _advise_realization_outcome_from_payload(
+    payload: object,
+) -> AdviseProposalRealizationOutcome:
+    if not isinstance(payload, Mapping):
+        raise ValueError("Advise realization outcome must be an object")
+    return AdviseProposalRealizationOutcome(
+        outcome_id=_required_response_text(payload, "outcome_id"),
+        source_event_version=_required_response_int(payload, "source_event_version"),
+        status=AdviseProposalRealizationStatus(_required_response_text(payload, "status")),
+        reason_code=_required_response_text(payload, "reason_code"),
+        occurred_at_utc=_required_response_datetime(payload, "occurred_at"),
+        review_work_id=_optional_response_text(payload, "review_work_id"),
+        proposal_id=_optional_response_text(payload, "proposal_id"),
+        terminal=_required_response_bool(payload, "terminal"),
+    )
 
 
 def _conversion_intent_envelope(

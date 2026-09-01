@@ -28,6 +28,10 @@ from app.runtime.settings import RuntimeConfigurationError, RuntimeProfile, load
 
 ADVISE_BASE_URL_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL"
 ADVISE_SUBMIT_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH"
+ADVISE_HISTORY_PATH_TEMPLATE_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE"
+DEFAULT_ADVISE_HISTORY_PATH_TEMPLATE = (
+    "/advisory/proposals/idea-intake/{intake_id}/realization"
+)
 ADVISE_ACTOR_ID_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID"
 ADVISE_ROLE_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_ROLE"
 ADVISE_TENANT_ID_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID"
@@ -158,6 +162,10 @@ def _advise_adapter_config(
         return DownstreamRealizationAdapterConfig(
             base_url=base_url,
             submit_path=submit_path,
+            history_path_template=os.getenv(
+                ADVISE_HISTORY_PATH_TEMPLATE_ENV,
+                DEFAULT_ADVISE_HISTORY_PATH_TEMPLATE,
+            ).strip(),
             source_authority=source_authority,
             timeout_seconds=_timeout_seconds(),
             max_connections=_positive_int_env(
