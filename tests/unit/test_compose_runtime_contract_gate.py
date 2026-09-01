@@ -15,6 +15,14 @@ def _normalized_model(*, include_worker: bool = True) -> dict[str, Any]:
         },
         "lotus-idea": {
             "image": "lotus-idea:local",
+            "environment": {
+                "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE": (
+                    "/advisory/proposals/idea-intake/{intake_id}/realization"
+                ),
+                "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES": (
+                    "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
+                ),
+            },
             "depends_on": {
                 "lotus-idea-migrations": {"condition": "service_completed_successfully"}
             },
@@ -77,3 +85,25 @@ def test_normalized_compose_contract_requires_migration_dependency() -> None:
         "normalized Compose service lotus-idea must depend on lotus-idea-migrations "
         "before consuming the shared image" in validate_compose_model(model, include_worker=True)
     )
+
+
+def test_normalized_compose_contract_requires_advise_history_configuration() -> None:
+    model = _normalized_model()
+    del model["services"]["lotus-idea"]["environment"][
+        "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE"
+    ]
+
+    errors = validate_compose_model(model, include_worker=True)
+
+    assert any("canonical Advise realization history path" in error for error in errors)
+
+
+def test_normalized_compose_contract_requires_advise_history_capability() -> None:
+    model = _normalized_model()
+    model["services"]["lotus-idea"]["environment"]["LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"] = (
+        "advisory.idea_proposal_intake.accept"
+    )
+
+    errors = validate_compose_model(model, include_worker=True)
+
+    assert any("intake and realization-read capabilities" in error for error in errors)
