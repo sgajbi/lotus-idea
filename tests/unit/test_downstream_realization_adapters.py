@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -94,7 +94,9 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     assert captured["headers"]["x-tenant-id"] == "tenant-sg"
     assert captured["headers"]["x-legal-entity-code"] == "SGPB"
     assert captured["headers"]["x-service-identity"] == "lotus-idea-local-development"
-    assert captured["headers"]["x-capabilities"] == "advisory.idea_proposal_intake.accept"
+    assert captured["headers"]["x-capabilities"] == (
+        "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
+    )
     assert captured["headers"]["x-principal-status"] == "ACTIVE"
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
@@ -118,6 +120,75 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     assert "request_body" not in rendered
     assert "response_body" not in rendered
     assert "source_route" not in rendered
+
+
+def test_advise_adapter_reads_and_validates_exact_owner_history_in_trusted_scope() -> None:
+    captured: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["headers"] = dict(request.headers)
+        return httpx.Response(200, json=_advise_history_payload())
+
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            history_path_template=(
+                "/advisory/proposals/idea-intake/{intake_id}/realization"
+            ),
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client("https://advise.example", httpx.MockTransport(handler)),
+    )
+
+    history = adapter.load_proposal_realization(
+        intake_id="ipi_idea_receipt_001",
+        access_scope=report_access_scope(),
+        correlation_id="corr-history",
+        trace_id="trace-history",
+    )
+
+    assert captured["path"] == (
+        "/advisory/proposals/idea-intake/ipi_idea_receipt_001/realization"
+    )
+    assert captured["headers"]["x-portfolio-id"] == "PB_SG_GLOBAL_BAL_001"
+    assert captured["headers"]["x-authorized-portfolio-id"] == "PB_SG_GLOBAL_BAL_001"
+    assert captured["headers"]["x-correlation-id"] == "corr-history"
+    assert history.current_source_event_version == 2
+    assert history.proposal_id == "proposal-001"
+    assert [outcome.status.value for outcome in history.outcomes] == [
+        "ACCEPTED_FOR_REVIEW",
+        "PROPOSAL_LINKED",
+    ]
+
+
+def test_advise_adapter_fails_closed_on_non_contiguous_owner_history() -> None:
+    payload = _advise_history_payload()
+    payload["outcomes"][1]["source_event_version"] = 3
+    payload["current_source_event_version"] = 3
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            history_path_template=(
+                "/advisory/proposals/idea-intake/{intake_id}/realization"
+            ),
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="contiguous"):
+        adapter.load_proposal_realization(
+            intake_id="ipi_idea_receipt_001",
+            access_scope=report_access_scope(),
+        )
 
 
 def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> None:
@@ -726,6 +797,55 @@ def downstream_json_client(
     )
 
 
+def _advise_history_payload() -> dict[str, Any]:
+    linked_at = REQUEST_TIME + timedelta(minutes=1)
+    return {
+        "realization_id": "ipr_idea_receipt_001",
+        "intake_id": "ipi_idea_receipt_001",
+        "review_work_id": "iarw_idea_receipt_001",
+        "review_work_status": "PROPOSAL_LINKED",
+        "source_authority": "lotus-idea",
+        "realization_authority": "lotus-advise",
+        "tenant_id": "tenant-sg",
+        "legal_entity_code": "SGPB",
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        "idea_candidate_id": "idea_high_cash_redacted",
+        "conversion_intent_id": "conversion-001",
+        "source_evidence_fingerprint": "sha256:evidence-redacted",
+        "current_status": "PROPOSAL_LINKED",
+        "current_source_event_version": 2,
+        "proposal_id": "proposal-001",
+        "proposal_record_created": True,
+        "suitability_authority_granted": False,
+        "order_created": False,
+        "client_publication_authorized": False,
+        "created_at": REQUEST_TIME.isoformat(),
+        "updated_at": linked_at.isoformat(),
+        "outcomes": [
+            {
+                "outcome_id": "ipro_initial",
+                "source_event_version": 1,
+                "status": "ACCEPTED_FOR_REVIEW",
+                "reason_code": "idea_intake_accepted_for_adviser_review",
+                "occurred_at": REQUEST_TIME.isoformat(),
+                "review_work_id": "iarw_idea_receipt_001",
+                "proposal_id": None,
+                "terminal": False,
+            },
+            {
+                "outcome_id": "ipro_linked",
+                "source_event_version": 2,
+                "status": "PROPOSAL_LINKED",
+                "reason_code": "advise_proposal_linked",
+                "occurred_at": linked_at.isoformat(),
+                "review_work_id": "iarw_idea_receipt_001",
+                "proposal_id": "proposal-001",
+                "terminal": False,
+            },
+        ],
+    }
+
+
 def manage_service_context() -> ManageRealizationServiceContext:
     return ManageRealizationServiceContext(
         actor_id="lotus-idea-local-development",
@@ -744,7 +864,10 @@ def advise_service_context() -> AdviseRealizationServiceContext:
         tenant_id="tenant-sg",
         legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
-        capabilities="advisory.idea_proposal_intake.accept",
+        capabilities=(
+            "advisory.idea_proposal_intake.accept,"
+            "advisory.idea_proposal_realization.read"
+        ),
     )
 
 

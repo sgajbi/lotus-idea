@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Protocol
 
 from app.domain import (
+    AdviseProposalRealizationHistory,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     ReviewAccessScope,
@@ -103,6 +104,18 @@ class AdviseProposalRealizationClient(Protocol):
         idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         """Submit a source-safe proposal intent envelope to lotus-advise."""
+
+
+class AdviseProposalRealizationReader(Protocol):
+    def load_proposal_realization(
+        self,
+        *,
+        intake_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        """Load the exact Advise-owned realization history in trusted scope."""
 
 
 class ManageActionRealizationClient(Protocol):

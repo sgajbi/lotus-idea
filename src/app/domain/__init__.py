@@ -106,6 +106,13 @@ from app.domain.opportunity_family_compatibility import (
     OpportunityEvidenceLane,
     OpportunityFamilyCompatibility,
 )
+from app.domain.advise_realization import (
+    AdviseProposalRealizationHistory,
+    AdviseProposalRealizationOutcome,
+    AdviseProposalRealizationStatus,
+    AdviseProposalReviewWorkStatus,
+    TERMINAL_ADVISE_REALIZATION_STATUSES,
+)
 from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionAuditEntry,
@@ -415,6 +422,11 @@ __all__ = [
     "OpportunityArchetype",
     "OpportunityEvidenceLane",
     "OpportunityFamilyCompatibility",
+    "AdviseProposalRealizationHistory",
+    "AdviseProposalRealizationOutcome",
+    "AdviseProposalRealizationStatus",
+    "AdviseProposalReviewWorkStatus",
+    "TERMINAL_ADVISE_REALIZATION_STATUSES",
     "DownstreamSubmissionPosture",
     "DownstreamSubmissionRecord",
     "DownstreamSubmissionResourceType",
