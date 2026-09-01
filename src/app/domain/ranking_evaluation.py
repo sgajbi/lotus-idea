@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP, localcontext
 from enum import IntEnum, StrEnum
 from typing import Iterable
+
+from app.domain.presentation_receipts import MAX_PRESENTED_CANDIDATE_COUNT
 
 
 RANKING_EVALUATION_POLICY_VERSION = "idea-ranking-evaluation-v1"
@@ -36,6 +39,51 @@ class RankedOpportunityJudgment:
             self.relevance_grade, RankingRelevanceGrade
         ):
             raise ValueError("relevance_grade must use the governed ranking vocabulary")
+
+
+@dataclass(frozen=True)
+class RankingPresentationFact:
+    """One privacy-safe, exact-version judgment for an immutable queue presentation."""
+
+    queue_snapshot_digest: str
+    tenant_id: str
+    presented_at_utc: datetime
+    visible_opportunity_count: int
+    queue_policy_version: str
+    ranking_policy_version: str
+    surface: str
+    producer: str
+    judgment: RankedOpportunityJudgment
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "queue_snapshot_digest",
+            "tenant_id",
+            "queue_policy_version",
+            "ranking_policy_version",
+            "surface",
+            "producer",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} is required")
+        if self.presented_at_utc.tzinfo is None or self.presented_at_utc.utcoffset() is None:
+            raise ValueError("presented_at_utc must be timezone-aware")
+        _validate_visible_opportunity_count(self.visible_opportunity_count)
+        if not isinstance(self.judgment, RankedOpportunityJudgment):
+            raise ValueError("judgment must use RankedOpportunityJudgment")
+
+
+@dataclass(frozen=True)
+class RankingQueueSnapshotEvaluation:
+    queue_snapshot_digest: str
+    tenant_id: str
+    presented_at_utc: datetime
+    queue_policy_version: str
+    ranking_policy_version: str
+    surface: str
+    producer: str
+    evaluation: RankingSnapshotEvaluation
 
 
 @dataclass(frozen=True)
@@ -76,8 +124,7 @@ def evaluate_ranking_snapshot(
 ) -> RankingSnapshotEvaluation:
     """Evaluate one immutable queue presentation without treating unjudged work as irrelevant."""
 
-    if not _is_integer(visible_opportunity_count) or visible_opportunity_count <= 0:
-        raise ValueError("visible_opportunity_count must be a positive integer")
+    _validate_visible_opportunity_count(visible_opportunity_count)
     normalized_cutoffs = _validate_cutoffs(cutoffs)
     by_rank = _validate_judgments(
         tuple(judgments),
@@ -95,6 +142,71 @@ def evaluate_ranking_snapshot(
             for cutoff in normalized_cutoffs
         ),
     )
+
+
+def evaluate_ranking_presentations(
+    facts: Iterable[RankingPresentationFact],
+    *,
+    cutoffs: tuple[int, ...] = APPROVED_RANKING_CUTOFFS,
+) -> tuple[RankingQueueSnapshotEvaluation, ...]:
+    """Evaluate immutable queue snapshots after validating receipt-set consistency."""
+
+    grouped: dict[str, list[RankingPresentationFact]] = {}
+    for fact in facts:
+        if not isinstance(fact, RankingPresentationFact):
+            raise ValueError("facts must use RankingPresentationFact")
+        grouped.setdefault(fact.queue_snapshot_digest, []).append(fact)
+
+    evaluations: list[RankingQueueSnapshotEvaluation] = []
+    for snapshot_digest in sorted(grouped):
+        snapshot_facts = tuple(grouped[snapshot_digest])
+        authority = snapshot_facts[0]
+        _validate_snapshot_consistency(snapshot_facts, authority=authority)
+        evaluations.append(
+            RankingQueueSnapshotEvaluation(
+                queue_snapshot_digest=snapshot_digest,
+                tenant_id=authority.tenant_id,
+                presented_at_utc=authority.presented_at_utc,
+                queue_policy_version=authority.queue_policy_version,
+                ranking_policy_version=authority.ranking_policy_version,
+                surface=authority.surface,
+                producer=authority.producer,
+                evaluation=evaluate_ranking_snapshot(
+                    (fact.judgment for fact in snapshot_facts),
+                    visible_opportunity_count=authority.visible_opportunity_count,
+                    cutoffs=cutoffs,
+                ),
+            )
+        )
+    return tuple(evaluations)
+
+
+def _validate_snapshot_consistency(
+    facts: tuple[RankingPresentationFact, ...],
+    *,
+    authority: RankingPresentationFact,
+) -> None:
+    authority_values = (
+        authority.tenant_id,
+        authority.presented_at_utc,
+        authority.visible_opportunity_count,
+        authority.queue_policy_version,
+        authority.ranking_policy_version,
+        authority.surface,
+        authority.producer,
+    )
+    for fact in facts[1:]:
+        fact_values = (
+            fact.tenant_id,
+            fact.presented_at_utc,
+            fact.visible_opportunity_count,
+            fact.queue_policy_version,
+            fact.ranking_policy_version,
+            fact.surface,
+            fact.producer,
+        )
+        if fact_values != authority_values:
+            raise ValueError("queue snapshot presentation facts are internally inconsistent")
 
 
 def _evaluate_cutoff(
@@ -220,6 +332,13 @@ def _validate_judgments(
     return by_rank
 
 
+def _validate_visible_opportunity_count(value: int) -> None:
+    if not _is_integer(value) or not 1 <= value <= MAX_PRESENTED_CANDIDATE_COUNT:
+        raise ValueError(
+            f"visible_opportunity_count must be between 1 and {MAX_PRESENTED_CANDIDATE_COUNT}"
+        )
+
+
 def _ratio(numerator: int, denominator: int) -> Decimal:
     return _quantize(Decimal(numerator) / Decimal(denominator))
 
@@ -238,7 +357,10 @@ __all__ = [
     "RankedOpportunityJudgment",
     "RankingCutoffEvaluation",
     "RankingCutoffStatus",
+    "RankingPresentationFact",
+    "RankingQueueSnapshotEvaluation",
     "RankingRelevanceGrade",
     "RankingSnapshotEvaluation",
+    "evaluate_ranking_presentations",
     "evaluate_ranking_snapshot",
 ]
