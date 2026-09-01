@@ -263,12 +263,7 @@ def _text(payload: Mapping[str, Any], field_name: str) -> str:
 
 
 def _optional_text(payload: Mapping[str, Any], field_name: str) -> str | None:
-    value = payload.get(field_name)
-    if value is None:
-        return None
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field_name} must be non-blank when present")
-    return value
+    return None if payload.get(field_name) is None else _text(payload, field_name)
 
 
 def _positive_int(payload: Mapping[str, Any], field_name: str) -> int:
