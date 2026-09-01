@@ -245,6 +245,15 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         '--ref "$dispatch_ref"',
         '-f expected_sha="$revision"',
     ),
+    "main-releasability-tag-reclamation.yml": (
+        "workflow_run:",
+        'workflows: ["Main Releasability Gate"]',
+        "types: [completed]",
+        "contents: write",
+        "github.event.workflow_run.head_branch",
+        "github.event.workflow_run.head_sha",
+        "python scripts/reclaim_main_releasability_tag.py",
+    ),
     "postgres-disaster-recovery-drill.yml": (
         "schedule:",
         'POSTGRESQL_MAJOR_VERSION: "18"',

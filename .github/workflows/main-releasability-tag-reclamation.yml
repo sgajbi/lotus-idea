@@ -2,7 +2,7 @@ name: Main Releasability Tag Reclamation
 
 on:
   workflow_run:
-    workflows: ["Main Releasability"]
+    workflows: ["Main Releasability Gate"]
     types: [completed]
 
 permissions:
