@@ -34,8 +34,10 @@ clean branch hygiene.
 2. PR Merge Gate for required merge readiness.
 3. Main Releasability Gate for post-merge truth.
 4. Merged PR Main Releasability Dispatch as the authoritative post-merge
-   trigger, with manual reruns through `workflow_dispatch`; the gate does not
-   also run on `push` to `main`, avoiding expected cancelled duplicate runs.
+   trigger. Because the repository is rebase-only, it enumerates every revision
+   added by the merged PR and dispatches one exact-revision run for each;
+   manual reruns remain available through `workflow_dispatch`. The gate does
+   not also run on `push` to `main`.
 5. Non-suppressed auto-merge token enforcement through `LOTUS_AUTOMERGE_TOKEN`;
    without that secret, the helper warns, skips auto-merge, and requires a
    human/release actor to rebase merge.
@@ -91,10 +93,15 @@ flowchart LR
     Local["Local contract gates"]
     Feature["Feature Lane"]
     PR["PR Merge Gate"]
+    Dispatch["Per-revision merged-PR dispatch"]
     Main["Main Releasability"]
+    Audit["Scheduled coverage audit"]
+    Reclaim["Post-run tag reclamation"]
     Wiki["Wiki publication after merge"]
 
-    Local --> Feature --> PR --> Main --> Wiki
+    Local --> Feature --> PR --> Dispatch --> Main --> Wiki
+    Main --> Reclaim
+    Audit -. "verifies exact commit verdicts" .-> Main
     Local -->|"source-ingestion output contract"| PR
 ```
 
@@ -218,8 +225,28 @@ trust telemetry snapshot generation is added back to `make lint`, or if
 cannot silently degrade into optional local commands.
 It also fails if Main Releasability regains a `push` trigger while the merged-PR
 dispatch workflow remains active, because normal merges should produce one
-authoritative release-proof run rather than a paired cancelled run and
-successful dispatch run.
+authoritative release-proof run per revision rather than duplicate trigger
+paths. The dispatcher also asserts the repository remains rebase-only before
+using the merged PR commit count to enumerate revisions; a merge-policy change
+therefore fails closed instead of silently leaving deployable commits ungated.
+
+Main Releasability runs set `cancel-in-progress: false`. A repeated or later
+dispatch can consume more capacity, but it cannot cancel the only verdict being
+produced for an exact revision. The write-capable tag cleanup is isolated in
+`main-releasability-tag-reclamation.yml`, triggered only after a Main
+Releasability run completes. Its helper validates the governed tag shape,
+repository, expected SHA, and live tag target before deletion; cleanup failure
+does not change the release verdict.
+
+Run `make main-gate-coverage-audit` to verify the latest 60 post-rollout main
+revisions against GitHub's `main-releasability.yml` run history. Missing,
+cancelled, in-progress, malformed, and unreadable evidence fails closed; a
+completed failing run remains a real verdict and is reported separately from a
+coverage gap. Commit `abcc119ea48d286cf7336fb687a51e0b40d38404` is the
+exclusive rollout boundary, so older commits are explicitly classified as
+pre-gate rather than generating synthetic release runs. The same audit runs
+daily through `main-gate-coverage-audit.yml`. Run ids and current counts stay in
+GitHub/generated evidence and are not transcribed into routine source updates.
 
 The GitHub Security tab posture is governed in both repository settings and
 source-controlled files. Dependabot alerts/security updates are enabled, secret
