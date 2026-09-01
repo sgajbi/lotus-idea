@@ -39,16 +39,20 @@ Implemented on `main`:
    candidate without mutating lifecycle authority.
 5. `src/app/domain/review_queue/policy.py` owns the separate, versioned
    `ReviewQueuePolicy`: accepted candidate score-policy versions, priority
-   thresholds, exclusions, deduplication, and deterministic ordering.
+   thresholds, exclusions, and deterministic ordering. Economic duplicate
+   prevention remains an atomic persistence responsibility; the queue does not
+   infer duplicate work from shared source lineage.
    `build_review_queue` creates a deterministic review queue projection,
-   excludes suppressed, duplicate, expired, closed, rejected, blocked,
+   excludes explicitly duplicate-suppressed, otherwise suppressed, expired,
+   closed, rejected, blocked,
    snoozed, unscored, non-reviewable, and access-scope-mismatched candidates,
    and ranks by score, creation time, and candidate identity for stable
    ordering.
 6. `tests/unit/test_scoring_queue_policy.py` provides golden examples for
    deterministic scoring, conflict penalty behavior, score attachment, stable
    ranking, priority buckets, suppression, snooze, expiry, unsupported evidence,
-   unscored candidates, and deduplication.
+   unscored candidates, explicit duplicate suppression, and preservation of
+   distinct economic candidates that share source lineage.
 7. `src/app/application/review_queue.py` now adds a thin application
    projection over candidate repository snapshots. It reads persisted candidate
    records from the Slice 06 repository contract, delegates ranking and
@@ -141,6 +145,22 @@ GitHub issue `#332` closes the queue paging race without adding a queue service:
     `app.domain.review_queue` package. This is design modularity inside the
     existing deployable; no workload, ownership, isolation, or operability
     evidence justifies a queue microservice.
+
+### Economic Duplicate Authority
+
+`businessIdentityId` is the only economic candidate identity. The repository
+reconciles retries and concurrent evaluations against that identity before a
+candidate, audit event, or outbox event is created. `sourceSignalIds` are
+evidence lineage: multiple economically distinct opportunities may legitimately
+share them, so queue and readiness projections must never group or suppress
+candidates by those values.
+
+An adviser may still suppress a candidate explicitly with the governed
+`duplicate` suppression reason. That durable review fact is excluded and
+reported as `QueueExclusionReason.DUPLICATE`; it is not inferred from evidence
+similarity. Domain, bounded PostgreSQL, and real-PostgreSQL tests prove shared
+lineage preservation, explicit suppression accounting, stable ordering, and
+snapshot semantics without adding a parallel queue authority.
 
 ### Evidence-Derived Family Scoring
 

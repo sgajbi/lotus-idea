@@ -3443,6 +3443,13 @@ review-posture actions and must not be reintroduced as evaluator-level
 duplicate outcomes. Preserve the foundation-only supported-feature posture
 until the normal promotion evidence is complete.
 
+Review queue and readiness projections must preserve every distinct economic
+candidate even when candidates share `sourceSignalIds`. Source-signal identity
+is evidence lineage, not business identity and not a queue deduplication key.
+Atomic repository reconciliation prevents duplicate economic candidates;
+explicit adviser suppression with reason `duplicate` remains a separate,
+durable review fact and is reported as the queue's `duplicate` exclusion count.
+
 For persisted high-cash opportunities, authoritative `not_eligible` evidence
 expires the matching active candidate; blocked evidence never proves
 resolution and remains non-mutating. Derive expiry identity from the stable

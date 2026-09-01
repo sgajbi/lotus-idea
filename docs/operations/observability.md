@@ -201,6 +201,9 @@ documented in the operator runbook.
 6. `duplicate` and `not_eligible` describe persistence-owned duplicate reconciliation or
    deterministic threshold posture that did not create a new candidate. `suppressed` is reserved
    for manual review posture or source-safe cleanup isolation, not evaluator-level deduplication.
+   For advisor queue readiness specifically, `duplicate` counts explicit durable duplicate
+   suppression; candidates are never classified as duplicates merely because they share source
+   signal lineage.
 7. `permission_denied` means fail-closed capability policy blocked the caller.
 8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
