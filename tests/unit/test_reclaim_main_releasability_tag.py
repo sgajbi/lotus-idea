@@ -90,7 +90,7 @@ def test_reclaim_job_runs_after_gate_without_changing_its_verdict() -> None:
     )
     workflow = workflow_path.read_text(encoding="utf-8")
 
-    assert 'workflows: ["Main Releasability"]' in workflow
+    assert 'workflows: ["Main Releasability Gate"]' in workflow
     assert "types: [completed]" in workflow
     assert "github.event.workflow_run.head_branch" in workflow
     assert "github.event.workflow_run.head_sha" in workflow
