@@ -210,9 +210,9 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
         "their exact numerators and denominators, zero denominators return null, and the "
         "response excludes raw tenant, client, portfolio, candidate, actor, correlation, and "
         "free-text data. PostgreSQL runtime execution uses repository-side aggregates. "
-        "Presentation and rank-at-show measures remain explicitly unavailable until governed "
-        "Gateway and Workbench receipt consumers are certified; queue retrieval is not treated "
-        "as presentation."
+        "Presentation and ranked-quality measures use immutable Workbench receipts and exact-"
+        "version governed judgments when available; incomplete exposure or judgment evidence "
+        "remains explicit and queue retrieval is never treated as presentation."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": OpportunityEffectivenessResponse,
@@ -223,8 +223,8 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
             "content": {
                 "application/json": {
                     "example": {
-                        "schemaVersion": "lotus-idea.opportunity-effectiveness.v1",
-                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v3",
+                        "schemaVersion": "lotus-idea.opportunity-effectiveness.v2",
+                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v4",
                         "window": {
                             "startUtcInclusive": "2026-06-21T00:00:00Z",
                             "endUtcExclusive": "2026-06-22T00:00:00Z",
@@ -256,6 +256,12 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                             "topRankedAcceptedOpportunityCount": None,
                             "presentationRate": None,
                             "topRankedAcceptanceRate": None,
+                            "rankingQuality": {
+                                "policyVersion": "idea-ranking-evaluation-v1",
+                                "minimumReadySnapshotCount": 30,
+                                "recallStatus": "unavailable_incomplete_relevant_set",
+                                "cutoffs": [],
+                            },
                         },
                         "familyEffectiveness": [],
                         "dimensions": {

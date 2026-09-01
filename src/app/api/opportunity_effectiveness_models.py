@@ -39,6 +39,30 @@ class EffectivenessCountsResponse(CamelModel):
     reconciled_submission_count: int = Field(..., alias="reconciledSubmissionCount")
 
 
+class RankingQualityCutoffResponse(CamelModel):
+    cutoff: int
+    snapshot_count: int = Field(..., alias="snapshotCount")
+    ready_snapshot_count: int = Field(..., alias="readySnapshotCount")
+    incomplete_presentation_snapshot_count: int = Field(
+        ..., alias="incompletePresentationSnapshotCount"
+    )
+    incomplete_judgment_snapshot_count: int = Field(..., alias="incompleteJudgmentSnapshotCount")
+    judged_opportunity_count: int = Field(..., alias="judgedOpportunityCount")
+    evaluated_opportunity_count: int = Field(..., alias="evaluatedOpportunityCount")
+    judgment_coverage: Decimal | None = Field(..., alias="judgmentCoverage")
+    support_status: str = Field(..., alias="supportStatus")
+    mean_precision_at_k: Decimal | None = Field(..., alias="meanPrecisionAtK")
+    mean_ndcg_at_k: Decimal | None = Field(..., alias="meanNdcgAtK")
+    recall_at_k: Decimal | None = Field(..., alias="recallAtK")
+
+
+class RankingQualityResponse(CamelModel):
+    policy_version: str = Field(..., alias="policyVersion")
+    minimum_ready_snapshot_count: int = Field(..., alias="minimumReadySnapshotCount")
+    recall_status: str = Field(..., alias="recallStatus")
+    cutoffs: tuple[RankingQualityCutoffResponse, ...]
+
+
 class EffectivenessPresentationResponse(CamelModel):
     measurement_status: str = Field(..., alias="measurementStatus")
     presented_opportunity_count: int | None = Field(..., alias="presentedOpportunityCount")
@@ -52,6 +76,7 @@ class EffectivenessPresentationResponse(CamelModel):
     top_ranked_acceptance_rate: EffectivenessRateResponse | None = Field(
         ..., alias="topRankedAcceptanceRate"
     )
+    ranking_quality: RankingQualityResponse = Field(..., alias="rankingQuality")
 
 
 class EffectivenessDimensionCountResponse(CamelModel):

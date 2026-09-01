@@ -36,6 +36,10 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
     assert summary.presented_opportunity_count == 2
     assert summary.top_ranked_presented_opportunity_count == 2
     assert summary.top_ranked_accepted_opportunity_count == 1
+    assert [fact.judgment.relevance_grade for fact in summary.ranking_presentation_facts] == [
+        2,
+        0,
+    ]
     assert summary.detection_to_review_seconds == (Decimal("60.0"), Decimal("120.0"))
     assert connection.cursor_instance.params == (
         "tenant-a",
@@ -43,11 +47,14 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
         _time(12),
         _time(14),
         101,
+        10_001,
     )
     query = connection.cursor_instance.query
     assert "opportunity-effectiveness-summary-v1" in query
     assert "idea_data_lifecycle_control" in query
     assert "LIMIT (SELECT bounded_limit FROM parameters)" in query
+    assert "ranking_human_judgments" in query
+    assert "valid_until_utc" in query
     assert "candidate_json" not in summary.__dict__
 
 
@@ -57,6 +64,7 @@ def test_postgres_effectiveness_projection_maps_one_privacy_safe_aggregate_row()
         ("invalid_temporal_fact_count", "temporally invalid"),
         ("invalid_outcome_history_count", "quarantined conversion outcomes"),
         ("invalid_presentation_fact_count", "invalid presentation evidence"),
+        ("invalid_ranking_judgment_count", "conflicting ranking judgments"),
     ),
 )
 def test_postgres_effectiveness_projection_fails_closed_on_invalid_durable_facts(
@@ -82,6 +90,21 @@ def test_postgres_effectiveness_projection_rejects_malformed_driver_values() -> 
     row["family_counts"] = {"high_cash": True}
 
     with pytest.raises(TypeError, match="family_counts values must be integers"):
+        load_opportunity_effectiveness_summary(
+            _Connection(row),
+            tenant_id="tenant-a",
+            window_start_utc=_time(8),
+            window_end_utc=_time(12),
+            evaluated_at_utc=_time(14),
+            max_opportunities=100,
+        )
+
+
+def test_postgres_effectiveness_projection_fails_closed_above_ranking_fact_bound() -> None:
+    row = _summary_row()
+    row["ranking_presentation_fact_count"] = 10_001
+
+    with pytest.raises(RuntimeError, match="ranking presentation fact bound"):
         load_opportunity_effectiveness_summary(
             _Connection(row),
             tenant_id="tenant-a",
@@ -235,9 +258,37 @@ def _summary_row() -> dict[str, Any]:
         "downstream_submission_posture_counts": {},
         "detection_to_review_seconds": [Decimal("60.0"), Decimal("120.0")],
         "approval_to_conversion_seconds": [Decimal("30.0")],
+        "ranking_presentation_facts": [
+            {
+                "queue_snapshot_digest": f"sha256:{'a' * 64}",
+                "tenant_id": "tenant-a",
+                "presented_at_utc": "2026-06-21T10:00:00+00:00",
+                "visible_opportunity_count": 2,
+                "queue_policy_version": "queue-v1",
+                "ranking_policy_version": "ranking-v1",
+                "surface": "advisor_review_queue",
+                "producer": "lotus-workbench",
+                "rank": 1,
+                "relevance_grade": 2,
+            },
+            {
+                "queue_snapshot_digest": f"sha256:{'a' * 64}",
+                "tenant_id": "tenant-a",
+                "presented_at_utc": "2026-06-21T10:00:00+00:00",
+                "visible_opportunity_count": 2,
+                "queue_policy_version": "queue-v1",
+                "ranking_policy_version": "ranking-v1",
+                "surface": "advisor_review_queue",
+                "producer": "lotus-workbench",
+                "rank": 2,
+                "relevance_grade": 0,
+            },
+        ],
         "invalid_temporal_fact_count": 0,
         "invalid_outcome_history_count": 0,
         "invalid_presentation_fact_count": 0,
+        "invalid_ranking_judgment_count": 0,
+        "ranking_presentation_fact_count": 2,
     }
 
 
