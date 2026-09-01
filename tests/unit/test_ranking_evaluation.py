@@ -15,6 +15,7 @@ from app.domain.ranking_evaluation import (
     aggregate_ranking_evaluations,
     evaluate_ranking_presentations,
     evaluate_ranking_snapshot,
+    evaluate_ranking_stability,
 )
 
 
@@ -40,6 +41,7 @@ def presentation_fact(
         ranking_policy_version="ranking-v1",
         surface="advisor_review_queue",
         producer="lotus-workbench",
+        economic_identity_id=f"economic-opportunity-{rank}",
         judgment=judgment(rank, grade),
     )
 
@@ -133,7 +135,10 @@ def test_duplicate_snapshot_rank_is_rejected() -> None:
         evaluate_ranking_presentations(
             (
                 presentation_fact(1, RankingRelevanceGrade.USEFUL),
-                presentation_fact(1, RankingRelevanceGrade.NOT_USEFUL),
+                replace(
+                    presentation_fact(1, RankingRelevanceGrade.NOT_USEFUL),
+                    economic_identity_id="different-economic-opportunity",
+                ),
             ),
             cutoffs=(1,),
         )
@@ -222,6 +227,76 @@ def test_aggregate_with_no_ready_snapshot_exposes_no_quality_value() -> None:
     assert aggregate.judgment_coverage == Decimal("0.000000")
     assert aggregate.mean_precision_at_k is None
     assert aggregate.mean_ndcg_at_k is None
+
+
+def test_rank_stability_compares_only_equivalent_economic_cohorts() -> None:
+    first = evaluate_ranking_presentations(
+        tuple(
+            presentation_fact(rank, RankingRelevanceGrade.USEFUL, digest_character="a")
+            for rank in range(1, 4)
+        ),
+        cutoffs=(3,),
+    )[0]
+    reversed_facts = tuple(
+        replace(
+            presentation_fact(rank, RankingRelevanceGrade.USEFUL, digest_character="b"),
+            presented_at_utc=datetime(2026, 9, 1, 9, tzinfo=UTC),
+            economic_identity_id=f"economic-opportunity-{4 - rank}",
+        )
+        for rank in range(1, 4)
+    )
+    reversed_snapshot = evaluate_ranking_presentations(reversed_facts, cutoffs=(3,))[0]
+    unrelated = evaluate_ranking_presentations(
+        (
+            replace(
+                presentation_fact(1, RankingRelevanceGrade.USEFUL, digest_character="c"),
+                economic_identity_id="different-economic-opportunity",
+            ),
+        ),
+        cutoffs=(1,),
+    )[0]
+
+    stability = evaluate_ranking_stability((first, reversed_snapshot, unrelated))
+
+    assert stability.comparable_snapshot_pair_count == 1
+    assert stability.mean_normalized_stability == Decimal("0.000000")
+
+
+def test_identical_equivalent_ranking_is_fully_stable() -> None:
+    first = evaluate_ranking_presentations(
+        tuple(
+            presentation_fact(rank, RankingRelevanceGrade.USEFUL, digest_character="a")
+            for rank in range(1, 4)
+        ),
+        cutoffs=(3,),
+    )[0]
+    replay = replace(
+        first,
+        queue_snapshot_digest=f"sha256:{'b' * 64}",
+        presented_at_utc=first.presented_at_utc + timedelta(hours=1),
+    )
+
+    stability = evaluate_ranking_stability((first, replay))
+
+    assert stability.comparable_snapshot_pair_count == 1
+    assert stability.mean_normalized_stability == Decimal("1.000000")
+
+
+def test_incomplete_presentations_do_not_contribute_to_stability() -> None:
+    incomplete = evaluate_ranking_presentations(
+        (presentation_fact(1, RankingRelevanceGrade.USEFUL),),
+        cutoffs=(3,),
+    )[0]
+    replay = replace(
+        incomplete,
+        queue_snapshot_digest=f"sha256:{'b' * 64}",
+        presented_at_utc=incomplete.presented_at_utc + timedelta(hours=1),
+    )
+
+    stability = evaluate_ranking_stability((incomplete, replay))
+
+    assert stability.comparable_snapshot_pair_count == 0
+    assert stability.mean_normalized_stability is None
 
 
 @pytest.mark.parametrize("minimum", (0, -1, True))
