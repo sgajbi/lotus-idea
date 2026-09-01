@@ -77,6 +77,9 @@ from app.infrastructure.postgres_downstream_submission import (
 from app.infrastructure.postgres_downstream_submission_repository import (
     PostgresDownstreamSubmissionRepositoryMixin,
 )
+from app.infrastructure.postgres_advise_realization_repository import (
+    PostgresAdviseRealizationRepositoryMixin,
+)
 from app.infrastructure.postgres_downstream_readiness import (
     load_downstream_realization_readiness_summary,
 )
@@ -134,6 +137,7 @@ class PostgresIdeaRepository(
     PostgresOutboxRepositoryMixin,
     PostgresOutboxRecoveryRepositoryMixin,
     PostgresDownstreamSubmissionRepositoryMixin,
+    PostgresAdviseRealizationRepositoryMixin,
     PostgresPresentationReceiptRepositoryMixin,
 ):
     """PostgreSQL-backed implementation of the governed idea repository ports."""

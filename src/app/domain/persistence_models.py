@@ -10,6 +10,7 @@ from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.audit import AuditEvent
 from app.domain.conversion_governance import GovernedConversionIntent, GovernedConversionOutcome
 from app.domain.downstream_submission import DownstreamSubmissionRecord
+from app.domain.advise_realization import AdviseProposalRealizationHistory
 from app.domain.outbox.events import OutboxEventRecord
 from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.idempotency import IdempotencyRecord
@@ -216,6 +217,9 @@ class IdeaRepositorySnapshot:
     downstream_submission_records: Mapping[str, DownstreamSubmissionRecord] = field(
         default_factory=dict
     )
+    advise_realization_histories: Mapping[str, AdviseProposalRealizationHistory] = field(
+        default_factory=dict
+    )
     presentation_receipts: Mapping[str, CandidatePresentationReceipt] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -256,6 +260,11 @@ class IdeaRepositorySnapshot:
             self,
             "downstream_submission_records",
             MappingProxyType(dict(self.downstream_submission_records)),
+        )
+        object.__setattr__(
+            self,
+            "advise_realization_histories",
+            MappingProxyType(dict(self.advise_realization_histories)),
         )
         object.__setattr__(
             self,

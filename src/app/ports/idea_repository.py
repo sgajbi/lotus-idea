@@ -23,6 +23,8 @@ from app.domain import (
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationResult,
     DownstreamSubmissionOwnerReceipt,
+    AdviseProposalRealizationHistory,
+    AdviseRealizationHistoryMutationResult,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -511,6 +513,18 @@ class DownstreamSubmissionRepository(Protocol):
         change_reference: str,
         reconciled_at_utc: datetime,
     ) -> DownstreamSubmissionMutationResult: ...
+
+    def advise_realization_history_by_support_reference(
+        self,
+        support_reference: str,
+    ) -> AdviseProposalRealizationHistory | None: ...
+
+    def persist_advise_realization_history(
+        self,
+        *,
+        support_reference: str,
+        history: AdviseProposalRealizationHistory,
+    ) -> AdviseRealizationHistoryMutationResult: ...
 
 
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
