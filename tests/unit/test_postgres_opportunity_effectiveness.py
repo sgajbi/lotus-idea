@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import pytest
 
@@ -157,6 +157,77 @@ def test_postgres_effectiveness_projection_rejects_malformed_summary_shapes(
             evaluated_at_utc=_time(14),
             max_opportunities=100,
         )
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    (
+        (
+            lambda row: row.__setitem__("family_effectiveness", ["invalid"]),
+            "entries must be mappings",
+        ),
+        (
+            lambda row: row.__setitem__("family_effectiveness", [{"family": 7}]),
+            "family must be a string",
+        ),
+        (
+            lambda row: row["family_effectiveness"][0].__setitem__(
+                "generated_opportunity_count", True
+            ),
+            "must be an integer",
+        ),
+        (
+            lambda row: row.__setitem__("ranking_presentation_facts", {}),
+            "must be an array",
+        ),
+        (
+            lambda row: row.__setitem__("ranking_presentation_facts", ["invalid"]),
+            "entries must be mappings",
+        ),
+        (
+            lambda row: row["ranking_presentation_facts"][0].__setitem__(
+                "visible_opportunity_count", True
+            ),
+            "must be an integer",
+        ),
+        (
+            lambda row: row["ranking_presentation_facts"][0].__setitem__("presented_at_utc", 7),
+            "must be an ISO-8601 string",
+        ),
+    ),
+)
+def test_postgres_effectiveness_projection_rejects_malformed_nested_ranking_shapes(
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    row = _summary_row()
+    mutate(row)
+
+    with pytest.raises(TypeError, match=message):
+        load_opportunity_effectiveness_summary(
+            _Connection(row),
+            tenant_id="tenant-a",
+            window_start_utc=_time(8),
+            window_end_utc=_time(12),
+            evaluated_at_utc=_time(14),
+            max_opportunities=100,
+        )
+
+
+def test_postgres_effectiveness_projection_accepts_native_driver_timestamp() -> None:
+    row = _summary_row()
+    row["ranking_presentation_facts"][0]["presented_at_utc"] = _time(10)
+
+    summary = load_opportunity_effectiveness_summary(
+        _Connection(row),
+        tenant_id="tenant-a",
+        window_start_utc=_time(8),
+        window_end_utc=_time(12),
+        evaluated_at_utc=_time(14),
+        max_opportunities=100,
+    )
+
+    assert summary.ranking_presentation_facts[0].presented_at_utc == _time(10)
 
 
 class _Cursor:
