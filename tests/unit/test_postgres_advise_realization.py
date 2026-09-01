@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
+from typing import Any
+
+import pytest
 
 from app.domain import (
     AdviseProposalRealizationHistory,
@@ -11,6 +14,10 @@ from app.domain import (
     SourceSystem,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_advise_realization import (
+    _history_from_json,
+    _history_to_json,
+)
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_advise_realization_reconciliation import RECORDED_AT, _history
 from tests.unit.test_postgres_downstream_submission import _claim
@@ -50,10 +57,23 @@ def test_postgres_advise_history_survives_restart_and_appends_monotonically() ->
         support_reference=claim.support_reference,
         history=_postgres_history(version=3),
     )
+    final_outcomes = _postgres_history(version=3).outcomes
+    conflict = restarted.persist_advise_realization_history(
+        support_reference=claim.support_reference,
+        history=replace(
+            _postgres_history(version=3),
+            outcomes=(
+                *final_outcomes[:-1],
+                replace(final_outcomes[-1], reason_code="different_completion"),
+            ),
+        ),
+    )
 
     assert accepted.decision is AdviseRealizationHistoryMutationDecision.ACCEPTED
     assert replayed.decision is AdviseRealizationHistoryMutationDecision.REPLAYED
     assert progressed.decision is AdviseRealizationHistoryMutationDecision.ACCEPTED
+    assert conflict.decision is AdviseRealizationHistoryMutationDecision.CONFLICT
+    assert conflict.blocker == "advise_realization_history_conflict"
     loaded = restarted.advise_realization_history_by_support_reference(claim.support_reference)
     assert loaded == _postgres_history(version=3)
     assert len(connection.rows["idea_advise_realization_history"]) == 1
@@ -88,6 +108,46 @@ def test_postgres_advise_history_rejects_owner_identity_conflict_without_mutatio
     assert conflict.decision is AdviseRealizationHistoryMutationDecision.CONFLICT
     assert conflict.blocker == "advise_realization_owner_receipt_conflict"
     assert connection.rows["idea_advise_realization_history"] == []
+
+
+def test_postgres_advise_history_reports_missing_submission_without_writing() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+
+    result = repository.persist_advise_realization_history(
+        support_reference="downstream-submission-000000000000000000000000",
+        history=_postgres_history(version=2),
+    )
+
+    assert result.decision is AdviseRealizationHistoryMutationDecision.NOT_FOUND
+    assert result.blocker == "downstream_submission_not_found"
+    assert connection.rows["idea_advise_realization_history"] == []
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda _payload: "not-an-object", "history_json must be an object"),
+        (lambda payload: payload.update(outcomes="not-an-array") or payload, "outcomes"),
+        (lambda payload: payload.update(realization_id=" ") or payload, "realization_id"),
+        (
+            lambda payload: payload.update(current_source_event_version=True) or payload,
+            "positive integer",
+        ),
+        (
+            lambda payload: payload.update(proposal_record_created="yes") or payload,
+            "must be boolean",
+        ),
+    ],
+)
+def test_postgres_advise_history_codec_rejects_corrupt_durable_evidence(
+    mutate: Any,
+    message: str,
+) -> None:
+    payload = _history_to_json(_postgres_history(version=2))
+
+    with pytest.raises(ValueError, match=message):
+        _history_from_json(mutate(payload))
 
 
 def _postgres_history(*, version: int) -> AdviseProposalRealizationHistory:
