@@ -39,14 +39,20 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v2"
-    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v4"
+    assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v3"
+    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v5"
     assert payload["counts"]["generatedOpportunityCount"] == 3
     assert payload["counts"]["reviewedOpportunityCount"] == 3
     assert payload["rates"]["approval"] == {
         "numerator": 1,
         "denominator": 3,
         "value": "0.333333",
+        "zeroDenominatorBehavior": "null",
+    }
+    assert payload["rates"]["downstreamFailed"] == {
+        "numerator": 0,
+        "denominator": 1,
+        "value": "0.000000",
         "zeroDenominatorBehavior": "null",
     }
     assert payload["presentation"] == {
@@ -486,6 +492,9 @@ def _summary(**overrides: Any) -> OpportunityEffectivenessRepositorySummary:
                 + values["current_downstream_outcome_counts"].get("completed", 0),
                 downstream_rejected_count=values["current_downstream_outcome_counts"].get(
                     "rejected", 0
+                ),
+                downstream_failed_count=values["current_downstream_outcome_counts"].get(
+                    "failed", 0
                 ),
                 downstream_uncertain_count=values["current_downstream_outcome_counts"].get(
                     "not_reported", 0

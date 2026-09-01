@@ -136,6 +136,7 @@ class OpportunityFamilyEffectivenessRepositorySummary:
     conversion_intent_count: int
     downstream_accepted_count: int
     downstream_rejected_count: int
+    downstream_failed_count: int
     downstream_uncertain_count: int
 
 

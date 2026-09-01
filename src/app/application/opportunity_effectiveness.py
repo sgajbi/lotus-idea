@@ -59,8 +59,8 @@ from app.ports.idea_repository import (
 )
 
 
-OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v4"
-OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v2"
+OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v5"
+OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v3"
 MAX_EFFECTIVENESS_OPPORTUNITIES = 10_000
 
 
@@ -158,6 +158,7 @@ class OpportunityEffectivenessSnapshot:
     conversion_rate: EffectivenessRate
     downstream_accepted_rate: EffectivenessRate
     downstream_rejected_rate: EffectivenessRate
+    downstream_failed_rate: EffectivenessRate
     downstream_uncertain_rate: EffectivenessRate
     detection_to_review: EffectivenessDuration
     approval_to_conversion: EffectivenessDuration
@@ -277,9 +278,12 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         ReviewAction.APPROVE_FOR_CONVERSION.value,
     )
     rejected_count = _count(summary.latest_review_action_counts, ReviewAction.REJECT.value)
-    accepted_outcome_count, rejected_outcome_count, uncertain_outcome_count = (
-        _downstream_outcome_counts(summary)
-    )
+    (
+        accepted_outcome_count,
+        rejected_outcome_count,
+        failed_outcome_count,
+        uncertain_outcome_count,
+    ) = _downstream_outcome_counts(summary)
     presentation = _build_presentation_effectiveness(summary)
     try:
         ranking_quality, ranking_stability = build_ranking_quality(
@@ -361,6 +365,10 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         ),
         downstream_rejected_rate=rate(
             rejected_outcome_count,
+            summary.conversion_intent_count,
+        ),
+        downstream_failed_rate=rate(
+            failed_outcome_count,
             summary.conversion_intent_count,
         ),
         downstream_uncertain_rate=rate(
@@ -609,13 +617,14 @@ def _count(counts: Mapping[str, int], value: str) -> int:
 
 def _downstream_outcome_counts(
     summary: OpportunityEffectivenessRepositorySummary,
-) -> tuple[int, int, int]:
+) -> tuple[int, int, int, int]:
     counts = summary.current_downstream_outcome_counts
     accepted = sum(
         _count(counts, status.value)
         for status in (ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED)
     )
     rejected = _count(counts, ConversionOutcomeStatus.REJECTED.value)
+    failed = _count(counts, ConversionOutcomeStatus.FAILED.value)
     uncertain = sum(
         _count(counts, value)
         for value in (
@@ -623,7 +632,7 @@ def _downstream_outcome_counts(
             ConversionOutcomeStatus.REQUESTED.value,
         )
     )
-    return accepted, rejected, uncertain
+    return accepted, rejected, failed, uncertain
 
 
 def _in_memory_family_effectiveness(
@@ -653,6 +662,10 @@ def _in_memory_family_effectiveness(
         rejected = _count(
             measures.current_downstream_outcome_counts,
             ConversionOutcomeStatus.REJECTED.value,
+        )
+        failed = _count(
+            measures.current_downstream_outcome_counts,
+            ConversionOutcomeStatus.FAILED.value,
         )
         uncertain = sum(
             _count(measures.current_downstream_outcome_counts, value)
@@ -684,6 +697,7 @@ def _in_memory_family_effectiveness(
                 conversion_intent_count=measures.conversion_intent_count,
                 downstream_accepted_count=accepted,
                 downstream_rejected_count=rejected,
+                downstream_failed_count=failed,
                 downstream_uncertain_count=uncertain,
             )
         )
@@ -1092,6 +1106,7 @@ def _snapshot_payload_without_digest(
             "conversion": snapshot.conversion_rate.to_payload(),
             "downstreamAccepted": snapshot.downstream_accepted_rate.to_payload(),
             "downstreamRejected": snapshot.downstream_rejected_rate.to_payload(),
+            "downstreamFailed": snapshot.downstream_failed_rate.to_payload(),
             "downstreamUncertain": snapshot.downstream_uncertain_rate.to_payload(),
         },
         "timings": {

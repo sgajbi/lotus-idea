@@ -302,6 +302,7 @@ def _summary_row() -> dict[str, Any]:
                 "conversion_intent_count": 1,
                 "downstream_accepted_count": 1,
                 "downstream_rejected_count": 0,
+                "downstream_failed_count": 0,
                 "downstream_uncertain_count": 0,
             },
             {
@@ -318,6 +319,7 @@ def _summary_row() -> dict[str, Any]:
                 "conversion_intent_count": 0,
                 "downstream_accepted_count": 0,
                 "downstream_rejected_count": 0,
+                "downstream_failed_count": 0,
                 "downstream_uncertain_count": 0,
             },
         ],

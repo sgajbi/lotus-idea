@@ -223,8 +223,8 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
             "content": {
                 "application/json": {
                     "example": {
-                        "schemaVersion": "lotus-idea.opportunity-effectiveness.v2",
-                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v4",
+                        "schemaVersion": "lotus-idea.opportunity-effectiveness.v3",
+                        "methodologyPolicyVersion": "idea-opportunity-effectiveness-v5",
                         "window": {
                             "startUtcInclusive": "2026-06-21T00:00:00Z",
                             "endUtcExclusive": "2026-06-22T00:00:00Z",
@@ -293,7 +293,8 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                             "currentDownstreamOutcome": [
                                 {"value": "accepted", "count": 4},
                                 {"value": "rejected", "count": 1},
-                                {"value": "requested", "count": 2},
+                                {"value": "failed", "count": 1},
+                                {"value": "requested", "count": 1},
                             ],
                             "downstreamSubmissionPosture": [
                                 {"value": "accepted_by_downstream", "count": 4},
@@ -309,7 +310,8 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                             "conversion": _rate_example(7, 7, "1.000000"),
                             "downstreamAccepted": _rate_example(4, 7, "0.571429"),
                             "downstreamRejected": _rate_example(1, 7, "0.142857"),
-                            "downstreamUncertain": _rate_example(2, 7, "0.285714"),
+                            "downstreamFailed": _rate_example(1, 7, "0.142857"),
+                            "downstreamUncertain": _rate_example(1, 7, "0.142857"),
                         },
                         "timings": {
                             "detectionToReview": _duration_example(18, "900", "3600", "14400"),

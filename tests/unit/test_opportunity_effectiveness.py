@@ -697,7 +697,44 @@ def test_effectiveness_snapshot_observes_only_facts_available_at_evaluation_time
         ConversionOutcomeStatus.REQUESTED.value: 1
     }
     assert projection.downstream_accepted_rate.value == Decimal("0.000000")
+    assert projection.downstream_failed_rate.value == Decimal("0.000000")
     assert projection.downstream_uncertain_rate.value == Decimal("1.000000")
+
+
+def test_effectiveness_snapshot_measures_terminal_downstream_failure_explicitly() -> None:
+    candidate = _candidate(
+        "idea-failed-outcome-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("82"),
+        created_at=WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    intent = _conversion_intent(candidate, requested_at=WINDOW_START + timedelta(hours=3))
+    failed = _conversion_outcome(
+        intent,
+        status=ConversionOutcomeStatus.FAILED,
+        version=1,
+        recorded_at=WINDOW_START + timedelta(hours=4),
+    )
+    record = replace(
+        _record(candidate, conversion=False),
+        conversion_intents=(intent,),
+        conversion_outcomes=(failed,),
+    )
+
+    projection = _build(_snapshot(record))
+
+    assert _counts(projection.current_downstream_outcome_counts) == {
+        ConversionOutcomeStatus.FAILED.value: 1
+    }
+    assert projection.downstream_accepted_rate.value == Decimal("0.000000")
+    assert projection.downstream_rejected_rate.value == Decimal("0.000000")
+    assert projection.downstream_failed_rate.value == Decimal("1.000000")
+    assert projection.downstream_uncertain_rate.value == Decimal("0.000000")
+    family = projection.family_effectiveness[0]
+    assert family.downstream_failed_count == 1
+    assert family.downstream_failed_rate.value == Decimal("1.000000")
 
 
 def test_effectiveness_snapshot_counts_candidate_level_suppression_without_review() -> None:
@@ -1135,10 +1172,12 @@ def _assert_family_effectiveness(snapshot: OpportunityEffectivenessSnapshot) -> 
     assert high_cash.feedback_opportunity_count == 1
     assert high_cash.conversion_opportunity_count == 1
     assert high_cash.downstream_accepted_count == 1
+    assert high_cash.downstream_failed_count == 0
     assert high_cash.review_rate.value == Decimal("1.000000")
     assert high_cash.approval_rate.value == Decimal("1.000000")
     assert high_cash.conversion_rate.value == Decimal("1.000000")
     assert high_cash.downstream_accepted_rate.value == Decimal("1.000000")
+    assert high_cash.downstream_failed_rate.value == Decimal("0.000000")
 
     concentration = family_effectiveness[OpportunityFamily.CONCENTRATION]
     assert concentration.suppressed_opportunity_count == 1

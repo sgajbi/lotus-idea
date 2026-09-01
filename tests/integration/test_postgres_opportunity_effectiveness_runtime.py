@@ -21,12 +21,14 @@ from app.domain import (
     ReviewAction,
     ReviewPosture,
 )
+from app.domain.ideas import ConversionOutcomeStatus
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.support.opportunity_effectiveness_fixture import (
     FIXTURE_EVALUATED_AT,
     FIXTURE_WINDOW_END,
     FIXTURE_WINDOW_START,
     candidate_fixture,
+    conversion_outcome_fixture,
     golden_effectiveness_snapshot,
     record_fixture,
     review_fixture,
@@ -121,6 +123,60 @@ def test_postgres_effectiveness_empty_cohort_matches_in_memory_methodology(
     )
 
     assert actual == expected
+
+
+def test_postgres_effectiveness_matches_terminal_failed_outcome_methodology(
+    postgres_database_url: str,
+) -> None:
+    candidate = candidate_fixture(
+        "idea-postgres-failed-outcome-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("82"),
+        created_at=FIXTURE_WINDOW_START + timedelta(hours=1),
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    record_with_intent = record_fixture(candidate, conversion=True)
+    intent = record_with_intent.conversion_intents[0]
+    failed = conversion_outcome_fixture(
+        intent,
+        status=ConversionOutcomeStatus.FAILED,
+        version=1,
+        recorded_at=FIXTURE_WINDOW_START + timedelta(hours=4),
+    )
+    persisted = snapshot_fixture(replace(record_with_intent, conversion_outcomes=(failed,)))
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        repository.replace_snapshot(persisted)
+        summary = repository.opportunity_effectiveness_summary(
+            tenant_id="tenant-a",
+            window_start_utc=FIXTURE_WINDOW_START,
+            window_end_utc=FIXTURE_WINDOW_END,
+            evaluated_at_utc=FIXTURE_EVALUATED_AT,
+            max_opportunities=100,
+        )
+
+    actual = build_opportunity_effectiveness_snapshot_from_summary(
+        summary,
+        tenant_id="tenant-a",
+        window_start_utc=FIXTURE_WINDOW_START,
+        window_end_utc=FIXTURE_WINDOW_END,
+        evaluated_at_utc=FIXTURE_EVALUATED_AT,
+        max_opportunities=100,
+    )
+    expected = build_opportunity_effectiveness_snapshot(
+        persisted,
+        tenant_id="tenant-a",
+        window_start_utc=FIXTURE_WINDOW_START,
+        window_end_utc=FIXTURE_WINDOW_END,
+        evaluated_at_utc=FIXTURE_EVALUATED_AT,
+        max_opportunities=100,
+    )
+
+    assert actual == expected
+    assert actual.downstream_failed_rate.value == Decimal("1.000000")
+    assert actual.downstream_uncertain_rate.value == Decimal("0.000000")
 
 
 def test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_version(

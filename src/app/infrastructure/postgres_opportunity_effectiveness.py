@@ -141,6 +141,7 @@ def _family_effectiveness(
         "conversion_intent_count",
         "downstream_accepted_count",
         "downstream_rejected_count",
+        "downstream_failed_count",
         "downstream_uncertain_count",
     )
     for item in value:
@@ -529,6 +530,11 @@ family_effectiveness AS (
          WHERE outcome_candidate.family = family_cohort.family
            AND outcome.status = 'rejected')
             AS downstream_rejected_count,
+        (SELECT COUNT(*)::INTEGER FROM current_outcomes AS outcome
+         JOIN cohort AS outcome_candidate USING (candidate_id)
+         WHERE outcome_candidate.family = family_cohort.family
+           AND outcome.status = 'failed')
+            AS downstream_failed_count,
         (SELECT COUNT(*)::INTEGER FROM current_outcomes AS outcome
          JOIN cohort AS outcome_candidate USING (candidate_id)
          WHERE outcome_candidate.family = family_cohort.family

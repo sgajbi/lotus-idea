@@ -48,6 +48,7 @@ class OpportunityFamilyEffectiveness:
     conversion_intent_count: int
     downstream_accepted_count: int
     downstream_rejected_count: int
+    downstream_failed_count: int
     downstream_uncertain_count: int
     presentation_rate: EffectivenessRate | None
     review_rate: EffectivenessRate
@@ -59,6 +60,7 @@ class OpportunityFamilyEffectiveness:
     conversion_rate: EffectivenessRate
     downstream_accepted_rate: EffectivenessRate
     downstream_rejected_rate: EffectivenessRate
+    downstream_failed_rate: EffectivenessRate
     downstream_uncertain_rate: EffectivenessRate
 
     def to_payload(self) -> dict[str, Any]:
@@ -79,6 +81,7 @@ class OpportunityFamilyEffectiveness:
                 "conversionIntentCount": self.conversion_intent_count,
                 "downstreamAcceptedCount": self.downstream_accepted_count,
                 "downstreamRejectedCount": self.downstream_rejected_count,
+                "downstreamFailedCount": self.downstream_failed_count,
                 "downstreamUncertainCount": self.downstream_uncertain_count,
             },
             "rates": {
@@ -96,6 +99,7 @@ class OpportunityFamilyEffectiveness:
                 "conversion": self.conversion_rate.to_payload(),
                 "downstreamAccepted": self.downstream_accepted_rate.to_payload(),
                 "downstreamRejected": self.downstream_rejected_rate.to_payload(),
+                "downstreamFailed": self.downstream_failed_rate.to_payload(),
                 "downstreamUncertain": self.downstream_uncertain_rate.to_payload(),
             },
         }
@@ -125,6 +129,7 @@ def summary_counts(summary: OpportunityFamilyEffectivenessRepositorySummary) -> 
         summary.conversion_intent_count,
         summary.downstream_accepted_count,
         summary.downstream_rejected_count,
+        summary.downstream_failed_count,
         summary.downstream_uncertain_count,
     )
 
@@ -160,6 +165,7 @@ def _validate_family_totals(summary: OpportunityEffectivenessRepositorySummary) 
             + summary.current_downstream_outcome_counts.get("completed", 0)
         ),
         "downstream_rejected": summary.current_downstream_outcome_counts.get("rejected", 0),
+        "downstream_failed": summary.current_downstream_outcome_counts.get("failed", 0),
         "downstream_uncertain": (
             summary.current_downstream_outcome_counts.get("not_reported", 0)
             + summary.current_downstream_outcome_counts.get("requested", 0)
@@ -189,6 +195,9 @@ def _validate_family_totals(summary: OpportunityEffectivenessRepositorySummary) 
         ),
         "downstream_rejected": sum(
             item.downstream_rejected_count for item in summary.family_effectiveness
+        ),
+        "downstream_failed": sum(
+            item.downstream_failed_count for item in summary.family_effectiveness
         ),
         "downstream_uncertain": sum(
             item.downstream_uncertain_count for item in summary.family_effectiveness
@@ -252,6 +261,7 @@ def _validate_family_summary(
     if (
         item.downstream_accepted_count
         + item.downstream_rejected_count
+        + item.downstream_failed_count
         + item.downstream_uncertain_count
         != item.conversion_intent_count
     ):
@@ -281,6 +291,7 @@ def _build_family_effectiveness(
         conversion_intent_count=item.conversion_intent_count,
         downstream_accepted_count=item.downstream_accepted_count,
         downstream_rejected_count=item.downstream_rejected_count,
+        downstream_failed_count=item.downstream_failed_count,
         downstream_uncertain_count=item.downstream_uncertain_count,
         presentation_rate=(
             rate(item.presented_opportunity_count, item.generated_opportunity_count)
@@ -299,6 +310,7 @@ def _build_family_effectiveness(
         conversion_rate=rate(item.conversion_opportunity_count, item.approved_opportunity_count),
         downstream_accepted_rate=rate(item.downstream_accepted_count, item.conversion_intent_count),
         downstream_rejected_rate=rate(item.downstream_rejected_count, item.conversion_intent_count),
+        downstream_failed_rate=rate(item.downstream_failed_count, item.conversion_intent_count),
         downstream_uncertain_rate=rate(
             item.downstream_uncertain_count, item.conversion_intent_count
         ),
