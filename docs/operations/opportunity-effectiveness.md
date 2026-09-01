@@ -47,8 +47,8 @@ learning without claiming that Workbench and Gateway are certified.
 ## Effectiveness Read Model
 
 `GET /api/v1/operations/opportunity-effectiveness` returns schema
-`lotus-idea.opportunity-effectiveness.v2` under methodology policy
-`idea-opportunity-effectiveness-v4`.
+`lotus-idea.opportunity-effectiveness.v3` under methodology policy
+`idea-opportunity-effectiveness-v5`.
 
 The population is economic opportunities first generated in the half-open UTC
 window `[windowStartUtc, windowEndUtc)`. Later review, feedback, conversion,
@@ -66,7 +66,7 @@ behavior. Empty denominators return `null`. The response includes:
 - a per-family funnel that applies the same cohort, chronology, latest-review,
   current-outcome, and zero-denominator rules as the global snapshot;
 - review, approval, rejection, suppression, feedback, conversion, downstream
-  accepted/rejected/uncertain rates;
+  accepted/rejected/failed/uncertain rates;
 - detection-to-review and approval-to-conversion distributions; and
 - a deterministic snapshot digest and explicit privacy boundary.
 
@@ -97,7 +97,7 @@ denominator.
 Methodology v3 adds `familyEffectiveness`. Each represented opportunity family
 has generated, presented, reviewed, approved, rejected, suppressed,
 duplicate-suppressed, feedback, conversion, conversion-intent, and current
-downstream accepted/rejected/uncertain counts. Review and presentation divide
+downstream accepted/rejected/failed/uncertain counts. Review and presentation divide
 by generated opportunities; approval and rejection divide by reviewed
 opportunities; suppression and duplicate suppression divide by generated
 opportunities; feedback divides by reviewed opportunities; conversion divides
@@ -111,6 +111,14 @@ Presentation remains receipt-derived at family level. When the cohort contains
 no qualifying presentation receipt, every family's `presentedOpportunityCount`
 and `presentation` rate are `null`; unavailable evidence is never reported as
 measured zero activity.
+
+Methodology v5 makes downstream technical/business failure an explicit terminal
+category. `failed` is not relabeled as downstream rejection and is not grouped
+with uncertain outcomes. Aggregate and per-family accepted, rejected, failed,
+and uncertain counts are mutually exclusive and must reconcile exactly to the
+conversion-intent population. This prevents a valid source-owned terminal
+failure from invalidating the effectiveness snapshot while keeping timeout,
+missing response, and `requested` posture outside success.
 
 ## Ranked-Queue Quality
 

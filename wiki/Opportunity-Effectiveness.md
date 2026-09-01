@@ -56,6 +56,10 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   It reports judgment coverage beside Precision@K and graded NDCG@K, keeps
   partial presentation and unjudged work explicit, and requires 30 complete
   snapshots before support is `ready`.
+- Methodology v5 reports terminal downstream `failed` outcomes separately at
+  aggregate and family level. Accepted, rejected, failed, and uncertain
+  categories are mutually exclusive and reconcile to conversion intents;
+  technical failure is neither a business rejection nor an uncertain success.
 - Recall@K remains explicitly unavailable until a defensible complete relevant
   set exists. Equivalent-cohort ordering stability is reported separately and
   never changes production policy automatically.
