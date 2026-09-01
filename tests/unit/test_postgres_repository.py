@@ -19,6 +19,7 @@ from app.domain import (
     ConversionOutcomeStatus,
     ConversionTarget,
     CandidatePresentationReceipt,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     EvidenceFreshness,
     FeedbackCommand,
@@ -751,6 +752,14 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
         lease_attempt_id=claim.lease_attempt_id or "",
         posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         finalized_at_utc=EVALUATED_AT,
+        owner_receipt=DownstreamSubmissionOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_ADVISE,
+            owner_request_id="ipi_postgres_001",
+            owner_realization_id="ipr_postgres_001",
+            owner_work_id="iarw_postgres_001",
+            source_event_version=1,
+            source_evidence_fingerprint="sha256:downstream-submit-postgres",
+        ),
     )
     assert finalized.record is not None
     record = finalized.record
@@ -760,8 +769,15 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
     missing = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
         "missing-submission"
     )
+    snapshot_record = (
+        PostgresIdeaRepository(connection)
+        .snapshot()
+        .downstream_submission_records[claim.idempotency_key]
+    )
 
     assert reloaded == record
+    assert snapshot_record == record
+    assert snapshot_record.owner_receipt == record.owner_receipt
     assert missing is None
 
 

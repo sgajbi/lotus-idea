@@ -8,7 +8,12 @@ from types import ModuleType
 
 import pytest
 
-from scripts.postgres_disaster_recovery_fixture_data import feedback_command, review_command
+from app.domain import CandidateScorePolicyVersion
+from scripts.postgres_disaster_recovery_fixture_data import (
+    feedback_command,
+    high_cash_candidate,
+    review_command,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -52,6 +57,13 @@ def test_disaster_recovery_fixture_mutations_keep_scope_on_actor_context() -> No
     assert feedback.actor.client_ids == frozenset({"client-dr-fixture"})
     assert not hasattr(review, "access_scope")
     assert not hasattr(feedback, "access_scope")
+
+
+def test_disaster_recovery_fixture_uses_governed_score_policy_vocabulary() -> None:
+    candidate = high_cash_candidate()
+
+    assert candidate.score is not None
+    assert candidate.score.policy_version == CandidateScorePolicyVersion.HIGH_CASH.value
 
 
 def test_disaster_recovery_fixture_direct_entrypoint_loads() -> None:

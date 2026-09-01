@@ -26,7 +26,10 @@ def test_restore_resume_validator_binds_all_no_duplicate_decisions() -> None:
     for decision in (
         "CandidatePersistenceDecision.REPLAYED",
         "OutboxRecoveryDecision.REPLAYED",
+        "DownstreamSubmissionClaimDecision.REPLAYED",
         "DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED",
+        "DownstreamSubmissionResourceType.CONVERSION_INTENT",
+        "DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK",
         "DownstreamSubmissionMutationDecision.LEASE_CONFLICT",
     ):
         assert decision in source
