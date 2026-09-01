@@ -1042,6 +1042,16 @@ For durable reads, prefer bounded projections over whole repository snapshots:
    submission posture counts,
 7. advisor queue readiness aggregate projection.
 
+Candidate detail authorizes the persisted candidate before reading its related
+downstream submissions. Durable providers resolve conversion-intent and report
+evidence-pack submissions with one candidate-scoped query; process-local
+providers use their identity maps. The API projection may expose resource,
+target, source authority, posture, timestamps, attempt count, and explicit
+reconciliation posture. It must not expose idempotency keys, support
+references, actor/correlation/trace identifiers, failure diagnostics, leases,
+or submission audit history. Local submission posture is never a substitute
+for the source-owned current conversion outcome.
+
 When adding another read path or aggregate diagnostic, first ask whether the
 query needs a bounded projection contract. Avoid `snapshot()` for narrow
 PostgreSQL reads unless the provider is process-local or the flow is still

@@ -91,7 +91,13 @@ returning detail. `durableStorageBacked` follows the active repository provider.
 When the active durable provider is PostgreSQL, ordinary candidate-detail reads
 use an internal repository-side projection for the requested candidate and its
 related lifecycle, audit, review, feedback, conversion, report-evidence, and
-AI-lineage rows rather than hydrating a whole repository snapshot. This is
+AI-lineage rows rather than hydrating a whole repository snapshot. Candidate
+detail now also exposes adviser-safe local downstream-submission posture for
+its conversion intents and report evidence packs. Entitlement approval occurs
+before the single candidate-scoped posture query, and the response omits
+idempotency keys, support references, failure diagnostics, actors, traces,
+leases, and audit history. The posture is Idea-owned delivery evidence and does
+not replace source-owned `currentConversionOutcomes`. This is
 bounded design modularity inside `lotus-idea`; it is not a separate runtime
 service boundary or a supported-feature promotion.
 
