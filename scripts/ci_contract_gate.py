@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(Path(__file__).resolve().parent))
+sys.path.append(str(ROOT))
 from ci_contract_gate_expectations import (  # noqa: E402
     REQUIRED_LINT_TARGETS,
     REQUIRED_TEST_SELECTORS,
