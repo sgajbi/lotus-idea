@@ -48,6 +48,7 @@ from app.domain import (
 from app.domain.idempotency import IdempotencyDecision
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
+from app.domain.ranking_evaluation import RankingPresentationFact
 
 
 @dataclass(frozen=True)
@@ -167,6 +168,7 @@ class OpportunityEffectivenessRepositorySummary:
     downstream_submission_posture_counts: Mapping[str, int]
     detection_to_review_seconds: tuple[Decimal, ...]
     approval_to_conversion_seconds: tuple[Decimal, ...]
+    ranking_presentation_facts: tuple[RankingPresentationFact, ...] = ()
 
 
 class CandidateSnapshotRepository(Protocol):

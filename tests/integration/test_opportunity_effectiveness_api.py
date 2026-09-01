@@ -39,8 +39,8 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v1"
-    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v3"
+    assert payload["schemaVersion"] == "lotus-idea.opportunity-effectiveness.v2"
+    assert payload["methodologyPolicyVersion"] == "idea-opportunity-effectiveness-v4"
     assert payload["counts"]["generatedOpportunityCount"] == 3
     assert payload["counts"]["reviewedOpportunityCount"] == 3
     assert payload["rates"]["approval"] == {
@@ -56,6 +56,12 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
         "topRankedAcceptedOpportunityCount": None,
         "presentationRate": None,
         "topRankedAcceptanceRate": None,
+        "rankingQuality": {
+            "policyVersion": "idea-ranking-evaluation-v1",
+            "minimumReadySnapshotCount": 30,
+            "recallStatus": "unavailable_incomplete_relevant_set",
+            "cutoffs": [],
+        },
     }
     assert payload["privacyBoundary"]["containsRawCandidateIdentifier"] is False
     assert payload["certificationStatus"] == "not_certified"
@@ -212,6 +218,12 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
             "denominator": 2,
             "value": "0.500000",
             "zeroDenominatorBehavior": "null",
+        },
+        "rankingQuality": {
+            "policyVersion": "idea-ranking-evaluation-v1",
+            "minimumReadySnapshotCount": 30,
+            "recallStatus": "unavailable_incomplete_relevant_set",
+            "cutoffs": [],
         },
     }
     assert response.json()["familyEffectiveness"][0]["counts"]["presentedOpportunityCount"] == 2

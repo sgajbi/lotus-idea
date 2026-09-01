@@ -12,6 +12,7 @@ from app.domain.presentation_receipts import MAX_PRESENTED_CANDIDATE_COUNT
 RANKING_EVALUATION_POLICY_VERSION = "idea-ranking-evaluation-v1"
 APPROVED_RANKING_CUTOFFS = (1, 3, 5, 10)
 MINIMUM_READY_SNAPSHOT_COUNT = 30
+MAX_RANKING_PRESENTATION_FACTS = 10_000
 _RATE_QUANTUM = Decimal("0.000001")
 
 
@@ -457,6 +458,7 @@ def _is_integer(value: object) -> bool:
 __all__ = [
     "APPROVED_RANKING_CUTOFFS",
     "MINIMUM_READY_SNAPSHOT_COUNT",
+    "MAX_RANKING_PRESENTATION_FACTS",
     "RANKING_EVALUATION_POLICY_VERSION",
     "RankedOpportunityJudgment",
     "RankingCutoffAggregate",

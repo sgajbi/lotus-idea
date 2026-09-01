@@ -14,6 +14,8 @@ from app.application.opportunity_effectiveness import (
 )
 from app.domain import (
     CandidatePresentationReceipt,
+    FeedbackOutcome,
+    FeedbackReason,
     IdeaLifecycleStatus,
     OpportunityFamily,
     ReviewAction,
@@ -192,3 +194,99 @@ def test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_vers
     assert actual.top_ranked_accepted_opportunity_count == 1
     assert actual.top_ranked_acceptance_rate is not None
     assert actual.top_ranked_acceptance_rate.value == Decimal("1.000000")
+
+
+def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projection(
+    postgres_database_url: str,
+) -> None:
+    candidates = tuple(
+        candidate_fixture(
+            f"idea-postgres-ranked-{index}",
+            family=OpportunityFamily.HIGH_CASH,
+            score=Decimal(95 - index),
+            created_at=FIXTURE_WINDOW_START + timedelta(hours=1),
+            lifecycle_status=(
+                IdeaLifecycleStatus.APPROVED if index == 1 else IdeaLifecycleStatus.GENERATED
+            ),
+            review_posture=(
+                ReviewPosture.APPROVED_FOR_CONVERSION
+                if index == 1
+                else ReviewPosture.ADVISOR_REVIEW_REQUIRED
+            ),
+        )
+        for index in range(1, 4)
+    )
+    records = (
+        record_fixture(
+            candidates[0],
+            review=review_fixture(
+                candidates[0].candidate_id,
+                action=ReviewAction.APPROVE_FOR_CONVERSION,
+                decided_at=FIXTURE_WINDOW_START + timedelta(hours=2, minutes=30),
+            ),
+            conversion=True,
+        ),
+        record_fixture(
+            candidates[1],
+            feedback_reason=FeedbackReason.RELEVANT,
+            feedback_outcome=FeedbackOutcome.USEFUL,
+        ),
+        record_fixture(
+            candidates[2],
+            feedback_reason=FeedbackReason.NOT_RELEVANT,
+        ),
+    )
+    presented_at = FIXTURE_WINDOW_START + timedelta(hours=2)
+    receipts = tuple(
+        CandidatePresentationReceipt(
+            receipt_id=f"receipt-postgres-ranked-{rank}",
+            candidate_id=candidate.candidate_id,
+            tenant_id="tenant-a",
+            presented_at_utc=presented_at,
+            rank_at_presentation=rank,
+            visible_candidate_count=3,
+            queue_snapshot_digest=f"sha256:{'8' * 64}",
+            queue_policy_version="idea-review-queue-v1",
+            ranking_policy_version="idea-score-v2",
+            candidate_material_version=candidate.identity.material_version,
+            candidate_evidence_version=candidate.identity.evidence_version,
+        )
+        for rank, candidate in enumerate(candidates, start=1)
+    )
+    persisted = replace(
+        snapshot_fixture(*records),
+        presentation_receipts={receipt.receipt_id: receipt for receipt in receipts},
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        repository.replace_snapshot(persisted)
+        summary = repository.opportunity_effectiveness_summary(
+            tenant_id="tenant-a",
+            window_start_utc=FIXTURE_WINDOW_START,
+            window_end_utc=FIXTURE_WINDOW_END,
+            evaluated_at_utc=FIXTURE_EVALUATED_AT,
+            max_opportunities=100,
+        )
+
+    actual = build_opportunity_effectiveness_snapshot_from_summary(
+        summary,
+        tenant_id="tenant-a",
+        window_start_utc=FIXTURE_WINDOW_START,
+        window_end_utc=FIXTURE_WINDOW_END,
+        evaluated_at_utc=FIXTURE_EVALUATED_AT,
+        max_opportunities=100,
+    )
+    expected = build_opportunity_effectiveness_snapshot(
+        persisted,
+        tenant_id="tenant-a",
+        window_start_utc=FIXTURE_WINDOW_START,
+        window_end_utc=FIXTURE_WINDOW_END,
+        evaluated_at_utc=FIXTURE_EVALUATED_AT,
+        max_opportunities=100,
+    )
+
+    assert actual == expected
+    cutoff_three = next(item for item in actual.ranking_quality if item.cutoff == 3)
+    assert cutoff_three.mean_precision_at_k == Decimal("0.666667")
+    assert cutoff_three.mean_ndcg_at_k == Decimal("1.000000")

@@ -14,7 +14,7 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionPosture,
 )
-from app.domain.feedback_taxonomy import FeedbackReason
+from app.domain.feedback_taxonomy import FeedbackOutcome, FeedbackReason
 from app.domain.ideas import (
     CandidateChangeReason,
     ConversionOutcomeStatus,
@@ -31,6 +31,17 @@ from app.domain.review_governance import (
     ReviewAction,
 )
 from app.domain.review_queue import priority_bucket_for_score
+from app.domain.ranking_evaluation import (
+    MINIMUM_READY_SNAPSHOT_COUNT,
+    MAX_RANKING_PRESENTATION_FACTS,
+    RANKING_EVALUATION_POLICY_VERSION,
+    RankedOpportunityJudgment,
+    RankingCutoffAggregate,
+    RankingPresentationFact,
+    RankingRelevanceGrade,
+    aggregate_ranking_evaluations,
+    evaluate_ranking_presentations,
+)
 from app.application.opportunity_effectiveness_family import (
     EffectivenessRate,
     FamilyEffectivenessDataError,
@@ -46,8 +57,8 @@ from app.ports.idea_repository import (
 )
 
 
-OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v3"
-OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v1"
+OPPORTUNITY_EFFECTIVENESS_POLICY_VERSION = "idea-opportunity-effectiveness-v4"
+OPPORTUNITY_EFFECTIVENESS_SCHEMA_VERSION = "lotus-idea.opportunity-effectiveness.v2"
 MAX_EFFECTIVENESS_OPPORTUNITIES = 10_000
 
 
@@ -128,6 +139,7 @@ class OpportunityEffectivenessSnapshot:
     top_ranked_accepted_opportunity_count: int | None
     presentation_rate: EffectivenessRate | None
     top_ranked_acceptance_rate: EffectivenessRate | None
+    ranking_quality: tuple[RankingCutoffAggregate, ...]
     family_effectiveness: tuple[OpportunityFamilyEffectiveness, ...]
     family_counts: tuple[EffectivenessDimensionCount, ...]
     score_band_counts: tuple[EffectivenessDimensionCount, ...]
@@ -278,6 +290,12 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         )
     )
     presentation = _build_presentation_effectiveness(summary)
+    try:
+        ranking_quality = aggregate_ranking_evaluations(
+            evaluate_ranking_presentations(summary.ranking_presentation_facts)
+        )
+    except ValueError as exc:
+        raise OpportunityEffectivenessDataError(str(exc)) from exc
     provisional = OpportunityEffectivenessSnapshot(
         window_start_utc=window_start_utc,
         window_end_utc=window_end_utc,
@@ -303,6 +321,7 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         top_ranked_accepted_opportunity_count=(presentation.top_ranked_accepted_opportunity_count),
         presentation_rate=presentation.presentation_rate,
         top_ranked_acceptance_rate=presentation.top_ranked_acceptance_rate,
+        ranking_quality=ranking_quality,
         family_effectiveness=build_family_effectiveness(
             summary.family_effectiveness,
             presentation_available=presentation.measurement_status
@@ -515,6 +534,11 @@ def _in_memory_repository_summary(
         downstream_submission_posture_counts=downstream_postures,
         detection_to_review_seconds=measures.detection_to_review_seconds,
         approval_to_conversion_seconds=measures.approval_to_conversion_seconds,
+        ranking_presentation_facts=_ranking_presentation_facts(
+            snapshot,
+            records=records,
+            evaluated_at_utc=evaluated_at_utc,
+        ),
     )
 
 
@@ -876,6 +900,154 @@ def _presentation_measures(
     )
 
 
+def _ranking_presentation_facts(
+    snapshot: IdeaRepositorySnapshot,
+    *,
+    records: tuple[CandidatePersistenceRecord, ...],
+    evaluated_at_utc: datetime,
+) -> tuple[RankingPresentationFact, ...]:
+    records_by_candidate = {record.candidate.candidate_id: record for record in records}
+    facts: list[RankingPresentationFact] = []
+    for receipt in sorted(
+        snapshot.presentation_receipts.values(),
+        key=lambda item: (item.queue_snapshot_digest, item.rank_at_presentation, item.receipt_id),
+    ):
+        record = records_by_candidate.get(receipt.candidate_id)
+        if record is None or receipt.presented_at_utc > evaluated_at_utc:
+            continue
+        candidate = record.candidate
+        if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
+            raise OpportunityEffectivenessDataError(
+                "presentation receipt tenant does not match its cohort candidate"
+            )
+        evidence_hash = _presentation_evidence_hash(record, receipt)
+        facts.append(
+            RankingPresentationFact(
+                queue_snapshot_digest=receipt.queue_snapshot_digest,
+                tenant_id=receipt.tenant_id,
+                presented_at_utc=receipt.presented_at_utc,
+                visible_opportunity_count=receipt.visible_candidate_count,
+                queue_policy_version=receipt.queue_policy_version,
+                ranking_policy_version=receipt.ranking_policy_version,
+                surface=receipt.surface,
+                producer=receipt.producer,
+                judgment=RankedOpportunityJudgment(
+                    rank=receipt.rank_at_presentation,
+                    relevance_grade=_ranking_relevance_grade(
+                        record,
+                        receipt=receipt,
+                        evidence_hash=evidence_hash,
+                        evaluated_at_utc=evaluated_at_utc,
+                    ),
+                ),
+            )
+        )
+        if len(facts) > MAX_RANKING_PRESENTATION_FACTS:
+            raise OpportunityEffectivenessBoundExceeded(
+                "opportunity effectiveness exceeds the "
+                f"{MAX_RANKING_PRESENTATION_FACTS} ranking presentation fact bound"
+            )
+    return tuple(facts)
+
+
+def _ranking_relevance_grade(
+    record: CandidatePersistenceRecord,
+    *,
+    receipt: CandidatePresentationReceipt,
+    evidence_hash: str,
+    evaluated_at_utc: datetime,
+) -> RankingRelevanceGrade | None:
+    valid_until = _presentation_version_valid_until(record, receipt)
+
+    def matches_version(*, occurred_at_utc: datetime, content_hash: str) -> bool:
+        return (
+            content_hash == evidence_hash
+            and receipt.presented_at_utc <= occurred_at_utc <= evaluated_at_utc
+            and (valid_until is None or occurred_at_utc < valid_until)
+        )
+
+    matching_intents = tuple(
+        intent
+        for intent in record.conversion_intents
+        if matches_version(
+            occurred_at_utc=intent.intent.requested_at_utc,
+            content_hash=intent.evidence_content_hash,
+        )
+    )
+    matching_intent_ids = {intent.intent.conversion_intent_id for intent in matching_intents}
+    for intent_id in matching_intent_ids:
+        outcomes = tuple(
+            outcome
+            for outcome in record.conversion_outcomes
+            if outcome.conversion_intent_id == intent_id
+            and receipt.presented_at_utc <= outcome.outcome.recorded_at_utc <= evaluated_at_utc
+        )
+        current = current_conversion_outcome(outcomes)
+        if current is not None and current.outcome.status in {
+            ConversionOutcomeStatus.ACCEPTED,
+            ConversionOutcomeStatus.COMPLETED,
+        }:
+            return RankingRelevanceGrade.DOWNSTREAM_ACCEPTED
+
+    human_judgments: list[tuple[datetime, RankingRelevanceGrade]] = []
+    for decision in record.review_decisions:
+        if not matches_version(
+            occurred_at_utc=decision.decided_at_utc,
+            content_hash=decision.evidence_content_hash,
+        ):
+            continue
+        grade = {
+            ReviewAction.APPROVE_FOR_CONVERSION: RankingRelevanceGrade.APPROVED_FOR_CONVERSION,
+            ReviewAction.REJECT: RankingRelevanceGrade.NOT_USEFUL,
+            ReviewAction.SUPPRESS: RankingRelevanceGrade.NOT_USEFUL,
+        }.get(decision.action)
+        if grade is not None:
+            human_judgments.append((decision.decided_at_utc, grade))
+    for event in record.feedback_events:
+        if not matches_version(
+            occurred_at_utc=event.feedback.recorded_at_utc,
+            content_hash=event.evidence_content_hash,
+        ):
+            continue
+        grade = (
+            RankingRelevanceGrade.USEFUL
+            if event.feedback.outcome is FeedbackOutcome.USEFUL
+            else RankingRelevanceGrade.NOT_USEFUL
+        )
+        human_judgments.append((event.feedback.recorded_at_utc, grade))
+    if not human_judgments:
+        return None
+    latest_at = max(occurred_at for occurred_at, _ in human_judgments)
+    latest_grades = {grade for occurred_at, grade in human_judgments if occurred_at == latest_at}
+    if len(latest_grades) != 1:
+        raise OpportunityEffectivenessDataError(
+            "ranking relevance contains conflicting human judgments at the same instant"
+        )
+    return next(iter(latest_grades))
+
+
+def _presentation_version_valid_until(
+    record: CandidatePersistenceRecord,
+    receipt: CandidatePresentationReceipt,
+) -> datetime | None:
+    next_version_times = [
+        entry.recorded_at_utc
+        for entry in record.version_history
+        if entry.recorded_at_utc > receipt.presented_at_utc
+        and (
+            entry.material_version != receipt.candidate_material_version
+            or entry.evidence_version != receipt.candidate_evidence_version
+        )
+    ]
+    candidate = record.candidate
+    if candidate.updated_at_utc > receipt.presented_at_utc and (
+        candidate.identity.material_version != receipt.candidate_material_version
+        or candidate.identity.evidence_version != receipt.candidate_evidence_version
+    ):
+        next_version_times.append(candidate.updated_at_utc)
+    return min(next_version_times) if next_version_times else None
+
+
 def _presentation_evidence_hash(
     record: CandidatePersistenceRecord,
     receipt: CandidatePresentationReceipt,
@@ -1031,6 +1203,32 @@ def _snapshot_payload_without_digest(
                 if snapshot.top_ranked_acceptance_rate is not None
                 else None
             ),
+            "rankingQuality": {
+                "policyVersion": RANKING_EVALUATION_POLICY_VERSION,
+                "minimumReadySnapshotCount": MINIMUM_READY_SNAPSHOT_COUNT,
+                "recallStatus": "unavailable_incomplete_relevant_set",
+                "cutoffs": [
+                    {
+                        "cutoff": item.cutoff,
+                        "snapshotCount": item.snapshot_count,
+                        "readySnapshotCount": item.ready_snapshot_count,
+                        "incompletePresentationSnapshotCount": (
+                            item.incomplete_presentation_snapshot_count
+                        ),
+                        "incompleteJudgmentSnapshotCount": (
+                            item.incomplete_judgment_snapshot_count
+                        ),
+                        "judgedOpportunityCount": item.judged_opportunity_count,
+                        "evaluatedOpportunityCount": item.evaluated_opportunity_count,
+                        "judgmentCoverage": _decimal_payload(item.judgment_coverage),
+                        "supportStatus": item.support_status.value,
+                        "meanPrecisionAtK": _decimal_payload(item.mean_precision_at_k),
+                        "meanNdcgAtK": _decimal_payload(item.mean_ndcg_at_k),
+                        "recallAtK": None,
+                    }
+                    for item in snapshot.ranking_quality
+                ],
+            },
         },
         "dimensions": {
             "opportunityFamily": [item.to_payload() for item in snapshot.family_counts],

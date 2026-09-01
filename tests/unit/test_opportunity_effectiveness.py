@@ -283,6 +283,7 @@ def test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_
         receipt_id="receipt-presented-001-b",
         rank=2,
         presented_at=WINDOW_START + timedelta(hours=2, minutes=30),
+        snapshot_digest_character="8",
     )
 
     projection = build_opportunity_effectiveness_snapshot(
@@ -324,6 +325,118 @@ def test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_
         "value": "1.000000",
         "zeroDenominatorBehavior": "null",
     }
+
+
+def test_effectiveness_snapshot_measures_full_ranked_queue_from_governed_outcomes() -> None:
+    candidates = tuple(
+        _candidate(
+            f"idea-ranked-{index}",
+            family=OpportunityFamily.HIGH_CASH,
+            score=Decimal(95 - index),
+            created_at=WINDOW_START + timedelta(hours=1),
+            lifecycle_status=(
+                IdeaLifecycleStatus.APPROVED if index == 1 else IdeaLifecycleStatus.GENERATED
+            ),
+            review_posture=(
+                ReviewPosture.APPROVED_FOR_CONVERSION
+                if index == 1
+                else ReviewPosture.ADVISOR_REVIEW_REQUIRED
+            ),
+        )
+        for index in range(1, 4)
+    )
+    records = (
+        _record(
+            candidates[0],
+            review=_review(
+                candidates[0].candidate_id,
+                action=ReviewAction.APPROVE_FOR_CONVERSION,
+                decided_at=WINDOW_START + timedelta(hours=2, minutes=30),
+            ),
+            conversion=True,
+        ),
+        _record(
+            candidates[1],
+            feedback_reason=FeedbackReason.RELEVANT,
+            feedback_outcome=FeedbackOutcome.USEFUL,
+        ),
+        _record(
+            candidates[2],
+            feedback_reason=FeedbackReason.NOT_RELEVANT,
+        ),
+    )
+    presented_at = WINDOW_START + timedelta(hours=2)
+    receipts = tuple(
+        _receipt(
+            candidate,
+            receipt_id=f"receipt-ranked-{rank}",
+            rank=rank,
+            presented_at=presented_at,
+        )
+        for rank, candidate in enumerate(candidates, start=1)
+    )
+
+    projection = _build(_snapshot(*records, receipts=receipts))
+
+    cutoff_three = next(item for item in projection.ranking_quality if item.cutoff == 3)
+    assert cutoff_three.ready_snapshot_count == 1
+    assert cutoff_three.judgment_coverage == Decimal("1.000000")
+    assert cutoff_three.mean_precision_at_k == Decimal("0.666667")
+    assert cutoff_three.mean_ndcg_at_k == Decimal("1.000000")
+    assert cutoff_three.support_status.value == "insufficient_support"
+
+
+def test_effectiveness_snapshot_does_not_apply_later_version_feedback_to_old_rank() -> None:
+    original = _candidate(
+        "idea-ranking-version-fence-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("91"),
+        created_at=WINDOW_START + timedelta(hours=1),
+    )
+    refreshed = replace(
+        original,
+        identity=replace(original.identity, evidence_version=2),
+        updated_at_utc=WINDOW_START + timedelta(hours=3),
+    )
+    old_version = CandidateVersionHistoryEntry(
+        candidate_id=original.candidate_id,
+        business_identity_id=original.identity.business_identity_id,
+        material_fingerprint=original.identity.material_fingerprint,
+        material_version=1,
+        evidence_version=1,
+        change_reason=CandidateChangeReason.INITIAL_DETECTION,
+        source_lifecycle_status=None,
+        resulting_lifecycle_status=IdeaLifecycleStatus.GENERATED,
+        supersedes_material_version=None,
+        evidence_hash=original.evidence_packet.lineage_ref.content_hash,
+        recorded_at_utc=original.created_at_utc,
+    )
+    record = replace(
+        _record(
+            refreshed,
+            feedback_reason=FeedbackReason.RELEVANT,
+            feedback_outcome=FeedbackOutcome.USEFUL,
+        ),
+        version_history=(old_version,),
+    )
+    receipt = replace(
+        _receipt(
+            refreshed,
+            receipt_id="receipt-ranking-version-fence-001",
+            rank=1,
+            presented_at=WINDOW_START + timedelta(hours=2),
+        ),
+        visible_candidate_count=1,
+        candidate_evidence_version=1,
+    )
+
+    projection = _build(_snapshot(record, receipts=(receipt,)))
+
+    cutoff_one = next(item for item in projection.ranking_quality if item.cutoff == 1)
+    assert cutoff_one.ready_snapshot_count == 0
+    assert cutoff_one.incomplete_judgment_snapshot_count == 1
+    assert cutoff_one.judgment_coverage == Decimal("0.000000")
+    assert cutoff_one.mean_precision_at_k is None
 
 
 def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_approval() -> None:
@@ -1051,6 +1164,7 @@ def _receipt(
     receipt_id: str,
     rank: int,
     presented_at: datetime,
+    snapshot_digest_character: str = "9",
 ) -> CandidatePresentationReceipt:
     scope = candidate.access_scope
     assert scope is not None
@@ -1061,7 +1175,7 @@ def _receipt(
         presented_at_utc=presented_at,
         rank_at_presentation=rank,
         visible_candidate_count=3,
-        queue_snapshot_digest=f"sha256:{'9' * 64}",
+        queue_snapshot_digest=f"sha256:{snapshot_digest_character * 64}",
         queue_policy_version="idea-queue-v1",
         ranking_policy_version="idea-rank-v1",
         candidate_material_version=candidate.identity.material_version,

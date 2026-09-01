@@ -6,6 +6,12 @@ from typing import Any, Mapping
 
 from app.infrastructure.postgres_codecs import read_row_value
 from app.infrastructure.postgres_protocols import PostgresConnection
+from app.domain.ranking_evaluation import (
+    MAX_RANKING_PRESENTATION_FACTS,
+    RankedOpportunityJudgment,
+    RankingPresentationFact,
+    RankingRelevanceGrade,
+)
 from app.ports.idea_repository import (
     OpportunityEffectivenessRepositorySummary,
     OpportunityFamilyEffectivenessRepositorySummary,
@@ -32,6 +38,7 @@ def load_opportunity_effectiveness_summary(
                 window_end_utc,
                 evaluated_at_utc,
                 max_opportunities + 1,
+                MAX_RANKING_PRESENTATION_FACTS + 1,
             ),
         )
         rows = cursor.fetchall()
@@ -47,6 +54,12 @@ def load_opportunity_effectiveness_summary(
     invalid_presentation_fact_count = _integer(row, "invalid_presentation_fact_count")
     if invalid_presentation_fact_count:
         raise RuntimeError("opportunity effectiveness contains invalid presentation evidence")
+    invalid_ranking_judgment_count = _integer(row, "invalid_ranking_judgment_count")
+    if invalid_ranking_judgment_count:
+        raise RuntimeError("opportunity effectiveness contains conflicting ranking judgments")
+    ranking_presentation_fact_count = _integer(row, "ranking_presentation_fact_count")
+    if ranking_presentation_fact_count > MAX_RANKING_PRESENTATION_FACTS:
+        raise RuntimeError("opportunity effectiveness exceeds the ranking presentation fact bound")
     return OpportunityEffectivenessRepositorySummary(
         generated_opportunity_count=_integer(row, "generated_opportunity_count"),
         reviewed_opportunity_count=_integer(row, "reviewed_opportunity_count"),
@@ -83,6 +96,7 @@ def load_opportunity_effectiveness_summary(
         downstream_submission_posture_counts=_counts(row, "downstream_submission_posture_counts"),
         detection_to_review_seconds=_decimals(row, "detection_to_review_seconds"),
         approval_to_conversion_seconds=_decimals(row, "approval_to_conversion_seconds"),
+        ranking_presentation_facts=_ranking_presentation_facts(row),
     )
 
 
@@ -152,6 +166,53 @@ def _decimals(row: Any, key: str) -> tuple[Decimal, ...]:
     return tuple(item if isinstance(item, Decimal) else Decimal(str(item)) for item in value)
 
 
+def _ranking_presentation_facts(row: Any) -> tuple[RankingPresentationFact, ...]:
+    value = read_row_value(row, "ranking_presentation_facts")
+    if not isinstance(value, (list, tuple)):
+        raise TypeError("ranking_presentation_facts must be an array")
+    facts: list[RankingPresentationFact] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise TypeError("ranking_presentation_facts entries must be mappings")
+        grade = item.get("relevance_grade")
+        facts.append(
+            RankingPresentationFact(
+                queue_snapshot_digest=str(item["queue_snapshot_digest"]),
+                tenant_id=str(item["tenant_id"]),
+                presented_at_utc=_timestamp(item["presented_at_utc"]),
+                visible_opportunity_count=_mapping_integer(item, "visible_opportunity_count"),
+                queue_policy_version=str(item["queue_policy_version"]),
+                ranking_policy_version=str(item["ranking_policy_version"]),
+                surface=str(item["surface"]),
+                producer=str(item["producer"]),
+                judgment=RankedOpportunityJudgment(
+                    rank=_mapping_integer(item, "rank"),
+                    relevance_grade=(
+                        RankingRelevanceGrade(_mapping_integer(item, "relevance_grade"))
+                        if grade is not None
+                        else None
+                    ),
+                ),
+            )
+        )
+    return tuple(facts)
+
+
+def _mapping_integer(item: Mapping[str, Any], key: str) -> int:
+    value = item.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"ranking presentation {key} must be an integer")
+    return value
+
+
+def _timestamp(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if not isinstance(value, str):
+        raise TypeError("ranking presentation timestamp must be an ISO-8601 string")
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
 _SUMMARY_QUERY = """
 /* lotus-idea opportunity-effectiveness-summary-v1 */
 WITH parameters AS (
@@ -160,7 +221,8 @@ WITH parameters AS (
         %s::TIMESTAMPTZ AS window_start_utc,
         %s::TIMESTAMPTZ AS window_end_utc,
         %s::TIMESTAMPTZ AS evaluated_at_utc,
-        %s::INTEGER AS bounded_limit
+        %s::INTEGER AS bounded_limit,
+        %s::INTEGER AS ranking_fact_limit
 ),
 cohort AS MATERIALIZED (
     SELECT candidate.*
@@ -252,12 +314,39 @@ presentation_receipts AS (
     SELECT DISTINCT
         receipt.receipt_id,
         receipt.candidate_id,
+        receipt.tenant_id,
         receipt.presented_at_utc,
         receipt.rank_at_presentation,
+        receipt.visible_candidate_count,
+        receipt.queue_snapshot_digest,
+        receipt.queue_policy_version,
+        receipt.ranking_policy_version,
+        receipt.surface,
+        receipt.producer,
         COALESCE(
             history.evidence_hash,
             cohort.candidate_json->'evidence_packet'->'lineage_ref'->>'content_hash'
-        ) AS evidence_hash
+        ) AS evidence_hash,
+        (
+            SELECT MIN(version_change.changed_at_utc)
+            FROM (
+                SELECT later_history.recorded_at_utc AS changed_at_utc
+                FROM idea_candidate_version_history AS later_history
+                WHERE later_history.candidate_id = receipt.candidate_id
+                  AND later_history.recorded_at_utc > receipt.presented_at_utc
+                  AND (
+                      later_history.material_version <> receipt.candidate_material_version
+                      OR later_history.evidence_version <> receipt.candidate_evidence_version
+                  )
+                UNION ALL
+                SELECT cohort.updated_at_utc
+                WHERE cohort.updated_at_utc > receipt.presented_at_utc
+                  AND (
+                      cohort.material_version <> receipt.candidate_material_version
+                      OR cohort.evidence_version <> receipt.candidate_evidence_version
+                  )
+            ) AS version_change
+        ) AS valid_until_utc
     FROM idea_candidate_presentation_receipt AS receipt
     JOIN cohort USING (candidate_id)
     LEFT JOIN idea_candidate_version_history AS history
@@ -268,6 +357,60 @@ presentation_receipts AS (
     CROSS JOIN parameters
     WHERE receipt.tenant_id = parameters.tenant_id
       AND receipt.presented_at_utc <= parameters.evaluated_at_utc
+    ORDER BY receipt.presented_at_utc, receipt.queue_snapshot_digest,
+             receipt.rank_at_presentation, receipt.receipt_id
+    LIMIT (SELECT ranking_fact_limit FROM parameters)
+),
+ranking_human_judgments AS (
+    SELECT
+        receipt.receipt_id,
+        review.decided_at_utc AS occurred_at_utc,
+        CASE review.action
+            WHEN 'approve_for_conversion' THEN 2
+            WHEN 'reject' THEN 0
+            WHEN 'suppress' THEN 0
+        END::INTEGER AS relevance_grade
+    FROM presentation_receipts AS receipt
+    JOIN idea_review_decision AS review USING (candidate_id)
+    CROSS JOIN parameters
+    WHERE review.action IN ('approve_for_conversion', 'reject', 'suppress')
+      AND review.decision_json->>'evidence_content_hash' = receipt.evidence_hash
+      AND review.decided_at_utc >= receipt.presented_at_utc
+      AND review.decided_at_utc <= parameters.evaluated_at_utc
+      AND (receipt.valid_until_utc IS NULL OR review.decided_at_utc < receipt.valid_until_utc)
+    UNION ALL
+    SELECT
+        receipt.receipt_id,
+        feedback.recorded_at_utc,
+        CASE feedback.feedback_outcome
+            WHEN 'useful' THEN 1
+            WHEN 'not_useful' THEN 0
+        END::INTEGER AS relevance_grade
+    FROM presentation_receipts AS receipt
+    JOIN idea_feedback_event AS feedback USING (candidate_id)
+    CROSS JOIN parameters
+    WHERE feedback.feedback_json->>'evidence_content_hash' = receipt.evidence_hash
+      AND feedback.recorded_at_utc >= receipt.presented_at_utc
+      AND feedback.recorded_at_utc <= parameters.evaluated_at_utc
+      AND (receipt.valid_until_utc IS NULL OR feedback.recorded_at_utc < receipt.valid_until_utc)
+),
+ranking_latest_human_time AS (
+    SELECT receipt_id, MAX(occurred_at_utc) AS occurred_at_utc
+    FROM ranking_human_judgments
+    GROUP BY receipt_id
+),
+ranking_latest_human AS (
+    SELECT judgment.receipt_id, MAX(judgment.relevance_grade)::INTEGER AS relevance_grade
+    FROM ranking_human_judgments AS judgment
+    JOIN ranking_latest_human_time USING (receipt_id, occurred_at_utc)
+    GROUP BY judgment.receipt_id
+),
+invalid_ranking_judgments AS (
+    SELECT judgment.receipt_id
+    FROM ranking_human_judgments AS judgment
+    JOIN ranking_latest_human_time USING (receipt_id, occurred_at_utc)
+    GROUP BY judgment.receipt_id
+    HAVING COUNT(DISTINCT judgment.relevance_grade) > 1
 ),
 invalid_presentation_facts AS (
     SELECT receipt.receipt_id
@@ -501,12 +644,53 @@ SELECT
     ) FROM first_approvals JOIN first_intents USING (candidate_id)
       WHERE first_intents.requested_at_utc >= first_approvals.decided_at_utc), ARRAY[]::NUMERIC[])
         AS approval_to_conversion_seconds,
+    COALESCE((
+        SELECT jsonb_agg(
+            jsonb_build_object(
+                'queue_snapshot_digest', receipt.queue_snapshot_digest,
+                'tenant_id', receipt.tenant_id,
+                'presented_at_utc', receipt.presented_at_utc,
+                'visible_opportunity_count', receipt.visible_candidate_count,
+                'queue_policy_version', receipt.queue_policy_version,
+                'ranking_policy_version', receipt.ranking_policy_version,
+                'surface', receipt.surface,
+                'producer', receipt.producer,
+                'rank', receipt.rank_at_presentation,
+                'relevance_grade', CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM intents AS intent
+                        JOIN current_outcomes AS outcome USING (conversion_intent_id)
+                        WHERE intent.candidate_id = receipt.candidate_id
+                          AND intent.intent_json->>'evidence_content_hash' = receipt.evidence_hash
+                          AND intent.requested_at_utc >= receipt.presented_at_utc
+                          AND intent.requested_at_utc <= parameters.evaluated_at_utc
+                          AND (
+                              receipt.valid_until_utc IS NULL
+                              OR intent.requested_at_utc < receipt.valid_until_utc
+                          )
+                          AND outcome.status IN ('accepted', 'completed')
+                    ) THEN 3
+                    ELSE ranking_latest_human.relevance_grade
+                END
+            )
+            ORDER BY receipt.queue_snapshot_digest, receipt.rank_at_presentation,
+                     receipt.receipt_id
+        )
+        FROM presentation_receipts AS receipt
+        LEFT JOIN ranking_latest_human USING (receipt_id)
+        CROSS JOIN parameters
+    ), '[]'::JSONB) AS ranking_presentation_facts,
     (SELECT COUNT(*)::INTEGER FROM invalid_temporal_facts) AS invalid_temporal_fact_count,
     (SELECT COUNT(DISTINCT quarantine.conversion_intent_id)::INTEGER
      FROM idea_conversion_outcome_quarantine AS quarantine
      JOIN intents USING (conversion_intent_id)) AS invalid_outcome_history_count,
     (SELECT COUNT(*)::INTEGER FROM invalid_presentation_facts)
-        AS invalid_presentation_fact_count
+        AS invalid_presentation_fact_count,
+    (SELECT COUNT(*)::INTEGER FROM invalid_ranking_judgments)
+        AS invalid_ranking_judgment_count,
+    (SELECT COUNT(*)::INTEGER FROM presentation_receipts)
+        AS ranking_presentation_fact_count
 """
 
 
