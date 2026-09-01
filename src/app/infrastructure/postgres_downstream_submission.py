@@ -13,6 +13,7 @@ from app.domain import (
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -31,7 +32,7 @@ DOWNSTREAM_SUBMISSION_COLUMNS = """
 idempotency_key, request_fingerprint, resource_type, resource_id, target,
 source_authority, status, downstream_failure_reason, correlation_id, trace_id,
 submitted_at_utc, support_reference, attempt_count, updated_at_utc, lease_owner,
-lease_attempt_id, lease_expires_at_utc, audit_json
+lease_attempt_id, lease_expires_at_utc, audit_json, owner_receipt_json
 """
 RECONCILIATION_POSTURES = (
     DownstreamSubmissionPosture.IN_FLIGHT.value,
@@ -53,7 +54,7 @@ def claim_postgres_downstream_submission(
                     {DOWNSTREAM_SUBMISSION_COLUMNS}
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 ON CONFLICT DO NOTHING
                 RETURNING {DOWNSTREAM_SUBMISSION_COLUMNS}
@@ -132,6 +133,7 @@ def finalize_postgres_downstream_submission(
     posture: DownstreamSubmissionPosture,
     finalized_at_utc: datetime,
     failure_reason: str | None = None,
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamSubmissionMutationResult:
     try:
         with connection.cursor() as cursor:
@@ -150,6 +152,7 @@ def finalize_postgres_downstream_submission(
                 posture=posture,
                 finalized_at_utc=finalized_at_utc,
                 failure_reason=failure_reason,
+                owner_receipt=owner_receipt,
             )
             if result.decision is DownstreamSubmissionMutationDecision.ACCEPTED:
                 assert result.record is not None
@@ -285,6 +288,7 @@ def downstream_submission_values(record: DownstreamSubmissionRecord) -> tuple[An
         record.lease_attempt_id,
         record.lease_expires_at_utc,
         Jsonb([downstream_submission_audit_to_json(entry) for entry in record.audit_history]),
+        Jsonb(_owner_receipt_to_json(record.owner_receipt)) if record.owner_receipt else None,
     )
 
 
@@ -311,6 +315,7 @@ def downstream_submission_from_row(row: object) -> DownstreamSubmissionRecord:
             downstream_submission_audit_from_json(item)
             for item in _audit_payloads(read_row_value(row, "audit_json"))
         ),
+        owner_receipt=_owner_receipt_from_json(read_row_value(row, "owner_receipt_json")),
     )
 
 
@@ -408,6 +413,7 @@ def _update_mutable_submission_state(
             downstream_failure_reason = %s,
             updated_at_utc = %s,
             audit_json = %s
+            , owner_receipt_json = %s
         WHERE idempotency_key = %s
           AND lease_attempt_id IS NOT DISTINCT FROM %s
         RETURNING {DOWNSTREAM_SUBMISSION_COLUMNS}
@@ -417,12 +423,42 @@ def _update_mutable_submission_state(
             record.downstream_failure_reason,
             record.updated_at_utc,
             Jsonb([downstream_submission_audit_to_json(entry) for entry in record.audit_history]),
+            Jsonb(_owner_receipt_to_json(record.owner_receipt)) if record.owner_receipt else None,
             record.idempotency_key,
             record.lease_attempt_id,
         ),
     )
     if not cursor.fetchall():
         raise RuntimeError("downstream submission state update lost its lease")
+
+
+def _owner_receipt_to_json(receipt: DownstreamSubmissionOwnerReceipt) -> dict[str, Any]:
+    return {
+        "ownerAuthority": receipt.owner_authority.value,
+        "ownerRequestId": receipt.owner_request_id,
+        "ownerRealizationId": receipt.owner_realization_id,
+        "ownerWorkId": receipt.owner_work_id,
+        "sourceEventVersion": receipt.source_event_version,
+        "sourceEvidenceFingerprint": receipt.source_evidence_fingerprint,
+    }
+
+
+def _owner_receipt_from_json(value: Any) -> DownstreamSubmissionOwnerReceipt | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("owner_receipt_json must be an object")
+    version = value.get("sourceEventVersion")
+    if not isinstance(version, int) or isinstance(version, bool):
+        raise ValueError("owner receipt sourceEventVersion must be an integer")
+    return DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem(_required_string(value, "ownerAuthority")),
+        owner_request_id=_required_string(value, "ownerRequestId"),
+        owner_realization_id=_required_string(value, "ownerRealizationId"),
+        owner_work_id=_optional_string(value, "ownerWorkId"),
+        source_event_version=version,
+        source_evidence_fingerprint=_required_string(value, "sourceEvidenceFingerprint"),
+    )
 
 
 def _audit_payloads(value: Any) -> tuple[Mapping[str, Any], ...]:

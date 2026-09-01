@@ -5,6 +5,7 @@ from datetime import datetime
 from app.domain.downstream_submission import (
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -57,6 +58,7 @@ class PostgresDownstreamSubmissionRepositoryMixin:
         posture: DownstreamSubmissionPosture,
         finalized_at_utc: datetime,
         failure_reason: str | None = None,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
         return finalize_postgres_downstream_submission(
             self._connection,
@@ -66,6 +68,7 @@ class PostgresDownstreamSubmissionRepositoryMixin:
             posture=posture,
             finalized_at_utc=finalized_at_utc,
             failure_reason=failure_reason,
+            owner_receipt=owner_receipt,
         )
 
     def downstream_submissions_requiring_reconciliation(

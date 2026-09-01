@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from collections.abc import Callable, Mapping
 from typing import Any, Protocol
 
 from app.domain import (
@@ -17,7 +18,10 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
     DownstreamServiceError,
 )
-from app.ports.downstream_realization import DownstreamRealizationOutcome
+from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
+    DownstreamRealizationOutcome,
+)
 
 
 class DownstreamRealizationConfigurationError(ValueError):
@@ -228,6 +232,7 @@ class HttpAdviseProposalRealizationClient:
             trace_id=trace_id,
             idempotency_key=idempotency_key,
             additional_headers=self._advise_service_context.request_headers(),
+            accepted_response_mapper=_advise_outcome_from_receipt,
         )
 
     def close(self) -> None:
@@ -343,9 +348,12 @@ def _post_downstream_envelope(
     trace_id: str | None,
     idempotency_key: str | None,
     additional_headers: dict[str, str] | None = None,
+    accepted_response_mapper: (
+        Callable[[Mapping[str, Any]], DownstreamRealizationOutcome] | None
+    ) = None,
 ) -> DownstreamRealizationOutcome:
     try:
-        client.post_json(
+        response_payload = client.post_json(
             submit_path,
             json_payload=json_payload,
             correlation_id=correlation_id,
@@ -358,7 +366,58 @@ def _post_downstream_envelope(
         if exc.status_code is not None and 400 <= exc.status_code < 500:
             return DownstreamRealizationOutcome.rejected_by_downstream(failure_reason)
         return DownstreamRealizationOutcome.unknown(failure_reason)
-    return DownstreamRealizationOutcome.accepted_by_downstream()
+    if accepted_response_mapper is None:
+        return DownstreamRealizationOutcome.accepted_by_downstream()
+    try:
+        return accepted_response_mapper(response_payload)
+    except (KeyError, TypeError, ValueError):
+        return DownstreamRealizationOutcome.unknown("downstream_malformed_response")
+
+
+def _advise_outcome_from_receipt(
+    payload: Mapping[str, Any],
+) -> DownstreamRealizationOutcome:
+    accepted = payload.get("intake_receipt_accepted")
+    if accepted is False:
+        return DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
+    if accepted is not True:
+        raise ValueError("intake_receipt_accepted must be boolean")
+    return DownstreamRealizationOutcome.accepted_by_downstream(
+        DownstreamOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_ADVISE,
+            owner_request_id=_required_response_text(payload, "intake_id"),
+            owner_realization_id=_required_response_text(payload, "realization_id"),
+            owner_work_id=_optional_response_text(payload, "review_work_id"),
+            source_event_version=_required_response_int(payload, "source_event_version"),
+            source_evidence_fingerprint=_required_response_text(
+                payload,
+                "source_evidence_fingerprint",
+            ),
+        )
+    )
+
+
+def _required_response_text(payload: Mapping[str, Any], field_name: str) -> str:
+    value = payload.get(field_name)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} is required")
+    return value
+
+
+def _optional_response_text(payload: Mapping[str, Any], field_name: str) -> str | None:
+    value = payload.get(field_name)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be non-blank when present")
+    return value
+
+
+def _required_response_int(payload: Mapping[str, Any], field_name: str) -> int:
+    value = payload.get(field_name)
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise ValueError(f"{field_name} must be a positive integer")
+    return value
 
 
 def _conversion_intent_envelope(

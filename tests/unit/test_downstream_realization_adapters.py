@@ -49,7 +49,17 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         captured["trace_id"] = request.headers["X-Trace-Id"]
         captured["idempotency_key"] = request.headers["Idempotency-Key"]
         captured["payload"] = request.read()
-        return httpx.Response(202, json={"accepted": True})
+        return httpx.Response(
+            202,
+            json={
+                "intake_receipt_accepted": True,
+                "intake_id": "ipi_idea_receipt_001",
+                "realization_id": "ipr_idea_receipt_001",
+                "review_work_id": "iarw_idea_receipt_001",
+                "source_event_version": 1,
+                "source_evidence_fingerprint": "sha256:evidence-redacted",
+            },
+        )
 
     adapter = HttpAdviseProposalRealizationClient(
         DownstreamRealizationAdapterConfig(
@@ -70,6 +80,11 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     )
 
     assert outcome.accepted is True
+    assert outcome.owner_receipt is not None
+    assert outcome.owner_receipt.owner_authority is SourceSystem.LOTUS_ADVISE
+    assert outcome.owner_receipt.owner_request_id == "ipi_idea_receipt_001"
+    assert outcome.owner_receipt.owner_realization_id == "ipr_idea_receipt_001"
+    assert outcome.owner_receipt.owner_work_id == "iarw_idea_receipt_001"
     assert captured["path"] == "/advisory/idea-intake"
     assert captured["correlation_id"] == "corr-downstream"
     assert captured["trace_id"] == "trace-downstream"

@@ -49,7 +49,15 @@ def execute_downstream_submission_query(
         connection.begin_write()
         if connection.fail_on_update == "idea_downstream_submission":
             raise RuntimeError("update failed for idea_downstream_submission")
-        status, failure_reason, updated_at_utc, audit_json, key, lease_attempt_id = params
+        (
+            status,
+            failure_reason,
+            updated_at_utc,
+            audit_json,
+            owner_receipt_json,
+            key,
+            lease_attempt_id,
+        ) = params
         for row in rows:
             if row["idempotency_key"] != key:
                 continue
@@ -61,6 +69,7 @@ def execute_downstream_submission_query(
                 downstream_failure_reason=failure_reason,
                 updated_at_utc=updated_at_utc,
                 audit_json=_unwrap_jsonb(audit_json),
+                owner_receipt_json=_unwrap_jsonb(owner_receipt_json),
             )
             cursor._rows = [dict(row)]
             return True

@@ -55,6 +55,27 @@ class DownstreamSubmissionResolution(StrEnum):
 
 
 @dataclass(frozen=True)
+class DownstreamSubmissionOwnerReceipt:
+    owner_authority: SourceSystem
+    owner_request_id: str
+    owner_realization_id: str
+    owner_work_id: str | None
+    source_event_version: int
+    source_evidence_fingerprint: str
+
+    def __post_init__(self) -> None:
+        _require_text(self.owner_request_id, "owner_request_id")
+        _require_text(self.owner_realization_id, "owner_realization_id")
+        if self.owner_work_id is not None:
+            _require_text(self.owner_work_id, "owner_work_id")
+        if self.source_event_version <= 0:
+            raise ValueError("source_event_version must be positive")
+        _require_text(self.source_evidence_fingerprint, "source_evidence_fingerprint")
+        if not self.source_evidence_fingerprint.startswith("sha256:"):
+            raise ValueError("source_evidence_fingerprint must use sha256")
+
+
+@dataclass(frozen=True)
 class DownstreamSubmissionAuditEntry:
     audit_id: str
     action: DownstreamSubmissionAuditAction
@@ -95,6 +116,7 @@ class DownstreamSubmissionRecord:
     lease_owner: str | None = None
     lease_attempt_id: str | None = None
     lease_expires_at_utc: datetime | None = None
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.idempotency_key, "idempotency_key")
@@ -218,6 +240,7 @@ def finalize_downstream_submission(
     posture: DownstreamSubmissionPosture,
     finalized_at_utc: datetime,
     failure_reason: str | None = None,
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamSubmissionMutationResult:
     lease_error = _lease_blocker(record, lease_owner, lease_attempt_id)
     if lease_error is not None:
@@ -239,6 +262,11 @@ def finalize_downstream_submission(
         DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
     }:
         raise ValueError("unsupported downstream submission final posture")
+    if owner_receipt is not None:
+        if posture is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
+            raise ValueError("owner_receipt requires accepted downstream posture")
+        if owner_receipt.owner_authority is not record.source_authority:
+            raise ValueError("owner_receipt authority must match source_authority")
     action = (
         DownstreamSubmissionAuditAction.RECONCILIATION_REQUIRED
         if posture is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED
@@ -252,6 +280,7 @@ def finalize_downstream_submission(
         occurred_at_utc=finalized_at_utc,
         reason=failure_reason,
         record_failure_reason=failure_reason,
+        owner_receipt=owner_receipt,
     )
     return DownstreamSubmissionMutationResult(
         decision=DownstreamSubmissionMutationDecision.ACCEPTED,
@@ -331,6 +360,7 @@ def _transition_record(
     reason: str | None,
     record_failure_reason: str | None = None,
     change_reference: str | None = None,
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamSubmissionRecord:
     audit = _audit_entry(
         idempotency_key=record.idempotency_key,
@@ -349,6 +379,7 @@ def _transition_record(
         updated_at_utc=occurred_at_utc,
         downstream_failure_reason=record_failure_reason,
         audit_history=(*record.audit_history, audit),
+        owner_receipt=owner_receipt if owner_receipt is not None else record.owner_receipt,
     )
 
 
@@ -413,6 +444,11 @@ def _validate_posture(record: DownstreamSubmissionRecord) -> None:
         and record.downstream_failure_reason is not None
     ):
         raise ValueError(f"{record.status.value} downstream submission forbids a failure reason")
+    if record.owner_receipt is not None:
+        if record.status is not DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM:
+            raise ValueError("owner_receipt requires accepted downstream posture")
+        if record.owner_receipt.owner_authority is not record.source_authority:
+            raise ValueError("owner_receipt authority must match source_authority")
 
 
 def _lease_blocker(
