@@ -291,7 +291,9 @@ adapter foundations when the corresponding adapter configuration is present:
 1. `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
    for Advise or Manage conversion intents,
 2. `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
-   for Report evidence-pack requests.
+   for Report evidence-pack requests,
+3. `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation`
+   to reconcile an Advise-owned realization history from its persisted receipt.
 
 Those submission routes require `idea.downstream-realization.submit` and
 `Idempotency-Key`, precheck a local idempotency ledger, propagate
@@ -301,6 +303,15 @@ adapter call, changed-fingerprint reuse returns `409 idempotency_conflict`, and
 missing adapter configuration is persisted as a replayable
 `downstream_realization_not_configured` posture. They do not record
 authoritative downstream outcomes or prove downstream route existence.
+
+For Advise, accepted-for-review and rejected-before-work receipts carry the
+owner intake identity, realization identity, source version, and evidence
+fingerprint. Idea persists that bounded receipt, authorizes complete caller
+scope before any owner read, and accepts only an exact replay or append-only
+extension of the typed Advise history. The history may link adviser review work
+and a proposal, or may terminate before work; either way Advise remains the
+business-state authority. Idea does not translate transport success into
+proposal acceptance, suitability, execution, or client-publication truth.
 
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.
