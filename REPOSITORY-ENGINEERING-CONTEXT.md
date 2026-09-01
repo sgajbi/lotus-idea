@@ -151,6 +151,10 @@ without a complete relevant-set denominator. Later material/evidence versions
 end attribution to an older presentation. These are offline learning measures
 only and never mutate production ranking policy. Queue retrieval must never be
 used as a shown proxy.
+Methodology v5 keeps terminal downstream failure explicit in aggregate and
+family effectiveness. Accepted, rejected, failed, and uncertain categories
+must reconcile exactly to conversion intents; failure is neither business
+rejection nor uncertain success.
 Migration `019` receipt
 evidence is covered by the complete 19-table lifecycle and recovery inventories,
 representative PostgreSQL restore state, and candidate/version/tenant/chronology
