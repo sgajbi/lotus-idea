@@ -34,6 +34,8 @@ from app.infrastructure.downstream_realization import (
     _advise_realization_history_from_payload,
 )
 from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
+    DownstreamRealizationOutcome,
     DownstreamRealizationOutcomePosture,
     DownstreamRealizationReadError,
 )
@@ -507,6 +509,69 @@ def test_downstream_malformed_response_errors_map_to_bounded_reason() -> None:
     assert outcome.accepted is False
     assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
     assert outcome.failure_reason == "downstream_malformed_response"
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"owner_request_id": " "}, "owner_request_id is required"),
+        ({"owner_realization_id": " "}, "owner_realization_id is required"),
+        ({"source_evidence_fingerprint": " "}, "source_evidence_fingerprint is required"),
+        ({"owner_work_id": " "}, "owner_work_id must be non-blank"),
+        ({"source_event_version": 0}, "source_event_version must be positive"),
+        ({"source_evidence_fingerprint": "md5:unsafe"}, "must use sha256"),
+    ],
+)
+def test_owner_receipt_rejects_incomplete_or_unsafe_identity(
+    changes: dict[str, Any],
+    message: str,
+) -> None:
+    values: dict[str, Any] = {
+        "owner_authority": SourceSystem.LOTUS_ADVISE,
+        "owner_request_id": "ipi_001",
+        "owner_realization_id": "ipr_001",
+        "owner_work_id": "iarw_001",
+        "source_event_version": 1,
+        "source_evidence_fingerprint": "sha256:evidence",
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError, match=message):
+        DownstreamOwnerReceipt(
+            owner_authority=values["owner_authority"],
+            owner_request_id=values["owner_request_id"],
+            owner_realization_id=values["owner_realization_id"],
+            owner_work_id=values["owner_work_id"],
+            source_event_version=values["source_event_version"],
+            source_evidence_fingerprint=values["source_evidence_fingerprint"],
+        )
+
+
+def test_downstream_outcome_rejects_contradictory_posture_evidence() -> None:
+    receipt = DownstreamOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id="ipi_001",
+        owner_realization_id="ipr_001",
+        owner_work_id=None,
+        source_event_version=1,
+        source_evidence_fingerprint="sha256:evidence",
+    )
+
+    with pytest.raises(ValueError, match="accepted outcome forbids"):
+        DownstreamRealizationOutcome(
+            posture=DownstreamRealizationOutcomePosture.ACCEPTED,
+            failure_reason="contradiction",
+        )
+    with pytest.raises(ValueError, match="requires failure_reason"):
+        DownstreamRealizationOutcome(posture=DownstreamRealizationOutcomePosture.REJECTED)
+    with pytest.raises(ValueError, match="unknown outcome forbids owner_receipt"):
+        DownstreamRealizationOutcome(
+            posture=DownstreamRealizationOutcomePosture.UNKNOWN,
+            failure_reason="owner_outcome_uncertain",
+            owner_receipt=receipt,
+        )
+    with pytest.raises(ValueError, match="failure_reason is required"):
+        DownstreamRealizationOutcome.rejected_by_downstream(" ")
 
 
 def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
