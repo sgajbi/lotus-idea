@@ -14,7 +14,7 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionPosture,
 )
-from app.domain.feedback_taxonomy import FeedbackOutcome, FeedbackReason
+from app.domain.feedback_taxonomy import FeedbackReason
 from app.domain.ideas import (
     CandidateChangeReason,
     ConversionOutcomeStatus,
@@ -37,10 +37,16 @@ from app.domain.ranking_evaluation import (
     RANKING_EVALUATION_POLICY_VERSION,
     RankedOpportunityJudgment,
     RankingCutoffAggregate,
+    RankingJudgmentSource,
     RankingPresentationFact,
+    RankingRelevanceFact,
     RankingRelevanceGrade,
     aggregate_ranking_evaluations,
+    derive_ranking_relevance,
+    downstream_relevance_grade,
     evaluate_ranking_presentations,
+    feedback_relevance_grade,
+    review_relevance_grade,
 )
 from app.application.opportunity_effectiveness_family import (
     EffectivenessRate,
@@ -958,21 +964,13 @@ def _ranking_relevance_grade(
     evaluated_at_utc: datetime,
 ) -> RankingRelevanceGrade | None:
     valid_until = _presentation_version_valid_until(record, receipt)
-
-    def matches_version(*, occurred_at_utc: datetime, content_hash: str) -> bool:
-        return (
-            content_hash == evidence_hash
-            and receipt.presented_at_utc <= occurred_at_utc <= evaluated_at_utc
-            and (valid_until is None or occurred_at_utc < valid_until)
-        )
-
+    relevance_facts: list[RankingRelevanceFact] = []
     matching_intents = tuple(
         intent
         for intent in record.conversion_intents
-        if matches_version(
-            occurred_at_utc=intent.intent.requested_at_utc,
-            content_hash=intent.evidence_content_hash,
-        )
+        if intent.evidence_content_hash == evidence_hash
+        and receipt.presented_at_utc <= intent.intent.requested_at_utc <= evaluated_at_utc
+        and (valid_until is None or intent.intent.requested_at_utc < valid_until)
     )
     matching_intent_ids = {intent.intent.conversion_intent_id for intent in matching_intents}
     for intent_id in matching_intent_ids:
@@ -983,47 +981,47 @@ def _ranking_relevance_grade(
             and receipt.presented_at_utc <= outcome.outcome.recorded_at_utc <= evaluated_at_utc
         )
         current = current_conversion_outcome(outcomes)
-        if current is not None and current.outcome.status in {
-            ConversionOutcomeStatus.ACCEPTED,
-            ConversionOutcomeStatus.COMPLETED,
-        }:
-            return RankingRelevanceGrade.DOWNSTREAM_ACCEPTED
-
-    human_judgments: list[tuple[datetime, RankingRelevanceGrade]] = []
+        if current is not None:
+            grade = downstream_relevance_grade(current.outcome.status)
+            if grade is not None:
+                relevance_facts.append(
+                    RankingRelevanceFact(
+                        occurred_at_utc=current.outcome.recorded_at_utc,
+                        source=RankingJudgmentSource.DOWNSTREAM_OUTCOME,
+                        relevance_grade=grade,
+                    )
+                )
     for decision in record.review_decisions:
-        if not matches_version(
-            occurred_at_utc=decision.decided_at_utc,
-            content_hash=decision.evidence_content_hash,
-        ):
+        if decision.evidence_content_hash != evidence_hash:
             continue
-        grade = {
-            ReviewAction.APPROVE_FOR_CONVERSION: RankingRelevanceGrade.APPROVED_FOR_CONVERSION,
-            ReviewAction.REJECT: RankingRelevanceGrade.NOT_USEFUL,
-            ReviewAction.SUPPRESS: RankingRelevanceGrade.NOT_USEFUL,
-        }.get(decision.action)
+        grade = review_relevance_grade(decision.action)
         if grade is not None:
-            human_judgments.append((decision.decided_at_utc, grade))
+            relevance_facts.append(
+                RankingRelevanceFact(
+                    occurred_at_utc=decision.decided_at_utc,
+                    source=RankingJudgmentSource.ADVISER_REVIEW,
+                    relevance_grade=grade,
+                )
+            )
     for event in record.feedback_events:
-        if not matches_version(
-            occurred_at_utc=event.feedback.recorded_at_utc,
-            content_hash=event.evidence_content_hash,
-        ):
+        if event.evidence_content_hash != evidence_hash:
             continue
-        grade = (
-            RankingRelevanceGrade.USEFUL
-            if event.feedback.outcome is FeedbackOutcome.USEFUL
-            else RankingRelevanceGrade.NOT_USEFUL
+        relevance_facts.append(
+            RankingRelevanceFact(
+                occurred_at_utc=event.feedback.recorded_at_utc,
+                source=RankingJudgmentSource.ADVISER_FEEDBACK,
+                relevance_grade=feedback_relevance_grade(event.feedback.outcome),
+            )
         )
-        human_judgments.append((event.feedback.recorded_at_utc, grade))
-    if not human_judgments:
-        return None
-    latest_at = max(occurred_at for occurred_at, _ in human_judgments)
-    latest_grades = {grade for occurred_at, grade in human_judgments if occurred_at == latest_at}
-    if len(latest_grades) != 1:
-        raise OpportunityEffectivenessDataError(
-            "ranking relevance contains conflicting human judgments at the same instant"
+    try:
+        return derive_ranking_relevance(
+            relevance_facts,
+            presented_at_utc=receipt.presented_at_utc,
+            evaluated_at_utc=evaluated_at_utc,
+            valid_until_utc=valid_until,
         )
-    return next(iter(latest_grades))
+    except ValueError as exc:
+        raise OpportunityEffectivenessDataError(str(exc)) from exc
 
 
 def _presentation_version_valid_until(

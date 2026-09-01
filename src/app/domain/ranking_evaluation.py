@@ -7,6 +7,9 @@ from enum import IntEnum, StrEnum
 from typing import Iterable
 
 from app.domain.presentation_receipts import MAX_PRESENTED_CANDIDATE_COUNT
+from app.domain.feedback_taxonomy import FeedbackOutcome
+from app.domain.ideas import ConversionOutcomeStatus
+from app.domain.review_governance import ReviewAction
 
 
 RANKING_EVALUATION_POLICY_VERSION = "idea-ranking-evaluation-v1"
@@ -35,6 +38,12 @@ class RankingMetricSupportStatus(StrEnum):
     READY = "ready"
 
 
+class RankingJudgmentSource(StrEnum):
+    ADVISER_REVIEW = "adviser_review"
+    ADVISER_FEEDBACK = "adviser_feedback"
+    DOWNSTREAM_OUTCOME = "downstream_outcome"
+
+
 @dataclass(frozen=True)
 class RankedOpportunityJudgment:
     rank: int
@@ -46,6 +55,21 @@ class RankedOpportunityJudgment:
         if self.relevance_grade is not None and not isinstance(
             self.relevance_grade, RankingRelevanceGrade
         ):
+            raise ValueError("relevance_grade must use the governed ranking vocabulary")
+
+
+@dataclass(frozen=True)
+class RankingRelevanceFact:
+    occurred_at_utc: datetime
+    source: RankingJudgmentSource
+    relevance_grade: RankingRelevanceGrade
+
+    def __post_init__(self) -> None:
+        if self.occurred_at_utc.tzinfo is None or self.occurred_at_utc.utcoffset() is None:
+            raise ValueError("occurred_at_utc must be timezone-aware")
+        if not isinstance(self.source, RankingJudgmentSource):
+            raise ValueError("source must use the governed ranking judgment vocabulary")
+        if not isinstance(self.relevance_grade, RankingRelevanceGrade):
             raise ValueError("relevance_grade must use the governed ranking vocabulary")
 
 
@@ -165,6 +189,65 @@ def evaluate_ranking_snapshot(
             for cutoff in normalized_cutoffs
         ),
     )
+
+
+def review_relevance_grade(action: ReviewAction) -> RankingRelevanceGrade | None:
+    return {
+        ReviewAction.APPROVE_FOR_CONVERSION: RankingRelevanceGrade.APPROVED_FOR_CONVERSION,
+        ReviewAction.REJECT: RankingRelevanceGrade.NOT_USEFUL,
+        ReviewAction.SUPPRESS: RankingRelevanceGrade.NOT_USEFUL,
+    }.get(action)
+
+
+def feedback_relevance_grade(outcome: FeedbackOutcome) -> RankingRelevanceGrade:
+    return (
+        RankingRelevanceGrade.USEFUL
+        if outcome is FeedbackOutcome.USEFUL
+        else RankingRelevanceGrade.NOT_USEFUL
+    )
+
+
+def downstream_relevance_grade(
+    status: ConversionOutcomeStatus,
+) -> RankingRelevanceGrade | None:
+    if status in {ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED}:
+        return RankingRelevanceGrade.DOWNSTREAM_ACCEPTED
+    return None
+
+
+def derive_ranking_relevance(
+    facts: Iterable[RankingRelevanceFact],
+    *,
+    presented_at_utc: datetime,
+    evaluated_at_utc: datetime,
+    valid_until_utc: datetime | None,
+) -> RankingRelevanceGrade | None:
+    """Resolve source precedence and chronology for one exact candidate presentation version."""
+
+    eligible = tuple(
+        fact
+        for fact in facts
+        if presented_at_utc <= fact.occurred_at_utc <= evaluated_at_utc
+        and (valid_until_utc is None or fact.occurred_at_utc < valid_until_utc)
+    )
+    if any(
+        fact.source is RankingJudgmentSource.DOWNSTREAM_OUTCOME
+        and fact.relevance_grade is RankingRelevanceGrade.DOWNSTREAM_ACCEPTED
+        for fact in eligible
+    ):
+        return RankingRelevanceGrade.DOWNSTREAM_ACCEPTED
+    human = tuple(
+        fact for fact in eligible if fact.source is not RankingJudgmentSource.DOWNSTREAM_OUTCOME
+    )
+    if not human:
+        return None
+    latest_at = max(fact.occurred_at_utc for fact in human)
+    latest_grades = {fact.relevance_grade for fact in human if fact.occurred_at_utc == latest_at}
+    if len(latest_grades) != 1:
+        raise ValueError(
+            "ranking relevance contains conflicting human judgments at the same instant"
+        )
+    return next(iter(latest_grades))
 
 
 def evaluate_ranking_presentations(
@@ -464,12 +547,18 @@ __all__ = [
     "RankingCutoffAggregate",
     "RankingCutoffEvaluation",
     "RankingCutoffStatus",
+    "RankingJudgmentSource",
     "RankingMetricSupportStatus",
     "RankingPresentationFact",
     "RankingQueueSnapshotEvaluation",
     "RankingRelevanceGrade",
+    "RankingRelevanceFact",
     "RankingSnapshotEvaluation",
     "aggregate_ranking_evaluations",
+    "derive_ranking_relevance",
+    "downstream_relevance_grade",
     "evaluate_ranking_presentations",
     "evaluate_ranking_snapshot",
+    "feedback_relevance_grade",
+    "review_relevance_grade",
 ]
