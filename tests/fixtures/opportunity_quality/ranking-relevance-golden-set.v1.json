@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "lotus-idea.ranking-relevance-golden-set.v1",
+  "methodologyPolicyVersion": "idea-ranking-evaluation-v1",
+  "presentedAtHour": 2,
+  "evaluatedAtHour": 8,
+  "cases": [
+    {
+      "caseId": "duplicate-suppression",
+      "validUntilHour": null,
+      "facts": [{"hour": 4, "kind": "review", "value": "suppress"}],
+      "expectedGrade": "not_useful"
+    },
+    {
+      "caseId": "snooze-remains-unjudged",
+      "validUntilHour": null,
+      "facts": [{"hour": 4, "kind": "review", "value": "snooze"}],
+      "expectedGrade": null
+    },
+    {
+      "caseId": "expiry-remains-unjudged",
+      "validUntilHour": null,
+      "facts": [],
+      "expectedGrade": null
+    },
+    {
+      "caseId": "recurrence-cuts-off-old-judgment",
+      "validUntilHour": 3,
+      "facts": [{"hour": 4, "kind": "feedback", "value": "useful"}],
+      "expectedGrade": null
+    },
+    {
+      "caseId": "evidence-refresh-cuts-off-old-rank",
+      "validUntilHour": 3,
+      "facts": [{"hour": 3, "kind": "review", "value": "approve_for_conversion"}],
+      "expectedGrade": null
+    },
+    {
+      "caseId": "material-version-change-cuts-off-old-rank",
+      "validUntilHour": 5,
+      "facts": [{"hour": 6, "kind": "downstream", "value": "accepted"}],
+      "expectedGrade": null
+    },
+    {
+      "caseId": "later-correction-controls-human-grade",
+      "validUntilHour": null,
+      "facts": [
+        {"hour": 4, "kind": "feedback", "value": "not_useful"},
+        {"hour": 5, "kind": "feedback", "value": "useful"}
+      ],
+      "expectedGrade": "useful"
+    },
+    {
+      "caseId": "exact-evaluation-boundary-is-inclusive",
+      "validUntilHour": null,
+      "facts": [{"hour": 8, "kind": "review", "value": "approve_for_conversion"}],
+      "expectedGrade": "approved_for_conversion"
+    },
+    {
+      "caseId": "downstream-acceptance-has-source-precedence",
+      "validUntilHour": null,
+      "facts": [
+        {"hour": 5, "kind": "downstream", "value": "completed"},
+        {"hour": 6, "kind": "feedback", "value": "not_useful"}
+      ],
+      "expectedGrade": "downstream_accepted"
+    },
+    {
+      "caseId": "same-instant-human-conflict-fails-closed",
+      "validUntilHour": null,
+      "facts": [
+        {"hour": 5, "kind": "review", "value": "approve_for_conversion"},
+        {"hour": 5, "kind": "feedback", "value": "not_useful"}
+      ],
+      "expectedError": "conflicting human judgments"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "lotus-idea.ranking-quality-golden-set.v1",
+  "methodologyPolicyVersion": "idea-ranking-evaluation-v1",
+  "cases": [
+    {
+      "caseId": "perfect-ordering",
+      "concern": "perfect_ordering",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, "downstream_accepted"], [2, "approved_for_conversion"], [3, "useful"]],
+      "expected": ["ready", 3, 3, 0, "1.000000", "1.000000", "1.000000"]
+    },
+    {
+      "caseId": "reversed-ordering",
+      "concern": "reversed_ordering",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, "useful"], [2, "approved_for_conversion"], [3, "downstream_accepted"]],
+      "expected": ["ready", 3, 3, 0, "1.000000", "1.000000", "0.680606"]
+    },
+    {
+      "caseId": "tied-relevance",
+      "concern": "ties",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, "approved_for_conversion"], [2, "approved_for_conversion"], [3, "not_useful"]],
+      "expected": ["ready", 3, 3, 0, "1.000000", "0.666667", "1.000000"]
+    },
+    {
+      "caseId": "sparse-judgments",
+      "concern": "sparse_judgments",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, "useful"], [2, null], [3, "not_useful"]],
+      "expected": ["incomplete_judgments", 3, 2, 1, "0.666667", null, null]
+    },
+    {
+      "caseId": "no-judgments",
+      "concern": "no_judgments",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, null], [2, null], [3, null]],
+      "expected": ["incomplete_judgments", 3, 0, 3, "0.000000", null, null]
+    },
+    {
+      "caseId": "duplicate-suppression",
+      "concern": "duplicate_suppression",
+      "visibleOpportunityCount": 3,
+      "cutoff": 3,
+      "judgments": [[1, "useful"], [2, "not_useful"], [3, "not_useful"]],
+      "expected": ["ready", 3, 3, 0, "1.000000", "0.333333", "1.000000"]
+    },
+    {
+      "caseId": "snooze-expiry-unjudged",
+      "concern": "snooze_and_expiry",
+      "visibleOpportunityCount": 1,
+      "cutoff": 1,
+      "judgments": [[1, null]],
+      "expected": ["incomplete_judgments", 1, 0, 1, "0.000000", null, null]
+    },
+    {
+      "caseId": "recurrence-equivalent-evidence",
+      "concern": "recurrence",
+      "visibleOpportunityCount": 2,
+      "cutoff": 3,
+      "judgments": [[1, "useful"], [2, "useful"]],
+      "expected": ["ready", 2, 2, 0, "1.000000", "1.000000", "1.000000"]
+    },
+    {
+      "caseId": "evidence-refresh-unjudged",
+      "concern": "evidence_refresh",
+      "visibleOpportunityCount": 2,
+      "cutoff": 3,
+      "judgments": [[1, "useful"], [2, null]],
+      "expected": ["incomplete_judgments", 2, 1, 1, "0.500000", null, null]
+    },
+    {
+      "caseId": "material-version-change-unjudged",
+      "concern": "material_version_change",
+      "visibleOpportunityCount": 1,
+      "cutoff": 1,
+      "judgments": [[1, null]],
+      "expected": ["incomplete_judgments", 1, 0, 1, "0.000000", null, null]
+    },
+    {
+      "caseId": "correction-reorders-relevance",
+      "concern": "correction",
+      "visibleOpportunityCount": 2,
+      "cutoff": 3,
+      "judgments": [[1, "not_useful"], [2, "useful"]],
+      "expected": ["ready", 2, 2, 0, "1.000000", "0.500000", "0.630930"]
+    },
+    {
+      "caseId": "exact-boundary-approval",
+      "concern": "exact_boundary_timestamp",
+      "visibleOpportunityCount": 1,
+      "cutoff": 1,
+      "judgments": [[1, "approved_for_conversion"]],
+      "expected": ["ready", 1, 1, 0, "1.000000", "1.000000", "1.000000"]
+    }
+  ]
+}
