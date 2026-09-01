@@ -104,8 +104,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("GET", "/api/v1/downstream-submissions/reconciliation"),
         (
             "POST",
-            "/api/v1/downstream-submissions/{supportReference}/"
-            "advise-realization-reconciliation",
+            "/api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation",
         ),
         ("GET", "/api/v1/implementation-proof/readiness"),
         ("GET", "/api/v1/outbox-delivery/readiness"),

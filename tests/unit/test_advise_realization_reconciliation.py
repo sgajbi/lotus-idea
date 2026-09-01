@@ -376,7 +376,9 @@ def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() ->
     assert advise_realization_submission_blocker(submission, _history(version=2)) is None
 
 
-def test_in_memory_advise_history_repository_fails_closed_on_missing_or_conflicting_source() -> None:
+def test_in_memory_advise_history_repository_fails_closed_on_missing_or_conflicting_source() -> (
+    None
+):
     repository, support_reference = _repository_with_accepted_submission()
     history = _history(version=2)
 
