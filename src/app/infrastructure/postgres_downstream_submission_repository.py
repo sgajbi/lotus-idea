@@ -14,6 +14,7 @@ from app.infrastructure.postgres_downstream_submission import (
     finalize_postgres_downstream_submission,
     load_postgres_downstream_submission_by_idempotency_key,
     load_postgres_downstream_submission_by_support_reference,
+    load_postgres_downstream_submissions_for_candidate,
     load_postgres_downstream_submissions_requiring_reconciliation,
     reconcile_postgres_downstream_submission,
 )
@@ -30,6 +31,15 @@ class PostgresDownstreamSubmissionRepositoryMixin:
         return load_postgres_downstream_submission_by_idempotency_key(
             self._connection,
             idempotency_key,
+        )
+
+    def downstream_submissions_for_candidate(
+        self,
+        candidate_id: str,
+    ) -> tuple[DownstreamSubmissionRecord, ...]:
+        return load_postgres_downstream_submissions_for_candidate(
+            self._connection,
+            candidate_id,
         )
 
     def claim_downstream_submission(

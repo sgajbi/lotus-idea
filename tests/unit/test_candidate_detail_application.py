@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from app.application.candidate_detail import GetCandidateDetailCommand, get_candidate_detail
 from app.application.candidate_lookup import candidate_record_by_id
-from app.domain import CandidatePersistenceRecord, IdeaRepositorySnapshot, QueueAccessScopeFilter
+from app.domain import (
+    CandidatePersistenceRecord,
+    DownstreamSubmissionRecord,
+    IdeaRepositorySnapshot,
+    QueueAccessScopeFilter,
+)
 from tests.unit.test_postgres_repository import access_scope, high_cash_candidate
 
 
@@ -21,7 +26,9 @@ def test_candidate_detail_uses_projection_repository_without_snapshot() -> None:
     )
 
     assert result.record == record
+    assert result.downstream_submissions == ()
     assert repository.requested_candidate_ids == [candidate.candidate_id]
+    assert repository.requested_submission_candidate_ids == [candidate.candidate_id]
 
 
 def test_candidate_detail_projection_preserves_scope_denial() -> None:
@@ -43,6 +50,7 @@ def test_candidate_detail_projection_preserves_scope_denial() -> None:
 
     assert result.record is None
     assert result.access_scope_denied is True
+    assert repository.requested_submission_candidate_ids == []
 
 
 def test_candidate_lookup_falls_back_to_snapshot_for_process_local_repository() -> None:
@@ -63,6 +71,7 @@ class ProjectionOnlyCandidateDetailRepository:
     def __init__(self, record: CandidatePersistenceRecord) -> None:
         self.record = record
         self.requested_candidate_ids: list[str] = []
+        self.requested_submission_candidate_ids: list[str] = []
 
     def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
         self.requested_candidate_ids.append(candidate_id)
@@ -72,6 +81,13 @@ class ProjectionOnlyCandidateDetailRepository:
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         raise AssertionError("candidate detail projection must not hydrate a full snapshot")
+
+    def downstream_submissions_for_candidate(
+        self,
+        candidate_id: str,
+    ) -> tuple[DownstreamSubmissionRecord, ...]:
+        self.requested_submission_candidate_ids.append(candidate_id)
+        return ()
 
 
 class SnapshotOnlyCandidateRepository:

@@ -5,7 +5,9 @@ from datetime import UTC, datetime
 
 from app.api.candidate_detail_models import CandidateDetailResponse
 from app.domain import CandidatePersistenceRecord
+from app.domain import DownstreamSubmissionPosture
 from app.main import app
+from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 from tests.unit.test_postgres_repository import access_scope, high_cash_candidate
 
 
@@ -63,6 +65,53 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
     assert response["candidate"]["scoreConflictPenaltyApplied"] == "0"
 
 
+def test_candidate_detail_response_exposes_only_adviser_safe_submission_posture() -> None:
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    record = CandidatePersistenceRecord(
+        candidate=candidate,
+        evidence_hash="sha256:candidate-detail-submission",
+        persisted_at_utc=candidate.created_at_utc,
+    )
+    submission = build_downstream_submission_record(
+        idempotency_key="candidate-detail-sensitive-key",
+        request_fingerprint="sha256:candidate-detail-sensitive-fingerprint",
+        resource_id="conversion-candidate-detail-001",
+        submitted_at_utc=candidate.created_at_utc,
+        status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        failure_reason="private downstream diagnostic",
+        correlation_id="corr-sensitive-candidate-detail",
+        trace_id="trace-sensitive-candidate-detail",
+    )
+
+    response = CandidateDetailResponse.from_record(
+        record,
+        downstream_submissions=(submission,),
+    ).model_dump(by_alias=True)
+
+    assert response["downstreamSubmissions"] == (
+        {
+            "resourceType": "conversion_intent",
+            "resourceId": "conversion-candidate-detail-001",
+            "target": "advise_proposal",
+            "sourceAuthority": "lotus-advise",
+            "submissionPosture": "reconciliation_required",
+            "submittedAtUtc": candidate.created_at_utc,
+            "updatedAtUtc": candidate.created_at_utc,
+            "attemptCount": 1,
+            "operatorReconciliationRequired": True,
+            "recordsDownstreamOutcome": False,
+            "grantsDownstreamAuthority": False,
+        },
+    )
+    serialized = str(response["downstreamSubmissions"])
+    assert "candidate-detail-sensitive-key" not in serialized
+    assert "sensitive-fingerprint" not in serialized
+    assert "private downstream diagnostic" not in serialized
+    assert "corr-sensitive" not in serialized
+    assert "trace-sensitive" not in serialized
+    assert submission.support_reference not in serialized
+
+
 def test_openapi_exposes_reconstructable_candidate_score_contract() -> None:
     schemas = app.openapi()["components"]["schemas"]
     candidate = schemas["CandidateDetailCandidateResponse"]
@@ -96,3 +145,51 @@ def test_openapi_exposes_reconstructable_candidate_score_contract() -> None:
         "weight",
         "contribution",
     }
+
+
+def test_openapi_requires_source_safe_downstream_submission_posture() -> None:
+    schemas = app.openapi()["components"]["schemas"]
+    candidate_detail = schemas["CandidateDetailResponse"]
+    submission = schemas["DownstreamSubmissionSummaryResponse"]
+
+    assert "downstreamSubmissions" in candidate_detail["required"]
+    assert candidate_detail["properties"]["downstreamSubmissions"]["items"] == {
+        "$ref": "#/components/schemas/DownstreamSubmissionSummaryResponse"
+    }
+    assert set(submission["required"]) == {
+        "resourceType",
+        "resourceId",
+        "target",
+        "sourceAuthority",
+        "submissionPosture",
+        "submittedAtUtc",
+        "updatedAtUtc",
+        "attemptCount",
+        "operatorReconciliationRequired",
+        "recordsDownstreamOutcome",
+        "grantsDownstreamAuthority",
+    }
+    assert submission["properties"]["resourceType"] == {
+        "$ref": "#/components/schemas/DownstreamSubmissionResourceType",
+        "description": "Idea-owned resource whose delivery posture is shown.",
+    }
+    assert submission["properties"]["submissionPosture"] == {
+        "$ref": "#/components/schemas/DownstreamSubmissionPosture",
+        "description": "Idea-owned local delivery posture; not a business outcome.",
+    }
+    assert set(schemas["DownstreamSubmissionPosture"]["enum"]) == {
+        "in_flight",
+        "accepted_by_downstream",
+        "rejected_by_downstream",
+        "not_configured",
+        "reconciliation_required",
+        "quarantined",
+    }
+    assert {
+        "idempotencyKey",
+        "supportReference",
+        "downstreamFailureReason",
+        "correlationId",
+        "traceId",
+        "auditHistory",
+    }.isdisjoint(submission["properties"])

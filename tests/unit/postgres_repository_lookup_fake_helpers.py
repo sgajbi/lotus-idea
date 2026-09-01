@@ -8,6 +8,39 @@ def candidate_detail_rows(
     query: str,
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
+    if "candidate-detail-downstream-submissions" in query:
+        candidate_id = params[0]
+        conversion_ids = {
+            row["conversion_intent_id"]
+            for row in connection.rows["idea_conversion_intent"]
+            if row["candidate_id"] == candidate_id
+        }
+        report_pack_ids = {
+            row["report_evidence_pack_id"]
+            for row in connection.rows["idea_report_evidence_pack_request"]
+            if row["candidate_id"] == candidate_id
+        }
+        rows = [
+            dict(row)
+            for row in connection.rows["idea_downstream_submission"]
+            if (
+                row["resource_type"] == "conversion_intent" and row["resource_id"] in conversion_ids
+            )
+            or (
+                row["resource_type"] == "report_evidence_pack"
+                and row["resource_id"] in report_pack_ids
+            )
+        ]
+        return sorted(
+            rows,
+            key=lambda row: (
+                row["submitted_at_utc"],
+                row["resource_type"],
+                row["resource_id"],
+                row["target"],
+                row["updated_at_utc"],
+            ),
+        )
     table_name = _table_from_select(query)
     if "where conversion_intent_id = any(%s)" in query:
         intent_ids = set(params[0])

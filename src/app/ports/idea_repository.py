@@ -182,6 +182,14 @@ class CandidateDetailProjectionRepository(Protocol):
 
 
 @runtime_checkable
+class CandidateDownstreamSubmissionProjectionRepository(Protocol):
+    def downstream_submissions_for_candidate(
+        self,
+        candidate_id: str,
+    ) -> tuple[DownstreamSubmissionRecord, ...]: ...
+
+
+@runtime_checkable
 class ReviewQueueProjectionRepository(Protocol):
     def review_queue_candidate_page(
         self,

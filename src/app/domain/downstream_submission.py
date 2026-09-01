@@ -128,6 +128,19 @@ class DownstreamSubmissionMutationResult:
     blocker: str | None = None
 
 
+def downstream_submission_sort_key(
+    record: DownstreamSubmissionRecord,
+) -> tuple[datetime, str, str, str, datetime]:
+    """Return the provider-neutral ordering for candidate submission posture."""
+    return (
+        record.submitted_at_utc,
+        record.resource_type.value,
+        record.resource_id,
+        record.target.value,
+        record.updated_at_utc,
+    )
+
+
 def downstream_submission_support_reference(idempotency_key: str) -> str:
     _require_text(idempotency_key, "idempotency_key")
     digest = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()[:24]

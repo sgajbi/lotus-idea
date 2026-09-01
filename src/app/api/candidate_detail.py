@@ -16,6 +16,7 @@ from app.api.candidate_detail_models import (
     CandidateEvidenceResponse,
     ConversionIntentSummaryResponse,
     ConversionOutcomeSummaryResponse,
+    DownstreamSubmissionSummaryResponse,
     FeedbackSummaryResponse,
     LifecycleHistoryResponse,
     RedactedSourceRefResponse,
@@ -54,6 +55,7 @@ __all__ = (
     "CandidateEvidenceResponse",
     "ConversionIntentSummaryResponse",
     "ConversionOutcomeSummaryResponse",
+    "DownstreamSubmissionSummaryResponse",
     "FeedbackSummaryResponse",
     "LifecycleHistoryResponse",
     "RedactedSourceRefResponse",
@@ -175,6 +177,7 @@ def _candidate_detail_result_response(
     )
     return CandidateDetailResponse.from_record(
         result.record,
+        downstream_submissions=result.downstream_submissions,
         durable_storage_backed=durable_storage_backed,
     )
 
@@ -239,7 +242,9 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
     "description": (
         "Returns a source-safe internal detail projection for a persisted idea candidate, "
         "including redacted source evidence, lifecycle history, review, feedback, "
-        "conversion, report-evidence, and audit summary posture. When platform "
+        "conversion, local downstream-submission, report-evidence, and audit summary "
+        "posture. Local submission posture does not assert a source-owned business "
+        "outcome. When platform "
         "caller-context scope headers are present, the route applies those entitlements "
         "fail-closed before returning detail. This is an RFC-0002 Slice 10 and Slice 11 "
         "API foundation for evidence-drawer use; it is not a Workbench product proof, "
@@ -321,7 +326,9 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
                         "feedbackEvents": [],
                         "conversionIntents": [],
                         "conversionOutcomes": [],
+                        "currentConversionOutcomes": [],
                         "reportEvidencePacks": [],
+                        "downstreamSubmissions": [],
                         "auditSummary": {
                             "eventCount": 1,
                             "latestEventType": "idea.candidate.persisted",

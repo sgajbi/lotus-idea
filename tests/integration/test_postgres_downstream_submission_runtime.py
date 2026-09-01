@@ -30,7 +30,10 @@ SUBMITTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
 def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
     postgres_database_url: str,
 ) -> None:
-    seed_active_conversion_resource(postgres_database_url, "conversion-postgres-runtime")
+    candidate_id = seed_active_conversion_resource(
+        postgres_database_url,
+        "conversion-postgres-runtime",
+    )
     barrier = Barrier(2)
 
     def claim_once() -> DownstreamSubmissionClaimDecision:
@@ -67,6 +70,11 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
         restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
         pending = restarted.downstream_submissions_requiring_reconciliation(limit=10)
         assert len(pending) == 1
+        candidate_submissions = restarted.downstream_submissions_for_candidate(candidate_id)
+        assert [item.resource_id for item in candidate_submissions] == [
+            "conversion-postgres-runtime"
+        ]
+        assert restarted.downstream_submissions_for_candidate("candidate-outside-scope") == ()
         support_reference = pending[0].support_reference
         accepted = restarted.reconcile_downstream_submission(
             support_reference=support_reference,

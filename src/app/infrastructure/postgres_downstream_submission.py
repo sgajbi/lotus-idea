@@ -177,6 +177,34 @@ def load_postgres_downstream_submission_by_support_reference(
         return _load_by_support_reference(cursor, support_reference, for_update=False)
 
 
+def load_postgres_downstream_submissions_for_candidate(
+    connection: PostgresConnection,
+    candidate_id: str,
+) -> tuple[DownstreamSubmissionRecord, ...]:
+    if not candidate_id.strip():
+        raise ValueError("candidate_id is required")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            /* lotus-idea candidate-detail-downstream-submissions */
+            SELECT {DOWNSTREAM_SUBMISSION_COLUMNS}
+            FROM idea_downstream_submission
+            WHERE (resource_type, resource_id) IN (
+                SELECT 'conversion_intent', conversion_intent_id
+                FROM idea_conversion_intent
+                WHERE candidate_id = %s
+                UNION ALL
+                SELECT 'report_evidence_pack', report_evidence_pack_id
+                FROM idea_report_evidence_pack_request
+                WHERE candidate_id = %s
+            )
+            ORDER BY submitted_at_utc, resource_type, resource_id, target, updated_at_utc
+            """,
+            (candidate_id, candidate_id),
+        )
+        return tuple(downstream_submission_from_row(row) for row in cursor.fetchall())
+
+
 def load_postgres_downstream_submissions_requiring_reconciliation(
     connection: PostgresConnection,
     *,

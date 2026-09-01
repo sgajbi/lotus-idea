@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -13,6 +14,7 @@ from app.domain import (
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
     InMemoryIdeaRepository,
+    IdeaRepositorySnapshot,
     SourceSystem,
     create_downstream_submission_claim,
 )
@@ -117,6 +119,53 @@ def test_in_memory_submission_repository_fails_closed_for_missing_and_blank_look
         repository.downstream_submission_by_idempotency_key(" ")
     with pytest.raises(ValueError, match="support_reference is required"):
         repository.downstream_submission_by_support_reference(" ")
+
+
+def test_in_memory_candidate_projection_covers_both_resource_types_in_stable_order() -> None:
+    conversion = _claim("submission-conversion", "fingerprint-conversion")
+    report = create_downstream_submission_claim(
+        idempotency_key="submission-report",
+        request_fingerprint="fingerprint-report",
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id="report-pack-001",
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=SourceSystem.LOTUS_REPORT,
+        actor_subject="report-worker-redacted",
+        claimed_at_utc=CLAIMED_AT - timedelta(minutes=1),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-submission-report",
+        lease_expires_at_utc=CLAIMED_AT + timedelta(minutes=5),
+    )
+    unrelated = replace(
+        _claim("submission-unrelated", "fingerprint-unrelated"),
+        resource_id="conversion-other",
+    )
+    repository = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+            conversion_intent_candidates={
+                "conversion-001": "candidate-owned",
+                "conversion-other": "candidate-unrelated",
+            },
+            report_evidence_pack_candidates={
+                "report-pack-001": "candidate-owned",
+            },
+            downstream_submission_records={
+                conversion.idempotency_key: conversion,
+                report.idempotency_key: report,
+                unrelated.idempotency_key: unrelated,
+            },
+        )
+    )
+
+    submissions = repository.downstream_submissions_for_candidate("candidate-owned")
+
+    assert [(item.resource_type, item.resource_id) for item in submissions] == [
+        (DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK, "report-pack-001"),
+        (DownstreamSubmissionResourceType.CONVERSION_INTENT, "conversion-001"),
+    ]
 
 
 def _claim(idempotency_key: str, request_fingerprint: str) -> DownstreamSubmissionRecord:

@@ -9,6 +9,8 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
+    DownstreamSubmissionResourceType,
+    downstream_submission_sort_key,
     evaluate_downstream_submission_claim,
     finalize_downstream_submission,
     reconcile_downstream_submission,
@@ -17,6 +19,30 @@ from app.domain.downstream_submission import (
 
 class InMemoryDownstreamSubmissionRepositoryMixin:
     _downstream_submission_records: dict[str, DownstreamSubmissionRecord]
+    _conversion_intent_candidates: dict[str, str]
+    _report_evidence_pack_candidates: dict[str, str]
+
+    def downstream_submissions_for_candidate(
+        self,
+        candidate_id: str,
+    ) -> tuple[DownstreamSubmissionRecord, ...]:
+        _require_text(candidate_id, "candidate_id")
+        records = (
+            record
+            for record in self._downstream_submission_records.values()
+            if self._candidate_id_for_submission(record) == candidate_id
+        )
+        return tuple(
+            sorted(
+                records,
+                key=downstream_submission_sort_key,
+            )
+        )
+
+    def _candidate_id_for_submission(self, record: DownstreamSubmissionRecord) -> str | None:
+        if record.resource_type is DownstreamSubmissionResourceType.CONVERSION_INTENT:
+            return self._conversion_intent_candidates.get(record.resource_id)
+        return self._report_evidence_pack_candidates.get(record.resource_id)
 
     def downstream_submission_by_idempotency_key(
         self,

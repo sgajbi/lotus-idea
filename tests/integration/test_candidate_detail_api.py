@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi.responses import JSONResponse
@@ -9,7 +10,15 @@ from tests.support.http import ManagedTestClient, managed_test_client
 from app.api.candidate_detail import get_idea_candidate_detail
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.application.candidate_detail import GetCandidateDetailCommand
+from app.domain import (
+    ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionResourceType,
+    SourceSystem,
+    create_downstream_submission_claim,
+)
 from app.main import app
+from app.runtime.repository_state import get_idea_repository
 
 
 def source_ref(product_id: str) -> dict[str, str]:
@@ -305,6 +314,7 @@ def test_candidate_detail_api_returns_source_safe_persisted_candidate_detail() -
     assert "contentHash" not in payload["evidence"]["sourceRefs"][0]
     assert payload["auditSummary"]["eventCount"] == 1
     assert payload["auditSummary"]["latestEventType"] == "idea.candidate.persisted"
+    assert payload["downstreamSubmissions"] == []
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
 
@@ -318,6 +328,33 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
         scoped=True,
     )
     seed_full_candidate_workflow(client, candidate_id)
+    repository = get_idea_repository()
+    submitted_at = datetime(2026, 6, 21, 10, 30, tzinfo=UTC)
+    claim = create_downstream_submission_claim(
+        idempotency_key="detail-report-submission-sensitive-key",
+        request_fingerprint="sha256:detail-report-submission-sensitive",
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id="detail-report-evidence-pack-001",
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=SourceSystem.LOTUS_REPORT,
+        actor_subject="lotus-idea-downstream-worker",
+        claimed_at_utc=submitted_at,
+        lease_owner="lotus-idea-downstream-worker",
+        lease_attempt_id="detail-report-sensitive-attempt",
+        lease_expires_at_utc=submitted_at + timedelta(minutes=5),
+        correlation_id="corr-detail-report-sensitive",
+        trace_id="trace-detail-report-sensitive",
+    )
+    assert repository.claim_downstream_submission(claim).record == claim
+    finalized = repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=submitted_at + timedelta(minutes=1),
+        failure_reason="private report adapter diagnostic",
+    )
+    assert finalized.record is not None
 
     response = client.get(
         f"/api/v1/idea-candidates/{candidate_id}",
@@ -349,6 +386,27 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     assert payload["reportEvidencePacks"][0]["createsRenderedOutput"] is False
     assert payload["reportEvidencePacks"][0]["createsArchiveRecord"] is False
     assert payload["reportEvidencePacks"][0]["grantsClientPublicationAuthority"] is False
+    assert payload["downstreamSubmissions"] == [
+        {
+            "resourceType": "report_evidence_pack",
+            "resourceId": "detail-report-evidence-pack-001",
+            "target": "report_evidence",
+            "sourceAuthority": "lotus-report",
+            "submissionPosture": "reconciliation_required",
+            "submittedAtUtc": "2026-06-21T10:30:00Z",
+            "updatedAtUtc": "2026-06-21T10:31:00Z",
+            "attemptCount": 1,
+            "operatorReconciliationRequired": True,
+            "recordsDownstreamOutcome": False,
+            "grantsDownstreamAuthority": False,
+        }
+    ]
+    serialized_submissions = str(payload["downstreamSubmissions"])
+    assert "sensitive-key" not in serialized_submissions
+    assert "private report adapter diagnostic" not in serialized_submissions
+    assert "corr-detail-report-sensitive" not in serialized_submissions
+    assert "trace-detail-report-sensitive" not in serialized_submissions
+    assert claim.support_reference not in serialized_submissions
     assert payload["auditSummary"]["latestEventType"] == "idea.report_evidence_pack.requested"
     assert payload["supportedFeaturePromoted"] is False
 
