@@ -155,8 +155,8 @@ Methodology v5 keeps terminal downstream failure explicit in aggregate and
 family effectiveness. Accepted, rejected, failed, and uncertain categories
 must reconcile exactly to conversion intents; failure is neither business
 rejection nor uncertain success.
-Migration `019` receipt
-evidence is covered by the complete 19-table lifecycle and recovery inventories,
+Migration `019` presentation-receipt evidence and migration `022` Advise owner
+receipt/history evidence are covered by the complete 20-table lifecycle and recovery inventories,
 representative PostgreSQL restore state, and candidate/version/tenant/chronology
 integrity checks. #1145 is closed
 after PR #1149 exact-main, release-image, wiki, and branch-hygiene proof. #1150 is closed after

@@ -136,6 +136,13 @@ REFERENTIAL_CHECKS: dict[str, tuple[frozenset[str], str]] = {
            WHERE child.resource_type = 'report_evidence_pack'
              AND parent.report_evidence_pack_id IS NULL""",
     ),
+    "advise_realization_submission": (
+        frozenset({"idea_advise_realization_history", "idea_downstream_submission"}),
+        """SELECT COUNT(*) FROM idea_advise_realization_history history
+           LEFT JOIN idea_downstream_submission submission
+             ON submission.support_reference = history.support_reference
+           WHERE submission.support_reference IS NULL""",
+    ),
 }
 
 SEMANTIC_CHECKS: dict[str, tuple[frozenset[str], str]] = {
@@ -234,6 +241,19 @@ SEMANTIC_CHECKS: dict[str, tuple[frozenset[str], str]] = {
         frozenset({"idea_downstream_submission"}),
         """SELECT COUNT(*) FROM idea_downstream_submission
            WHERE resource_type NOT IN ('conversion_intent', 'report_evidence_pack')""",
+    ),
+    "advise_realization_receipt_identity": (
+        frozenset({"idea_advise_realization_history", "idea_downstream_submission"}),
+        """SELECT COUNT(*) FROM idea_advise_realization_history history
+           JOIN idea_downstream_submission submission
+             ON submission.support_reference = history.support_reference
+           WHERE submission.source_authority <> 'lotus-advise'
+              OR submission.target <> 'advise_proposal'
+              OR submission.owner_receipt_json IS NULL
+              OR history.realization_id <> submission.owner_receipt_json->>'ownerRealizationId'
+              OR history.intake_id <> submission.owner_receipt_json->>'ownerRequestId'
+              OR history.current_source_event_version
+                   < (submission.owner_receipt_json->>'sourceEventVersion')::integer""",
     ),
 }
 
