@@ -122,7 +122,7 @@ def test_reconcile_advise_history_denies_scope_before_owner_call() -> None:
         reconcile_advise_realization_history(
             replace(
                 _command(support_reference),
-                access_scope_filter=replace(AUTHORIZED_SCOPE, portfolio_id="PB_OTHER"),
+                access_scope_filter=replace(AUTHORIZED_SCOPE, portfolio_id=("PB_OTHER",)),
             ),
             repository=repository,
             advise_reader=reader,

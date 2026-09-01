@@ -16,6 +16,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import (
+    AdviseProposalRealizationHistory,
     CandidatePersistenceRecord,
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
@@ -40,6 +41,7 @@ from app.domain.report_evidence import (
     ReportEvidencePackPurpose,
     ReportEvidenceSourceSummary,
 )
+from app.domain.persistence_advise_realization import InMemoryAdviseRealizationRepositoryMixin
 from app.ports.downstream_realization import DownstreamRealizationOutcome
 
 
@@ -336,7 +338,7 @@ class _ExampleReportEvidencePackCandidateRecord:
     candidate: _ExampleCandidate
 
 
-class _ExampleDownstreamSubmissionRepository:
+class _ExampleDownstreamSubmissionRepository(InMemoryAdviseRealizationRepositoryMixin):
     def __init__(
         self,
         *,
@@ -373,6 +375,7 @@ class _ExampleDownstreamSubmissionRepository:
             else None
         )
         self._records: dict[str, DownstreamSubmissionRecord] = {}
+        self._advise_realization_histories: dict[str, AdviseProposalRealizationHistory] = {}
 
     def conversion_intent_by_id(self, conversion_intent_id: str) -> GovernedConversionIntent | None:
         if (
