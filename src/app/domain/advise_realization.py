@@ -21,6 +21,13 @@ class AdviseProposalReviewWorkStatus(StrEnum):
     CLOSED = "CLOSED"
 
 
+class AdviseRealizationHistoryMutationDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
+    NOT_FOUND = "not_found"
+
+
 TERMINAL_ADVISE_REALIZATION_STATUSES = frozenset(
     {
         AdviseProposalRealizationStatus.REJECTED_BEFORE_WORK,
@@ -139,6 +146,45 @@ class AdviseProposalRealizationHistory:
             raise ValueError("Advise realization response asserted unsupported authority")
         object.__setattr__(self, "outcomes", tuple(self.outcomes))
         _validate_history(self)
+
+
+@dataclass(frozen=True)
+class AdviseRealizationHistoryMutationResult:
+    decision: AdviseRealizationHistoryMutationDecision
+    history: AdviseProposalRealizationHistory | None
+    blocker: str | None = None
+
+
+def evaluate_advise_realization_history_mutation(
+    existing: AdviseProposalRealizationHistory | None,
+    proposed: AdviseProposalRealizationHistory,
+) -> AdviseRealizationHistoryMutationDecision:
+    if existing is None:
+        return AdviseRealizationHistoryMutationDecision.ACCEPTED
+    if existing == proposed:
+        return AdviseRealizationHistoryMutationDecision.REPLAYED
+    if _history_identity(existing) != _history_identity(proposed):
+        return AdviseRealizationHistoryMutationDecision.CONFLICT
+    if proposed.current_source_event_version <= existing.current_source_event_version:
+        return AdviseRealizationHistoryMutationDecision.CONFLICT
+    if proposed.outcomes[: len(existing.outcomes)] != existing.outcomes:
+        return AdviseRealizationHistoryMutationDecision.CONFLICT
+    return AdviseRealizationHistoryMutationDecision.ACCEPTED
+
+
+def _history_identity(history: AdviseProposalRealizationHistory) -> tuple[str, ...]:
+    return (
+        history.realization_id,
+        history.intake_id,
+        history.source_authority,
+        history.realization_authority,
+        history.tenant_id,
+        history.legal_entity_code,
+        history.portfolio_id,
+        history.idea_candidate_id,
+        history.conversion_intent_id,
+        history.source_evidence_fingerprint,
+    )
 
 
 def _validate_history(history: AdviseProposalRealizationHistory) -> None:

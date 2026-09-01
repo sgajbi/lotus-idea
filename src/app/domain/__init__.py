@@ -111,7 +111,10 @@ from app.domain.advise_realization import (
     AdviseProposalRealizationOutcome,
     AdviseProposalRealizationStatus,
     AdviseProposalReviewWorkStatus,
+    AdviseRealizationHistoryMutationDecision,
+    AdviseRealizationHistoryMutationResult,
     TERMINAL_ADVISE_REALIZATION_STATUSES,
+    evaluate_advise_realization_history_mutation,
 )
 from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
@@ -426,7 +429,10 @@ __all__ = [
     "AdviseProposalRealizationOutcome",
     "AdviseProposalRealizationStatus",
     "AdviseProposalReviewWorkStatus",
+    "AdviseRealizationHistoryMutationDecision",
+    "AdviseRealizationHistoryMutationResult",
     "TERMINAL_ADVISE_REALIZATION_STATUSES",
+    "evaluate_advise_realization_history_mutation",
     "DownstreamSubmissionPosture",
     "DownstreamSubmissionRecord",
     "DownstreamSubmissionResourceType",
