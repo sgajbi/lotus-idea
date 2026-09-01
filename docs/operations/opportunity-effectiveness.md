@@ -47,8 +47,8 @@ learning without claiming that Workbench and Gateway are certified.
 ## Effectiveness Read Model
 
 `GET /api/v1/operations/opportunity-effectiveness` returns schema
-`lotus-idea.opportunity-effectiveness.v1` under methodology policy
-`idea-opportunity-effectiveness-v3`.
+`lotus-idea.opportunity-effectiveness.v2` under methodology policy
+`idea-opportunity-effectiveness-v4`.
 
 The population is economic opportunities first generated in the half-open UTC
 window `[windowStartUtc, windowEndUtc)`. Later review, feedback, conversion,
@@ -111,6 +111,55 @@ Presentation remains receipt-derived at family level. When the cohort contains
 no qualifying presentation receipt, every family's `presentedOpportunityCount`
 and `presentation` rate are `null`; unavailable evidence is never reported as
 measured zero activity.
+
+## Ranked-Queue Quality
+
+Methodology v4 evaluates whether useful opportunities appear early enough in
+the adviser queue. It does not change scores or ranking policy. The evaluation
+unit is one internally consistent immutable queue snapshot. Receipts sharing a
+snapshot digest must agree on tenant, presentation instant, visible population,
+queue and ranking policies, surface, and producer. Ranks and economic identities
+must be unique. Missing top-K receipts make the cutoff
+`incomplete_presentation`; missing judgments make it
+`incomplete_judgments`. Neither condition is treated as negative relevance.
+
+The approved cutoffs are 1, 3, 5, and 10. For each cutoff the response reports
+snapshot support, judged and evaluated opportunity counts, judgment coverage,
+macro-mean Precision@K, and macro-mean NDCG@K. Quality values use only complete,
+fully judged snapshots; coverage still includes incomplete evidence. Fewer than
+30 complete snapshots is `insufficient_support`, zero complete snapshots is
+`unavailable`, and at least 30 is `ready`.
+
+Precision@K counts grades of `useful` or higher as relevant. NDCG uses graded
+gain `2^grade - 1`, logarithmic rank discount, and normalization against the
+ideal ordering. The governed grades are:
+
+| Grade | Explicit evidence |
+| --- | --- |
+| 0 — `not_useful` | Latest exact-version adviser rejection, suppression, or not-useful feedback |
+| 1 — `useful` | Latest exact-version useful adviser feedback |
+| 2 — `approved_for_conversion` | Latest exact-version adviser approval |
+| 3 — `downstream_accepted` | Accepted or completed source-owned outcome for an exact-version conversion intent |
+
+Source-owned downstream acceptance takes precedence. Otherwise the latest
+human judgment controls; contradictory human judgments at the same instant
+fail the projection closed. A later material or evidence version ends the
+attribution window for the earlier presentation even if a content hash repeats.
+Snooze, expiry, absence of review, and non-accepted downstream posture remain
+unjudged rather than becoming artificial negatives.
+
+Recall@K is explicitly unavailable because exposed adviser feedback does not
+provide a complete relevant-set denominator. Ranking stability is measured
+separately for adjacent snapshots only when their economic opportunity set,
+visible count, and ranking-policy version are equivalent. It uses normalized
+Spearman footrule stability: 1 is identical ordering and 0 is maximum reversal.
+
+These metrics are offline product-learning evidence. Exposure and selection
+bias remain material: advisers can judge only what they see, and missing review
+is not evidence of irrelevance. No metric autonomously changes score weights,
+suppression, eligibility, lifecycle, or production ranking. Champion/challenger
+or rollback decisions require a separate human-approved change with independent
+evidence.
 
 ## Presentation Receipt Contract
 
@@ -191,6 +240,7 @@ Run the smallest relevant checks first:
 ```powershell
 python -m pytest tests/unit/test_presentation_receipts.py tests/unit/test_postgres_presentation_receipts.py -q
 python -m pytest tests/integration/test_presentation_receipts_api.py -q
+python -m pytest tests/unit/test_ranking_evaluation.py tests/unit/test_ranking_quality_golden_set.py tests/unit/test_ranking_relevance_golden_set.py -q
 python scripts/openapi_quality_gate.py
 python scripts/endpoint_certification_gate.py
 python scripts/operation_metric_contract_gate.py
@@ -217,4 +267,5 @@ tracked durably in:
 - `sgajbi/lotus-gateway#692` — exact pass-through; and
 - `sgajbi/lotus-workbench#954` — visible-render production.
 
-The canonical methodology and closure issue is `sgajbi/lotus-idea#1156`.
+The presentation foundation is tracked by `sgajbi/lotus-idea#1156`; ranked
+quality methodology and parity are tracked by `sgajbi/lotus-idea#1204`.

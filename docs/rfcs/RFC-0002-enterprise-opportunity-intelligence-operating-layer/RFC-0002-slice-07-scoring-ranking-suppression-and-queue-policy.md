@@ -263,6 +263,18 @@ No transport receipt time, market calendar, tenant timezone, or implicit
 freshness threshold supplies this boundary. No new scheduler or deployable
 service is introduced.
 
+### Offline ranked-quality evaluation
+
+The existing bounded opportunity-effectiveness resource now evaluates complete
+immutable presentation snapshots at governed cutoffs 1, 3, 5, and 10. It
+publishes judgment coverage with macro Precision@K and graded NDCG@K, a
+30-complete-snapshot minimum-support posture, explicit Recall@K unavailability,
+and normalized rank stability only across equivalent economic cohorts under the
+same ranking policy. Partial receipt populations and unjudged opportunities do
+not contribute fabricated quality values. The implementation is an internal
+domain/application capability plus the existing PostgreSQL adapter; no runtime
+service split or production ranking-policy mutation is introduced.
+
 ## Remaining Gaps
 
 Workbench realization, broader review audiences, data-product certification,

@@ -141,16 +141,16 @@ snapshot recorded 151 tracked Idea RFC-0002 issues, 124 closed and 27 open.
 #681 was the Slice 18 synchronization tracker, #1154 was closed after
 PR #1157 exact-main, release-image, wiki, and branch-hygiene proof, #1155 has
 merged its Idea-owned governed feedback taxonomy and evaluation foundation,
-and #1156 was implementing versioned opportunity-effectiveness measurement plus
-immutable visible-render receipt evidence. The effectiveness read model now
-counts distinct candidates backed by eligible stored receipts and attributes
-rank-1 acceptance only to an approval for the exact receipt version. Methodology
-v2 also reports a generated-to-presented rate and an explicit distinct rank-1
-presentation denominator, so absence of a rank-1 observation remains different
-from rank-1 rejection. With no eligible receipt it retains null/unavailable
-semantics; with evidence it reports stored counts and rates while Gateway `#692`
-and Workbench `#954` consumer certification remain outstanding. Queue retrieval
-must never be used as a shown proxy.
+The effectiveness read model counts distinct candidates backed by eligible
+stored receipts and attributes rank-1 acceptance only to an approval for the
+exact receipt version. Methodology v4 additionally evaluates immutable queue
+snapshots at cutoffs 1, 3, 5, and 10 using judgment coverage, Precision@K,
+graded NDCG@K, and equivalent-economic-cohort rank stability. Incomplete
+presentation and unjudged work remain explicit; recall remains unavailable
+without a complete relevant-set denominator. Later material/evidence versions
+end attribution to an older presentation. These are offline learning measures
+only and never mutate production ranking policy. Queue retrieval must never be
+used as a shown proxy.
 Migration `019` receipt
 evidence is covered by the complete 19-table lifecycle and recovery inventories,
 representative PostgreSQL restore state, and candidate/version/tenant/chronology
@@ -1982,6 +1982,17 @@ Snapshot and PostgreSQL restore paths must preserve receipts associated with
 loaded candidate state; absence of qualifying receipts remains
 `null`/unavailable rather than a false zero. These measurements remain internal
 and `not_certified` until canonical consumer proof is complete.
+
+Methodology v4 extends that fence across the full presented top-K population.
+Only complete receipt sets with explicit exact-version judgments contribute to
+Precision@K or NDCG@K; all snapshots contribute to coverage posture. The graded
+precedence is accepted/completed source-owned outcome, then the latest explicit
+adviser review or feedback. Same-instant contradictory human judgments fail
+closed. Snooze, expiry, missing judgments, and incomplete receipt populations
+are never coerced to not useful. Rank stability compares adjacent snapshots
+only when economic opportunity membership, visible count, and ranking policy
+are equivalent. The response never exposes economic identity or raw receipt
+facts used by the internal calculation.
 
 AI model-risk operations proof is limited to implemented AI explanation
 telemetry and is classified as `source_contract`. Keep its builder, thin
