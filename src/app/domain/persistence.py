@@ -100,9 +100,7 @@ class InMemoryIdeaRepository(
         self._outbox_events: dict[str, OutboxEventRecord] = {}
         self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
-        self._advise_realization_histories: dict[
-            str, AdviseProposalRealizationHistory
-        ] = {}
+        self._advise_realization_histories: dict[str, AdviseProposalRealizationHistory] = {}
         self._presentation_receipts: dict[str, CandidatePresentationReceipt] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)

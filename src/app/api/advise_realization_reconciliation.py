@@ -114,9 +114,7 @@ class AdviseRealizationReconciliationResponse(CamelModel):
     durable_storage_backed: bool = Field(alias="durableStorageBacked")
     grants_execution_authority: bool = Field(alias="grantsExecutionAuthority")
     grants_suitability_authority: bool = Field(alias="grantsSuitabilityAuthority")
-    grants_client_publication_authority: bool = Field(
-        alias="grantsClientPublicationAuthority"
-    )
+    grants_client_publication_authority: bool = Field(alias="grantsClientPublicationAuthority")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
 
@@ -249,10 +247,7 @@ def _emit(outcome: OperationOutcome, error_code: str | None) -> None:
 
 
 ADVISE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
-    "path": (
-        "/api/v1/downstream-submissions/{supportReference}/"
-        "advise-realization-reconciliation"
-    ),
+    "path": ("/api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation"),
     "operation_id": "reconcileIdeaAdviseRealizationHistory",
     "summary": "Reconcile authoritative Advise realization outcomes",
     "description": (

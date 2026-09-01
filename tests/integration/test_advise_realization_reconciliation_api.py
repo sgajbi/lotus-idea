@@ -158,13 +158,11 @@ def test_advise_realization_reconciliation_api_persists_exact_owner_history(
     support_reference = submitted.json()["downstreamSubmission"]["supportReference"]
 
     response = client.post(
-        f"/api/v1/downstream-submissions/{support_reference}/"
-        "advise-realization-reconciliation",
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
         headers=_reconciliation_headers(),
     )
     replay = client.post(
-        f"/api/v1/downstream-submissions/{support_reference}/"
-        "advise-realization-reconciliation",
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
         headers=_reconciliation_headers(),
     )
 
