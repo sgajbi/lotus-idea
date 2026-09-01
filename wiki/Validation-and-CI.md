@@ -232,11 +232,14 @@ therefore fails closed instead of silently leaving deployable commits ungated.
 
 Main Releasability runs set `cancel-in-progress: false`. A repeated or later
 dispatch can consume more capacity, but it cannot cancel the only verdict being
-produced for an exact revision. The write-capable tag cleanup is isolated in
-`main-releasability-tag-reclamation.yml`, triggered only after a Main
-Releasability run completes. Its helper validates the governed tag shape,
+produced for an exact revision. The write-capable tag cleanup is a final
+always-run job after CI signal evidence in `main-releasability.yml`. Its
+`contents: write` permission is job-scoped; all validation jobs and the workflow
+default remain read-only. The helper validates the governed tag shape,
 repository, expected SHA, and live tag target before deletion; cleanup failure
-does not change the release verdict.
+does not change the release verdict. Cleanup deliberately runs in the same
+workflow because GitHub suppresses non-exempt follow-on events from workflows
+dispatched with the repository `GITHUB_TOKEN`.
 
 Run `make main-gate-coverage-audit` to verify the latest 60 post-rollout main
 revisions against GitHub's `main-releasability.yml` run history. Missing,

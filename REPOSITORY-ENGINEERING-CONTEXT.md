@@ -320,10 +320,13 @@ revision added by the PR, oldest first, and starts one immutable Main
 Releasability run for each revision. The dispatcher fails closed if repository
 merge methods no longer match that assumption. Evidence runs use
 `cancel-in-progress: false`: a newer dispatch must not erase an in-flight
-verdict for an independently deployable revision. A separate post-run workflow
-reclaims only the exact temporary dispatch tag after validating its tag name,
-repository, and target SHA, so cleanup cannot broaden or alter the release
-verdict workflow.
+verdict for an independently deployable revision. A final always-run job in the
+same workflow reclaims only the exact temporary dispatch tag after CI signal
+evidence is produced and after validating its tag name, repository, and target
+SHA. Its `contents: write` permission is scoped to that cleanup job; validation
+jobs and workflow-level permissions remain read-only. This same-run design is
+required because GitHub suppresses non-exempt follow-on events from runs
+dispatched with the repository `GITHUB_TOKEN`.
 
 `make main-gate-coverage-audit` is the GitHub-backed operational audit. It
 requires a success or failure verdict for each of the latest 60 post-rollout

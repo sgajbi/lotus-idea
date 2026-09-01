@@ -586,3 +586,24 @@ jobs:
           name: main-releasability-ci-signal-evidence
           path: ci-signal-evidence.json
           if-no-files-found: error
+
+  reclaim-dispatch-tag:
+    name: Main Releasability / Reclaim Consumed Dispatch Tag
+    if: >-
+      always() &&
+      github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'main-releasability-')
+    needs: [ci-signal-evidence]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Delete consumed immutable dispatch tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISPATCH_REF: ${{ github.ref_name }}
+          EXPECTED_SHA: ${{ github.sha }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+        run: python scripts/reclaim_main_releasability_tag.py

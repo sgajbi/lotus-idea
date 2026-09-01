@@ -84,25 +84,28 @@ def test_delete_failure_is_non_blocking() -> None:
     assert len(runner.calls) == 2
 
 
-def test_reclaim_job_runs_after_gate_without_changing_its_verdict() -> None:
-    workflow_path = Path(__file__).resolve().parents[2] / (
-        ".github/workflows/main-releasability-tag-reclamation.yml"
-    )
+def test_reclaim_job_runs_after_signal_evidence_with_scoped_write_permission() -> None:
+    workflow_path = Path(__file__).resolve().parents[2] / ".github/workflows/main-releasability.yml"
     workflow = workflow_path.read_text(encoding="utf-8")
 
-    assert 'workflows: ["Main Releasability Gate"]' in workflow
-    assert "types: [completed]" in workflow
-    assert "github.event.workflow_run.head_branch" in workflow
-    assert "github.event.workflow_run.head_sha" in workflow
-    assert "contents: write" in workflow
-    assert "run: python scripts/reclaim_main_releasability_tag.py" in workflow
+    reclaim_job = workflow.split("  reclaim-dispatch-tag:\n", maxsplit=1)[1]
+    assert "needs: [ci-signal-evidence]" in reclaim_job
+    assert "always() &&" in reclaim_job
+    assert "github.ref_type == 'tag'" in reclaim_job
+    assert "github.ref_name" in reclaim_job
+    assert "github.sha" in reclaim_job
+    assert "permissions:\n      contents: write" in reclaim_job
+    assert "run: python scripts/reclaim_main_releasability_tag.py" in reclaim_job
 
 
-def test_release_verdict_workflow_remains_read_only_and_fail_closed() -> None:
+def test_validation_jobs_remain_read_only_and_fail_closed() -> None:
     workflow_path = Path(__file__).resolve().parents[2] / (
         ".github/workflows/main-releasability.yml"
     )
     workflow = workflow_path.read_text(encoding="utf-8")
 
-    assert "contents: write" not in workflow
+    global_permissions = workflow.split("env:", maxsplit=1)[0]
+    validation_jobs = workflow.split("  reclaim-dispatch-tag:\n", maxsplit=1)[0]
+    assert "contents: write" not in global_permissions
+    assert "contents: write" not in validation_jobs
     assert "continue-on-error:" not in workflow

@@ -210,6 +210,14 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "scripts/ci_signal_evidence.py",
         "main-releasability-ci-signal-evidence",
         "ci-signal-evidence.json",
+        "reclaim-dispatch-tag:",
+        "needs: [ci-signal-evidence]",
+        "always() &&",
+        "github.ref_type == 'tag'",
+        "github.ref_name",
+        "github.sha",
+        "contents: write",
+        "python scripts/reclaim_main_releasability_tag.py",
     ),
     "pr-auto-merge.yml": (
         "pull_request_target:",
@@ -244,15 +252,6 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "gh workflow run main-releasability.yml",
         '--ref "$dispatch_ref"',
         '-f expected_sha="$revision"',
-    ),
-    "main-releasability-tag-reclamation.yml": (
-        "workflow_run:",
-        'workflows: ["Main Releasability Gate"]',
-        "types: [completed]",
-        "contents: write",
-        "github.event.workflow_run.head_branch",
-        "github.event.workflow_run.head_sha",
-        "python scripts/reclaim_main_releasability_tag.py",
     ),
     "postgres-disaster-recovery-drill.yml": (
         "schedule:",
@@ -324,7 +323,6 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
     "main-releasability.yml": (
         "  push:",
         "pull_request_target:",
-        "contents: write",
         "pull-requests: write",
         "continue-on-error:",
         "run: ./.venv/bin/python -m pytest",
