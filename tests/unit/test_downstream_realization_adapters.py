@@ -31,8 +31,12 @@ from app.infrastructure.downstream_realization import (
     HttpReportEvidencePackMaterializationClient,
     ManageRealizationServiceContext,
     ReportRealizationServiceContext,
+    _advise_realization_history_from_payload,
 )
-from app.ports.downstream_realization import DownstreamRealizationOutcomePosture
+from app.ports.downstream_realization import (
+    DownstreamRealizationOutcomePosture,
+    DownstreamRealizationReadError,
+)
 
 
 REQUEST_TIME = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
@@ -220,6 +224,109 @@ def test_advise_adapter_fails_closed_on_non_contiguous_owner_history() -> None:
             intake_id="ipi_idea_receipt_001",
             access_scope=report_access_scope(),
         )
+
+
+@pytest.mark.parametrize(
+    ("history_path_template", "message"),
+    [
+        ("advisory/{intake_id}", "start with '/'"),
+        ("/advisory/history", "one {intake_id} placeholder"),
+        ("/advisory/{intake_id}/{intake_id}", "one {intake_id} placeholder"),
+        ("/advisory/{intake_id}?debug=true", "query string or fragment"),
+    ],
+)
+def test_advise_history_config_rejects_ambiguous_routes(
+    history_path_template: str,
+    message: str,
+) -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match=message):
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            history_path_template=history_path_template,
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        )
+
+
+def test_advise_history_reader_requires_route_and_printable_intake_identity() -> None:
+    without_route = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        )
+    )
+    with_route = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            history_path_template="/advisory/{intake_id}",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        )
+    )
+
+    with pytest.raises(DownstreamRealizationConfigurationError, match="history_path_template"):
+        without_route.load_proposal_realization(
+            intake_id="ipi_001",
+            access_scope=report_access_scope(),
+        )
+    with pytest.raises(ValueError, match="intake_id is required"):
+        with_route.load_proposal_realization(
+            intake_id=" ",
+            access_scope=report_access_scope(),
+        )
+
+
+def test_advise_history_reader_maps_owner_service_failure() -> None:
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            history_path_template="/advisory/{intake_id}",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(503, json={})),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationReadError, match="history is unavailable"):
+        adapter.load_proposal_realization(
+            intake_id="ipi_001",
+            access_scope=report_access_scope(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda payload: payload.pop("realization_id"), "realization_id is required"),
+        (lambda payload: payload.update(review_work_id=" "), "must be non-blank"),
+        (
+            lambda payload: payload.update(current_source_event_version=True),
+            "positive integer",
+        ),
+        (lambda payload: payload.update(proposal_record_created="yes"), "must be boolean"),
+        (lambda payload: payload.update(created_at="not-a-date"), "must be ISO-8601"),
+        (lambda payload: payload.update(created_at="2026-09-01T10:00:00"), "must be UTC"),
+        (lambda payload: payload.update(outcomes={}), "outcomes must be an array"),
+        (lambda payload: payload.update(outcomes=["invalid"]), "must be an object"),
+    ],
+)
+def test_advise_history_payload_rejects_malformed_owner_fields(
+    mutate: Any,
+    message: str,
+) -> None:
+    payload = _advise_history_payload()
+    mutate(payload)
+
+    with pytest.raises(ValueError, match=message):
+        _advise_realization_history_from_payload(payload)
 
 
 def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> None:
