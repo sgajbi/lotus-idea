@@ -49,6 +49,30 @@ _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
     "supportability_status",
 }
 _INTAKE_RECEIPT_OUTCOMES = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+_ADVISE_HISTORY_RESPONSE_FIELDS = {
+    "realization_id",
+    "intake_id",
+    "review_work_id",
+    "review_work_status",
+    "source_authority",
+    "realization_authority",
+    "tenant_id",
+    "legal_entity_code",
+    "portfolio_id",
+    "idea_candidate_id",
+    "conversion_intent_id",
+    "source_evidence_fingerprint",
+    "current_status",
+    "current_source_event_version",
+    "proposal_id",
+    "proposal_record_created",
+    "suitability_authority_granted",
+    "order_created",
+    "client_publication_authorized",
+    "created_at_utc",
+    "updated_at_utc",
+    "outcomes",
+}
 _TRUSTED_SERVICE_HEADERS = {
     "X-Actor-Id",
     "X-Role",
@@ -65,6 +89,11 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
         "receipt_outcomes": _INTAKE_RECEIPT_OUTCOMES,
         "principal_capability": "advisory.idea_proposal_intake.accept",
+        "owner_history_route": ("GET /advisory/proposals/idea-intake/{intake_id}/realization"),
+        "history_principal_capability": "advisory.idea_proposal_realization.read",
+        "history_response_fields": _ADVISE_HISTORY_RESPONSE_FIELDS,
+        "history_required_server_headers": _TRUSTED_SERVICE_HEADERS
+        | {"X-Portfolio-Id", "X-Authorized-Portfolio-Id"},
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",
         "required_server_headers": _TRUSTED_SERVICE_HEADERS,
         "request_fields": _REQUIRED_ADVISE_INTAKE_REQUEST_FIELDS,
@@ -158,8 +187,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.6.0":
-        errors.append("downstream intake wire contract must be version 1.6.0")
+    if payload.get("contract_version") != "1.7.0":
+        errors.append("downstream intake wire contract must be version 1.7.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -252,6 +281,14 @@ def _validate_advise_manage_intake_consumer(
         and consumer.get("scope_boundary") != expected["scope_boundary"]
     ):
         errors.append(f"{target} intake wire contract scope_boundary drifted")
+    if target == "advise_proposal":
+        for field in ("owner_history_route", "history_principal_capability"):
+            if consumer.get(field) != expected[field]:
+                errors.append(f"{target} intake wire contract {field} drifted")
+        for field in ("history_response_fields", "history_required_server_headers"):
+            actual = consumer.get(field)
+            if not isinstance(actual, list) or set(actual) != expected[field]:
+                errors.append(f"{target} intake wire contract {field} drifted")
     return errors
 
 

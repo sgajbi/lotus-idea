@@ -12,6 +12,13 @@ SHARED_IMAGE = "lotus-idea:local"
 MIGRATION_SERVICE = "lotus-idea-migrations"
 API_SERVICE = "lotus-idea"
 WORKER_SERVICE = "lotus-idea-source-ingestion-worker"
+ADVISE_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE"
+ADVISE_HISTORY_PATH = "/advisory/proposals/idea-intake/{intake_id}/realization"
+ADVISE_CAPABILITIES_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"
+REQUIRED_ADVISE_CAPABILITIES = {
+    "advisory.idea_proposal_intake.accept",
+    "advisory.idea_proposal_realization.read",
+}
 
 
 def validate_compose_model(
@@ -66,6 +73,25 @@ def validate_compose_model(
                 f"normalized Compose service {consumer} must depend on "
                 f"{MIGRATION_SERVICE} before consuming the shared image"
             )
+    api_environment = cast(Mapping[str, Any], services[API_SERVICE]).get("environment")
+    if not isinstance(api_environment, Mapping):
+        errors.append("normalized Compose lotus-idea service must define an environment object")
+        return errors
+    if api_environment.get(ADVISE_HISTORY_PATH_ENV) != ADVISE_HISTORY_PATH:
+        errors.append(
+            "normalized Compose lotus-idea service must configure the canonical Advise "
+            "realization history path"
+        )
+    capabilities = {
+        value.strip()
+        for value in str(api_environment.get(ADVISE_CAPABILITIES_ENV, "")).split(",")
+        if value.strip()
+    }
+    if not REQUIRED_ADVISE_CAPABILITIES.issubset(capabilities):
+        errors.append(
+            "normalized Compose lotus-idea service must configure Advise intake and "
+            "realization-read capabilities"
+        )
     return errors
 
 

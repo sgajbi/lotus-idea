@@ -24,6 +24,11 @@
     "downstream_reconciliation_application": "src/app/application/downstream_submission_reconciliation.py",
     "downstream_reconciliation_api": "src/app/api/downstream_submission_reconciliation.py",
     "downstream_submission_postgres_proof": "tests/integration/test_postgres_downstream_submission_runtime.py",
+    "advise_owner_history_domain": "src/app/domain/advise_realization.py",
+    "advise_owner_history_reconciliation": "src/app/application/advise_realization_reconciliation.py",
+    "advise_owner_history_api": "src/app/api/advise_realization_reconciliation.py",
+    "advise_owner_history_postgres": "src/app/infrastructure/postgres_advise_realization.py",
+    "advise_owner_receipt_and_history_migration": "migrations/022_downstream_owner_receipt.sql",
     "contract_gate": "scripts/downstream_realization_contract_gate.py",
     "operations_runbook": "docs/operations/downstream-realization-readiness.md",
     "rfc_slice_12": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
@@ -40,6 +45,7 @@
       "evidence_refs": [
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
         "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
+        "POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation",
         "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
       ],
