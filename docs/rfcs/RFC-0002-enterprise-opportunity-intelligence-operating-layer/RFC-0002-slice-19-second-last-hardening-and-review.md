@@ -1245,8 +1245,10 @@ whole-store snapshot:
    not a new runtime service boundary.
 2. `PostgresIdeaRepository.review_queue_candidate_page(...)` reads only
    `idea_candidate_record`, applies lifecycle/posture/supportability,
-   caller-scope, stable score/created-time ordering, source-signal dedupe,
-   counts, and `LIMIT`/`OFFSET` bounds before hydrating the page window.
+   caller-scope, stable score/created-time ordering, counts, and
+   `LIMIT`/`OFFSET` bounds before hydrating the page window. Economic duplicate
+   prevention belongs to repository reconciliation by `businessIdentityId`;
+   shared source-signal lineage is not a queue deduplication key.
 3. Migration 001 now includes
    `idx_idea_candidate_record_review_queue_order`, and
    `migration_contract_gate.py` requires that index so the hot queue path stays

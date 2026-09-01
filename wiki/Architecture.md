@@ -316,6 +316,13 @@ active candidates. Caller and worker schemas reject
 posture, not duplicate-detection inputs. This does not promote a supported
 feature or transfer financial-fact authority into Lotus Idea.
 
+Review queue and readiness projections rank every distinct
+`businessIdentityId`. They never group candidates by `sourceSignalIds`, because
+economically distinct opportunities may share source lineage. Repository
+reconciliation prevents duplicate economic candidates; a queue `duplicate`
+exclusion means an explicit durable adviser suppression, not inferred evidence
+similarity.
+
 ### Canonical Source-Proof Runner
 
 `scripts/run_canonical_opportunity_source_proofs.py` is an operator automation
