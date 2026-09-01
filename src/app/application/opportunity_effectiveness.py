@@ -284,15 +284,10 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         failed_outcome_count,
         uncertain_outcome_count,
     ) = _downstream_outcome_counts(summary)
-    downstream_rates = tuple(
-        rate(count, summary.conversion_intent_count)
-        for count in (
-            accepted_outcome_count,
-            rejected_outcome_count,
-            failed_outcome_count,
-            uncertain_outcome_count,
-        )
-    )
+    downstream_accepted_rate = rate(accepted_outcome_count, summary.conversion_intent_count)
+    downstream_rejected_rate = rate(rejected_outcome_count, summary.conversion_intent_count)
+    downstream_failed_rate = rate(failed_outcome_count, summary.conversion_intent_count)
+    downstream_uncertain_rate = rate(uncertain_outcome_count, summary.conversion_intent_count)
     presentation = _build_presentation_effectiveness(summary)
     try:
         ranking_quality, ranking_stability = build_ranking_quality(
@@ -368,10 +363,10 @@ def build_opportunity_effectiveness_snapshot_from_summary(
             summary.reviewed_opportunity_count,
         ),
         conversion_rate=rate(summary.conversion_opportunity_count, approved_count),
-        downstream_accepted_rate=downstream_rates[0],
-        downstream_rejected_rate=downstream_rates[1],
-        downstream_failed_rate=downstream_rates[2],
-        downstream_uncertain_rate=downstream_rates[3],
+        downstream_accepted_rate=downstream_accepted_rate,
+        downstream_rejected_rate=downstream_rejected_rate,
+        downstream_failed_rate=downstream_failed_rate,
+        downstream_uncertain_rate=downstream_uncertain_rate,
         detection_to_review=_duration(summary.detection_to_review_seconds),
         approval_to_conversion=_duration(summary.approval_to_conversion_seconds),
         snapshot_digest="",
