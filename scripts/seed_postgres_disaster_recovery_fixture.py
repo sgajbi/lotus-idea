@@ -32,9 +32,14 @@ from app.domain import (  # noqa: E402
     AIExplanationCommand,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
+    AdviseProposalRealizationHistory,
+    AdviseProposalRealizationOutcome,
+    AdviseProposalRealizationStatus,
+    AdviseProposalReviewWorkStatus,
     CandidatePresentationReceipt,
     ConversionTarget,
     DownstreamSubmissionPosture,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
@@ -105,7 +110,7 @@ def _assert_empty_migrated_database(connection: PostgresConnection) -> None:
             """SELECT COUNT(*) AS table_count FROM pg_catalog.pg_tables
                WHERE schemaname = 'public' AND tablename LIKE 'idea\\_%' ESCAPE '\\'"""
         )
-        if int(database_cursor.fetchone()["table_count"]) != 19:
+        if int(database_cursor.fetchone()["table_count"]) != 20:
             raise ValueError("all current Lotus Idea migrations must be applied before seeding")
         database_cursor.execute(
             """SELECT
@@ -327,6 +332,76 @@ def _seed_downstream_submissions(repository: PostgresIdeaRepository) -> None:
         posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
         finalized_at_utc=FIXTURE_TIME + timedelta(minutes=14),
         failure_reason="dr_fixture_commit_outcome_unknown",
+    )
+
+    advise_claim = create_downstream_submission_claim(
+        idempotency_key="dr-fixture-downstream-advise",
+        request_fingerprint="sha256:dr-fixture-downstream-advise",
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id="dr-fixture-conversion-intent-001",
+        target=ConversionTarget.ADVISE_PROPOSAL,
+        source_authority=SourceSystem.LOTUS_ADVISE,
+        actor_subject="dr-fixture-realization-worker",
+        claimed_at_utc=FIXTURE_TIME + timedelta(minutes=15),
+        lease_owner="dr-fixture-realization-worker",
+        lease_attempt_id="dr-fixture-downstream-attempt-003",
+        lease_expires_at_utc=FIXTURE_TIME + timedelta(minutes=20),
+        correlation_id="corr-dr-fixture-downstream-003",
+        trace_id="trace-dr-fixture-downstream-003",
+    )
+    repository.claim_downstream_submission(advise_claim)
+    owner_receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id="ipi_dr_fixture_001",
+        owner_realization_id="ipr_dr_fixture_001",
+        owner_work_id="iarw_dr_fixture_001",
+        source_event_version=1,
+        source_evidence_fingerprint="sha256:dr-fixture-owner-evidence",
+    )
+    repository.finalize_downstream_submission(
+        idempotency_key=advise_claim.idempotency_key,
+        lease_owner=advise_claim.lease_owner or "",
+        lease_attempt_id=advise_claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=FIXTURE_TIME + timedelta(minutes=16),
+        owner_receipt=owner_receipt,
+    )
+    owner_outcome = AdviseProposalRealizationOutcome(
+        outcome_id="ipro_dr_fixture_001",
+        source_event_version=1,
+        status=AdviseProposalRealizationStatus.ACCEPTED_FOR_REVIEW,
+        reason_code="idea_intake_accepted_for_adviser_review",
+        occurred_at_utc=FIXTURE_TIME + timedelta(minutes=16),
+        review_work_id="iarw_dr_fixture_001",
+        proposal_id=None,
+        terminal=False,
+    )
+    repository.persist_advise_realization_history(
+        support_reference=advise_claim.support_reference,
+        history=AdviseProposalRealizationHistory(
+            realization_id="ipr_dr_fixture_001",
+            intake_id="ipi_dr_fixture_001",
+            review_work_id="iarw_dr_fixture_001",
+            review_work_status=AdviseProposalReviewWorkStatus.PENDING_ADVISER_REVIEW,
+            source_authority="lotus-idea",
+            realization_authority="lotus-advise",
+            tenant_id="tenant-dr-fixture",
+            legal_entity_code="SGPB",
+            portfolio_id="portfolio-dr-fixture-conversion",
+            idea_candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
+            conversion_intent_id="dr-fixture-conversion-intent-001",
+            source_evidence_fingerprint="sha256:dr-fixture-owner-evidence",
+            current_status=AdviseProposalRealizationStatus.ACCEPTED_FOR_REVIEW,
+            current_source_event_version=1,
+            proposal_id=None,
+            proposal_record_created=False,
+            suitability_authority_granted=False,
+            order_created=False,
+            client_publication_authorized=False,
+            created_at_utc=owner_outcome.occurred_at_utc,
+            updated_at_utc=owner_outcome.occurred_at_utc,
+            outcomes=(owner_outcome,),
+        ),
     )
 
 

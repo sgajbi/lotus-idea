@@ -17,6 +17,7 @@ from scripts.validate_postgres_disaster_recovery_resume import (
 OWNED_TABLES = frozenset(
     {
         "idea_ai_explanation_lineage",
+        "idea_advise_realization_history",
         "idea_audit_event",
         "idea_candidate_presentation_receipt",
         "idea_candidate_record",

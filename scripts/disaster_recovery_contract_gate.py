@@ -64,6 +64,7 @@ REQUIRED_INVARIANTS = {
     "idempotency_key_replay_and_conflict_integrity",
     "outbox_status_lease_retry_dead_letter_and_publication_integrity",
     "downstream_submission_status_lease_and_realization_integrity",
+    "advise_realization_receipt_identity_and_append_only_history_integrity",
     "ai_explanation_candidate_lineage_integrity",
     "resume_without_duplicate_outbox_or_downstream_publication",
 }

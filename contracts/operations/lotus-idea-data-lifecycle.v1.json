@@ -247,6 +247,17 @@
       "purge_policy": "immutable_tombstone_only"
     },
     {
+      "table": "idea_advise_realization_history",
+      "field_classification_profile_ref": "regulated_payload:v1",
+      "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
+      "data_classes": ["restricted_advisory_evidence", "confidential_operational_metadata"],
+      "purpose": "advise_owned_realization_outcome_history_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_owner_outcome_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
       "table": "idea_ai_explanation_lineage",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
