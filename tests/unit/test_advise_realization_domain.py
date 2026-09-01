@@ -73,33 +73,53 @@ def test_advise_realization_history_rejects_malformed_owner_evidence() -> None:
         ),
         (lambda: replace(history, outcomes=()), "outcomes are required"),
         (
-            lambda: replace(history, outcomes=(first, replace(linked, outcome_id=first.outcome_id), completed)),
+            lambda: replace(
+                history, outcomes=(first, replace(linked, outcome_id=first.outcome_id), completed)
+            ),
             "identities must be unique",
         ),
         (
             lambda: replace(
                 history,
-                outcomes=(replace(first, status=AdviseProposalRealizationStatus.PROPOSAL_LINKED), linked, completed),
+                outcomes=(
+                    replace(first, status=AdviseProposalRealizationStatus.PROPOSAL_LINKED),
+                    linked,
+                    completed,
+                ),
             ),
             "invalid initial status",
         ),
         (
             lambda: replace(
                 history,
-                outcomes=(first, replace(linked, status=AdviseProposalRealizationStatus.ADVISORY_COMPLETED, terminal=True), completed),
+                outcomes=(
+                    first,
+                    replace(
+                        linked,
+                        status=AdviseProposalRealizationStatus.ADVISORY_COMPLETED,
+                        terminal=True,
+                    ),
+                    completed,
+                ),
             ),
             "invalid status transition",
         ),
         (
             lambda: replace(
                 history,
-                outcomes=(first, replace(linked, occurred_at_utc=CREATED_AT - timedelta(seconds=1)), completed),
+                outcomes=(
+                    first,
+                    replace(linked, occurred_at_utc=CREATED_AT - timedelta(seconds=1)),
+                    completed,
+                ),
             ),
             "must be chronological",
         ),
         (lambda: replace(history, current_source_event_version=2), "final outcome"),
         (
-            lambda: replace(history, current_status=AdviseProposalRealizationStatus.PROPOSAL_LINKED),
+            lambda: replace(
+                history, current_status=AdviseProposalRealizationStatus.PROPOSAL_LINKED
+            ),
             "current_status",
         ),
         (lambda: replace(history, updated_at_utc=CREATED_AT), "updated_at_utc"),
