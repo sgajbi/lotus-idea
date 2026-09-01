@@ -21,6 +21,7 @@ from app.ports.downstream_realization import (
     DownstreamRealizationOutcome,
 )
 from app.runtime.downstream_realization_state import ConversionRealizationClients
+from app.runtime.downstream_realization_state import DownstreamRealizationClientsUnavailableError
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.integration.test_downstream_realization_api import (
     CapturingConversionClient,
@@ -182,6 +183,64 @@ def test_advise_realization_reconciliation_api_persists_exact_owner_history(
     assert replay.json()["reconciliationStatus"] == "replayed"
     assert replay.json()["appendedOutcomeCount"] == 0
 
+    denied_headers = _reconciliation_headers()
+    denied_headers["X-Caller-Portfolio-Ids"] = "PB_OTHER"
+    denied = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=denied_headers,
+    )
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "permission_denied"
+
+
+def test_advise_realization_reconciliation_api_reports_unconfigured_owner_reader(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    advise_client = OwnerLifecycleClient()
+    clients = ConversionRealizationClients(
+        advise_client=advise_client,
+        manage_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-owner-unconfigured",
+        idempotency_prefix="advise-owner-unconfigured",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-owner-api-002",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-owner-api-002",
+    )
+    submitted = client.post(
+        "/api/v1/conversion-intents/conversion-advise-owner-api-002/downstream-submissions",
+        headers=downstream_submission_headers("submission-advise-owner-api-002"),
+    )
+    support_reference = submitted.json()["downstreamSubmission"]["supportReference"]
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: _raise_unconfigured_owner_reader(),
+    )
+
+    response = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "advise_realization_reader_not_configured"
+
 
 def test_advise_realization_reconciliation_api_denial_emits_operation_event(
     monkeypatch: pytest.MonkeyPatch,
@@ -222,3 +281,7 @@ def _reconciliation_headers() -> dict[str, str]:
         "X-Correlation-Id": "corr-advise-owner-reconciliation",
         "X-Trace-Id": "trace-advise-owner-reconciliation",
     }
+
+
+def _raise_unconfigured_owner_reader() -> None:
+    raise DownstreamRealizationClientsUnavailableError("Advise reader is not configured")

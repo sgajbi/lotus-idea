@@ -116,6 +116,51 @@ def test_rejected_submission_preserves_authoritative_owner_receipt() -> None:
     assert result.record.owner_receipt == receipt
 
 
+def test_owner_receipt_and_submission_reject_contradictory_owner_evidence() -> None:
+    with pytest.raises(ValueError, match="source_event_version must be positive"):
+        _owner_receipt(source_event_version=0)
+    with pytest.raises(ValueError, match="must use sha256"):
+        _owner_receipt(source_evidence_fingerprint="md5:unsafe")
+
+    receipt = _owner_receipt()
+    with pytest.raises(ValueError, match="requires a terminal downstream posture"):
+        finalize_downstream_submission(
+            _claim(),
+            lease_owner="downstream-submission",
+            lease_attempt_id="attempt-001",
+            posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+            finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+            failure_reason="owner_outcome_uncertain",
+            owner_receipt=receipt,
+        )
+    with pytest.raises(ValueError, match="authority must match"):
+        finalize_downstream_submission(
+            _claim(),
+            lease_owner="downstream-submission",
+            lease_attempt_id="attempt-001",
+            posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+            finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+            owner_receipt=replace(receipt, owner_authority=SourceSystem.LOTUS_MANAGE),
+        )
+
+    accepted = finalize_downstream_submission(
+        _claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        owner_receipt=receipt,
+    ).record
+    assert accepted is not None
+    with pytest.raises(ValueError, match="requires a terminal downstream posture"):
+        replace(accepted, status=DownstreamSubmissionPosture.IN_FLIGHT)
+    with pytest.raises(ValueError, match="authority must match"):
+        replace(
+            accepted,
+            owner_receipt=replace(receipt, owner_authority=SourceSystem.LOTUS_MANAGE),
+        )
+
+
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:
     uncertain = finalize_downstream_submission(
         _claim(),
@@ -300,4 +345,19 @@ def _claim(
         lease_expires_at_utc=lease_expires_at_utc,
         correlation_id="corr-334",
         trace_id="trace-334",
+    )
+
+
+def _owner_receipt(
+    *,
+    source_event_version: int = 1,
+    source_evidence_fingerprint: str = "sha256:evidence-redacted",
+) -> DownstreamSubmissionOwnerReceipt:
+    return DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id="ipi_001",
+        owner_realization_id="ipr_001",
+        owner_work_id="iarw_001",
+        source_event_version=source_event_version,
+        source_evidence_fingerprint=source_evidence_fingerprint,
     )

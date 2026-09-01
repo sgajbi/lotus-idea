@@ -511,6 +511,37 @@ def test_downstream_malformed_response_errors_map_to_bounded_reason() -> None:
     assert outcome.failure_reason == "downstream_malformed_response"
 
 
+def test_advise_receipt_rejects_non_boolean_acceptance_claim() -> None:
+    payload = {
+        "intake_receipt_accepted": "yes",
+        "intake_id": "ipi_001",
+        "realization_id": "ipr_001",
+        "review_work_id": "iarw_001",
+        "source_event_version": 1,
+        "source_evidence_fingerprint": "sha256:evidence",
+    }
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/idea-intake",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(202, json=payload)),
+        ),
+    )
+
+    outcome = adapter.submit_proposal_intent(
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
+    )
+
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
+    assert outcome.failure_reason == "downstream_malformed_response"
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [
