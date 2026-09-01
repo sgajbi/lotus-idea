@@ -77,6 +77,7 @@ def test_row_for_insert_builds_downstream_submission_operability_row() -> None:
             None,
             None,
             _JsonbValue({"operator": "advisor-desk"}),
+            None,
         ),
     )
 
@@ -84,6 +85,7 @@ def test_row_for_insert_builds_downstream_submission_operability_row() -> None:
     assert row["target"] == "lotus-manage"
     assert row["source_authority"] == "lotus-idea"
     assert row["audit_json"] == {"operator": "advisor-desk"}
+    assert row["owner_receipt_json"] is None
 
 
 def test_row_for_insert_rejects_unknown_table_explicitly() -> None:
