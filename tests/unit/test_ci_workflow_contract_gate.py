@@ -304,8 +304,8 @@ def test_ci_contract_gate_blocks_non_failing_dispatch_ref_mismatch_branch(
     dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
-            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $MERGE_COMMIT_SHA"\n              exit 1',
-            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $MERGE_COMMIT_SHA"\n              :',
+            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $revision"\n              exit 1',
+            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $revision"\n              :',
         ),
         encoding="utf-8",
     )
@@ -326,10 +326,10 @@ def test_ci_contract_gate_blocks_function_scoped_dispatch_ref_mismatch_exit(
     dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
-            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $MERGE_COMMIT_SHA"\n              exit 1',
+            '              echo "::error::Dispatch ref $dispatch_ref points to $existing_ref_sha, expected $revision"\n              exit 1',
             (
                 '              echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "              collision_failure() {\n"
                 "                exit 1\n"
                 "              }"
@@ -355,17 +355,17 @@ def test_ci_contract_gate_blocks_nested_dispatch_ref_mismatch_condition(
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
             (
-                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '            if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '              echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "              exit 1\n"
                 "            fi"
             ),
             (
                 "            if false; then\n"
-                '              if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '              if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '                echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "                exit 1\n"
                 "              fi\n"
                 "            fi"
@@ -391,17 +391,17 @@ def test_ci_contract_gate_blocks_subshell_masked_dispatch_ref_mismatch_exit(
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
             (
-                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '            if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '              echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "              exit 1\n"
                 "            fi"
             ),
             (
                 "            (\n"
-                '              if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '              if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '                echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "                exit 1\n"
                 "              fi\n"
                 "            ) || true"
@@ -430,13 +430,13 @@ def test_ci_contract_gate_blocks_unconditional_dispatch_ref_creation(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi"
             ),
             (
                 '          gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '            -f ref="refs/tags/$dispatch_ref" \\\n'
-                '            -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '            -f sha="$revision" >/dev/null'
             ),
         ),
         encoding="utf-8",
@@ -458,7 +458,7 @@ def test_ci_contract_gate_blocks_wrong_dispatch_ref_creation_payload(
     dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
-            '-f sha="$MERGE_COMMIT_SHA" >/dev/null',
+            '-f sha="$revision" >/dev/null',
             '-f sha="$WRONG_SHA" >/dev/null',
         ),
         encoding="utf-8",
@@ -484,7 +484,7 @@ def test_ci_contract_gate_blocks_split_dispatch_run_steps(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          gh workflow run main-releasability.yml \\"
             ),
@@ -494,7 +494,7 @@ def test_ci_contract_gate_blocks_split_dispatch_run_steps(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          gh workflow run main-releasability.yml \\"
             ),
@@ -522,7 +522,7 @@ def test_ci_contract_gate_blocks_split_unnamed_dispatch_run_step(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          gh workflow run main-releasability.yml \\"
             ),
@@ -531,7 +531,7 @@ def test_ci_contract_gate_blocks_split_unnamed_dispatch_run_step(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          gh workflow run main-releasability.yml \\"
             ),
@@ -560,7 +560,7 @@ def test_ci_contract_gate_blocks_trailing_dispatch_ref_creation(
                 "          fi\n"
                 '          gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '            -f ref="refs/tags/$dispatch_ref" \\\n'
-                '            -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '            -f sha="$revision" >/dev/null\n'
                 "          gh workflow run main-releasability.yml \\"
             ),
             1,
@@ -611,7 +611,7 @@ def test_ci_contract_gate_blocks_nested_releasability_dispatch_command(
                 "          gh workflow run main-releasability.yml \\\n"
                 '            --repo "$GITHUB_REPOSITORY" \\\n'
                 '            --ref "$dispatch_ref" \\\n'
-                '            -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '            -f expected_sha="$revision" \\\n'
                 '            -f triggering_pr="$PR_NUMBER"'
             ),
             (
@@ -619,7 +619,7 @@ def test_ci_contract_gate_blocks_nested_releasability_dispatch_command(
                 "            gh workflow run main-releasability.yml \\\n"
                 '              --repo "$GITHUB_REPOSITORY" \\\n'
                 '              --ref "$dispatch_ref" \\\n'
-                '              -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '              -f expected_sha="$revision" \\\n'
                 '              -f triggering_pr="$PR_NUMBER"\n'
                 "          fi"
             ),
@@ -670,11 +670,11 @@ def test_ci_contract_gate_blocks_commented_dispatch_ref_payload_fields(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" '
-                '# -f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA"'
+                '# -f ref="refs/tags/$dispatch_ref" -f sha="$revision"'
             ),
         ),
         encoding="utf-8",
@@ -699,11 +699,11 @@ def test_ci_contract_gate_blocks_masked_dispatch_ref_creation_failure(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" '
-                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA" || true'
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$revision" || true'
             ),
         ),
         encoding="utf-8",
@@ -728,11 +728,11 @@ def test_ci_contract_gate_blocks_backgrounded_dispatch_ref_creation(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" '
-                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA" &'
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$revision" &'
             ),
         ),
         encoding="utf-8",
@@ -757,11 +757,11 @@ def test_ci_contract_gate_blocks_chained_dispatch_ref_creation_command(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" '
-                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA" ; exit 0'
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$revision" ; exit 0'
             ),
         ),
         encoding="utf-8",
@@ -784,17 +784,17 @@ def test_ci_contract_gate_blocks_dispatch_ref_sha_mutation_before_mismatch(
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
             (
-                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '            if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '              echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "              exit 1\n"
                 "            fi"
             ),
             (
-                '            existing_ref_sha="$MERGE_COMMIT_SHA"\n'
-                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '            existing_ref_sha="$revision"\n'
+                '            if [ "$existing_ref_sha" != "$revision" ]; then\n'
                 '              echo "::error::Dispatch ref $dispatch_ref points to '
-                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                '$existing_ref_sha, expected $revision"\n'
                 "              exit 1\n"
                 "            fi"
             ),
@@ -821,11 +821,11 @@ def test_ci_contract_gate_blocks_non_post_dispatch_ref_creation_override(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" --method GET '
-                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA"'
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$revision"'
             ),
         ),
         encoding="utf-8",
@@ -850,15 +850,15 @@ def test_ci_contract_gate_blocks_duplicate_guarded_dispatch_ref_creation(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
         ),
         encoding="utf-8",
@@ -906,11 +906,11 @@ def test_ci_contract_gate_blocks_input_body_dispatch_ref_creation_override(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" --input ref.json '
-                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA"'
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$revision"'
             ),
         ),
         encoding="utf-8",
@@ -936,19 +936,19 @@ def test_ci_contract_gate_blocks_dispatch_before_ref_creation(
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          gh workflow run main-releasability.yml \\"
             ),
             (
                 "          gh workflow run main-releasability.yml \\\n"
                 '            --ref "$dispatch_ref" \\\n'
-                '            -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '            -f expected_sha="$revision" \\\n'
                 '            -f triggering_pr="$PR_NUMBER"\n'
                 '          if [ -z "$existing_ref_sha" ]; then\n'
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '              -f sha="$revision" >/dev/null\n'
                 "          fi\n"
                 "          : # displaced dispatch command"
             ),
@@ -1014,12 +1014,12 @@ def test_ci_contract_gate_binds_dispatch_ref_payload_to_creation_command(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
                 '              -f ref="refs/tags/$dispatch_ref" \\\n'
-                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+                '              -f sha="$revision" >/dev/null'
             ),
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs"\n'
                 '            printf "%s" \'-f ref="refs/tags/$dispatch_ref"\'\n'
-                '            printf "%s" \'-f sha="$MERGE_COMMIT_SHA"\''
+                '            printf "%s" \'-f sha="$revision"\''
             ),
         ),
         encoding="utf-8",
@@ -1040,5 +1040,21 @@ def _copy_workflows(tmp_path: Path) -> Path:
     for workflow_name in module.WORKFLOW_EXPECTATIONS:
         source = ROOT / ".github" / "workflows" / workflow_name
         target = workflow_dir / workflow_name
-        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        text = source.read_text(encoding="utf-8")
+        if workflow_name == "merged-pr-main-releasability.yml":
+            text = _dedent_revision_loop_body(text)
+        target.write_text(text, encoding="utf-8")
     return workflow_dir
+
+
+def _dedent_revision_loop_body(workflow: str) -> str:
+    """Keep legacy mutation fixtures focused on shell semantics, not formatting."""
+    lines = workflow.splitlines(keepends=True)
+    start = next(
+        index
+        for index, line in enumerate(lines)
+        if line.strip() == "for revision in $revisions; do"
+    )
+    end = next(index for index in range(start + 1, len(lines)) if lines[index].strip() == "done")
+    body = [line[2:] if line.startswith("  ") else line for line in lines[start + 1 : end]]
+    return "".join([*lines[: start + 1], *body, *lines[end:]])

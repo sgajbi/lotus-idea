@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from scripts.ci_main_revision_dispatch_contract import (
+    extract_named_run_step,
+    validate_revision_dispatch_scope,
+)
+
 
 IMMUTABLE_DISPATCH_REF_LOOKUP_CONDITIONS = (
     (
@@ -13,21 +18,12 @@ IMMUTABLE_DISPATCH_REF_LOOKUP_CONDITIONS = (
         '--jq .object.sha 2>/dev/null)"; then'
     ),
 )
-REF_MISMATCH_CONDITION = 'if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then'
+REF_MISMATCH_CONDITION = 'if [ "$existing_ref_sha" != "$revision" ]; then'
 IMMUTABLE_DISPATCH_REF_CREATION_CONDITION = 'if [ -z "$existing_ref_sha" ]; then'
 IMMUTABLE_DISPATCH_REF_CREATION_COMMAND = 'gh api "repos/$GITHUB_REPOSITORY/git/refs"'
 IMMUTABLE_DISPATCH_REF_CREATION_REF_FIELD = '-f ref="refs/tags/$dispatch_ref"'
-IMMUTABLE_DISPATCH_REF_CREATION_SHA_FIELD = '-f sha="$MERGE_COMMIT_SHA"'
+IMMUTABLE_DISPATCH_REF_CREATION_SHA_FIELD = '-f sha="$revision"'
 MAIN_RELEASABILITY_DISPATCH_COMMAND = "gh workflow run main-releasability.yml"
-
-
-def _step_block(text: str, step_name: str) -> str:
-    start = text.find(f"- name: {step_name}")
-    if start == -1:
-        return ""
-    next_step = text.find("\n      - ", start + 1)
-    end = next_step if next_step != -1 else len(text)
-    return text[start:end]
 
 
 def _strip_shell_inline_comment(stripped_line: str) -> str:
@@ -67,13 +63,15 @@ def validate_merged_pr_main_releasability_dispatch(workflow_name: str, workflow:
         return []
 
     errors: list[str] = []
-    dispatch_step_text = _step_block(workflow, "Dispatch main releasability gate")
+    dispatch_step_text = extract_named_run_step(workflow, "Dispatch main releasability gate")
     if not dispatch_step_text:
         errors.append(
             "merged-pr-main-releasability.yml must keep lookup, conditional ref creation, "
             "and workflow dispatch in one named run step"
         )
-    dispatch_contract_text = dispatch_step_text or workflow
+    dispatch_contract_text, revision_errors = validate_revision_dispatch_scope(dispatch_step_text)
+    errors.extend(revision_errors)
+    dispatch_contract_text = dispatch_contract_text or dispatch_step_text or workflow
     if not _has_conditionally_guarded_immutable_ref_lookup(dispatch_contract_text):
         errors.append(
             "merged-pr-main-releasability.yml must guard immutable-ref lookup "
@@ -425,7 +423,7 @@ def _is_exact_main_releasability_dispatch_command(command: str) -> bool:
         and not any(token in normalized_command for token in (" || ", " && ", " ; "))
         and not normalized_command.endswith(" &")
         and '--ref "$dispatch_ref"' in normalized_command
-        and '-f expected_sha="$MERGE_COMMIT_SHA"' in normalized_command
+        and '-f expected_sha="$revision"' in normalized_command
     )
 
 
