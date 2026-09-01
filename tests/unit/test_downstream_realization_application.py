@@ -45,6 +45,7 @@ from app.domain import (
     request_report_evidence_pack,
 )
 from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
     DownstreamRealizationOutcome,
     DownstreamRealizationOutcomePosture,
 )
@@ -159,7 +160,18 @@ class CapturingReportClient:
 
 def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome() -> None:
     repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
-    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    advise_client = CapturingAdviseClient(
+        DownstreamRealizationOutcome.accepted_by_downstream(
+            DownstreamOwnerReceipt(
+                owner_authority=SourceSystem.LOTUS_ADVISE,
+                owner_request_id="ipi_submission_001",
+                owner_realization_id="ipr_submission_001",
+                owner_work_id="iarw_submission_001",
+                source_event_version=1,
+                source_evidence_fingerprint="sha256:evidence-redacted",
+            )
+        )
+    )
     manage_client = CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream())
 
     result = submit_conversion_intent_to_downstream(
@@ -190,6 +202,10 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     assert advise_client.idempotency_key == "submission-advise-001"
     assert advise_client.access_scope == candidate().access_scope
     assert manage_client.submitted == ()
+    submission = repository.downstream_submission_by_idempotency_key("submission-advise-001")
+    assert submission is not None
+    assert submission.owner_receipt is not None
+    assert submission.owner_receipt.owner_realization_id == "ipr_submission_001"
     assert "portfolio_id" not in str(result)
     assert "client_id" not in str(result)
 

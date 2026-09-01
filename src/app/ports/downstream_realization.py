@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from app.domain import GovernedConversionIntent, GovernedReportEvidencePack, ReviewAccessScope
+from app.domain import (
+    GovernedConversionIntent,
+    GovernedReportEvidencePack,
+    ReviewAccessScope,
+    SourceSystem,
+)
 
 
 class DownstreamRealizationOutcomePosture(StrEnum):
@@ -14,24 +19,61 @@ class DownstreamRealizationOutcomePosture(StrEnum):
 
 
 @dataclass(frozen=True)
+class DownstreamOwnerReceipt:
+    """Source-safe identity returned by the service that accepted durable work."""
+
+    owner_authority: SourceSystem
+    owner_request_id: str
+    owner_realization_id: str
+    owner_work_id: str | None
+    source_event_version: int
+    source_evidence_fingerprint: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("owner_request_id", self.owner_request_id),
+            ("owner_realization_id", self.owner_realization_id),
+            ("source_evidence_fingerprint", self.source_evidence_fingerprint),
+        ):
+            if not value.strip():
+                raise ValueError(f"{field_name} is required")
+        if self.owner_work_id is not None and not self.owner_work_id.strip():
+            raise ValueError("owner_work_id must be non-blank when present")
+        if self.source_event_version <= 0:
+            raise ValueError("source_event_version must be positive")
+        if not self.source_evidence_fingerprint.startswith("sha256:"):
+            raise ValueError("source_evidence_fingerprint must use sha256")
+
+
+@dataclass(frozen=True)
 class DownstreamRealizationOutcome:
     posture: DownstreamRealizationOutcomePosture
     failure_reason: str | None = None
+    owner_receipt: DownstreamOwnerReceipt | None = None
 
     def __post_init__(self) -> None:
         if self.posture is DownstreamRealizationOutcomePosture.ACCEPTED:
             if self.failure_reason is not None:
                 raise ValueError("accepted outcome forbids failure_reason")
-        elif self.failure_reason is None or not self.failure_reason.strip():
-            raise ValueError("non-accepted outcome requires failure_reason")
+        else:
+            if self.failure_reason is None or not self.failure_reason.strip():
+                raise ValueError("non-accepted outcome requires failure_reason")
+            if self.owner_receipt is not None:
+                raise ValueError("non-accepted outcome forbids owner_receipt")
 
     @property
     def accepted(self) -> bool:
         return self.posture is DownstreamRealizationOutcomePosture.ACCEPTED
 
     @classmethod
-    def accepted_by_downstream(cls) -> "DownstreamRealizationOutcome":
-        return cls(posture=DownstreamRealizationOutcomePosture.ACCEPTED)
+    def accepted_by_downstream(
+        cls,
+        owner_receipt: DownstreamOwnerReceipt | None = None,
+    ) -> "DownstreamRealizationOutcome":
+        return cls(
+            posture=DownstreamRealizationOutcomePosture.ACCEPTED,
+            owner_receipt=owner_receipt,
+        )
 
     @classmethod
     def rejected_by_downstream(cls, failure_reason: str) -> "DownstreamRealizationOutcome":

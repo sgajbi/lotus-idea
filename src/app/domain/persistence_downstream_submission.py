@@ -6,6 +6,7 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -74,6 +75,7 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
         posture: DownstreamSubmissionPosture,
         finalized_at_utc: datetime,
         failure_reason: str | None = None,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
         existing = self._downstream_submission_records.get(idempotency_key)
         if existing is None:
@@ -89,6 +91,7 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
             posture=posture,
             finalized_at_utc=finalized_at_utc,
             failure_reason=failure_reason,
+            owner_receipt=owner_receipt,
         )
         if result.decision is DownstreamSubmissionMutationDecision.ACCEPTED:
             assert result.record is not None

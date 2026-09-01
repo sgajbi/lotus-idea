@@ -248,6 +248,7 @@ def _downstream_submission_row(values: Sequence[Any]) -> dict[str, Any]:
             "lease_attempt_id",
             "lease_expires_at_utc",
             "audit_json",
+            "owner_receipt_json",
         ),
         values,
     )

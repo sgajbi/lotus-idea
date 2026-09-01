@@ -22,6 +22,7 @@ from app.domain import (
     GovernedReportEvidencePack,
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -486,6 +487,7 @@ class DownstreamSubmissionRepository(Protocol):
         posture: DownstreamSubmissionPosture,
         finalized_at_utc: datetime,
         failure_reason: str | None = None,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult: ...
 
     def downstream_submissions_requiring_reconciliation(

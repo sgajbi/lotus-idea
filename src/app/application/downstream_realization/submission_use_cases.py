@@ -10,6 +10,7 @@ from app.domain import (
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResourceType,
@@ -252,6 +253,7 @@ def _execute_claimed_submission(
         repository=repository,
         posture=posture,
         failure_reason=outcome.failure_reason,
+        owner_receipt=_submission_owner_receipt(outcome),
     )
 
 
@@ -261,6 +263,7 @@ def _finalize_submission(
     repository: DownstreamSubmissionRepository,
     posture: DownstreamSubmissionPosture,
     failure_reason: str | None,
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamRealizationSubmissionResult:
     try:
         result = repository.finalize_downstream_submission(
@@ -270,6 +273,7 @@ def _finalize_submission(
             posture=posture,
             finalized_at_utc=max(datetime.now(UTC), request.submitted_at_utc),
             failure_reason=failure_reason,
+            owner_receipt=owner_receipt,
         )
     except Exception:
         return _uncertain_result(request, "downstream_submission_finalization_failed")
@@ -340,6 +344,22 @@ def _posture_from_outcome(outcome: DownstreamRealizationOutcome) -> DownstreamSu
     if outcome.posture is DownstreamRealizationOutcomePosture.REJECTED:
         return DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM
     return DownstreamSubmissionPosture.RECONCILIATION_REQUIRED
+
+
+def _submission_owner_receipt(
+    outcome: DownstreamRealizationOutcome,
+) -> DownstreamSubmissionOwnerReceipt | None:
+    receipt = outcome.owner_receipt
+    if receipt is None:
+        return None
+    return DownstreamSubmissionOwnerReceipt(
+        owner_authority=receipt.owner_authority,
+        owner_request_id=receipt.owner_request_id,
+        owner_realization_id=receipt.owner_realization_id,
+        owner_work_id=receipt.owner_work_id,
+        source_event_version=receipt.source_event_version,
+        source_evidence_fingerprint=receipt.source_evidence_fingerprint,
+    )
 
 
 def _claim_record(request: _SubmissionRequest) -> DownstreamSubmissionRecord:
