@@ -266,6 +266,58 @@ ADVISE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
     "response_model": AdviseRealizationReconciliationResponse,
     "tags": ["Idea Downstream Realization"],
     "responses": {
+        200: {
+            "description": "Authoritative Advise history accepted or replayed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "reconciliationStatus": "accepted",
+                        "appendedOutcomeCount": 2,
+                        "history": {
+                            "realizationId": "ipr_73d5330c532f",
+                            "intakeId": "ipi_7a1d2b3c4d5e",
+                            "reviewWorkId": "iarw_a1c9106760cb",
+                            "reviewWorkStatus": "PROPOSAL_LINKED",
+                            "realizationAuthority": "lotus-advise",
+                            "currentStatus": "PROPOSAL_LINKED",
+                            "currentSourceEventVersion": 2,
+                            "proposalId": "proposal-001",
+                            "proposalRecordCreated": True,
+                            "outcomes": [
+                                {
+                                    "outcomeId": "ipro_001",
+                                    "sourceEventVersion": 1,
+                                    "status": "ACCEPTED_FOR_REVIEW",
+                                    "reasonCode": "idea_intake_accepted_for_adviser_review",
+                                    "occurredAtUtc": "2026-09-01T10:00:00+00:00",
+                                    "reviewWorkId": "iarw_a1c9106760cb",
+                                    "proposalId": None,
+                                    "terminal": False,
+                                },
+                                {
+                                    "outcomeId": "ipro_002",
+                                    "sourceEventVersion": 2,
+                                    "status": "PROPOSAL_LINKED",
+                                    "reasonCode": "advise_proposal_linked",
+                                    "occurredAtUtc": "2026-09-01T10:01:00+00:00",
+                                    "reviewWorkId": "iarw_a1c9106760cb",
+                                    "proposalId": "proposal-001",
+                                    "terminal": False,
+                                },
+                            ],
+                            "suitabilityAuthorityGranted": False,
+                            "orderCreated": False,
+                            "clientPublicationAuthorized": False,
+                        },
+                        "durableStorageBacked": True,
+                        "grantsExecutionAuthority": False,
+                        "grantsSuitabilityAuthority": False,
+                        "grantsClientPublicationAuthority": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
         **permission_denied_metadata(
             detail="The caller cannot reconcile this Advise realization.",
             description="Caller capability or complete entitlement scope is missing.",
