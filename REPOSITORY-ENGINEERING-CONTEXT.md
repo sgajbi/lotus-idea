@@ -313,6 +313,28 @@ Durable product, architecture, blocker, support, or execution-policy truth must
 be updated inside the implementation PR when it changes. Later durable
 corrections are batched in a periodic Slice 18 reconciliation sweep rather than
 firing after every merge.
+
+Mainline release evidence is revision-scoped, not PR-scoped. The repository is
+configured for rebase-only merging, so the merged-PR dispatcher enumerates every
+revision added by the PR, oldest first, and starts one immutable Main
+Releasability run for each revision. The dispatcher fails closed if repository
+merge methods no longer match that assumption. Evidence runs use
+`cancel-in-progress: false`: a newer dispatch must not erase an in-flight
+verdict for an independently deployable revision. A separate post-run workflow
+reclaims only the exact temporary dispatch tag after validating its tag name,
+repository, and target SHA, so cleanup cannot broaden or alter the release
+verdict workflow.
+
+`make main-gate-coverage-audit` is the GitHub-backed operational audit. It
+requires a success or failure verdict for each of the latest 60 post-rollout
+main revisions and treats absent, cancelled, running, malformed, or unreadable
+evidence as a coverage gap. Commit
+`abcc119ea48d286cf7336fb687a51e0b40d38404` is the exclusive rollout boundary;
+older history is explicitly classified as pre-gate instead of triggering a
+costly synthetic release backfill. The scheduled audit is authoritative for
+live coverage posture; volatile run identifiers remain in GitHub and immutable
+artifacts rather than source documentation.
+
 Platform PR `sgajbi/lotus-platform#646` then merged the reusable keep-open PR
 guidance hardening on platform main
 `c041a7e13358feb322b8e92b3827f3ed2a834b43`; exact-main Main Releasability run
