@@ -9,6 +9,8 @@ from app.application.advise_realization_reconciliation import (
     AdviseRealizationAccessScopeDenied,
     AdviseRealizationReconciliationStatus,
     ReconcileAdviseRealizationCommand,
+    _history_identity_blocker,
+    _submission_eligibility_blocker,
     reconcile_advise_realization_history,
 )
 from app.application.downstream_realization import (
@@ -21,6 +23,8 @@ from app.domain import (
     AdviseProposalRealizationStatus,
     AdviseProposalReviewWorkStatus,
     ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionResourceType,
     InMemoryIdeaRepository,
     QueueAccessScopeFilter,
     ReviewAccessScope,
@@ -164,6 +168,152 @@ def test_reconcile_maps_owner_read_failure_without_infrastructure_dependency() -
 
     assert result.status is AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE
     assert result.blocker == "advise_realization_owner_unavailable"
+
+
+def test_reconcile_fails_closed_when_submission_or_owner_reader_is_missing() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+
+    missing = reconcile_advise_realization_history(
+        _command("downstream-submission-000000000000000000000000"),
+        repository=repository,
+        advise_reader=None,
+    )
+    unavailable = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=None,
+    )
+
+    assert missing.status is AdviseRealizationReconciliationStatus.NOT_FOUND
+    assert unavailable.status is AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE
+    assert unavailable.blocker == "advise_realization_reader_not_configured"
+
+
+def test_reconcile_rejects_malformed_authoritative_history() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+
+    class MalformedReader:
+        def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
+            raise ValueError("owner payload is malformed")
+
+    result = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=MalformedReader(),
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.CONFLICT
+    assert result.blocker == "advise_realization_history_invalid"
+
+
+def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+    submission = repository.downstream_submission_by_support_reference(support_reference)
+    assert submission is not None
+    assert submission.owner_receipt is not None
+
+    cases = (
+        (
+            replace(
+                submission,
+                resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+            ),
+            "advise_realization_requires_conversion_intent_submission",
+        ),
+        (
+            replace(submission, target=ConversionTarget.MANAGE_REVIEW),
+            "advise_realization_requires_advise_target",
+        ),
+        (
+            replace(
+                submission,
+                source_authority=SourceSystem.LOTUS_MANAGE,
+                owner_receipt=replace(
+                    submission.owner_receipt,
+                    owner_authority=SourceSystem.LOTUS_MANAGE,
+                ),
+            ),
+            "advise_realization_requires_advise_authority",
+        ),
+        (
+            replace(
+                submission,
+                status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+                downstream_failure_reason="owner_outcome_uncertain",
+                owner_receipt=None,
+            ),
+            "advise_realization_requires_terminal_owner_submission",
+        ),
+        (
+            replace(submission, owner_receipt=None),
+            "advise_realization_owner_receipt_missing",
+        ),
+    )
+
+    for malformed, expected in cases:
+        assert _submission_eligibility_blocker(malformed) == expected
+    assert _submission_eligibility_blocker(submission) is None
+
+
+def test_advise_reconciliation_identity_check_names_exact_evidence_drift() -> None:
+    history = _history(version=2)
+    scope = ReviewAccessScope(
+        tenant_id="tenant-sg",
+        book_id="book-private-bank-sg",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-redacted",
+    )
+    cases = (
+        (replace(history, tenant_id="different"), "advise_realization_scope_conflict"),
+        (
+            replace(history, idea_candidate_id="different"),
+            "advise_realization_candidate_conflict",
+        ),
+        (
+            replace(history, conversion_intent_id="different"),
+            "advise_realization_conversion_intent_conflict",
+        ),
+        (
+            replace(history, source_evidence_fingerprint="sha256:different"),
+            "advise_realization_evidence_conflict",
+        ),
+    )
+
+    for changed, blocker in cases:
+        assert (
+            _history_identity_blocker(
+                changed,
+                access_scope=scope,
+                candidate_id="idea-downstream-001",
+                conversion_intent_id="conversion-advise_proposal-001",
+                evidence_fingerprint="sha256:downstream-evidence",
+            )
+            == blocker
+        )
+    assert (
+        _history_identity_blocker(
+            history,
+            access_scope=scope,
+            candidate_id="idea-downstream-001",
+            conversion_intent_id="conversion-advise_proposal-001",
+            evidence_fingerprint="sha256:downstream-evidence",
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("field_name", ["support_reference", "actor_subject"])
+def test_reconcile_command_requires_auditable_identity(field_name: str) -> None:
+    with pytest.raises(ValueError, match=f"{field_name} is required"):
+        ReconcileAdviseRealizationCommand(
+            support_reference=(
+                " "
+                if field_name == "support_reference"
+                else "downstream-submission-000000000000000000000000"
+            ),
+            actor_subject=" " if field_name == "actor_subject" else "operator-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+        )
 
 
 def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]:
