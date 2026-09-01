@@ -28,6 +28,7 @@ from app.domain import (
     IdeaConversionIntent,
     IdeaLifecycleStatus,
     ReasonCode,
+    QueueAccessScopeFilter,
     ReviewAccessScope,
     SourceSystem,
     evaluate_downstream_submission_claim,
@@ -59,6 +60,18 @@ DOWNSTREAM_SUBMISSION_202_SUCCESS_EXAMPLE_SUMMARIES = {
 
 _SUBMITTED_AT = datetime(2026, 6, 21, 10, 30, tzinfo=UTC)
 _ACTOR = "advisor-001"
+_ACCESS_SCOPE = ReviewAccessScope(
+    tenant_id="tenant-sg",
+    book_id="book-private-bank-sg",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-example",
+)
+_ACCESS_SCOPE_FILTER = QueueAccessScopeFilter(
+    tenant_id=_ACCESS_SCOPE.tenant_id,
+    book_id=_ACCESS_SCOPE.book_id,
+    portfolio_id=_ACCESS_SCOPE.portfolio_id,
+    client_id=_ACCESS_SCOPE.client_id,
+)
 
 
 def build_conversion_downstream_submission_200_response_examples() -> dict[str, dict[str, Any]]:
@@ -204,6 +217,7 @@ def _conversion_submission(
         conversion_intent_id=intent.intent.conversion_intent_id,
         idempotency_key=idempotency_key,
         actor_subject=_ACTOR,
+        access_scope_filter=_ACCESS_SCOPE_FILTER,
         correlation_id="corr-example",
         trace_id="trace-example",
         submitted_at_utc=_SUBMITTED_AT,
@@ -234,6 +248,7 @@ def _report_submission(
         report_evidence_pack_id=evidence_pack.report_evidence_pack_id,
         idempotency_key=idempotency_key,
         actor_subject=_ACTOR,
+        access_scope_filter=_ACCESS_SCOPE_FILTER,
         correlation_id="corr-example",
         trace_id="trace-example",
         submitted_at_utc=_SUBMITTED_AT,
@@ -328,6 +343,16 @@ class _ExampleDownstreamSubmissionRepository:
         report_evidence_pack: GovernedReportEvidencePack | None = None,
     ) -> None:
         self._conversion_intent = conversion_intent
+        self._conversion_intent_candidate: CandidatePersistenceRecord | None = (
+            cast(
+                CandidatePersistenceRecord,
+                _ExampleReportEvidencePackCandidateRecord(
+                    candidate=_ExampleCandidate(access_scope=_ACCESS_SCOPE)
+                ),
+            )
+            if conversion_intent is not None
+            else None
+        )
         self._report_evidence_pack = report_evidence_pack
         self._report_evidence_pack_candidate: CandidatePersistenceRecord | None = (
             cast(
@@ -354,6 +379,16 @@ class _ExampleDownstreamSubmissionRepository:
             and self._conversion_intent.intent.conversion_intent_id == conversion_intent_id
         ):
             return self._conversion_intent
+        return None
+
+    def candidate_record_for_conversion_intent(
+        self, conversion_intent_id: str
+    ) -> CandidatePersistenceRecord | None:
+        if (
+            self._conversion_intent
+            and self._conversion_intent.intent.conversion_intent_id == conversion_intent_id
+        ):
+            return self._conversion_intent_candidate
         return None
 
     def candidate_record_for_report_evidence_pack(

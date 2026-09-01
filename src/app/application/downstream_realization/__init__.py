@@ -1,6 +1,7 @@
 """Stable application interface for downstream realization."""
 
 from app.application.downstream_realization.submission_use_cases import (
+    DownstreamRealizationAccessScopeDenied,
     DownstreamRealizationStatus,
     DownstreamRealizationSubmissionResult,
     RealizeConversionIntentCommand,
@@ -10,6 +11,7 @@ from app.application.downstream_realization.submission_use_cases import (
 )
 
 __all__ = (
+    "DownstreamRealizationAccessScopeDenied",
     "DownstreamRealizationStatus",
     "DownstreamRealizationSubmissionResult",
     "RealizeConversionIntentCommand",

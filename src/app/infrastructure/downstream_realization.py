@@ -214,6 +214,7 @@ class HttpAdviseProposalRealizationClient:
         self,
         intent: GovernedConversionIntent,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -222,7 +223,7 @@ class HttpAdviseProposalRealizationClient:
         return _post_downstream_envelope(
             self._client,
             self._config.submit_path,
-            json_payload=_conversion_intent_envelope(intent),
+            json_payload=_conversion_intent_envelope(intent, access_scope=access_scope),
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
@@ -252,6 +253,7 @@ class HttpManageActionRealizationClient:
         self,
         intent: GovernedConversionIntent,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -260,7 +262,7 @@ class HttpManageActionRealizationClient:
         return _post_downstream_envelope(
             self._client,
             self._config.submit_path,
-            json_payload=_conversion_intent_envelope(intent),
+            json_payload=_conversion_intent_envelope(intent, access_scope=access_scope),
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
@@ -359,14 +361,18 @@ def _post_downstream_envelope(
     return DownstreamRealizationOutcome.accepted_by_downstream()
 
 
-def _conversion_intent_envelope(intent: GovernedConversionIntent) -> dict[str, Any]:
+def _conversion_intent_envelope(
+    intent: GovernedConversionIntent,
+    *,
+    access_scope: ReviewAccessScope,
+) -> dict[str, Any]:
     if intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
         intent_type = "REVIEW_FOR_ADVISORY_PROPOSAL"
     elif intent.intent.target is ConversionTarget.MANAGE_REVIEW:
         intent_type = "REVIEW_FOR_REBALANCE"
     else:
         raise ValueError("unsupported conversion target for downstream intake envelope")
-    return {
+    envelope = {
         "source_system": "lotus-idea",
         "source_product": "lotus-idea:IdeaCandidate:v1",
         "idea_candidate_id": intent.intent.candidate_id,
@@ -381,6 +387,9 @@ def _conversion_intent_envelope(intent: GovernedConversionIntent) -> dict[str, A
             }
         ],
     }
+    if intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
+        envelope["portfolio_id"] = access_scope.portfolio_id
+    return envelope
 
 
 def _report_evidence_pack_envelope(evidence_pack: GovernedReportEvidencePack) -> dict[str, Any]:

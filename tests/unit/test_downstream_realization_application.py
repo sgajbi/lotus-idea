@@ -10,6 +10,7 @@ from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
 
 from app.application.downstream_realization import (
+    DownstreamRealizationAccessScopeDenied,
     DownstreamRealizationStatus,
     RealizeConversionIntentCommand,
     RealizeReportEvidencePackCommand,
@@ -30,6 +31,7 @@ from app.domain import (
     InMemoryIdeaRepository,
     LineageRef,
     OpportunityFamily,
+    QueueAccessScopeFilter,
     ReasonCode,
     ReportEvidencePackCommand,
     ReportEvidencePackPurpose,
@@ -52,6 +54,12 @@ AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 PACK_REQUESTED_AT = datetime(2026, 6, 21, 10, 25, tzinfo=UTC)
+AUTHORIZED_SCOPE_FILTER = QueueAccessScopeFilter(
+    tenant_id="tenant-sg",
+    book_id="book-private-bank-sg",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-redacted",
+)
 
 
 @dataclass
@@ -61,11 +69,13 @@ class CapturingAdviseClient:
     correlation_id: str | None = None
     trace_id: str | None = None
     idempotency_key: str | None = None
+    access_scope: ReviewAccessScope | None = None
 
     def submit_proposal_intent(
         self,
         intent: GovernedConversionIntent,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -74,6 +84,7 @@ class CapturingAdviseClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        self.access_scope = access_scope
         return self.outcome
 
 
@@ -85,6 +96,7 @@ class RaisingAdviseClient:
         self,
         intent: GovernedConversionIntent,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -100,11 +112,13 @@ class CapturingManageClient:
     correlation_id: str | None = None
     trace_id: str | None = None
     idempotency_key: str | None = None
+    access_scope: ReviewAccessScope | None = None
 
     def submit_action_intent(
         self,
         intent: GovernedConversionIntent,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -113,6 +127,7 @@ class CapturingManageClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        self.access_scope = access_scope
         return self.outcome
 
 
@@ -152,6 +167,7 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="submission-advise-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             correlation_id="corr-realization",
             trace_id="trace-realization",
         ),
@@ -172,9 +188,39 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     assert advise_client.correlation_id == "corr-realization"
     assert advise_client.trace_id == "trace-realization"
     assert advise_client.idempotency_key == "submission-advise-001"
+    assert advise_client.access_scope == candidate().access_scope
     assert manage_client.submitted == ()
     assert "portfolio_id" not in str(result)
     assert "client_id" not in str(result)
+
+
+def test_submit_conversion_intent_rejects_cross_portfolio_scope_before_claim_or_dispatch() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    with pytest.raises(DownstreamRealizationAccessScopeDenied):
+        submit_conversion_intent_to_downstream(
+            RealizeConversionIntentCommand(
+                conversion_intent_id="conversion-advise_proposal-001",
+                idempotency_key="submission-cross-portfolio-denied",
+                actor_subject="advisor-redacted",
+                access_scope_filter=QueueAccessScopeFilter(
+                    tenant_id="tenant-sg",
+                    book_id="book-private-bank-sg",
+                    portfolio_id="PB_SG_ALT_BAL_002",
+                    client_id="client-redacted",
+                ),
+            ),
+            repository=repository,
+            advise_client=advise_client,
+            manage_client=None,
+        )
+
+    assert advise_client.submitted == ()
+    assert (
+        repository.downstream_submission_by_idempotency_key("submission-cross-portfolio-denied")
+        is None
+    )
 
 
 def test_submit_conversion_intent_replays_local_downstream_submission_without_client_call() -> None:
@@ -185,6 +231,7 @@ def test_submit_conversion_intent_replays_local_downstream_submission_without_cl
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-advise-replay-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         correlation_id="corr-realization",
         trace_id="trace-realization",
         submitted_at_utc=EVALUATED_AT,
@@ -220,6 +267,7 @@ def test_downstream_acceptance_with_failed_local_finalize_requires_reconciliatio
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-finalize-failure-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         submitted_at_utc=EVALUATED_AT,
     )
     original_finalize = repository.finalize_downstream_submission
@@ -262,6 +310,7 @@ def test_unknown_downstream_outcome_is_durable_and_never_retried_automatically()
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-timeout-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         submitted_at_utc=EVALUATED_AT,
     )
 
@@ -293,6 +342,7 @@ def test_downstream_client_exception_is_durable_and_not_retried() -> None:
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-client-exception-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         submitted_at_utc=EVALUATED_AT,
     )
 
@@ -334,6 +384,7 @@ def test_downstream_finalization_lease_conflict_returns_uncertain_posture(
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="submission-finalize-conflict-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             submitted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
@@ -365,6 +416,7 @@ def test_downstream_submission_requires_utc_submission_time(
                 conversion_intent_id="conversion-advise_proposal-001",
                 idempotency_key="submission-invalid-time-001",
                 actor_subject="advisor-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
                 submitted_at_utc=submitted_at,
             ),
             repository=repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL),
@@ -422,6 +474,7 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="submission-advise-conflict-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             submitted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
@@ -433,6 +486,7 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
             conversion_intent_id="conversion-advise_proposal-002",
             idempotency_key="submission-advise-conflict-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             submitted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
@@ -452,6 +506,7 @@ def test_submit_conversion_intent_persists_not_configured_posture_for_replay() -
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-advise-not-configured-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         submitted_at_utc=EVALUATED_AT,
     )
     advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
@@ -488,6 +543,7 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
             conversion_intent_id="conversion-manage_review-001",
             idempotency_key="submission-manage-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             correlation_id="corr-manage-realization",
             trace_id="trace-manage-realization",
         ),
@@ -505,6 +561,7 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     assert manage_client.correlation_id == "corr-manage-realization"
     assert manage_client.trace_id == "trace-manage-realization"
     assert manage_client.idempotency_key == "submission-manage-001"
+    assert manage_client.access_scope == candidate().access_scope
 
 
 def test_report_conversion_intent_requires_report_evidence_pack_request_submission() -> None:
@@ -515,6 +572,7 @@ def test_report_conversion_intent_requires_report_evidence_pack_request_submissi
             conversion_intent_id="conversion-report_evidence-001",
             idempotency_key="submission-report-intent-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         advise_client=CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream()),
@@ -536,6 +594,7 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
             report_evidence_pack_id="report-evidence-pack-001",
             idempotency_key="submission-report-pack-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             correlation_id="corr-report-realization",
             trace_id="trace-report-realization",
         ),
@@ -566,6 +625,7 @@ def test_submit_report_evidence_pack_replays_local_submission_without_client_cal
         report_evidence_pack_id="report-evidence-pack-001",
         idempotency_key="submission-report-pack-replay-001",
         actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         submitted_at_utc=EVALUATED_AT,
     )
 
@@ -598,6 +658,7 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
             conversion_intent_id="missing-conversion",
             idempotency_key="submission-missing-conversion-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         advise_client=advise_client,
@@ -608,6 +669,7 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
             report_evidence_pack_id="missing-pack",
             idempotency_key="submission-missing-pack-001",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         report_client=report_client,
@@ -630,6 +692,7 @@ def test_submit_conversion_intent_requires_non_blank_identifier() -> None:
                 conversion_intent_id=" ",
                 idempotency_key="submission-blank-conversion-001",
                 actor_subject="advisor-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             ),
             repository=InMemoryIdeaRepository(),
             advise_client=advise_client,
@@ -649,6 +712,7 @@ def test_submit_report_evidence_pack_requires_non_blank_identifier() -> None:
                 report_evidence_pack_id=" ",
                 idempotency_key="submission-blank-report-pack-001",
                 actor_subject="advisor-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
             ),
             repository=InMemoryIdeaRepository(),
             report_client=report_client,

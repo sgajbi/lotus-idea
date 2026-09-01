@@ -15,6 +15,8 @@ from app.domain import (
     DownstreamSubmissionResourceType,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
+    QueueAccessScopeFilter,
+    ReviewAccessScope,
     SourceSystem,
     create_downstream_submission_claim,
 )
@@ -48,6 +50,7 @@ class RealizeConversionIntentCommand:
     conversion_intent_id: str
     idempotency_key: str
     actor_subject: str
+    access_scope_filter: QueueAccessScopeFilter
     correlation_id: str | None = None
     trace_id: str | None = None
     submitted_at_utc: datetime | None = None
@@ -62,6 +65,7 @@ class RealizeReportEvidencePackCommand:
     report_evidence_pack_id: str
     idempotency_key: str
     actor_subject: str
+    access_scope_filter: QueueAccessScopeFilter
     correlation_id: str | None = None
     trace_id: str | None = None
     submitted_at_utc: datetime | None = None
@@ -82,6 +86,10 @@ class DownstreamRealizationSubmissionResult:
     records_downstream_outcome: bool = False
     grants_downstream_authority: bool = False
     supported_feature_promoted: bool = False
+
+
+class DownstreamRealizationAccessScopeDenied(Exception):
+    """Raised before claim or dispatch when caller scope does not cover the source candidate."""
 
 
 @dataclass(frozen=True)
@@ -121,13 +129,23 @@ def submit_conversion_intent_to_downstream(
             downstream_failure_reason="report_evidence_pack_request_required",
         )
 
-    request = _request_for_conversion(command, conversion_intent)
+    candidate_record = repository.candidate_record_for_conversion_intent(
+        command.conversion_intent_id
+    )
+    if candidate_record is None:
+        return _unresolved_result(DownstreamRealizationStatus.NOT_FOUND)
+    access_scope = _authorized_access_scope(
+        command.access_scope_filter,
+        candidate_record.candidate.access_scope,
+    )
+    request = _request_for_conversion(command, conversion_intent, access_scope=access_scope)
     if conversion_intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
         call = (
             None
             if advise_client is None
             else lambda: advise_client.submit_proposal_intent(
                 conversion_intent,
+                access_scope=access_scope,
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
                 idempotency_key=command.idempotency_key,
@@ -139,6 +157,7 @@ def submit_conversion_intent_to_downstream(
             if manage_client is None
             else lambda: manage_client.submit_action_intent(
                 conversion_intent,
+                access_scope=access_scope,
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
                 idempotency_key=command.idempotency_key,
@@ -168,10 +187,11 @@ def submit_report_evidence_pack_to_downstream(
     )
     if candidate_record is None:
         return _unresolved_result(DownstreamRealizationStatus.NOT_FOUND)
-    request = _request_for_report_pack(command, evidence_pack)
-    access_scope = candidate_record.candidate.access_scope
-    if access_scope is None:
-        return _uncertain_result(request, "trusted_candidate_scope_missing")
+    access_scope = _authorized_access_scope(
+        command.access_scope_filter,
+        candidate_record.candidate.access_scope,
+    )
+    request = _request_for_report_pack(command, evidence_pack, access_scope=access_scope)
     call = (
         None
         if report_client is None
@@ -343,6 +363,8 @@ def _claim_record(request: _SubmissionRequest) -> DownstreamSubmissionRecord:
 def _request_for_conversion(
     command: RealizeConversionIntentCommand,
     conversion_intent: GovernedConversionIntent,
+    *,
+    access_scope: ReviewAccessScope,
 ) -> _SubmissionRequest:
     return _submission_request(
         command=command,
@@ -350,12 +372,15 @@ def _request_for_conversion(
         resource_id=command.conversion_intent_id,
         target=conversion_intent.intent.target,
         source_authority=conversion_intent.target_source_authority,
+        access_scope=access_scope,
     )
 
 
 def _request_for_report_pack(
     command: RealizeReportEvidencePackCommand,
     evidence_pack: GovernedReportEvidencePack,
+    *,
+    access_scope: ReviewAccessScope,
 ) -> _SubmissionRequest:
     return _submission_request(
         command=command,
@@ -363,6 +388,7 @@ def _request_for_report_pack(
         resource_id=command.report_evidence_pack_id,
         target=ConversionTarget.REPORT_EVIDENCE,
         source_authority=evidence_pack.report_source_authority,
+        access_scope=access_scope,
     )
 
 
@@ -373,6 +399,7 @@ def _submission_request(
     resource_id: str,
     target: ConversionTarget,
     source_authority: SourceSystem,
+    access_scope: ReviewAccessScope,
 ) -> _SubmissionRequest:
     return _SubmissionRequest(
         idempotency_key=command.idempotency_key,
@@ -387,6 +414,10 @@ def _submission_request(
                 "resource_id": resource_id,
                 "target": target.value,
                 "source_authority": source_authority.value,
+                "tenant_id": access_scope.tenant_id,
+                "book_id": access_scope.book_id,
+                "portfolio_id": access_scope.portfolio_id,
+                "client_id": access_scope.client_id,
             }
         ),
         submitted_at_utc=command.submitted_at_utc or datetime.now(UTC),
@@ -412,6 +443,16 @@ def _validate_command(
     _require_text(command.actor_subject, "actor_subject")
     if command.submitted_at_utc is not None:
         _require_aware_utc(command.submitted_at_utc, "submitted_at_utc")
+
+
+def _authorized_access_scope(
+    access_scope_filter: QueueAccessScopeFilter,
+    access_scope: ReviewAccessScope | None,
+) -> ReviewAccessScope:
+    if access_scope_filter.is_empty or not access_scope_filter.matches(access_scope):
+        raise DownstreamRealizationAccessScopeDenied
+    assert access_scope is not None
+    return access_scope
 
 
 def _require_text(value: str, field_name: str) -> None:

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from app.application.downstream_realization import (
+    DownstreamRealizationAccessScopeDenied,
     DownstreamRealizationStatus,
     RealizeConversionIntentCommand,
     RealizeReportEvidencePackCommand,
@@ -19,6 +22,7 @@ from app.domain import (
 )
 from app.ports.downstream_realization import DownstreamRealizationOutcome
 from tests.unit.test_downstream_realization_application import (
+    AUTHORIZED_SCOPE_FILTER,
     CapturingAdviseClient,
     CapturingReportClient,
     repository_with_conversion,
@@ -30,7 +34,14 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
     source_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
     conversion_intent = source_repository.conversion_intent_by_id("conversion-advise_proposal-001")
     assert conversion_intent is not None
-    repository = LookupOnlyDownstreamRepository(conversion_intent=conversion_intent)
+    candidate_record = source_repository.candidate_record_for_conversion_intent(
+        "conversion-advise_proposal-001"
+    )
+    assert candidate_record is not None
+    repository = LookupOnlyDownstreamRepository(
+        conversion_intent=conversion_intent,
+        conversion_intent_candidate=candidate_record,
+    )
     advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
 
     result = submit_conversion_intent_to_downstream(
@@ -38,6 +49,7 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="downstream-lookup-conversion",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         advise_client=advise_client,
@@ -71,6 +83,7 @@ def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> Non
             report_evidence_pack_id="report-evidence-pack-001",
             idempotency_key="downstream-lookup-report-pack",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         report_client=report_client,
@@ -97,6 +110,7 @@ def test_downstream_report_pack_submission_requires_linked_candidate_record() ->
             report_evidence_pack_id="report-evidence-pack-001",
             idempotency_key="downstream-lookup-report-pack-without-candidate",
             actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
         ),
         repository=repository,
         report_client=report_client,
@@ -123,18 +137,18 @@ def test_downstream_report_pack_submission_requires_trusted_candidate_scope() ->
     )
     report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
 
-    result = submit_report_evidence_pack_to_downstream(
-        RealizeReportEvidencePackCommand(
-            report_evidence_pack_id="report-evidence-pack-001",
-            idempotency_key="downstream-lookup-report-pack-without-scope",
-            actor_subject="advisor-redacted",
-        ),
-        repository=repository,
-        report_client=report_client,
-    )
+    with pytest.raises(DownstreamRealizationAccessScopeDenied):
+        submit_report_evidence_pack_to_downstream(
+            RealizeReportEvidencePackCommand(
+                report_evidence_pack_id="report-evidence-pack-001",
+                idempotency_key="downstream-lookup-report-pack-without-scope",
+                actor_subject="advisor-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+            ),
+            repository=repository,
+            report_client=report_client,
+        )
 
-    assert result.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
-    assert result.downstream_failure_reason == "trusted_candidate_scope_missing"
     assert report_client.submitted == ()
 
 
@@ -143,14 +157,17 @@ class LookupOnlyDownstreamRepository(InMemoryIdeaRepository):
         self,
         *,
         conversion_intent: GovernedConversionIntent | None = None,
+        conversion_intent_candidate: CandidatePersistenceRecord | None = None,
         report_evidence_pack: GovernedReportEvidencePack | None = None,
         report_evidence_pack_candidate: CandidatePersistenceRecord | None = None,
     ) -> None:
         super().__init__()
         self.conversion_intent = conversion_intent
+        self.conversion_intent_candidate = conversion_intent_candidate
         self.report_evidence_pack = report_evidence_pack
         self.report_evidence_pack_candidate = report_evidence_pack_candidate
         self.requested_conversion_intent_ids: list[str] = []
+        self.requested_conversion_intent_candidate_ids: list[str] = []
         self.requested_report_evidence_pack_ids: list[str] = []
         self.requested_report_evidence_pack_candidate_ids: list[str] = []
 
@@ -164,6 +181,17 @@ class LookupOnlyDownstreamRepository(InMemoryIdeaRepository):
             and self.conversion_intent.intent.conversion_intent_id == conversion_intent_id
         ):
             return self.conversion_intent
+        return None
+
+    def candidate_record_for_conversion_intent(
+        self, conversion_intent_id: str
+    ) -> CandidatePersistenceRecord | None:
+        self.requested_conversion_intent_candidate_ids.append(conversion_intent_id)
+        if (
+            self.conversion_intent is not None
+            and self.conversion_intent.intent.conversion_intent_id == conversion_intent_id
+        ):
+            return self.conversion_intent_candidate
         return None
 
     def report_evidence_pack_by_id(
