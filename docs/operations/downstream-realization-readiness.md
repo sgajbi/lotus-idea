@@ -72,6 +72,7 @@ The submission routes are:
 | --- | --- | --- |
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
+| `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation` | Read the exact Advise-owned realization history for a receipt-bearing Advise submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 
 These routes are API-certified internal foundations. They propagate
 correlation, trace, and idempotency headers to configured adapters after a
@@ -85,7 +86,20 @@ is recorded as a replayable `downstream_realization_not_configured` posture and
 returns `503`. The routes emit
 `downstream_realization_submission` operation events with
 `supportability_status=not_certified`. They do not record authoritative
-downstream outcomes or promote support.
+downstream outcomes or promote support. Advise is the first owner integration
+to return a durable receipt on both accepted-for-review and
+rejected-before-work responses. Idea persists that bounded receipt and uses it
+as the only owner lookup key; HTTP success alone never becomes proposal or
+business-outcome truth.
+
+The Advise reconciliation route authorizes complete caller scope before owner
+I/O, reads the owner history through the typed port, validates source and
+realization authority, scope, evidence fingerprint, exact event versions,
+legal transitions, and stable work/proposal identity, then persists only an
+exact replay or append-only extension. Regression, mutation of prior events,
+identity drift, malformed owner evidence, and unsupported authority claims fail
+closed. A rejected-before-work history is a valid terminal owner outcome with
+no review-work or proposal identity; its durable receipt is not discarded.
 
 ## What It Does Not Prove
 
@@ -469,7 +483,7 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |
-| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH` |
+| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE` |
 | Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
 | Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
 
@@ -498,7 +512,7 @@ call, even when the variables are present.
 | `LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID` | `tenant-sg` |
 | `LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE` | `SGPB` |
 | `LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY` | `lotus-idea-local-development` |
-| `LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES` | `advisory.idea_proposal_intake.accept` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES` | `advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read` |
 
 The adapter sends these values only as `X-Actor-Id`, `X-Role`,
 `X-Tenant-Id`, `X-Legal-Entity-Code`, `X-Service-Identity`,

@@ -180,16 +180,17 @@ No suitability approval, rebalance/execution authority, report rendering, archiv
 - `GET /api/v1/downstream-realization/readiness`
 - `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
 - `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
+- `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation`
 - `GET /api/v1/downstream-submissions/reconciliation`
 - `POST /api/v1/downstream-submissions/reconciliation/{supportReference}`
 
 **Current use**
 
-Planned-contract readiness plus source-safe claim-before-call submission. Submission requires complete trusted tenant, book, portfolio, and client entitlement scope covering the persisted source candidate; missing or mismatched scope fails closed before claim or dispatch. The claim fingerprint binds that complete scope, and the Advise intake envelope carries the governed candidate `portfolio_id` without exposing client identity. The Manage envelope remains unchanged until its owner contract evolves. Readiness includes the local downstream submission denominator and unresolved reconciliation workload. Both submission routes publish accepted, rejected, accepted-replayed, and rejected-replayed `200` modes, with `reconciliation_required` separately published as `202`; exact retries never make another adapter call. Timeouts, transport ambiguity, 5xx responses, malformed responses, lease loss, and local finalization failure become durable reconciliation posture. Operator routes expose opaque inspection and audited accepted/rejected/quarantined resolution.
+Planned-contract readiness plus source-safe claim-before-call submission. Submission requires complete trusted tenant, book, portfolio, and client entitlement scope covering the persisted source candidate; missing or mismatched scope fails closed before claim or dispatch. The claim fingerprint binds that complete scope, and the Advise intake envelope carries the governed candidate `portfolio_id` without exposing client identity. Readiness includes the local downstream submission denominator and unresolved reconciliation workload. Both submission routes publish accepted, rejected, accepted-replayed, and rejected-replayed `200` modes, with `reconciliation_required` separately published as `202`; exact retries never make another adapter call. Timeouts, transport ambiguity, 5xx responses, malformed responses, lease loss, and local finalization failure become durable reconciliation posture. Operator routes expose opaque inspection and audited accepted/rejected/quarantined resolution. Advise receipts are persisted for accepted-for-review and rejected-before-work outcomes. The reconciliation route requires `idea.downstream-realization.reconcile`, authorizes complete scope before the owner read, validates the exact typed Advise history, and persists only an exact replay or append-only extension.
 
 **Boundary — not granted by these routes**
 
-No authoritative conversion outcome, automatic uncertain-call retry, route-existence proof by default, suitability, execution, materialization, client publication, or support promotion.
+No automatic uncertain-call retry, route-existence proof by default, suitability, execution, materialization, client publication, or support promotion. The local Advise history is evidence copied from its owner; Idea never becomes authoritative for proposal or advisory business state.
 
 ### Source ingestion and outbox operations
 

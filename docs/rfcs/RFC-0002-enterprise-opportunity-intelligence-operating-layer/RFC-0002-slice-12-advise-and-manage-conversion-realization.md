@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, bounded Advise idea-intake runtime-execution proof consumption, and bounded Manage action-intake runtime-execution proof consumption; suitability, Manage action-register persistence/rebalance execution, Report/Render/Archive materialization, production identity, and supported product proof remain blocked
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, bounded owner runtime proof consumption, and an implementation-backed Advise receipt/history reconciliation consumer; suitability, Manage action-register persistence/rebalance execution, Report/Render/Archive materialization, production identity, cross-repository product realization, and supported product proof remain blocked
 
 ## Outcome
 
@@ -271,6 +271,16 @@ Implemented in this slice:
     audit, or outbox mutation. This improves retry reconstruction without
     granting the downstream authority that remains with Advise, Manage, or
     Report.
+35. The Advise realization consumer persists source-safe owner receipt identity
+    for accepted-for-review and rejected-before-work submissions, then exposes
+    `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation`.
+    Complete tenant/book/portfolio/client entitlement scope is checked before
+    owner I/O. The typed boundary validates Advise authority, scope, evidence
+    fingerprint, contiguous versions, legal transitions, stable review-work and
+    proposal identity, and unsupported-authority flags. In-memory and PostgreSQL
+    providers accept only exact replay or append-only extension; migration 022
+    persists receipts and histories. Transport success is never interpreted as
+    proposal, suitability, execution, or publication success.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
@@ -303,8 +313,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. downstream failure/rejection/completion integration tests across owning
-   services,
+5. cross-repository exact-main/runtime acceptance of the Idea Advise history
+   consumer plus Manage failure/rejection/completion integration,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
