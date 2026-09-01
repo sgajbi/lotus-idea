@@ -2,6 +2,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -9,14 +10,20 @@ from app.domain.ranking_evaluation import (
     RANKING_EVALUATION_POLICY_VERSION,
     RankedOpportunityJudgment,
     RankingCutoffStatus,
+    RankingJudgmentSource,
     RankingMetricSupportStatus,
     RankingPresentationFact,
+    RankingQueueSnapshotEvaluation,
     RankingRelevanceGrade,
+    RankingRelevanceFact,
+    RankingSnapshotEvaluation,
     aggregate_ranking_evaluations,
     evaluate_ranking_presentations,
     evaluate_ranking_snapshot,
     evaluate_ranking_stability,
+    downstream_relevance_grade,
 )
+from app.domain.ideas import ConversionOutcomeStatus
 
 
 def judgment(
@@ -395,3 +402,171 @@ def test_invalid_ranking_evidence_fails_closed(
             visible_opportunity_count=visible_count,
             cutoffs=cutoffs,
         )
+
+
+@pytest.mark.parametrize(
+    ("factory", "message"),
+    (
+        (
+            lambda: RankedOpportunityJudgment(
+                rank=cast(int, True),
+                relevance_grade=RankingRelevanceGrade.USEFUL,
+            ),
+            "rank must be a positive integer",
+        ),
+        (
+            lambda: RankedOpportunityJudgment(
+                rank=1,
+                relevance_grade=cast(RankingRelevanceGrade, 1),
+            ),
+            "governed ranking vocabulary",
+        ),
+        (
+            lambda: RankingRelevanceFact(
+                occurred_at_utc=datetime(2026, 9, 1, 8),
+                source=RankingJudgmentSource.ADVISER_REVIEW,
+                relevance_grade=RankingRelevanceGrade.USEFUL,
+            ),
+            "occurred_at_utc must be timezone-aware",
+        ),
+        (
+            lambda: RankingRelevanceFact(
+                occurred_at_utc=datetime(2026, 9, 1, 8, tzinfo=UTC),
+                source=cast(RankingJudgmentSource, "review"),
+                relevance_grade=RankingRelevanceGrade.USEFUL,
+            ),
+            "governed ranking judgment vocabulary",
+        ),
+        (
+            lambda: RankingRelevanceFact(
+                occurred_at_utc=datetime(2026, 9, 1, 8, tzinfo=UTC),
+                source=RankingJudgmentSource.ADVISER_REVIEW,
+                relevance_grade=cast(RankingRelevanceGrade, 1),
+            ),
+            "governed ranking vocabulary",
+        ),
+        (
+            lambda: replace(presentation_fact(1, None), tenant_id=" "),
+            "tenant_id is required",
+        ),
+        (
+            lambda: replace(
+                presentation_fact(1, None),
+                presented_at_utc=datetime(2026, 9, 1, 8),
+            ),
+            "presented_at_utc must be timezone-aware",
+        ),
+        (
+            lambda: replace(
+                presentation_fact(1, None),
+                judgment=cast(RankedOpportunityJudgment, "invalid"),
+            ),
+            "judgment must use RankedOpportunityJudgment",
+        ),
+    ),
+)
+def test_ranking_value_objects_reject_ungoverned_runtime_values(
+    factory: Callable[[], object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        factory()
+
+
+@pytest.mark.parametrize(
+    ("judgments", "visible_count", "cutoffs", "message"),
+    (
+        ((), 0, (1,), "visible_opportunity_count"),
+        ((judgment(1, None),), 1, (), "cutoffs is required"),
+        ((judgment(1, None),), 1, (cast(int, True),), "positive integers"),
+        ((cast(RankedOpportunityJudgment, "invalid"),), 1, (1,), "RankedOpportunityJudgment"),
+    ),
+)
+def test_ranking_snapshot_rejects_invalid_runtime_shapes(
+    judgments: tuple[RankedOpportunityJudgment, ...],
+    visible_count: int,
+    cutoffs: tuple[int, ...],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        evaluate_ranking_snapshot(
+            judgments,
+            visible_opportunity_count=visible_count,
+            cutoffs=cutoffs,
+        )
+
+
+def test_presentation_collection_rejects_invalid_fact_and_duplicate_economic_identity() -> None:
+    with pytest.raises(ValueError, match="RankingPresentationFact"):
+        evaluate_ranking_presentations((cast(RankingPresentationFact, "invalid"),))
+
+    with pytest.raises(ValueError, match="economic identities must be unique"):
+        evaluate_ranking_presentations(
+            (
+                presentation_fact(1, RankingRelevanceGrade.USEFUL),
+                replace(
+                    presentation_fact(2, RankingRelevanceGrade.NOT_USEFUL),
+                    economic_identity_id="economic-opportunity-1",
+                ),
+            ),
+            cutoffs=(1,),
+        )
+
+
+def test_stability_ignores_empty_evaluation_and_validates_identity_population() -> None:
+    empty = RankingQueueSnapshotEvaluation(
+        queue_snapshot_digest=f"sha256:{'c' * 64}",
+        tenant_id="tenant-a",
+        presented_at_utc=datetime(2026, 9, 1, 7, tzinfo=UTC),
+        queue_policy_version="queue-v1",
+        ranking_policy_version="ranking-v1",
+        surface="advisor_review_queue",
+        producer="lotus-workbench",
+        ranked_economic_identity_ids=(),
+        evaluation=RankingSnapshotEvaluation(
+            policy_version=RANKING_EVALUATION_POLICY_VERSION,
+            visible_opportunity_count=1,
+            cutoff_evaluations=(),
+        ),
+    )
+    complete = evaluate_ranking_presentations(
+        (
+            replace(
+                presentation_fact(1, RankingRelevanceGrade.USEFUL),
+                visible_opportunity_count=2,
+            ),
+            replace(
+                presentation_fact(2, RankingRelevanceGrade.NOT_USEFUL),
+                visible_opportunity_count=2,
+            ),
+        ),
+        cutoffs=(3,),
+    )[0]
+    duplicate_identity = replace(
+        complete,
+        ranked_economic_identity_ids=("same", "same"),
+    )
+
+    assert evaluate_ranking_stability((empty,)).comparable_snapshot_pair_count == 0
+    with pytest.raises(ValueError, match="unique economic identities"):
+        evaluate_ranking_stability((duplicate_identity,))
+
+
+def test_single_opportunity_equivalent_replays_are_fully_stable() -> None:
+    first = evaluate_ranking_presentations(
+        (presentation_fact(1, RankingRelevanceGrade.USEFUL),),
+        cutoffs=(1,),
+    )[0]
+    replay = replace(
+        first,
+        queue_snapshot_digest=f"sha256:{'b' * 64}",
+        presented_at_utc=first.presented_at_utc + timedelta(hours=1),
+    )
+
+    assert evaluate_ranking_stability((first, replay)).mean_normalized_stability == Decimal(
+        "1.000000"
+    )
+
+
+def test_non_terminal_downstream_status_is_not_relevance_evidence() -> None:
+    assert downstream_relevance_grade(ConversionOutcomeStatus.REQUESTED) is None
