@@ -215,3 +215,13 @@ proof only. It remains unsupported until Gateway/Workbench proof,
 platform-scoped runtime entitlements, mesh certification, and supported-feature
 evidence store and expose review decisions and feedback events as a supported
 product surface.
+
+Offline ranking evaluation now consumes the durable review and feedback facts
+without expanding their authority. Exact-version accepted/completed downstream
+outcomes receive the strongest relevance grade; otherwise the latest explicit
+adviser review or governed feedback controls. Suppression and rejection are
+explicit not-useful evidence, while snooze, expiry, no action, missing review,
+and partial presentation remain unjudged. Contradictory human judgments at the
+same instant fail closed. The evaluation is observational and cannot change
+scores, suppression, eligibility, lifecycle, suitability, compliance, or
+conversion authority.

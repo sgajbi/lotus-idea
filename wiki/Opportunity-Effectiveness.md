@@ -24,6 +24,7 @@ flowchart LR
     Candidate --> Decisions["Review + feedback + conversion"]
     Receipt -->|"version-matched stored evidence"| Funnel["Effectiveness snapshot"]
     Decisions --> Funnel
+    Funnel --> Quality["Precision@K + NDCG@K\ncoverage + stability"]
 ```
 
 Queue retrieval is not visible-render evidence. Prefetch, off-screen items,
@@ -51,6 +52,13 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
 - Family presentation counts and rates remain `null` when the cohort has no
   qualifying presentation receipt, preserving the difference between measured
   zero activity and unavailable evidence.
+- Methodology v4 adds offline ranked-queue quality at cutoffs 1, 3, 5, and 10.
+  It reports judgment coverage beside Precision@K and graded NDCG@K, keeps
+  partial presentation and unjudged work explicit, and requires 30 complete
+  snapshots before support is `ready`.
+- Recall@K remains explicitly unavailable until a defensible complete relevant
+  set exists. Equivalent-cohort ordering stability is reported separately and
+  never changes production policy automatically.
 
 The receipt is fenced by tenant, strict-integer candidate material/evidence versions, UTC
 chronology, strict positive global rank, independently bounded integer visible-set count, and
@@ -66,6 +74,10 @@ Repeated receipts for one candidate do not inflate presentation counts. A
 rank-1 acceptance is attributed only when the receipt precedes an adviser
 approval whose evidence hash resolves to the receipt's exact candidate version;
 an older recurrence version cannot receive credit for a later approval.
+Ranked relevance uses the same version fence. Accepted/completed source-owned
+outcomes have the strongest grade; otherwise the latest explicit adviser
+review or feedback controls. Snooze, expiry, missing judgment, and incomplete
+top-K receipts remain unavailable rather than being mislabeled not useful.
 The rank-1 acceptance denominator contains only candidates genuinely presented
 at global rank 1. If stored receipts exist but none is rank 1, the rate is
 `0 / 0` with a `null` value rather than a fabricated rejection rate.
