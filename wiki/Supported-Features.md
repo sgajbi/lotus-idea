@@ -59,7 +59,8 @@ later browser failure.
 
 Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, candidate evidence replay,
-deterministic scoring with review-queue projection, source-safe candidate detail projection, advisor
+deterministic scoring with review-queue projection, source-safe candidate detail projection with
+adviser-safe local downstream-submission posture, advisor
 review/feedback governance, AI governance redaction/verifier/fallback controls,
 and certified internal AI explanation evaluator and readiness APIs, plus the first certified
 internal signal API foundations for high-cash, concentration-risk,

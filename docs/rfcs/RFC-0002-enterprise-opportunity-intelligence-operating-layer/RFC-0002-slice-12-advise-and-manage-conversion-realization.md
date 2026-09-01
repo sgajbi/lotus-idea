@@ -128,6 +128,13 @@ Implemented in this slice:
     completion, suitability, action-register, materialization, and failure
     truth remains owned by the downstream service and the existing
     conversion-outcome recording API.
+    Issue `#1207` closes the corresponding adviser-read gap: candidate detail
+    now projects the Idea-owned local posture for candidate-linked conversion
+    intent and report evidence-pack submissions after entitlement approval.
+    It exposes only correlation-safe resource, target, authority, posture,
+    timing, attempt, and reconciliation fields. It omits operator secrets and
+    keeps source-owned `currentConversionOutcomes` authoritative for business
+    realization.
 20. `tests/unit/test_downstream_realization_application.py` proves Advise
     routing, Manage failure mapping, report-target rejection through the
     conversion-intent submission path, not-found behavior, local idempotency

@@ -681,7 +681,8 @@ surface, client-ready publication, or supported-feature promotion.
 `GET /api/v1/idea-candidates/{candidateId}` is the certified internal
 source-safe candidate detail API foundation. It reads persisted candidate
 snapshots and returns redacted source evidence, lifecycle history, review,
-feedback, conversion, report-evidence, and audit summary posture without source
+feedback, conversion, report-evidence, adviser-safe local downstream-submission
+posture, and audit summary posture without source
 route disclosure, raw evidence export, downstream authority, Workbench proof,
 data-product certification, or supported-feature promotion. `lotus-gateway`
 publishes this as a bounded read-only route at
@@ -690,8 +691,13 @@ source authority and forwarding caller entitlement-scope headers for
 `lotus-idea` fail-closed access checks. Durable PostgreSQL providers now serve
 ordinary candidate-detail reads through a repository-side projection over the
 requested candidate and related detail rows instead of hydrating whole
-repository snapshots; this is an internal module boundary, not a separate
-runtime service.
+repository snapshots. After candidate scope approval, one additional bounded
+query resolves only conversion-intent and report-evidence-pack submissions
+owned by that candidate. The projection omits idempotency keys, support
+references, actor/trace data, failure details, and audit history. Local
+submission acceptance is transport evidence and never substitutes for a
+source-owned conversion outcome. This is an internal module boundary, not a
+separate runtime service.
 Review-action, feedback, conversion-intent request, and AI explanation
 evaluation workflows reuse the same bounded candidate lookup before domain
 evaluation when the repository exposes the projection. Older/process-local
