@@ -124,6 +124,41 @@ def test_postgres_advise_history_reports_missing_submission_without_writing() ->
     assert connection.rows["idea_advise_realization_history"] == []
 
 
+def test_postgres_advise_history_rolls_back_compare_and_set_failure() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = _claim("fingerprint-a")
+    repository.claim_downstream_submission(claim)
+    repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=RECORDED_AT + timedelta(minutes=1),
+        owner_receipt=DownstreamSubmissionOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_ADVISE,
+            owner_request_id="ipi_001",
+            owner_realization_id="ipr_001",
+            owner_work_id="iarw_001",
+            source_event_version=1,
+            source_evidence_fingerprint="sha256:downstream-evidence",
+        ),
+    )
+    repository.persist_advise_realization_history(
+        support_reference=claim.support_reference,
+        history=_postgres_history(version=2),
+    )
+    connection.rows["idea_advise_realization_history"][0]["realization_id"] = "corrupt"
+
+    with pytest.raises(RuntimeError, match="compare-and-set failed"):
+        repository.persist_advise_realization_history(
+            support_reference=claim.support_reference,
+            history=_postgres_history(version=3),
+        )
+
+    assert connection.rollbacks == 1
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [

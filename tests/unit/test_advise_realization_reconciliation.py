@@ -34,6 +34,8 @@ from app.domain import (
     AdviseProposalRealizationOutcome,
     AdviseProposalRealizationStatus,
     AdviseProposalReviewWorkStatus,
+    AdviseRealizationHistoryMutationDecision,
+    AdviseRealizationHistoryMutationResult,
     ConversionTarget,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
@@ -222,6 +224,84 @@ def test_reconcile_rejects_malformed_authoritative_history() -> None:
 
     assert result.status is AdviseRealizationReconciliationStatus.CONFLICT
     assert result.blocker == "advise_realization_history_invalid"
+
+
+def test_reconcile_maps_repository_races_without_overstating_owner_progress(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+    reader = StubAdviseReader(_history(version=2))
+
+    monkeypatch.setattr(
+        repository,
+        "persist_advise_realization_history",
+        lambda **_kwargs: AdviseRealizationHistoryMutationResult(
+            decision=AdviseRealizationHistoryMutationDecision.NOT_FOUND,
+            history=None,
+        ),
+    )
+    missing = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+    monkeypatch.setattr(
+        repository,
+        "persist_advise_realization_history",
+        lambda **_kwargs: AdviseRealizationHistoryMutationResult(
+            decision=AdviseRealizationHistoryMutationDecision.CONFLICT,
+            history=None,
+        ),
+    )
+    conflict = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert missing.status is AdviseRealizationReconciliationStatus.NOT_FOUND
+    assert conflict.status is AdviseRealizationReconciliationStatus.CONFLICT
+    assert conflict.blocker == "advise_realization_history_conflict"
+
+
+def test_reconcile_rejects_ineligible_or_missing_source_resources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+    submission = repository.downstream_submission_by_support_reference(support_reference)
+    assert submission is not None
+    monkeypatch.setattr(
+        repository,
+        "downstream_submission_by_support_reference",
+        lambda _support_reference: replace(
+            submission,
+            resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        ),
+    )
+    ineligible = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=None,
+    )
+    monkeypatch.setattr(
+        repository,
+        "downstream_submission_by_support_reference",
+        lambda _support_reference: submission,
+    )
+    monkeypatch.setattr(
+        repository,
+        "candidate_record_for_conversion_intent",
+        lambda _conversion_intent_id: None,
+    )
+    missing_source = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=None,
+    )
+
+    assert ineligible.status is AdviseRealizationReconciliationStatus.NOT_ELIGIBLE
+    assert missing_source.status is AdviseRealizationReconciliationStatus.CONFLICT
+    assert missing_source.blocker == "advise_realization_source_resource_missing"
 
 
 def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() -> None:
