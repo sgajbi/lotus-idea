@@ -11,6 +11,7 @@ from app.domain.presentation_receipts import MAX_PRESENTED_CANDIDATE_COUNT
 
 RANKING_EVALUATION_POLICY_VERSION = "idea-ranking-evaluation-v1"
 APPROVED_RANKING_CUTOFFS = (1, 3, 5, 10)
+MINIMUM_READY_SNAPSHOT_COUNT = 30
 _RATE_QUANTUM = Decimal("0.000001")
 
 
@@ -25,6 +26,12 @@ class RankingCutoffStatus(StrEnum):
     READY = "ready"
     INCOMPLETE_PRESENTATION = "incomplete_presentation"
     INCOMPLETE_JUDGMENTS = "incomplete_judgments"
+
+
+class RankingMetricSupportStatus(StrEnum):
+    UNAVAILABLE = "unavailable"
+    INSUFFICIENT_SUPPORT = "insufficient_support"
+    READY = "ready"
 
 
 @dataclass(frozen=True)
@@ -84,6 +91,21 @@ class RankingQueueSnapshotEvaluation:
     surface: str
     producer: str
     evaluation: RankingSnapshotEvaluation
+
+
+@dataclass(frozen=True)
+class RankingCutoffAggregate:
+    cutoff: int
+    snapshot_count: int
+    ready_snapshot_count: int
+    incomplete_presentation_snapshot_count: int
+    incomplete_judgment_snapshot_count: int
+    judged_opportunity_count: int
+    evaluated_opportunity_count: int
+    judgment_coverage: Decimal | None
+    support_status: RankingMetricSupportStatus
+    mean_precision_at_k: Decimal | None
+    mean_ndcg_at_k: Decimal | None
 
 
 @dataclass(frozen=True)
@@ -179,6 +201,87 @@ def evaluate_ranking_presentations(
             )
         )
     return tuple(evaluations)
+
+
+def aggregate_ranking_evaluations(
+    evaluations: Iterable[RankingQueueSnapshotEvaluation],
+    *,
+    minimum_ready_snapshot_count: int = MINIMUM_READY_SNAPSHOT_COUNT,
+) -> tuple[RankingCutoffAggregate, ...]:
+    """Build privacy-safe macro averages while retaining evidence-completeness posture."""
+
+    if not _is_integer(minimum_ready_snapshot_count) or minimum_ready_snapshot_count <= 0:
+        raise ValueError("minimum_ready_snapshot_count must be a positive integer")
+    evaluation_tuple = tuple(evaluations)
+    cutoff_values = sorted(
+        {
+            cutoff.cutoff
+            for snapshot in evaluation_tuple
+            for cutoff in snapshot.evaluation.cutoff_evaluations
+        }
+    )
+    aggregates: list[RankingCutoffAggregate] = []
+    for cutoff_value in cutoff_values:
+        cutoff_evaluations = tuple(
+            cutoff
+            for snapshot in evaluation_tuple
+            for cutoff in snapshot.evaluation.cutoff_evaluations
+            if cutoff.cutoff == cutoff_value
+        )
+        ready = tuple(
+            cutoff for cutoff in cutoff_evaluations if cutoff.status is RankingCutoffStatus.READY
+        )
+        ready_count = len(ready)
+        support_status = (
+            RankingMetricSupportStatus.UNAVAILABLE
+            if ready_count == 0
+            else RankingMetricSupportStatus.INSUFFICIENT_SUPPORT
+            if ready_count < minimum_ready_snapshot_count
+            else RankingMetricSupportStatus.READY
+        )
+        evaluated_count = sum(item.evaluated_depth for item in cutoff_evaluations)
+        judged_count = sum(item.judged_opportunity_count for item in cutoff_evaluations)
+        aggregates.append(
+            RankingCutoffAggregate(
+                cutoff=cutoff_value,
+                snapshot_count=len(cutoff_evaluations),
+                ready_snapshot_count=ready_count,
+                incomplete_presentation_snapshot_count=sum(
+                    item.status is RankingCutoffStatus.INCOMPLETE_PRESENTATION
+                    for item in cutoff_evaluations
+                ),
+                incomplete_judgment_snapshot_count=sum(
+                    item.status is RankingCutoffStatus.INCOMPLETE_JUDGMENTS
+                    for item in cutoff_evaluations
+                ),
+                judged_opportunity_count=judged_count,
+                evaluated_opportunity_count=evaluated_count,
+                judgment_coverage=(
+                    _ratio(judged_count, evaluated_count) if evaluated_count else None
+                ),
+                support_status=support_status,
+                mean_precision_at_k=_mean_ready_metric(ready, metric="precision"),
+                mean_ndcg_at_k=_mean_ready_metric(ready, metric="ndcg"),
+            )
+        )
+    return tuple(aggregates)
+
+
+def _mean_ready_metric(
+    evaluations: tuple[RankingCutoffEvaluation, ...],
+    *,
+    metric: str,
+) -> Decimal | None:
+    values = tuple(
+        item.precision_at_k if metric == "precision" else item.ndcg_at_k for item in evaluations
+    )
+    if not values:
+        return None
+    if any(value is None for value in values):
+        raise ValueError("ready ranking evaluations must carry quality values")
+    return _quantize(
+        sum((value for value in values if value is not None), Decimal(0)) / len(values)
+    )
 
 
 def _validate_snapshot_consistency(
@@ -353,14 +456,18 @@ def _is_integer(value: object) -> bool:
 
 __all__ = [
     "APPROVED_RANKING_CUTOFFS",
+    "MINIMUM_READY_SNAPSHOT_COUNT",
     "RANKING_EVALUATION_POLICY_VERSION",
     "RankedOpportunityJudgment",
+    "RankingCutoffAggregate",
     "RankingCutoffEvaluation",
     "RankingCutoffStatus",
+    "RankingMetricSupportStatus",
     "RankingPresentationFact",
     "RankingQueueSnapshotEvaluation",
     "RankingRelevanceGrade",
     "RankingSnapshotEvaluation",
+    "aggregate_ranking_evaluations",
     "evaluate_ranking_presentations",
     "evaluate_ranking_snapshot",
 ]
