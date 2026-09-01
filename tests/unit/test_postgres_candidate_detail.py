@@ -8,6 +8,7 @@ from tests.unit.test_postgres_repository import (
     access_scope,
     high_cash_candidate,
 )
+from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 
 
 def test_postgres_repository_loads_candidate_detail_without_whole_snapshot() -> None:
@@ -74,3 +75,54 @@ def test_postgres_repository_hides_erased_candidate_detail() -> None:
     control["state"] = "erased"
 
     assert repository.candidate_record_by_id(candidate.candidate_id) is None
+
+
+def test_postgres_repository_loads_only_candidate_scoped_downstream_submissions() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:detail-submission",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    connection.rows["idea_conversion_intent"].extend(
+        (
+            {
+                "conversion_intent_id": "conversion-detail-owned",
+                "candidate_id": candidate.candidate_id,
+            },
+            {
+                "conversion_intent_id": "conversion-detail-other",
+                "candidate_id": "candidate-other",
+            },
+        )
+    )
+    repository.claim_downstream_submission(
+        build_downstream_submission_claim(
+            idempotency_key="submission-detail-owned",
+            request_fingerprint="sha256:submission-detail-owned",
+            resource_id="conversion-detail-owned",
+            submitted_at_utc=EVALUATED_AT,
+        )
+    )
+    connection.rows["idea_downstream_submission"].append(
+        {
+            **connection.rows["idea_downstream_submission"][0],
+            "idempotency_key": "submission-detail-other",
+            "resource_id": "conversion-detail-other",
+        }
+    )
+    connection.executed_sql.clear()
+
+    submissions = repository.downstream_submissions_for_candidate(candidate.candidate_id)
+
+    assert [submission.resource_id for submission in submissions] == ["conversion-detail-owned"]
+    matching_queries = [
+        sql for sql in connection.executed_sql if "candidate-detail-downstream-submissions" in sql
+    ]
+    assert len(matching_queries) == 1
+    assert "idea_conversion_intent" in matching_queries[0]
+    assert "idea_report_evidence_pack_request" in matching_queries[0]

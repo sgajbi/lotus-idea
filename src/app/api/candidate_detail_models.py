@@ -10,6 +10,10 @@ from app.api.signal_models import CandidateIdentityResponse
 from app.domain import (
     CandidatePersistenceRecord,
     CandidateVersionHistoryEntry,
+    ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
     GovernedConversionIntent,
     GovernedConversionOutcome,
     GovernedFeedbackEvent,
@@ -17,6 +21,7 @@ from app.domain import (
     GovernedReviewDecision,
     LifecycleHistoryEntry,
     SourceRef,
+    SourceSystem,
     current_conversion_outcome,
 )
 
@@ -333,6 +338,86 @@ class ReportEvidencePackSummaryResponse(CamelModel):
         )
 
 
+class DownstreamSubmissionSummaryResponse(CamelModel):
+    resource_type: DownstreamSubmissionResourceType = Field(
+        ...,
+        alias="resourceType",
+        description="Idea-owned resource whose delivery posture is shown.",
+    )
+    resource_id: str = Field(
+        ...,
+        alias="resourceId",
+        min_length=1,
+        description="Identifier of the candidate-linked conversion intent or report pack.",
+    )
+    target: ConversionTarget = Field(
+        ...,
+        description="Downstream workflow requested by the Idea-owned resource.",
+    )
+    source_authority: SourceSystem = Field(
+        ...,
+        alias="sourceAuthority",
+        description="System that owns authoritative realization outcomes.",
+    )
+    submission_posture: DownstreamSubmissionPosture = Field(
+        ...,
+        alias="submissionPosture",
+        description="Idea-owned local delivery posture; not a business outcome.",
+    )
+    submitted_at_utc: datetime = Field(
+        ...,
+        alias="submittedAtUtc",
+        description="UTC time when Idea first claimed the downstream submission.",
+    )
+    updated_at_utc: datetime = Field(
+        ...,
+        alias="updatedAtUtc",
+        description="UTC time when the local submission posture last changed.",
+    )
+    attempt_count: int = Field(
+        ...,
+        alias="attemptCount",
+        ge=1,
+        description="Number of locally claimed delivery attempts.",
+    )
+    operator_reconciliation_required: bool = Field(
+        ...,
+        alias="operatorReconciliationRequired",
+        description="True only when the local posture explicitly requires reconciliation.",
+    )
+    records_downstream_outcome: bool = Field(
+        ...,
+        alias="recordsDownstreamOutcome",
+        description="Always false; source-owned outcomes are recorded separately.",
+    )
+    grants_downstream_authority: bool = Field(
+        ...,
+        alias="grantsDownstreamAuthority",
+        description="Always false; local delivery posture grants no downstream authority.",
+    )
+
+    @classmethod
+    def from_domain(
+        cls,
+        submission: DownstreamSubmissionRecord,
+    ) -> "DownstreamSubmissionSummaryResponse":
+        return cls(
+            resourceType=submission.resource_type,
+            resourceId=submission.resource_id,
+            target=submission.target,
+            sourceAuthority=submission.source_authority,
+            submissionPosture=submission.status,
+            submittedAtUtc=submission.submitted_at_utc,
+            updatedAtUtc=submission.updated_at_utc,
+            attemptCount=submission.attempt_count,
+            operatorReconciliationRequired=(
+                submission.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED
+            ),
+            recordsDownstreamOutcome=False,
+            grantsDownstreamAuthority=False,
+        )
+
+
 class AuditSummaryResponse(CamelModel):
     event_count: int = Field(..., alias="eventCount")
     latest_event_type: str | None = Field(default=None, alias="latestEventType")
@@ -375,6 +460,10 @@ class CandidateDetailResponse(CamelModel):
     report_evidence_packs: tuple[ReportEvidencePackSummaryResponse, ...] = Field(
         ..., alias="reportEvidencePacks"
     )
+    downstream_submissions: tuple[DownstreamSubmissionSummaryResponse, ...] = Field(
+        ...,
+        alias="downstreamSubmissions",
+    )
     audit_summary: AuditSummaryResponse = Field(..., alias="auditSummary")
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -384,6 +473,7 @@ class CandidateDetailResponse(CamelModel):
         cls,
         record: CandidatePersistenceRecord,
         *,
+        downstream_submissions: tuple[DownstreamSubmissionRecord, ...] = (),
         durable_storage_backed: bool = False,
     ) -> "CandidateDetailResponse":
         return cls(
@@ -420,6 +510,10 @@ class CandidateDetailResponse(CamelModel):
                 ReportEvidencePackSummaryResponse.from_domain(pack)
                 for pack in record.report_evidence_packs
             ),
+            downstreamSubmissions=tuple(
+                DownstreamSubmissionSummaryResponse.from_domain(submission)
+                for submission in downstream_submissions
+            ),
             auditSummary=AuditSummaryResponse.from_record(record),
             durableStorageBacked=durable_storage_backed,
             supportedFeaturePromoted=False,
@@ -450,6 +544,7 @@ __all__ = (
     "CandidateEvidenceResponse",
     "ConversionIntentSummaryResponse",
     "ConversionOutcomeSummaryResponse",
+    "DownstreamSubmissionSummaryResponse",
     "FeedbackSummaryResponse",
     "LifecycleHistoryResponse",
     "RedactedSourceRefResponse",
