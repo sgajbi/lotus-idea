@@ -261,6 +261,10 @@ OPPORTUNITY_EFFECTIVENESS_ROUTE: RouteMetadata = {
                                 "minimumReadySnapshotCount": 30,
                                 "recallStatus": "unavailable_incomplete_relevant_set",
                                 "cutoffs": [],
+                                "stability": {
+                                    "comparableSnapshotPairCount": 0,
+                                    "meanNormalizedStability": None,
+                                },
                             },
                         },
                         "familyEffectiveness": [],

@@ -61,6 +61,12 @@ class RankingQualityResponse(CamelModel):
     minimum_ready_snapshot_count: int = Field(..., alias="minimumReadySnapshotCount")
     recall_status: str = Field(..., alias="recallStatus")
     cutoffs: tuple[RankingQualityCutoffResponse, ...]
+    stability: RankingStabilityResponse
+
+
+class RankingStabilityResponse(CamelModel):
+    comparable_snapshot_pair_count: int = Field(..., alias="comparableSnapshotPairCount")
+    mean_normalized_stability: Decimal | None = Field(..., alias="meanNormalizedStability")
 
 
 class EffectivenessPresentationResponse(CamelModel):

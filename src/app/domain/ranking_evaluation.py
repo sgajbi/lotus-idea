@@ -85,6 +85,7 @@ class RankingPresentationFact:
     ranking_policy_version: str
     surface: str
     producer: str
+    economic_identity_id: str
     judgment: RankedOpportunityJudgment
 
     def __post_init__(self) -> None:
@@ -95,6 +96,7 @@ class RankingPresentationFact:
             "ranking_policy_version",
             "surface",
             "producer",
+            "economic_identity_id",
         ):
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
@@ -115,6 +117,7 @@ class RankingQueueSnapshotEvaluation:
     ranking_policy_version: str
     surface: str
     producer: str
+    ranked_economic_identity_ids: tuple[str, ...]
     evaluation: RankingSnapshotEvaluation
 
 
@@ -131,6 +134,12 @@ class RankingCutoffAggregate:
     support_status: RankingMetricSupportStatus
     mean_precision_at_k: Decimal | None
     mean_ndcg_at_k: Decimal | None
+
+
+@dataclass(frozen=True)
+class RankingStabilityAggregate:
+    comparable_snapshot_pair_count: int
+    mean_normalized_stability: Decimal | None
 
 
 @dataclass(frozen=True)
@@ -277,6 +286,10 @@ def evaluate_ranking_presentations(
                 ranking_policy_version=authority.ranking_policy_version,
                 surface=authority.surface,
                 producer=authority.producer,
+                ranked_economic_identity_ids=tuple(
+                    fact.economic_identity_id
+                    for fact in sorted(snapshot_facts, key=lambda item: item.judgment.rank)
+                ),
                 evaluation=evaluate_ranking_snapshot(
                     (fact.judgment for fact in snapshot_facts),
                     visible_opportunity_count=authority.visible_opportunity_count,
@@ -351,6 +364,67 @@ def aggregate_ranking_evaluations(
     return tuple(aggregates)
 
 
+def evaluate_ranking_stability(
+    evaluations: Iterable[RankingQueueSnapshotEvaluation],
+) -> RankingStabilityAggregate:
+    """Compare adjacent snapshots only when their economic cohorts and policy are equivalent."""
+
+    grouped: dict[tuple[frozenset[str], str, int], list[RankingQueueSnapshotEvaluation]] = {}
+    for snapshot in evaluations:
+        if not snapshot.evaluation.cutoff_evaluations:
+            continue
+        stability_population = max(
+            snapshot.evaluation.cutoff_evaluations,
+            key=lambda item: item.evaluated_depth,
+        )
+        if stability_population.status is RankingCutoffStatus.INCOMPLETE_PRESENTATION:
+            continue
+        identities = snapshot.ranked_economic_identity_ids[: stability_population.evaluated_depth]
+        if len(set(identities)) != len(identities):
+            raise ValueError("ranking stability requires unique economic identities per snapshot")
+        key = (
+            frozenset(identities),
+            snapshot.ranking_policy_version,
+            stability_population.evaluated_depth,
+        )
+        grouped.setdefault(key, []).append(snapshot)
+    values: list[Decimal] = []
+    for snapshots in grouped.values():
+        ordered = sorted(
+            snapshots,
+            key=lambda item: (item.presented_at_utc, item.queue_snapshot_digest),
+        )
+        for before, after in zip(ordered, ordered[1:]):
+            values.append(
+                _normalized_rank_stability(
+                    before.ranked_economic_identity_ids,
+                    after.ranked_economic_identity_ids,
+                )
+            )
+    return RankingStabilityAggregate(
+        comparable_snapshot_pair_count=len(values),
+        mean_normalized_stability=(
+            _quantize(sum(values, Decimal(0)) / len(values)) if values else None
+        ),
+    )
+
+
+def _normalized_rank_stability(
+    before: tuple[str, ...],
+    after: tuple[str, ...],
+) -> Decimal:
+    if len(before) != len(after) or set(before) != set(after):
+        raise ValueError("ranking stability requires equivalent economic cohorts")
+    if len(before) <= 1:
+        return Decimal("1.000000")
+    before_rank = {identity: rank for rank, identity in enumerate(before, start=1)}
+    displacement = sum(
+        abs(before_rank[identity] - rank) for rank, identity in enumerate(after, start=1)
+    )
+    maximum_displacement = (len(before) * len(before)) // 2
+    return _quantize(Decimal(1) - Decimal(displacement) / Decimal(maximum_displacement))
+
+
 def _mean_ready_metric(
     evaluations: tuple[RankingCutoffEvaluation, ...],
     *,
@@ -394,6 +468,9 @@ def _validate_snapshot_consistency(
         )
         if fact_values != authority_values:
             raise ValueError("queue snapshot presentation facts are internally inconsistent")
+    identities = tuple(fact.economic_identity_id for fact in facts)
+    if len(set(identities)) != len(identities):
+        raise ValueError("queue snapshot economic identities must be unique")
 
 
 def _evaluate_cutoff(
@@ -554,11 +631,13 @@ __all__ = [
     "RankingRelevanceGrade",
     "RankingRelevanceFact",
     "RankingSnapshotEvaluation",
+    "RankingStabilityAggregate",
     "aggregate_ranking_evaluations",
     "derive_ranking_relevance",
     "downstream_relevance_grade",
     "evaluate_ranking_presentations",
     "evaluate_ranking_snapshot",
+    "evaluate_ranking_stability",
     "feedback_relevance_grade",
     "review_relevance_grade",
 ]

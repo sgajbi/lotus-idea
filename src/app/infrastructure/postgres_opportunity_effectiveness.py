@@ -185,6 +185,7 @@ def _ranking_presentation_facts(row: Any) -> tuple[RankingPresentationFact, ...]
                 ranking_policy_version=str(item["ranking_policy_version"]),
                 surface=str(item["surface"]),
                 producer=str(item["producer"]),
+                economic_identity_id=str(item["economic_identity_id"]),
                 judgment=RankedOpportunityJudgment(
                     rank=_mapping_integer(item, "rank"),
                     relevance_grade=(
@@ -323,6 +324,7 @@ presentation_receipts AS (
         receipt.ranking_policy_version,
         receipt.surface,
         receipt.producer,
+        cohort.business_identity_id AS economic_identity_id,
         COALESCE(
             history.evidence_hash,
             cohort.candidate_json->'evidence_packet'->'lineage_ref'->>'content_hash'
@@ -655,6 +657,7 @@ SELECT
                 'ranking_policy_version', receipt.ranking_policy_version,
                 'surface', receipt.surface,
                 'producer', receipt.producer,
+                'economic_identity_id', receipt.economic_identity_id,
                 'rank', receipt.rank_at_presentation,
                 'relevance_grade', CASE
                     WHEN EXISTS (

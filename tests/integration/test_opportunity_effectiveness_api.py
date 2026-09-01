@@ -61,6 +61,10 @@ def test_opportunity_effectiveness_api_returns_bounded_privacy_safe_funnel() -> 
             "minimumReadySnapshotCount": 30,
             "recallStatus": "unavailable_incomplete_relevant_set",
             "cutoffs": [],
+            "stability": {
+                "comparableSnapshotPairCount": 0,
+                "meanNormalizedStability": None,
+            },
         },
     }
     assert payload["privacyBoundary"]["containsRawCandidateIdentifier"] is False
@@ -224,6 +228,10 @@ def test_opportunity_effectiveness_api_returns_stored_presentation_measurement_w
             "minimumReadySnapshotCount": 30,
             "recallStatus": "unavailable_incomplete_relevant_set",
             "cutoffs": [],
+            "stability": {
+                "comparableSnapshotPairCount": 0,
+                "meanNormalizedStability": None,
+            },
         },
     }
     assert response.json()["familyEffectiveness"][0]["counts"]["presentedOpportunityCount"] == 2

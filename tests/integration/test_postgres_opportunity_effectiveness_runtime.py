@@ -253,9 +253,26 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
         )
         for rank, candidate in enumerate(candidates, start=1)
     )
+    reordered_receipts = tuple(
+        CandidatePresentationReceipt(
+            receipt_id=f"receipt-postgres-reordered-{rank}",
+            candidate_id=candidate.candidate_id,
+            tenant_id="tenant-a",
+            presented_at_utc=presented_at + timedelta(minutes=15),
+            rank_at_presentation=rank,
+            visible_candidate_count=3,
+            queue_snapshot_digest=f"sha256:{'7' * 64}",
+            queue_policy_version="idea-review-queue-v1",
+            ranking_policy_version="idea-score-v2",
+            candidate_material_version=candidate.identity.material_version,
+            candidate_evidence_version=candidate.identity.evidence_version,
+        )
+        for rank, candidate in enumerate(reversed(candidates), start=1)
+    )
+    all_receipts = (*receipts, *reordered_receipts)
     persisted = replace(
         snapshot_fixture(*records),
-        presentation_receipts={receipt.receipt_id: receipt for receipt in receipts},
+        presentation_receipts={receipt.receipt_id: receipt for receipt in all_receipts},
     )
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
@@ -289,4 +306,6 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
     assert actual == expected
     cutoff_three = next(item for item in actual.ranking_quality if item.cutoff == 3)
     assert cutoff_three.mean_precision_at_k == Decimal("0.666667")
-    assert cutoff_three.mean_ndcg_at_k == Decimal("1.000000")
+    assert cutoff_three.mean_ndcg_at_k == Decimal("0.770670")
+    assert actual.ranking_stability.comparable_snapshot_pair_count == 1
+    assert actual.ranking_stability.mean_normalized_stability == Decimal("0.000000")

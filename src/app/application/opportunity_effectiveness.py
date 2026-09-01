@@ -41,10 +41,12 @@ from app.domain.ranking_evaluation import (
     RankingPresentationFact,
     RankingRelevanceFact,
     RankingRelevanceGrade,
+    RankingStabilityAggregate,
     aggregate_ranking_evaluations,
     derive_ranking_relevance,
     downstream_relevance_grade,
     evaluate_ranking_presentations,
+    evaluate_ranking_stability,
     feedback_relevance_grade,
     review_relevance_grade,
 )
@@ -146,6 +148,7 @@ class OpportunityEffectivenessSnapshot:
     presentation_rate: EffectivenessRate | None
     top_ranked_acceptance_rate: EffectivenessRate | None
     ranking_quality: tuple[RankingCutoffAggregate, ...]
+    ranking_stability: RankingStabilityAggregate
     family_effectiveness: tuple[OpportunityFamilyEffectiveness, ...]
     family_counts: tuple[EffectivenessDimensionCount, ...]
     score_band_counts: tuple[EffectivenessDimensionCount, ...]
@@ -297,9 +300,9 @@ def build_opportunity_effectiveness_snapshot_from_summary(
     )
     presentation = _build_presentation_effectiveness(summary)
     try:
-        ranking_quality = aggregate_ranking_evaluations(
-            evaluate_ranking_presentations(summary.ranking_presentation_facts)
-        )
+        ranking_evaluations = evaluate_ranking_presentations(summary.ranking_presentation_facts)
+        ranking_quality = aggregate_ranking_evaluations(ranking_evaluations)
+        ranking_stability = evaluate_ranking_stability(ranking_evaluations)
     except ValueError as exc:
         raise OpportunityEffectivenessDataError(str(exc)) from exc
     provisional = OpportunityEffectivenessSnapshot(
@@ -328,6 +331,7 @@ def build_opportunity_effectiveness_snapshot_from_summary(
         presentation_rate=presentation.presentation_rate,
         top_ranked_acceptance_rate=presentation.top_ranked_acceptance_rate,
         ranking_quality=ranking_quality,
+        ranking_stability=ranking_stability,
         family_effectiveness=build_family_effectiveness(
             summary.family_effectiveness,
             presentation_available=presentation.measurement_status
@@ -937,6 +941,7 @@ def _ranking_presentation_facts(
                 ranking_policy_version=receipt.ranking_policy_version,
                 surface=receipt.surface,
                 producer=receipt.producer,
+                economic_identity_id=candidate.identity.business_identity_id,
                 judgment=RankedOpportunityJudgment(
                     rank=receipt.rank_at_presentation,
                     relevance_grade=_ranking_relevance_grade(
@@ -1226,6 +1231,14 @@ def _snapshot_payload_without_digest(
                     }
                     for item in snapshot.ranking_quality
                 ],
+                "stability": {
+                    "comparableSnapshotPairCount": (
+                        snapshot.ranking_stability.comparable_snapshot_pair_count
+                    ),
+                    "meanNormalizedStability": _decimal_payload(
+                        snapshot.ranking_stability.mean_normalized_stability
+                    ),
+                },
             },
         },
         "dimensions": {
