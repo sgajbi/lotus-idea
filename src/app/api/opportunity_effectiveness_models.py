@@ -127,6 +127,7 @@ class EffectivenessRatesResponse(CamelModel):
     conversion: EffectivenessRateResponse
     downstream_accepted: EffectivenessRateResponse = Field(..., alias="downstreamAccepted")
     downstream_rejected: EffectivenessRateResponse = Field(..., alias="downstreamRejected")
+    downstream_failed: EffectivenessRateResponse = Field(..., alias="downstreamFailed")
     downstream_uncertain: EffectivenessRateResponse = Field(..., alias="downstreamUncertain")
 
 
@@ -145,6 +146,7 @@ class OpportunityFamilyEffectivenessCountsResponse(CamelModel):
     conversion_intent_count: int = Field(..., alias="conversionIntentCount")
     downstream_accepted_count: int = Field(..., alias="downstreamAcceptedCount")
     downstream_rejected_count: int = Field(..., alias="downstreamRejectedCount")
+    downstream_failed_count: int = Field(..., alias="downstreamFailedCount")
     downstream_uncertain_count: int = Field(..., alias="downstreamUncertainCount")
 
 
@@ -159,6 +161,7 @@ class OpportunityFamilyEffectivenessRatesResponse(CamelModel):
     conversion: EffectivenessRateResponse
     downstream_accepted: EffectivenessRateResponse = Field(..., alias="downstreamAccepted")
     downstream_rejected: EffectivenessRateResponse = Field(..., alias="downstreamRejected")
+    downstream_failed: EffectivenessRateResponse = Field(..., alias="downstreamFailed")
     downstream_uncertain: EffectivenessRateResponse = Field(..., alias="downstreamUncertain")
 
 
