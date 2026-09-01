@@ -2,11 +2,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
+import json
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+from app.api.advise_realization_reconciliation import (
+    _request_context_id,
+    _require_reconciliation_caller,
+    _response,
+)
 
 from app.application.advise_realization_reconciliation import (
     AdviseRealizationAccessScopeDenied,
+    AdviseRealizationReconciliationResult,
     AdviseRealizationReconciliationStatus,
     ReconcileAdviseRealizationCommand,
     _history_identity_blocker,
@@ -30,10 +42,16 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
 )
+from app.domain.persistence_advise_realization import advise_realization_submission_blocker
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
     DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
+)
+from app.security.caller_context import (
+    CallerContext,
+    CallerEntitlementScope,
+    PermissionDeniedError,
 )
 from tests.unit.test_downstream_realization_application import (
     CapturingAdviseClient,
@@ -252,7 +270,51 @@ def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() ->
 
     for malformed, expected in cases:
         assert _submission_eligibility_blocker(malformed) == expected
+        assert advise_realization_submission_blocker(malformed, _history(version=2)) == expected
     assert _submission_eligibility_blocker(submission) is None
+
+    assert submission.owner_receipt is not None
+    conflicting_receipt = replace(
+        submission.owner_receipt,
+        owner_request_id="ipi_different",
+    )
+    assert (
+        advise_realization_submission_blocker(
+            replace(submission, owner_receipt=conflicting_receipt),
+            _history(version=2),
+        )
+        == "advise_realization_owner_receipt_conflict"
+    )
+    regressed_receipt = replace(submission.owner_receipt, source_event_version=3)
+    assert (
+        advise_realization_submission_blocker(
+            replace(submission, owner_receipt=regressed_receipt),
+            _history(version=2),
+        )
+        == "advise_realization_history_regressed_below_receipt"
+    )
+    assert advise_realization_submission_blocker(submission, _history(version=2)) is None
+
+
+def test_in_memory_advise_history_repository_fails_closed_on_missing_or_conflicting_source() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+    history = _history(version=2)
+
+    missing = repository.persist_advise_realization_history(
+        support_reference="downstream-submission-000000000000000000000000",
+        history=history,
+    )
+    conflict = repository.persist_advise_realization_history(
+        support_reference=support_reference,
+        history=replace(history, intake_id="ipi_different"),
+    )
+
+    assert missing.decision.value == "not_found"
+    assert missing.blocker == "downstream_submission_not_found"
+    assert conflict.decision.value == "conflict"
+    assert conflict.blocker == "advise_realization_owner_receipt_conflict"
+    with pytest.raises(ValueError, match="support_reference is required"):
+        repository.advise_realization_history_by_support_reference(" ")
 
 
 def test_advise_reconciliation_identity_check_names_exact_evidence_drift() -> None:
@@ -314,6 +376,93 @@ def test_reconcile_command_requires_auditable_identity(field_name: str) -> None:
             actor_subject=" " if field_name == "actor_subject" else "operator-redacted",
             access_scope_filter=AUTHORIZED_SCOPE,
         )
+
+
+@pytest.mark.parametrize(
+    ("reconciliation_status", "blocker", "http_status", "code"),
+    [
+        (
+            AdviseRealizationReconciliationStatus.NOT_FOUND,
+            None,
+            404,
+            "downstream_submission_not_found",
+        ),
+        (
+            AdviseRealizationReconciliationStatus.NOT_ELIGIBLE,
+            "advise_realization_requires_terminal_owner_submission",
+            409,
+            "advise_realization_requires_terminal_owner_submission",
+        ),
+        (
+            AdviseRealizationReconciliationStatus.CONFLICT,
+            None,
+            409,
+            "advise_realization_reconciliation_conflict",
+        ),
+        (
+            AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE,
+            None,
+            503,
+            "advise_realization_owner_unavailable",
+        ),
+    ],
+)
+def test_advise_reconciliation_api_maps_failure_posture_without_false_success(
+    reconciliation_status: AdviseRealizationReconciliationStatus,
+    blocker: str | None,
+    http_status: int,
+    code: str,
+) -> None:
+    response = _response(
+        AdviseRealizationReconciliationResult(
+            status=reconciliation_status,
+            history=None,
+            blocker=blocker,
+        ),
+        durable_storage_backed=True,
+    )
+
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == http_status
+    assert json.loads(bytes(response.body))["code"] == code
+
+
+def test_advise_reconciliation_api_requires_capability_and_complete_scope() -> None:
+    complete_scope = CallerEntitlementScope(
+        tenant_ids=("tenant-sg",),
+        book_ids=("book-private-bank-sg",),
+        portfolio_ids=("PB_SG_GLOBAL_BAL_001",),
+        client_ids=("client-redacted",),
+    )
+    without_capability = CallerContext(
+        subject="operator-redacted",
+        entitlement_scope=complete_scope,
+    )
+    incomplete_scope = CallerContext(
+        subject="operator-redacted",
+        capabilities=frozenset({"idea.downstream-realization.reconcile"}),
+        entitlement_scope=replace(complete_scope, client_ids=()),
+    )
+    authorized = replace(
+        incomplete_scope,
+        entitlement_scope=complete_scope,
+    )
+
+    with pytest.raises(PermissionDeniedError):
+        _require_reconciliation_caller(without_capability)
+    with pytest.raises(PermissionDeniedError):
+        _require_reconciliation_caller(incomplete_scope)
+    _require_reconciliation_caller(authorized)
+
+
+def test_advise_reconciliation_request_context_ignores_absent_values() -> None:
+    request = cast(
+        Request,
+        SimpleNamespace(state=SimpleNamespace(correlation_id="corr-001", trace_id=None)),
+    )
+
+    assert _request_context_id(request, "correlation_id") == "corr-001"
+    assert _request_context_id(request, "trace_id") is None
 
 
 def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]:
