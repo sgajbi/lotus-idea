@@ -40,11 +40,18 @@ def test_conversion_intent_adapter_envelope_matches_versioned_wire_contract(
     authority: SourceSystem,
 ) -> None:
     contract = _consumer_contract(target.value)
-    envelope = _conversion_intent_envelope(conversion_intent(target, authority))
+    envelope = _conversion_intent_envelope(
+        conversion_intent(target, authority),
+        access_scope=report_access_scope(),
+    )
 
     assert set(envelope) == set(contract["request_fields"])
     assert envelope["intent_type"] == contract["intent_type"]
     assert envelope["source_system"] == "lotus-idea"
+    if target is ConversionTarget.ADVISE_PROPOSAL:
+        assert envelope["portfolio_id"] == "PB_SG_GLOBAL_BAL_001"
+    else:
+        assert "portfolio_id" not in envelope
     assert envelope["source_refs"] == [
         {
             "source_system": "lotus-idea",
@@ -89,6 +96,17 @@ def test_advise_service_context_matches_versioned_wire_contract() -> None:
     assert contract["local_dev_principal_source"] == (
         "trusted_headers_until_production_idp_available"
     )
+    assert contract["scope_boundary"] == {
+        "portfolio_source": "governed_candidate_access_scope",
+        "complete_caller_entitlement_required": True,
+        "idempotency_scope_fields": [
+            "tenant_id",
+            "book_id",
+            "portfolio_id",
+            "client_id",
+        ],
+        "client_id_exposed": False,
+    }
 
 
 def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:

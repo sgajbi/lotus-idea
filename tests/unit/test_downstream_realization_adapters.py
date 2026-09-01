@@ -63,6 +63,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
 
     outcome = adapter.submit_proposal_intent(
         conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
         correlation_id="corr-downstream",
         trace_id="trace-downstream",
         idempotency_key="submission-idempotency-001",
@@ -87,6 +88,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         "idea_candidate_id": "idea_high_cash_redacted",
         "conversion_intent_id": "conversion-001",
         "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "source_refs": [
             {
                 "source_system": "lotus-idea",
@@ -97,7 +99,6 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         ],
     }
     rendered = str(payload)
-    assert "portfolio_id" not in rendered
     assert "client_id" not in rendered
     assert "request_body" not in rendered
     assert "response_body" not in rendered
@@ -227,7 +228,8 @@ def test_downstream_http_failures_map_to_bounded_reasons(
     )
 
     outcome = adapter.submit_action_intent(
-        conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE)
+        conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE),
+        access_scope=report_access_scope(),
     )
 
     assert outcome.accepted is False
@@ -250,7 +252,8 @@ def test_downstream_transport_errors_do_not_leak_raw_exception_text() -> None:
     )
 
     outcome = adapter.submit_proposal_intent(
-        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE)
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
     )
 
     assert outcome.accepted is False
@@ -273,7 +276,8 @@ def test_downstream_malformed_response_errors_map_to_bounded_reason() -> None:
     )
 
     outcome = adapter.submit_proposal_intent(
-        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE)
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
     )
 
     assert outcome.accepted is False
@@ -308,6 +312,7 @@ def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
 
     outcome = adapter.submit_proposal_intent(
         conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        access_scope=report_access_scope(),
         idempotency_key="submission-idempotency-001",
     )
 
@@ -333,7 +338,8 @@ def test_downstream_adapter_rejects_wrong_conversion_target() -> None:
 
     with pytest.raises(ValueError, match="advise_proposal"):
         adapter.submit_proposal_intent(
-            conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE)
+            conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE),
+            access_scope=report_access_scope(),
         )
 
 
@@ -342,7 +348,8 @@ def test_conversion_envelope_rejects_non_intake_target() -> None:
 
     with pytest.raises(ValueError, match="unsupported conversion target"):
         _conversion_intent_envelope(
-            conversion_intent(ConversionTarget.REPORT_EVIDENCE, SourceSystem.LOTUS_REPORT)
+            conversion_intent(ConversionTarget.REPORT_EVIDENCE, SourceSystem.LOTUS_REPORT),
+            access_scope=report_access_scope(),
         )
 
 
@@ -424,6 +431,7 @@ def test_manage_adapter_posts_owner_contract_payload_and_server_context() -> Non
 
     outcome = adapter.submit_action_intent(
         conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE),
+        access_scope=report_access_scope(),
         correlation_id="corr-downstream",
         trace_id="trace-downstream",
         idempotency_key="submission-idempotency-001",

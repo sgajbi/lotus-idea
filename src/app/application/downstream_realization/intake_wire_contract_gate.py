@@ -15,6 +15,7 @@ _REQUIRED_INTAKE_REQUEST_FIELDS = {
     "intent_type",
     "source_refs",
 }
+_REQUIRED_ADVISE_INTAKE_REQUEST_FIELDS = _REQUIRED_INTAKE_REQUEST_FIELDS | {"portfolio_id"}
 _REQUIRED_REPORT_INTAKE_PAYLOAD_FIELDS = {
     "report_evidence_pack_id",
     "conversion_intent_id",
@@ -66,6 +67,18 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "principal_capability": "advisory.idea_proposal_intake.accept",
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",
         "required_server_headers": _TRUSTED_SERVICE_HEADERS,
+        "request_fields": _REQUIRED_ADVISE_INTAKE_REQUEST_FIELDS,
+        "scope_boundary": {
+            "portfolio_source": "governed_candidate_access_scope",
+            "complete_caller_entitlement_required": True,
+            "idempotency_scope_fields": [
+                "tenant_id",
+                "book_id",
+                "portfolio_id",
+                "client_id",
+            ],
+            "client_id_exposed": False,
+        },
     },
     "manage_review": {
         "owner_repository": "lotus-manage",
@@ -145,8 +158,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.5.0":
-        errors.append("downstream intake wire contract must be version 1.5.0")
+    if payload.get("contract_version") != "1.6.0":
+        errors.append("downstream intake wire contract must be version 1.6.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -234,6 +247,11 @@ def _validate_advise_manage_intake_consumer(
     ):
         if consumer.get(field) != expected[field]:
             errors.append(f"{target} intake wire contract {field} drifted")
+    if (
+        "scope_boundary" in expected
+        and consumer.get("scope_boundary") != expected["scope_boundary"]
+    ):
+        errors.append(f"{target} intake wire contract scope_boundary drifted")
     return errors
 
 

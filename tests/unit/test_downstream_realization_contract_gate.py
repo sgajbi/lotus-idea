@@ -207,7 +207,7 @@ def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
 
     errors = validate_downstream_intake_wire_contract(tmp_path)
 
-    assert "downstream intake wire contract must be version 1.5.0" in errors
+    assert "downstream intake wire contract must be version 1.6.0" in errors
     assert "downstream intake wire contract repository must be lotus-idea" in errors
     assert "downstream intake wire contract must remain development_only" in errors
     assert "downstream intake wire contract must remain not_certified" in errors
@@ -280,6 +280,25 @@ def test_downstream_intake_wire_contract_rejects_advise_manage_field_drift(
     assert "manage_review intake wire contract receipt_outcomes drifted" in errors
     assert "manage_review intake wire contract principal_capability drifted" in errors
     assert "manage_review intake wire contract local_dev_principal_source drifted" in errors
+
+
+def test_downstream_intake_wire_contract_rejects_advise_scope_boundary_drift(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    advise_contract = dict(payload["consumer_contracts"][0])
+    advise_contract["scope_boundary"] = {
+        "portfolio_source": "opaque_conversion_intent_id",
+        "complete_caller_entitlement_required": False,
+        "idempotency_scope_fields": [],
+        "client_id_exposed": True,
+    }
+    payload["consumer_contracts"][0] = advise_contract
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "advise_proposal intake wire contract scope_boundary drifted" in errors
 
 
 def test_downstream_realization_contract_gate_blocks_report_intake_wire_contract_drift(

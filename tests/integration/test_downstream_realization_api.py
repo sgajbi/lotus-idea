@@ -58,11 +58,13 @@ class CapturingConversionClient:
     correlation_id: str | None = None
     trace_id: str | None = None
     idempotency_key: str | None = None
+    access_scope: Any = None
 
     def submit_proposal_intent(
         self,
         intent: Any,
         *,
+        access_scope: Any,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -71,12 +73,14 @@ class CapturingConversionClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        self.access_scope = access_scope
         return self.outcome
 
     def submit_action_intent(
         self,
         intent: Any,
         *,
+        access_scope: Any,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -85,6 +89,7 @@ class CapturingConversionClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        self.access_scope = access_scope
         return self.outcome
 
 
@@ -168,6 +173,7 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_with_support
     assert advise_client.correlation_id == "corr-downstream-submission-api"
     assert advise_client.trace_id == "trace-downstream-submission-api"
     assert advise_client.idempotency_key == "downstream-submit-advise-api-001"
+    assert advise_client.access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
     assert manage_client.submitted == ()
 
 
@@ -258,7 +264,10 @@ def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
     )
     conflict = client.post(
         "/api/v1/conversion-intents/conversion-advise-conflict-api-002/downstream-submissions",
-        headers=downstream_submission_headers("downstream-submit-advise-conflict-api-001"),
+        headers=downstream_submission_headers(
+            "downstream-submit-advise-conflict-api-001",
+            portfolio_id="PB_SG_ALT_BAL_002",
+        ),
     )
 
     assert first.status_code == 200
@@ -1115,10 +1124,18 @@ def report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def downstream_submission_headers(idempotency_key: str) -> dict[str, str]:
+def downstream_submission_headers(
+    idempotency_key: str,
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.downstream-realization.submit",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-downstream-submission-api",
         "X-Trace-Id": "trace-downstream-submission-api",
         "Idempotency-Key": idempotency_key,

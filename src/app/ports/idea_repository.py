@@ -452,6 +452,11 @@ class DownstreamSubmissionRepository(Protocol):
         conversion_intent_id: str,
     ) -> GovernedConversionIntent | None: ...
 
+    def candidate_record_for_conversion_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> CandidatePersistenceRecord | None: ...
+
     def report_evidence_pack_by_id(
         self,
         report_evidence_pack_id: str,

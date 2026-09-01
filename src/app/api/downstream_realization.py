@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import CallerContextHeaders, caller_access_scope_filter
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
@@ -33,6 +33,7 @@ from app.api.runtime_dependencies import (
     idea_repository_durable_storage_backed,
 )
 from app.application.downstream_realization import (
+    DownstreamRealizationAccessScopeDenied,
     DownstreamRealizationStatus,
     DownstreamRealizationSubmissionResult,
     RealizeConversionIntentCommand,
@@ -40,7 +41,7 @@ from app.application.downstream_realization import (
     submit_conversion_intent_to_downstream,
     submit_report_evidence_pack_to_downstream,
 )
-from app.domain import ConversionTarget, SourceSystem
+from app.domain import ConversionTarget, QueueAccessScopeFilter, SourceSystem
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -186,6 +187,7 @@ class DownstreamSubmissionApiResponse(CamelModel):
 @dataclass(frozen=True)
 class _DownstreamSubmissionRequestContext:
     caller: CallerContext
+    access_scope_filter: QueueAccessScopeFilter
     repository: DownstreamSubmissionRepository
     durable_storage_backed: bool
     correlation_id: str | None
@@ -194,23 +196,14 @@ class _DownstreamSubmissionRequestContext:
 
 async def submit_conversion_intent_downstream(
     request: Request,
+    caller: CallerContextHeaders,
     conversion_intent_id: str = Path(..., alias="conversionIntentId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
-    x_lotus_trusted_caller_context: str | None = Header(
-        default=None,
-        alias=TRUSTED_CALLER_CONTEXT_HEADER,
-    ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
     context = _prepare_downstream_submission_request(
         request,
+        caller=caller,
         idempotency_key=idempotency_key,
-        x_caller_subject=x_caller_subject,
-        x_caller_roles=x_caller_roles,
-        x_caller_capabilities=x_caller_capabilities,
-        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
     )
     if isinstance(context, JSONResponse):
         return context
@@ -221,40 +214,35 @@ async def submit_conversion_intent_downstream(
     except DownstreamRealizationClientsUnavailableError:
         advise_client = None
         manage_client = None
-    result = submit_conversion_intent_to_downstream(
-        RealizeConversionIntentCommand(
-            conversion_intent_id=conversion_intent_id,
-            idempotency_key=idempotency_key,
-            actor_subject=context.caller.subject,
-            correlation_id=context.correlation_id,
-            trace_id=context.trace_id,
-        ),
-        repository=context.repository,
-        advise_client=advise_client,
-        manage_client=manage_client,
-    )
+    try:
+        result = submit_conversion_intent_to_downstream(
+            RealizeConversionIntentCommand(
+                conversion_intent_id=conversion_intent_id,
+                idempotency_key=idempotency_key,
+                actor_subject=context.caller.subject,
+                access_scope_filter=context.access_scope_filter,
+                correlation_id=context.correlation_id,
+                trace_id=context.trace_id,
+            ),
+            repository=context.repository,
+            advise_client=advise_client,
+            manage_client=manage_client,
+        )
+    except DownstreamRealizationAccessScopeDenied:
+        return _scope_permission_denied(context)
     return _submission_api_response(result, context)
 
 
 async def submit_report_evidence_pack_downstream(
     request: Request,
+    caller: CallerContextHeaders,
     report_evidence_pack_id: str = Path(..., alias="reportEvidencePackId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
-    x_lotus_trusted_caller_context: str | None = Header(
-        default=None,
-        alias=TRUSTED_CALLER_CONTEXT_HEADER,
-    ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
     context = _prepare_downstream_submission_request(
         request,
+        caller=caller,
         idempotency_key=idempotency_key,
-        x_caller_subject=x_caller_subject,
-        x_caller_roles=x_caller_roles,
-        x_caller_capabilities=x_caller_capabilities,
-        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
     )
     if isinstance(context, JSONResponse):
         return context
@@ -262,37 +250,32 @@ async def submit_report_evidence_pack_downstream(
         report_client = get_report_evidence_pack_realization_client()
     except DownstreamRealizationClientsUnavailableError:
         report_client = None
-    result = submit_report_evidence_pack_to_downstream(
-        RealizeReportEvidencePackCommand(
-            report_evidence_pack_id=report_evidence_pack_id,
-            idempotency_key=idempotency_key,
-            actor_subject=context.caller.subject,
-            correlation_id=context.correlation_id,
-            trace_id=context.trace_id,
-        ),
-        repository=context.repository,
-        report_client=report_client,
-    )
+    try:
+        result = submit_report_evidence_pack_to_downstream(
+            RealizeReportEvidencePackCommand(
+                report_evidence_pack_id=report_evidence_pack_id,
+                idempotency_key=idempotency_key,
+                actor_subject=context.caller.subject,
+                access_scope_filter=context.access_scope_filter,
+                correlation_id=context.correlation_id,
+                trace_id=context.trace_id,
+            ),
+            repository=context.repository,
+            report_client=report_client,
+        )
+    except DownstreamRealizationAccessScopeDenied:
+        return _scope_permission_denied(context)
     return _submission_api_response(result, context)
 
 
 def _prepare_downstream_submission_request(
     request: Request,
     *,
+    caller: CallerContext,
     idempotency_key: str,
-    x_caller_subject: str | None,
-    x_caller_roles: str | None,
-    x_caller_capabilities: str | None,
-    x_lotus_trusted_caller_context: str | None,
 ) -> _DownstreamSubmissionRequestContext | JSONResponse:
     correlation_id = _request_correlation_id(request)
     trace_id = _request_trace_id(request)
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
         _require_submission_caller(caller)
         validate_idempotency_key(idempotency_key)
@@ -325,8 +308,11 @@ def _prepare_downstream_submission_request(
             trace_id=trace_id,
         )
         return configuration_problem
+    access_scope_filter = caller_access_scope_filter(caller)
+    assert access_scope_filter is not None
     return _DownstreamSubmissionRequestContext(
         caller=caller,
+        access_scope_filter=access_scope_filter,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
         correlation_id=correlation_id,
@@ -366,6 +352,22 @@ def _submission_api_response(
 def _require_submission_caller(caller: CallerContext) -> None:
     if not caller.has_capability(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY):
         raise PermissionDeniedError(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY)
+    scope = caller.entitlement_scope
+    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
+        raise PermissionDeniedError("idea.downstream-realization.entitlement_scope")
+
+
+def _scope_permission_denied(
+    context: _DownstreamSubmissionRequestContext,
+) -> JSONResponse:
+    _emit_downstream_submission_event(
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+        durable_storage_backed=context.durable_storage_backed,
+        correlation_id=context.correlation_id,
+        trace_id=context.trace_id,
+    )
+    return _permission_denied()
 
 
 def _request_correlation_id(request: Request) -> str | None:

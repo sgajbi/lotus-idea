@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.5.0",
+  "contract_version": "1.6.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -17,6 +17,7 @@
         "idea_candidate_id",
         "conversion_intent_id",
         "intent_type",
+        "portfolio_id",
         "source_refs"
       ],
       "receipt_outcomes": [
@@ -26,6 +27,17 @@
       ],
       "principal_capability": "advisory.idea_proposal_intake.accept",
       "local_dev_principal_source": "trusted_headers_until_production_idp_available",
+      "scope_boundary": {
+        "portfolio_source": "governed_candidate_access_scope",
+        "complete_caller_entitlement_required": true,
+        "idempotency_scope_fields": [
+          "tenant_id",
+          "book_id",
+          "portfolio_id",
+          "client_id"
+        ],
+        "client_id_exposed": false
+      },
       "required_server_headers": [
         "X-Actor-Id",
         "X-Role",
