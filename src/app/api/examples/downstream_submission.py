@@ -21,6 +21,7 @@ from app.domain import (
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -437,6 +438,7 @@ class _ExampleDownstreamSubmissionRepository:
         posture: DownstreamSubmissionPosture,
         finalized_at_utc: datetime,
         failure_reason: str | None = None,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
         record = self._records[idempotency_key]
         result = finalize_downstream_submission(
@@ -446,6 +448,7 @@ class _ExampleDownstreamSubmissionRepository:
             posture=posture,
             finalized_at_utc=finalized_at_utc,
             failure_reason=failure_reason,
+            owner_receipt=owner_receipt,
         )
         if result.record is not None:
             self._records[record.idempotency_key] = result.record

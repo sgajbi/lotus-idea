@@ -183,6 +183,34 @@ def test_advise_realization_reconciliation_api_persists_exact_owner_history(
     assert replay.json()["appendedOutcomeCount"] == 0
 
 
+def test_advise_realization_reconciliation_api_denial_emits_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[tuple[str, str, str | None]] = []
+    monkeypatch.setattr(
+        reconciliation_api,
+        "emit_api_foundation_operation_event",
+        lambda operation, outcome, error_code: events.append(
+            (operation.value, outcome.value, error_code)
+        ),
+    )
+    client = managed_test_client(app)
+    headers = _reconciliation_headers()
+    headers["X-Caller-Capabilities"] = "idea.downstream-realization.submit"
+
+    response = client.post(
+        "/api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/"
+        "advise-realization-reconciliation",
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert events == [
+        ("downstream_reconciliation_resolve", "permission_denied", "permission_denied")
+    ]
+
+
 def _reconciliation_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",

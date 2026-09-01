@@ -1389,6 +1389,35 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_downstream_submission_contracts.py enforces exact named 200 and 202 success-mode parity."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Read and persist the authoritative append-only Advise realization history for a receipt-bound Idea proposal submission without transferring downstream business authority.",
+      "when_to_use": "Use when an internal caller has idea.downstream-realization.reconcile capability, complete tenant/book/portfolio/client entitlement scope, and an accepted or rejected Advise submission carrying a durable owner receipt that must be reconciled with the source-owned outcome history.",
+      "when_not_to_use": "Do not use to infer proposal acceptance from transport success, create suitability or execution authority, overwrite owner history, define a Gateway contract, claim Workbench product proof, authorize client-ready publication, or claim supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/advise-realization-reconciliation with X-Caller-Capabilities: idea.downstream-realization.reconcile and complete entitlement scope"
+      ],
+      "response_examples": [
+        "{\"reconciliationStatus\":\"accepted\",\"appendedOutcomeCount\":2,\"history\":{\"realizationId\":\"ipr_73d5330c532f\",\"intakeId\":\"ipi_7a1d2b3c4d5e\",\"reviewWorkId\":\"iarw_a1c9106760cb\",\"reviewWorkStatus\":\"PROPOSAL_LINKED\",\"realizationAuthority\":\"lotus-advise\",\"currentStatus\":\"PROPOSAL_LINKED\",\"currentSourceEventVersion\":2,\"proposalId\":\"proposal-001\",\"proposalRecordCreated\":true,\"outcomes\":[{\"outcomeId\":\"ipro_001\",\"sourceEventVersion\":1,\"status\":\"ACCEPTED_FOR_REVIEW\",\"reasonCode\":\"idea_intake_accepted_for_adviser_review\",\"occurredAtUtc\":\"2026-09-01T10:00:00+00:00\",\"reviewWorkId\":\"iarw_a1c9106760cb\",\"terminal\":false},{\"outcomeId\":\"ipro_002\",\"sourceEventVersion\":2,\"status\":\"PROPOSAL_LINKED\",\"reasonCode\":\"advise_proposal_linked\",\"occurredAtUtc\":\"2026-09-01T10:01:00+00:00\",\"reviewWorkId\":\"iarw_a1c9106760cb\",\"proposalId\":\"proposal-001\",\"terminal\":false}],\"suitabilityAuthorityGranted\":false,\"orderCreated\":false,\"clientPublicationAuthorized\":false},\"durableStorageBacked\":true,\"grantsExecutionAuthority\":false,\"grantsSuitabilityAuthority\":false,\"grantsClientPublicationAuthority\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.reconcile capability, complete entitlement scope, or access to the receipt-bound submission.",
+        "404 returns downstream_submission_not_found for an unknown opaque support reference.",
+        "409 returns a stable blocker when the submission is ineligible or the Advise history has identity drift, version gaps, chronology defects, or unsupported authority claims.",
+        "503 returns advise_realization_owner_unavailable, durable_repository_not_configured, or durable_repository_unavailable without changing persisted evidence."
+      ],
+      "test_evidence": [
+        "tests/integration/test_advise_realization_reconciliation_api.py::test_advise_realization_reconciliation_api_persists_exact_owner_history",
+        "tests/integration/test_advise_realization_reconciliation_api.py::test_advise_realization_reconciliation_api_denial_emits_operation_event",
+        "tests/unit/test_advise_realization_reconciliation.py::test_reconcile_advise_history_fails_closed_on_owner_identity_drift",
+        "tests/unit/test_advise_realization_reconciliation.py::test_reconcile_terminal_rejection_persists_owner_history",
+        "tests/unit/test_postgres_advise_realization.py::test_postgres_advise_history_survives_restart_and_appends_monotonically"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, caller context, response shapes, bounded authority claims, and product-safe error examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/downstream-submissions/reconciliation",
       "certification_status": "certified",
