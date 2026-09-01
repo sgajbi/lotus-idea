@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -29,10 +29,16 @@ GRADE = {
 
 
 def _cases() -> list[dict[str, Any]]:
-    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    raw_payload: object = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    if not isinstance(raw_payload, dict):
+        raise ValueError("ranking quality golden fixture must be a JSON object")
+    payload = cast(dict[str, Any], raw_payload)
     assert payload["schemaVersion"] == "lotus-idea.ranking-quality-golden-set.v1"
     assert payload["methodologyPolicyVersion"] == RANKING_EVALUATION_POLICY_VERSION
-    return payload["cases"]
+    cases: object = payload["cases"]
+    if not isinstance(cases, list) or not all(isinstance(case, dict) for case in cases):
+        raise ValueError("ranking quality golden fixture cases must be JSON objects")
+    return cast(list[dict[str, Any]], cases)
 
 
 @pytest.mark.parametrize("case", _cases(), ids=lambda case: str(case["caseId"]))

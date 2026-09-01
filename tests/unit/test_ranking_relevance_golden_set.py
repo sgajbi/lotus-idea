@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -37,9 +37,15 @@ SOURCE_BY_KIND = {
 
 
 def _payload() -> dict[str, Any]:
-    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    raw_payload: object = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    if not isinstance(raw_payload, dict):
+        raise ValueError("ranking relevance golden fixture must be a JSON object")
+    payload = cast(dict[str, Any], raw_payload)
     assert payload["schemaVersion"] == "lotus-idea.ranking-relevance-golden-set.v1"
     assert payload["methodologyPolicyVersion"] == RANKING_EVALUATION_POLICY_VERSION
+    cases: object = payload["cases"]
+    if not isinstance(cases, list) or not all(isinstance(case, dict) for case in cases):
+        raise ValueError("ranking relevance golden fixture cases must be JSON objects")
     return payload
 
 
