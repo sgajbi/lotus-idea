@@ -21,6 +21,7 @@ from app.domain import (
     ReviewActorRole,
     ReviewDecisionCommand,
     ReviewPosture,
+    SuppressionReason,
     UnsupportedEvidenceReason,
     apply_review_action,
 )
@@ -489,9 +490,10 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     reviewable = queue_candidate(index=1, candidate_scope=access_scope())
-    duplicate = replace(
+    duplicate_suppressed = replace(
         queue_candidate(index=2, candidate_scope=access_scope()),
-        source_signal_ids=reviewable.source_signal_ids,
+        review_posture=ReviewPosture.SUPPRESSED,
+        suppression_reason=SuppressionReason.DUPLICATE,
     )
     expired = replace(
         queue_candidate(index=3, candidate_scope=access_scope()),
@@ -517,7 +519,14 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
             client_id="client-001",
         ),
     )
-    for candidate in (reviewable, duplicate, expired, blocked, unscored, out_of_scope):
+    for candidate in (
+        reviewable,
+        duplicate_suppressed,
+        expired,
+        blocked,
+        unscored,
+        out_of_scope,
+    ):
         repository.persist_candidate(
             candidate,
             idempotency_key=f"signal-ingestion:high-cash:{candidate.candidate_id}",
@@ -559,10 +568,10 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
 def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> None:
     query = _review_queue_readiness_summary_query("FALSE")
 
-    assert query.count("%s") == 13
+    assert query.count("%s") == 14
     assert "WITH base AS" in query
     assert "classified AS" in query
-    assert "duplicate_counts AS" in query
+    assert "duplicate_counts AS" not in query
     for reason in QueueExclusionReason:
         assert f"AS {reason.value}" in query
 
@@ -571,6 +580,7 @@ def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> No
         QueueExclusionReason.INVALID_STATE,
         QueueExclusionReason.EXPIRED,
         QueueExclusionReason.SNOOZED,
+        QueueExclusionReason.DUPLICATE,
         QueueExclusionReason.SUPPRESSED,
         QueueExclusionReason.CLOSED,
         QueueExclusionReason.REJECTED,
@@ -582,7 +592,7 @@ def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> No
     reason_positions = [query.index(f"THEN '{reason.value}'") for reason in classification_order]
     assert reason_positions == sorted(reason_positions)
     assert "WHERE exclusion_reason = 'snoozed'" in query
-    assert "(SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate" in query
+    assert "WHERE exclusion_reason = 'duplicate'" in query
 
 
 def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:

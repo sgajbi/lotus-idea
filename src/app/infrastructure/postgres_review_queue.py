@@ -4,7 +4,12 @@ from datetime import datetime
 from typing import Any, Mapping, Sequence
 
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.domain.ideas import EvidenceSupportability, IdeaLifecycleStatus, ReviewPosture
+from app.domain.ideas import (
+    EvidenceSupportability,
+    IdeaLifecycleStatus,
+    ReviewPosture,
+    SuppressionReason,
+)
 from app.domain.review_governance import ReviewAction
 from app.domain.review_queue import (
     QueueExclusionReason,
@@ -186,6 +191,7 @@ def load_review_queue_readiness_summary(
         evaluated_at_utc,
         ReviewAction.SNOOZE.value,
         evaluated_at_utc,
+        SuppressionReason.DUPLICATE.value,
         ReviewPosture.SUPPRESSED.value,
         IdeaLifecycleStatus.EXPIRED.value,
         IdeaLifecycleStatus.CLOSED.value,
@@ -350,31 +356,20 @@ def _review_queue_candidate_cte(predicate_sql: str) -> str:
                    latest_review.latest_snoozed_until_utc,
                    latest_review.latest_review_decided_at_utc,
                    latest_review.latest_review_decision_id,
-                   COALESCE(
-                       (
-                           SELECT string_agg(signal.value, ',' ORDER BY signal.value)
-                           FROM jsonb_array_elements_text(
-                               candidate_json->'source_signal_ids'
-                           ) AS signal(value)
-                       ),
-                       candidate.candidate_id
-                   ) AS source_signal_key,
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record AS candidate
             {_latest_review_lateral_join()}
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
-              AND review_posture = %s
+              AND (
+                  review_posture = %s
+                  OR (candidate_json->>'suppression_reason') IS NOT NULL
+              )
         ),
         eligible AS (
             SELECT *
             FROM base
             WHERE {predicate_sql}
-        ),
-        deduped AS (
-            SELECT DISTINCT ON (source_signal_key) *
-            FROM eligible
-            ORDER BY source_signal_key, queue_score DESC, queue_created_at_utc, candidate_id
         )
         """
 
@@ -385,8 +380,8 @@ def _review_queue_count_query(predicate_sql: str) -> str:
         + _review_queue_candidate_cte(predicate_sql)
         + """
         SELECT
-            (SELECT COUNT(*) FROM deduped)::integer AS total_reviewable_item_count,
-            ((SELECT COUNT(*) FROM base) - (SELECT COUNT(*) FROM deduped))::integer
+            (SELECT COUNT(*) FROM eligible)::integer AS total_reviewable_item_count,
+            ((SELECT COUNT(*) FROM base) - (SELECT COUNT(*) FROM eligible))::integer
                 AS total_excluded_candidate_count,
             md5(
                 COALESCE(
@@ -460,14 +455,6 @@ def _review_queue_readiness_candidate_ctes(access_scope_mismatch_sql: str) -> st
             SELECT *
             FROM classified
             WHERE exclusion_reason IS NULL
-        ),
-        deduped AS (
-            SELECT DISTINCT ON (source_signal_key) *
-            FROM eligible
-            ORDER BY source_signal_key, queue_score DESC, queue_created_at_utc, candidate_id
-        ),
-        duplicate_counts AS (
-            {_review_queue_duplicate_count_select()}
         )
         """
 
@@ -478,21 +465,15 @@ def _review_queue_base_candidate_select() -> str:
                    candidate_json,
                    latest_review.latest_review_action,
                    latest_review.latest_snoozed_until_utc,
-                   COALESCE(
-                       (
-                           SELECT string_agg(signal.value, ',' ORDER BY signal.value)
-                           FROM jsonb_array_elements_text(
-                               candidate_json->'source_signal_ids'
-                           ) AS signal(value)
-                       ),
-                       candidate.candidate_id
-                   ) AS source_signal_key,
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record AS candidate
             {_latest_review_lateral_join()}
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
-              AND review_posture = %s
+              AND (
+                  review_posture = %s
+                  OR (candidate_json->>'suppression_reason') IS NOT NULL
+              )
         """
 
 
@@ -513,6 +494,8 @@ def _review_queue_readiness_exclusion_case(access_scope_mismatch_sql: str) -> st
                         WHEN latest_review_action = %s
                             AND latest_snoozed_until_utc > %s
                             THEN '{QueueExclusionReason.SNOOZED.value}'
+                        WHEN (candidate_json->>'suppression_reason') = %s
+                            THEN '{QueueExclusionReason.DUPLICATE.value}'
                         WHEN review_posture = %s
                             OR (candidate_json->>'suppression_reason') IS NOT NULL
                            THEN '{QueueExclusionReason.SUPPRESSED.value}'
@@ -536,24 +519,13 @@ def _review_queue_readiness_exclusion_case(access_scope_mismatch_sql: str) -> st
         """
 
 
-def _review_queue_duplicate_count_select() -> str:
-    return """
-            SELECT GREATEST(
-                (SELECT COUNT(*) FROM eligible) - (SELECT COUNT(*) FROM deduped),
-                0
-            )::integer AS duplicate_count
-        """
-
-
 def _review_queue_readiness_summary_select() -> str:
     return f"""
         SELECT
             (SELECT COUNT(*) FROM base)::integer AS candidate_snapshot_count,
-            (SELECT COUNT(*) FROM deduped)::integer AS reviewable_item_count,
-            (
-                (SELECT COUNT(*) FROM classified WHERE exclusion_reason IS NOT NULL)
-                + (SELECT duplicate_count FROM duplicate_counts)
-            )::integer AS excluded_candidate_count,
+            (SELECT COUNT(*) FROM eligible)::integer AS reviewable_item_count,
+            (SELECT COUNT(*) FROM classified WHERE exclusion_reason IS NOT NULL)::integer
+                AS excluded_candidate_count,
             (SELECT COUNT(*) FROM base WHERE (candidate_json->'score') IS NOT NULL)::integer
                 AS scored_candidate_count,
             (SELECT COUNT(*) FROM base WHERE (candidate_json->'score') IS NULL)::integer
@@ -562,7 +534,7 @@ def _review_queue_readiness_summary_select() -> str:
                 WHERE exclusion_reason = '{QueueExclusionReason.INVALID_STATE.value}')::integer
                 AS invalid_state,
             {_queue_exclusion_count_projection(QueueExclusionReason.SUPPRESSED)},
-            (SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate,
+            {_queue_exclusion_count_projection(QueueExclusionReason.DUPLICATE)},
             {_queue_exclusion_count_projection(QueueExclusionReason.EXPIRED)},
             {_queue_exclusion_count_projection(QueueExclusionReason.SNOOZED)},
             {_queue_exclusion_count_projection(QueueExclusionReason.CLOSED)},
@@ -587,7 +559,7 @@ def _review_queue_page_query(predicate_sql: str) -> str:
         + _review_queue_candidate_cte(predicate_sql)
         + """
         SELECT candidate_id, evidence_hash, candidate_json, persisted_at_utc
-        FROM deduped
+        FROM eligible
         ORDER BY queue_score DESC, queue_created_at_utc, candidate_id
         LIMIT %s OFFSET %s
         """

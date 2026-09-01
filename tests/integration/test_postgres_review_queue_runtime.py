@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from typing import Any, cast
 
@@ -84,6 +85,90 @@ def test_postgres_review_queue_and_readiness_enforce_applicability_expiry_bounda
     assert readiness.reviewable_item_count == 0
     assert readiness.excluded_candidate_count == 1
     assert readiness.exclusion_counts[QueueExclusionReason.EXPIRED.value] == 1
+
+
+def test_postgres_review_queue_preserves_distinct_economic_candidates_with_shared_lineage(
+    postgres_database_url: str,
+) -> None:
+    del postgres_database_url
+    repository = cast(PostgresIdeaRepository, get_idea_repository())
+    candidates = []
+    for index in range(2):
+        evaluation = evaluate_bond_maturity_signal(
+            _bond_maturity_input(portfolio_id=f"PB_SHARED_LINEAGE_{index}"),
+            BondMaturitySignalPolicy(
+                policy_version="bond-maturity-review-v2",
+                maturity_window_days=30,
+            ),
+        )
+        assert evaluation.candidate is not None
+        candidate = replace(
+            evaluation.candidate,
+            source_signal_ids=("shared-economic-source-lineage",),
+        )
+        persisted = repository.persist_candidate(
+            candidate,
+            idempotency_key=f"postgres-shared-lineage-{index}",
+            payload={"candidate_id": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+        assert persisted.record is not None
+        candidates.append(candidate)
+
+    page = repository.review_queue_candidate_page(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        expected_snapshot_token=None,
+        queue_policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+    )
+
+    expected_candidate_ids = sorted(candidate.candidate_id for candidate in candidates)
+    assert [record.candidate.candidate_id for record in page.candidate_records] == (
+        expected_candidate_ids
+    )
+    assert page.total_reviewable_item_count == 2
+    assert page.total_excluded_candidate_count == 0
+    assert readiness.reviewable_item_count == 2
+    assert readiness.excluded_candidate_count == 0
+    assert readiness.exclusion_counts[QueueExclusionReason.DUPLICATE.value] == 0
+
+    client = managed_test_client(app)
+    duplicate_suppression = client.post(
+        f"/api/v1/idea-candidates/{candidates[0].candidate_id}/review-actions",
+        json={
+            "reviewId": "postgres-shared-lineage-duplicate-suppression",
+            "action": "suppress",
+            "reasonCodes": ["review_required"],
+            "decidedAtUtc": "2026-06-21T10:02:00Z",
+            "suppressionReason": "duplicate",
+        },
+        headers=_snooze_headers(
+            portfolio_id="PB_SHARED_LINEAGE_0",
+            idempotency_key="postgres-shared-lineage-duplicate-suppression",
+        ),
+    )
+    assert duplicate_suppression.status_code == 200
+
+    after_suppression = repository.review_queue_readiness_summary(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 3, tzinfo=UTC),
+        audience=ReviewQueueAudience.ADVISOR,
+        rankable_score_policy_versions=("bond-maturity-review-v2",),
+        access_scope_filter=None,
+    )
+    assert after_suppression.reviewable_item_count == 1
+    assert after_suppression.excluded_candidate_count == 1
+    assert after_suppression.exclusion_counts[QueueExclusionReason.DUPLICATE.value] == 1
 
 
 def test_postgres_review_queue_honors_persisted_snooze_until_exact_boundary(
@@ -199,7 +284,7 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
     assert stale_page.json()["code"] == "review_queue_snapshot_conflict"
 
 
-def _bond_maturity_input() -> BondMaturitySignalInput:
+def _bond_maturity_input(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> BondMaturitySignalInput:
     as_of_date = date(2026, 6, 21)
     evaluated_at_utc = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
@@ -226,7 +311,7 @@ def _bond_maturity_input() -> BondMaturitySignalInput:
         access_scope=ReviewAccessScope(
             tenant_id="tenant-private-bank-sg",
             book_id="book-advisor-001",
-            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            portfolio_id=portfolio_id,
             client_id="client-001",
         ),
     )
@@ -294,16 +379,20 @@ def _review_queue_headers() -> dict[str, str]:
     }
 
 
-def _snooze_headers() -> dict[str, str]:
+def _snooze_headers(
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    idempotency_key: str = "postgres-review-queue-snooze-001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
         "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-review-queue-snooze",
         "X-Trace-Id": "trace-postgres-review-queue-snooze",
-        "Idempotency-Key": "postgres-review-queue-snooze-001",
+        "Idempotency-Key": idempotency_key,
     }
