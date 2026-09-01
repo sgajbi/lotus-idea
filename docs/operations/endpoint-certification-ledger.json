@@ -1956,7 +1956,7 @@
         "tests/integration/test_postgres_opportunity_effectiveness_runtime.py::test_postgres_effectiveness_empty_cohort_matches_in_memory_methodology",
         "tests/integration/test_postgres_opportunity_effectiveness_runtime.py::test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_version",
         "tests/unit/test_opportunity_effectiveness.py::test_effectiveness_snapshot_produces_reproducible_source_safe_funnel_math",
-        "tests/unit/test_opportunity_effectiveness.py::test_effectiveness_snapshot_measures_terminal_downstream_failure_explicitly",
+        "tests/unit/test_opportunity_effectiveness_downstream_outcomes.py::test_effectiveness_snapshot_measures_terminal_downstream_failure_explicitly",
         "tests/integration/test_postgres_opportunity_effectiveness_runtime.py::test_postgres_effectiveness_matches_terminal_failed_outcome_methodology",
         "tests/unit/test_opportunity_effectiveness.py::test_effectiveness_snapshot_measures_version_matched_presentations_and_rank_one_acceptance",
         "tests/unit/test_opportunity_effectiveness.py::test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_approval",
