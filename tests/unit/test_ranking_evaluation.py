@@ -9,8 +9,10 @@ from app.domain.ranking_evaluation import (
     RANKING_EVALUATION_POLICY_VERSION,
     RankedOpportunityJudgment,
     RankingCutoffStatus,
+    RankingMetricSupportStatus,
     RankingPresentationFact,
     RankingRelevanceGrade,
+    aggregate_ranking_evaluations,
     evaluate_ranking_presentations,
     evaluate_ranking_snapshot,
 )
@@ -151,6 +153,81 @@ def test_partial_snapshot_receipts_are_incomplete_not_irrelevant() -> None:
     assert evaluation.unjudged_opportunity_count == 1
     assert evaluation.precision_at_k is None
     assert evaluation.ndcg_at_k is None
+
+
+def test_aggregate_reports_coverage_and_macro_quality_with_support_posture() -> None:
+    evaluations = evaluate_ranking_presentations(
+        (
+            presentation_fact(1, RankingRelevanceGrade.USEFUL, digest_character="a"),
+            presentation_fact(2, RankingRelevanceGrade.NOT_USEFUL, digest_character="a"),
+            presentation_fact(3, RankingRelevanceGrade.NOT_USEFUL, digest_character="a"),
+            presentation_fact(1, RankingRelevanceGrade.USEFUL, digest_character="b"),
+            presentation_fact(2, RankingRelevanceGrade.USEFUL, digest_character="b"),
+            presentation_fact(3, RankingRelevanceGrade.NOT_USEFUL, digest_character="b"),
+        ),
+        cutoffs=(3,),
+    )
+
+    aggregate = aggregate_ranking_evaluations(
+        evaluations,
+        minimum_ready_snapshot_count=3,
+    )[0]
+
+    assert aggregate.snapshot_count == 2
+    assert aggregate.ready_snapshot_count == 2
+    assert aggregate.judged_opportunity_count == 6
+    assert aggregate.evaluated_opportunity_count == 6
+    assert aggregate.judgment_coverage == Decimal("1.000000")
+    assert aggregate.support_status is RankingMetricSupportStatus.INSUFFICIENT_SUPPORT
+    assert aggregate.mean_precision_at_k == Decimal("0.500000")
+    assert aggregate.mean_ndcg_at_k == Decimal("1.000000")
+
+
+def test_aggregate_keeps_incomplete_snapshots_out_of_quality_mean() -> None:
+    evaluations = evaluate_ranking_presentations(
+        (
+            presentation_fact(1, RankingRelevanceGrade.USEFUL, digest_character="a"),
+            presentation_fact(2, RankingRelevanceGrade.NOT_USEFUL, digest_character="a"),
+            presentation_fact(3, RankingRelevanceGrade.NOT_USEFUL, digest_character="a"),
+            presentation_fact(1, RankingRelevanceGrade.USEFUL, digest_character="b"),
+            presentation_fact(2, None, digest_character="b"),
+            presentation_fact(3, RankingRelevanceGrade.NOT_USEFUL, digest_character="b"),
+        ),
+        cutoffs=(3,),
+    )
+
+    aggregate = aggregate_ranking_evaluations(
+        evaluations,
+        minimum_ready_snapshot_count=1,
+    )[0]
+
+    assert aggregate.snapshot_count == 2
+    assert aggregate.ready_snapshot_count == 1
+    assert aggregate.incomplete_judgment_snapshot_count == 1
+    assert aggregate.judgment_coverage == Decimal("0.833333")
+    assert aggregate.support_status is RankingMetricSupportStatus.READY
+    assert aggregate.mean_precision_at_k == Decimal("0.333333")
+    assert aggregate.mean_ndcg_at_k == Decimal("1.000000")
+
+
+def test_aggregate_with_no_ready_snapshot_exposes_no_quality_value() -> None:
+    evaluations = evaluate_ranking_presentations(
+        (presentation_fact(1, None),),
+        cutoffs=(1,),
+    )
+
+    aggregate = aggregate_ranking_evaluations(evaluations)[0]
+
+    assert aggregate.support_status is RankingMetricSupportStatus.UNAVAILABLE
+    assert aggregate.judgment_coverage == Decimal("0.000000")
+    assert aggregate.mean_precision_at_k is None
+    assert aggregate.mean_ndcg_at_k is None
+
+
+@pytest.mark.parametrize("minimum", (0, -1, True))
+def test_aggregate_rejects_invalid_minimum_support(minimum: int) -> None:
+    with pytest.raises(ValueError, match="minimum_ready_snapshot_count"):
+        aggregate_ranking_evaluations((), minimum_ready_snapshot_count=minimum)
 
 
 def test_unjudged_opportunity_is_not_treated_as_irrelevant() -> None:
