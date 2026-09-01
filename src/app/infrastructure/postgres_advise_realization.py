@@ -211,7 +211,9 @@ def _history_from_json(value: Any) -> AdviseProposalRealizationHistory:
         realization_id=_text(payload, "realization_id"),
         intake_id=_text(payload, "intake_id"),
         review_work_id=_optional_text(payload, "review_work_id"),
-        review_work_status=(AdviseProposalReviewWorkStatus(review_status) if review_status else None),
+        review_work_status=(
+            AdviseProposalReviewWorkStatus(review_status) if review_status else None
+        ),
         source_authority=_text(payload, "source_authority"),
         realization_authority=_text(payload, "realization_authority"),
         tenant_id=_text(payload, "tenant_id"),

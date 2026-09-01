@@ -150,8 +150,7 @@ PROTECTED_OPERATION_REQUIREMENTS = (
     CallerContextOpenApiRequirement(
         method="POST",
         path=(
-            "/api/v1/downstream-submissions/{supportReference}/"
-            "advise-realization-reconciliation"
+            "/api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation"
         ),
         required_capabilities=("idea.downstream-realization.reconcile",),
         entitlement_scope=(
