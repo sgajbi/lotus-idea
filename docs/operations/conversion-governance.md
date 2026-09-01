@@ -34,6 +34,15 @@ Current implemented scope:
    first, and rejects a distinct stale intent before lifecycle, audit, outbox,
    idempotency, or conversion-intent evidence is written. When competing
    intents race, the first commit is authoritative.
+10. downstream submission requires a complete trusted tenant, book, portfolio,
+    and client entitlement scope that covers the persisted source candidate.
+    Missing or mismatched scope fails closed before a local submission claim or
+    downstream call. The claim fingerprint binds all four scope dimensions so
+    a retry key cannot replay work across scope.
+11. the Advise intake envelope carries the candidate's canonical
+    `portfolio_id`; it never derives portfolio identity from an opaque candidate
+    or conversion-intent identifier. The Manage envelope remains unchanged
+    until the Manage-owned contract explicitly accepts portfolio scope.
 
 The report conversion path now has one additional internal request foundation:
 

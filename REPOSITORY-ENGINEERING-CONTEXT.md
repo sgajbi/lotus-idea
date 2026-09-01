@@ -1440,8 +1440,14 @@ only. They never trust browser-supplied identity headers and fail closed in
 demo, staging, and production until trusted service identity and
 IdP/session/token-claim mapping are delivered through the tracked identity
 work in issue `#380`. The Advise adapter maps only the source-safe conversion
-intent envelope into the Advise-owned intake receipt route and does not grant
-suitability, proposal lifecycle, or client-publication authority. The Report
+intent envelope into the Advise-owned intake receipt route and includes the
+persisted candidate's canonical `portfolio_id`. Downstream submission requires
+complete trusted tenant, book, portfolio, and client caller entitlement scope;
+the application verifies that scope against the source candidate before claim
+or dispatch and binds all four dimensions into the idempotency fingerprint.
+This does not grant suitability, proposal lifecycle, or client-publication
+authority. The Manage envelope remains unchanged pending an owner-contract
+change. The Report
 adapter maps the Idea evidence envelope into
 the Report-owned strict snake-case intake contract, performs only the governed
 retention-policy selector translation documented above, and does not grant
