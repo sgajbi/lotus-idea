@@ -33,6 +33,7 @@ from app.domain import (
     ReasonCode,
     QueueAccessScopeFilter,
     ReviewAccessScope,
+    ReportMaterializationReceiptEvidence,
     SourceSystem,
     evaluate_downstream_submission_claim,
     finalize_downstream_submission,
@@ -44,7 +45,7 @@ from app.domain.report_evidence import (
 )
 from app.domain.persistence_advise_realization import InMemoryAdviseRealizationRepositoryMixin
 from app.domain.persistence_manage_realization import InMemoryManageRealizationRepositoryMixin
-from app.ports.downstream_realization import DownstreamRealizationOutcome
+from app.ports.downstream_realization import DownstreamOwnerReceipt, DownstreamRealizationOutcome
 
 
 CONVERSION_DOWNSTREAM_SUBMISSION_OPERATION_PATH = (
@@ -180,7 +181,7 @@ def _build_conversion_examples() -> dict[str, dict[str, Any]]:
 def _build_report_examples() -> dict[str, dict[str, Any]]:
     accepted = _report_submission(
         idempotency_key="downstream-example-report-accepted",
-        outcome=DownstreamRealizationOutcome.accepted_by_downstream(),
+        outcome=_report_materialization_outcome(),
     )
     rejected = _report_submission(
         idempotency_key="downstream-example-report-rejected",
@@ -188,7 +189,7 @@ def _build_report_examples() -> dict[str, dict[str, Any]]:
     )
     accepted_replayed = _report_submission(
         idempotency_key="downstream-example-report-accepted-replayed",
-        outcome=DownstreamRealizationOutcome.accepted_by_downstream(),
+        outcome=_report_materialization_outcome(),
         replay=True,
     )
     rejected_replayed = _report_submission(
@@ -327,6 +328,39 @@ def _report_evidence_pack() -> GovernedReportEvidencePack:
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=_SUBMITTED_AT,
         retention_policy_ref="lotus-report:idea-evidence-retention:v1",
+    )
+
+
+def _report_materialization_outcome() -> DownstreamRealizationOutcome:
+    evidence_pack = _report_evidence_pack()
+    return DownstreamRealizationOutcome.accepted_by_downstream(
+        DownstreamOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_REPORT,
+            owner_request_id="report-request-example",
+            owner_realization_id="report-job-example",
+            owner_work_id=None,
+            source_event_version=None,
+            source_evidence_fingerprint=evidence_pack.evidence_content_hash,
+            report_materialization=ReportMaterializationReceiptEvidence(
+                status="data_ready",
+                materialization_status="data_ready",
+                status_url="/reports/jobs/report-job-example",
+                report_evidence_pack_id=evidence_pack.report_evidence_pack_id,
+                conversion_intent_id=evidence_pack.conversion_intent_id,
+                candidate_id=evidence_pack.candidate_id,
+                evidence_packet_id=evidence_pack.evidence_packet_id,
+                creates_report_job=True,
+                creates_rendered_output=False,
+                creates_archive_record=False,
+                render_job_id=None,
+                archive_document_id=None,
+                supportability_status="not_certified",
+                remaining_blockers=(
+                    "client_publication_authority_blocked",
+                    "supported_feature_promotion_missing",
+                ),
+            ),
+        )
     )
 
 

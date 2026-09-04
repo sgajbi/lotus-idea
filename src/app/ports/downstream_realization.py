@@ -7,6 +7,7 @@ from typing import Protocol
 from app.domain import (
     AdviseProposalRealizationHistory,
     ManageActionRealizationHistory,
+    ReportMaterializationReceiptEvidence,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     ReviewAccessScope,
@@ -32,8 +33,9 @@ class DownstreamOwnerReceipt:
     owner_request_id: str
     owner_realization_id: str
     owner_work_id: str | None
-    source_event_version: int
+    source_event_version: int | None
     source_evidence_fingerprint: str
+    report_materialization: ReportMaterializationReceiptEvidence | None = None
 
     def __post_init__(self) -> None:
         for field_name, value in (
@@ -45,10 +47,15 @@ class DownstreamOwnerReceipt:
                 raise ValueError(f"{field_name} is required")
         if self.owner_work_id is not None and not self.owner_work_id.strip():
             raise ValueError("owner_work_id must be non-blank when present")
-        if self.source_event_version <= 0:
-            raise ValueError("source_event_version must be positive")
+        if self.source_event_version is not None and self.source_event_version <= 0:
+            raise ValueError("source_event_version must be positive when present")
         if not self.source_evidence_fingerprint.startswith("sha256:"):
             raise ValueError("source_evidence_fingerprint must use sha256")
+        if self.owner_authority is SourceSystem.LOTUS_REPORT:
+            if self.source_event_version is not None or self.report_materialization is None:
+                raise ValueError("Report receipt requires unversioned materialization evidence")
+        elif self.source_event_version is None or self.report_materialization is not None:
+            raise ValueError("evented owner receipt requires a version and no materialization")
 
 
 @dataclass(frozen=True)

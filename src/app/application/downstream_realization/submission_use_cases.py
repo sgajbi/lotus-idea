@@ -84,6 +84,7 @@ class DownstreamRealizationSubmissionResult:
     downstream_failure_reason: str | None = None
     support_reference: str | None = None
     idempotency_replayed: bool = False
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None
     records_downstream_outcome: bool = False
     grants_downstream_authority: bool = False
     supported_feature_promoted: bool = False
@@ -196,12 +197,15 @@ def submit_report_evidence_pack_to_downstream(
     call = (
         None
         if report_client is None
-        else lambda: report_client.submit_report_evidence_pack_request(
+        else lambda: _validate_report_owner_outcome(
+            report_client.submit_report_evidence_pack_request(
+                evidence_pack,
+                access_scope=access_scope,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
+                idempotency_key=command.idempotency_key,
+            ),
             evidence_pack,
-            access_scope=access_scope,
-            correlation_id=command.correlation_id,
-            trace_id=command.trace_id,
-            idempotency_key=command.idempotency_key,
         )
     )
     return _execute_claimed_submission(request, repository=repository, call=call)
@@ -322,6 +326,7 @@ def _result_from_existing(
         ),
         support_reference=record.support_reference,
         idempotency_replayed=idempotency_replayed,
+        owner_receipt=record.owner_receipt,
     )
 
 
@@ -359,7 +364,39 @@ def _submission_owner_receipt(
         owner_work_id=receipt.owner_work_id,
         source_event_version=receipt.source_event_version,
         source_evidence_fingerprint=receipt.source_evidence_fingerprint,
+        report_materialization=receipt.report_materialization,
     )
+
+
+def _validate_report_owner_outcome(
+    outcome: DownstreamRealizationOutcome,
+    evidence_pack: GovernedReportEvidencePack,
+) -> DownstreamRealizationOutcome:
+    if outcome.posture is not DownstreamRealizationOutcomePosture.ACCEPTED:
+        return outcome
+    receipt = outcome.owner_receipt
+    if receipt is None or receipt.owner_authority is not SourceSystem.LOTUS_REPORT:
+        raise ValueError("accepted Report submission requires an authoritative owner receipt")
+    evidence = receipt.report_materialization
+    if evidence is None:
+        raise ValueError("accepted Report submission requires materialization evidence")
+    expected_identity = (
+        evidence_pack.report_evidence_pack_id,
+        evidence_pack.conversion_intent_id,
+        evidence_pack.candidate_id,
+        evidence_pack.evidence_packet_id,
+        evidence_pack.evidence_content_hash,
+    )
+    actual_identity = (
+        evidence.report_evidence_pack_id,
+        evidence.conversion_intent_id,
+        evidence.candidate_id,
+        evidence.evidence_packet_id,
+        receipt.source_evidence_fingerprint,
+    )
+    if actual_identity != expected_identity:
+        raise ValueError("Report owner receipt identity does not match the evidence pack")
+    return outcome
 
 
 def _claim_record(request: _SubmissionRequest) -> DownstreamSubmissionRecord:

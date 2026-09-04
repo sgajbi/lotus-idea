@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 import pytest
+from tests.support.report_materialization import report_materialization_receipt_payload
 
 from app.domain import (
     ConversionBoundary,
@@ -337,7 +338,13 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     def handler(request: httpx.Request) -> httpx.Response:
         captured["headers"] = dict(request.headers)
         captured["payload"] = request.read()
-        return httpx.Response(202, json={"accepted": True})
+        return httpx.Response(
+            202,
+            json=report_materialization_receipt_payload(
+                report_evidence_pack(),
+                idempotency_key="report-submission-idempotency-001",
+            ),
+        )
 
     adapter = HttpReportEvidencePackMaterializationClient(
         DownstreamRealizationAdapterConfig(
@@ -358,6 +365,21 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     )
 
     assert outcome.accepted is True
+    assert outcome.owner_receipt is not None
+    assert outcome.owner_receipt.owner_authority is SourceSystem.LOTUS_REPORT
+    assert outcome.owner_receipt.owner_request_id == ("report-request-report-evidence-pack-001")
+    assert outcome.owner_receipt.owner_realization_id == "report-job-report-evidence-pack-001"
+    assert outcome.owner_receipt.source_event_version is None
+    materialization = outcome.owner_receipt.report_materialization
+    assert materialization is not None
+    assert materialization.status == "data_ready"
+    assert materialization.report_evidence_pack_id == "report-evidence-pack-001"
+    assert materialization.creates_rendered_output is False
+    assert materialization.creates_archive_record is False
+    assert materialization.remaining_blockers == (
+        "client_publication_authority_blocked",
+        "supported_feature_promotion_missing",
+    )
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
         "idea_evidence_pack": {
@@ -406,9 +428,9 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     assert captured["headers"]["x-region"] == "APAC"
     assert captured["headers"]["x-correlation-id"] == "corr-report"
     assert captured["headers"]["x-trace-id"] == "trace-report"
+    assert captured["headers"]["idempotency-key"] == "report-submission-idempotency-001"
     assert "client_id" not in str(payload)
     assert "tenant_id" not in str(payload)
-    assert captured["headers"]["idempotency-key"] == "report-submission-idempotency-001"
     assert payload["idea_evidence_pack"]["source_summaries"] == [
         {
             "product_id": "lotus-core:PortfolioStateSnapshot:v1",
@@ -425,6 +447,51 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     assert "content_hash" not in rendered
     assert "client_id" not in rendered
     assert "book_id" not in rendered
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda payload: payload.update(idempotency_key="wrong-key"),
+        lambda payload: payload.update(producer="lotus-report"),
+        lambda payload: payload.update(grants_client_publication_authority=True),
+        lambda payload: payload["source_authority"].update(client_publication="lotus-report"),
+        lambda payload: payload["report_package_identity"].update(candidate_id="candidate-drift"),
+        lambda payload: payload.update(remaining_blockers=[]),
+        lambda payload: payload.update(creates_rendered_output=True, render_job_id=None),
+        lambda payload: payload.update(status_url="/reports/jobs/report-job-other"),
+    ],
+)
+def test_report_adapter_fails_closed_on_malformed_or_expanded_owner_receipt(
+    mutate: Any,
+) -> None:
+    response_payload = report_materialization_receipt_payload(
+        report_evidence_pack(),
+        idempotency_key="report-submission-idempotency-001",
+    )
+    mutate(response_payload)
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(lambda _request: httpx.Response(202, json=response_payload)),
+        ),
+    )
+
+    outcome = adapter.submit_report_evidence_pack_request(
+        report_evidence_pack(),
+        access_scope=report_access_scope(),
+        idempotency_key="report-submission-idempotency-001",
+    )
+
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
+    assert outcome.failure_reason == "downstream_malformed_response"
+    assert outcome.owner_receipt is None
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
+from app.api.downstream_owner_receipt_models import DownstreamOwnerReceiptResponse
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -153,6 +154,10 @@ class DownstreamSubmissionResultResponse(CamelModel):
     downstream_failure_reason: str | None = Field(default=None, alias="downstreamFailureReason")
     support_reference: str | None = Field(default=None, alias="supportReference")
     idempotency_replayed: bool = Field(False, alias="idempotencyReplayed")
+    owner_receipt: DownstreamOwnerReceiptResponse | None = Field(
+        default=None,
+        alias="ownerReceipt",
+    )
     records_downstream_outcome: bool = Field(False, alias="recordsDownstreamOutcome")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -169,6 +174,11 @@ class DownstreamSubmissionResultResponse(CamelModel):
             downstreamFailureReason=result.downstream_failure_reason,
             supportReference=result.support_reference,
             idempotencyReplayed=result.idempotency_replayed,
+            ownerReceipt=(
+                DownstreamOwnerReceiptResponse.from_domain(result.owner_receipt)
+                if result.owner_receipt is not None
+                else None
+            ),
             recordsDownstreamOutcome=result.records_downstream_outcome,
             grantsDownstreamAuthority=result.grants_downstream_authority,
             supportedFeaturePromoted=result.supported_feature_promoted,

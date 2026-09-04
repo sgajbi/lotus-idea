@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.8.0",
+  "contract_version": "1.9.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -212,6 +212,47 @@
         "X-Caller-Application",
         "X-Tenant-Id",
         "X-Region"
+      ],
+      "receipt_response_fields": [
+        "report_request_id",
+        "report_job_id",
+        "status",
+        "materialization_status",
+        "status_url",
+        "idempotency_key",
+        "report_package_identity",
+        "producer",
+        "source_authority",
+        "materialization_proven",
+        "creates_report_job",
+        "creates_rendered_output",
+        "creates_archive_record",
+        "grants_client_publication_authority",
+        "supported_feature_promoted",
+        "supportability_status",
+        "remaining_blockers",
+        "evidence_refs",
+        "render_job_id",
+        "archive_document_id"
+      ],
+      "receipt_invariants": {
+        "exact_submission_identity_required": true,
+        "exact_idempotency_key_required": true,
+        "client_publication_authority_forbidden": true,
+        "supported_feature_promotion_forbidden": true,
+        "malformed_receipt_requires_reconciliation": true,
+        "persist_exact_owner_receipt": true
+      },
+      "receipt_source_authority": {
+        "idea_evidence": "lotus-idea",
+        "report_materialization": "lotus-report",
+        "rendering": "lotus-render",
+        "archive_record": "lotus-archive",
+        "client_publication": "blocked"
+      },
+      "receipt_required_blockers": [
+        "client_publication_authority_blocked",
+        "supported_feature_promotion_missing"
       ]
     }
   ],

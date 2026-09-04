@@ -23,6 +23,10 @@ from app.runtime.downstream_realization_state import (
 )
 from app.main import app
 from app.ports.downstream_realization import DownstreamRealizationOutcome
+from tests.support.report_materialization import (
+    authoritative_report_outcome,
+    report_owner_receipt_response,
+)
 
 
 def test_downstream_submission_operation_log_includes_request_correlation_id(
@@ -114,6 +118,8 @@ class CapturingReportClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        if self.outcome.accepted and self.outcome.owner_receipt is None:
+            return authoritative_report_outcome(evidence_pack)
         return self.outcome
 
 
@@ -160,6 +166,7 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_with_support
             "downstreamFailureReason": None,
             "supportReference": support_reference,
             "idempotencyReplayed": False,
+            "ownerReceipt": None,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
             "supportedFeaturePromoted": False,
@@ -325,6 +332,7 @@ def test_report_downstream_submission_api_accepts_pack_with_support_reference(
             "downstreamFailureReason": None,
             "supportReference": support_reference,
             "idempotencyReplayed": False,
+            "ownerReceipt": report_owner_receipt_response(report_client.submitted[0]),
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
             "supportedFeaturePromoted": False,
@@ -381,6 +389,16 @@ def test_report_downstream_submission_api_replays_same_idempotency_key(
     assert second.status_code == 200
     assert first.json()["downstreamSubmission"]["idempotencyReplayed"] is False
     assert second.json()["downstreamSubmission"]["idempotencyReplayed"] is True
+    assert (
+        first.json()["downstreamSubmission"]["ownerReceipt"]
+        == second.json()["downstreamSubmission"]["ownerReceipt"]
+    )
+    assert (
+        first.json()["downstreamSubmission"]["ownerReceipt"]["reportMaterialization"][
+            "reportEvidencePackId"
+        ]
+        == "report-pack-replay-api-001"
+    )
     assert len(report_client.submitted) == 1
 
 
@@ -618,6 +636,7 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
         "downstreamFailureReason": "downstream_rejected",
         "supportReference": support_reference,
         "idempotencyReplayed": False,
+        "ownerReceipt": None,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
         "supportedFeaturePromoted": False,
@@ -784,6 +803,7 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
         "downstreamFailureReason": "downstream_rejected",
         "supportReference": support_reference,
         "idempotencyReplayed": False,
+        "ownerReceipt": None,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
         "supportedFeaturePromoted": False,

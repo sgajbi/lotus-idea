@@ -99,6 +99,7 @@ def test_candidate_detail_response_exposes_only_adviser_safe_submission_posture(
             "updatedAtUtc": candidate.created_at_utc,
             "attemptCount": 1,
             "operatorReconciliationRequired": True,
+            "ownerReceipt": None,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
         },

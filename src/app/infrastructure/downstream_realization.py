@@ -15,6 +15,7 @@ from app.domain import (
     ManageActionRealizationEventType,
     ManageActionRealizationHistory,
     ManageActionRealizationStatus,
+    ReportMaterializationReceiptEvidence,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     ReviewAccessScope,
@@ -409,6 +410,11 @@ class HttpReportEvidencePackMaterializationClient:
             trace_id=trace_id,
             idempotency_key=idempotency_key,
             additional_headers=self._report_service_context.request_headers(),
+            accepted_response_mapper=lambda payload: _report_outcome_from_receipt(
+                payload,
+                evidence_pack=evidence_pack,
+                idempotency_key=idempotency_key,
+            ),
         )
 
     def close(self) -> None:
@@ -545,6 +551,96 @@ def _manage_rejection_reason(payload: Mapping[str, Any]) -> str:
     return "downstream_rejected"
 
 
+def _report_outcome_from_receipt(
+    payload: Mapping[str, Any],
+    *,
+    evidence_pack: GovernedReportEvidencePack,
+    idempotency_key: str | None,
+) -> DownstreamRealizationOutcome:
+    if idempotency_key is None:
+        raise ValueError("Report receipt validation requires an idempotency key")
+    if _required_response_text(payload, "idempotency_key") != idempotency_key:
+        raise ValueError("Report receipt idempotency key does not match the submission")
+    if _required_response_text(payload, "producer") != "lotus-idea":
+        raise ValueError("Report receipt producer must be lotus-idea")
+    for field_name, expected in (
+        ("materialization_proven", True),
+        ("creates_report_job", True),
+        ("grants_client_publication_authority", False),
+        ("supported_feature_promoted", False),
+    ):
+        if _required_response_bool(payload, field_name) is not expected:
+            raise ValueError(f"Report receipt {field_name} must be {expected}")
+    if _required_response_text(payload, "supportability_status") != "not_certified":
+        raise ValueError("Report receipt supportability_status must be not_certified")
+
+    source_authority = _required_response_mapping(payload, "source_authority")
+    expected_authority = {
+        "idea_evidence": "lotus-idea",
+        "report_materialization": "lotus-report",
+        "rendering": "lotus-render",
+        "archive_record": "lotus-archive",
+        "client_publication": "blocked",
+    }
+    if dict(source_authority) != expected_authority:
+        raise ValueError("Report receipt source_authority does not match the governed boundary")
+
+    identity = _required_response_mapping(payload, "report_package_identity")
+    expected_identity = {
+        "report_evidence_pack_id": evidence_pack.report_evidence_pack_id,
+        "conversion_intent_id": evidence_pack.conversion_intent_id,
+        "candidate_id": evidence_pack.candidate_id,
+        "evidence_packet_id": evidence_pack.evidence_packet_id,
+        "evidence_content_fingerprint": evidence_pack.evidence_content_hash,
+        "source_contract_version": "lotus_idea_evidence_pack_report_input.v1",
+        "owned_product": "lotus-report:ClientReportEvidencePack:v1",
+    }
+    if dict(identity) != expected_identity:
+        raise ValueError("Report receipt package identity does not match the submission")
+
+    blockers = _required_response_text_array(payload, "remaining_blockers")
+    required_blockers = {
+        "client_publication_authority_blocked",
+        "supported_feature_promotion_missing",
+    }
+    if not required_blockers.issubset(set(blockers)):
+        raise ValueError("Report receipt omits required supportability blockers")
+
+    report_job_id = _required_response_text(payload, "report_job_id")
+    status_url = _required_response_text(payload, "status_url")
+    if status_url != f"/reports/jobs/{report_job_id}":
+        raise ValueError("Report receipt status_url does not match report_job_id")
+    evidence = ReportMaterializationReceiptEvidence(
+        status=_required_response_text(payload, "status"),
+        materialization_status=_required_response_text(payload, "materialization_status"),
+        status_url=status_url,
+        report_evidence_pack_id=_required_response_text(identity, "report_evidence_pack_id"),
+        conversion_intent_id=_required_response_text(identity, "conversion_intent_id"),
+        candidate_id=_required_response_text(identity, "candidate_id"),
+        evidence_packet_id=_required_response_text(identity, "evidence_packet_id"),
+        creates_report_job=True,
+        creates_rendered_output=_required_response_bool(payload, "creates_rendered_output"),
+        creates_archive_record=_required_response_bool(payload, "creates_archive_record"),
+        render_job_id=_optional_response_text(payload, "render_job_id"),
+        archive_document_id=_optional_response_text(payload, "archive_document_id"),
+        supportability_status="not_certified",
+        remaining_blockers=tuple(blockers),
+    )
+    if evidence.status != evidence.materialization_status:
+        raise ValueError("Report receipt status fields must agree")
+    return DownstreamRealizationOutcome.accepted_by_downstream(
+        DownstreamOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_REPORT,
+            owner_request_id=_required_response_text(payload, "report_request_id"),
+            owner_realization_id=report_job_id,
+            owner_work_id=None,
+            source_event_version=None,
+            source_evidence_fingerprint=evidence_pack.evidence_content_hash,
+            report_materialization=evidence,
+        )
+    )
+
+
 def _manage_realization_history_from_payload(
     payload: Mapping[str, Any],
 ) -> ManageActionRealizationHistory:
@@ -601,6 +697,27 @@ def _required_response_text(payload: Mapping[str, Any], field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} is required")
     return value
+
+
+def _required_response_mapping(payload: Mapping[str, Any], field_name: str) -> Mapping[str, Any]:
+    value = payload.get(field_name)
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field_name} must be an object")
+    return value
+
+
+def _required_response_text_array(payload: Mapping[str, Any], field_name: str) -> tuple[str, ...]:
+    value = payload.get(field_name)
+    if not isinstance(value, list) or not value:
+        raise ValueError(f"{field_name} must be a non-empty array")
+    normalized: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError(f"{field_name} must contain non-blank strings")
+        normalized.append(item)
+    if len(set(normalized)) != len(value):
+        raise ValueError(f"{field_name} must not contain duplicates")
+    return tuple(normalized)
 
 
 def _optional_response_text(payload: Mapping[str, Any], field_name: str) -> str | None:

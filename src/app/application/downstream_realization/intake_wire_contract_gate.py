@@ -50,6 +50,28 @@ _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
     "producer",
     "supportability_status",
 }
+_REQUIRED_REPORT_MATERIALIZATION_RECEIPT_FIELDS = {
+    "report_request_id",
+    "report_job_id",
+    "status",
+    "materialization_status",
+    "status_url",
+    "idempotency_key",
+    "report_package_identity",
+    "producer",
+    "source_authority",
+    "materialization_proven",
+    "creates_report_job",
+    "creates_rendered_output",
+    "creates_archive_record",
+    "grants_client_publication_authority",
+    "supported_feature_promoted",
+    "supportability_status",
+    "remaining_blockers",
+    "evidence_refs",
+    "render_job_id",
+    "archive_document_id",
+}
 _INTAKE_RECEIPT_OUTCOMES = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
 _MANAGE_HISTORY_RESPONSE_FIELDS = {
     "contract_version",
@@ -176,6 +198,26 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
             "X-Tenant-Id",
             "X-Region",
         },
+        "receipt_response_fields": _REQUIRED_REPORT_MATERIALIZATION_RECEIPT_FIELDS,
+        "receipt_invariants": {
+            "exact_submission_identity_required": True,
+            "exact_idempotency_key_required": True,
+            "client_publication_authority_forbidden": True,
+            "supported_feature_promotion_forbidden": True,
+            "malformed_receipt_requires_reconciliation": True,
+            "persist_exact_owner_receipt": True,
+        },
+        "receipt_source_authority": {
+            "idea_evidence": "lotus-idea",
+            "report_materialization": "lotus-report",
+            "rendering": "lotus-render",
+            "archive_record": "lotus-archive",
+            "client_publication": "blocked",
+        },
+        "receipt_required_blockers": [
+            "client_publication_authority_blocked",
+            "supported_feature_promotion_missing",
+        ],
     },
 }
 _INTAKE_SECURITY_BOUNDARY_REQUIRED_TRUE_FIELDS = (
@@ -190,6 +232,10 @@ _REPORT_INTAKE_CONSUMER_FIELDS = (
     "local_test_service_context",
     "boundary",
     "idea_evidence_pack_fields",
+    "receipt_response_fields",
+    "receipt_invariants",
+    "receipt_source_authority",
+    "receipt_required_blockers",
 )
 
 
@@ -220,8 +266,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.8.0":
-        errors.append("downstream intake wire contract must be version 1.8.0")
+    if payload.get("contract_version") != "1.9.0":
+        errors.append("downstream intake wire contract must be version 1.9.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -334,7 +380,7 @@ def _validate_report_evidence_intake_consumer(
     for field in _REPORT_INTAKE_CONSUMER_FIELDS:
         actual = consumer.get(field)
         expected_value = expected[field]
-        if field == "idea_evidence_pack_fields":
+        if field in {"idea_evidence_pack_fields", "receipt_response_fields"}:
             matches = isinstance(actual, list) and set(actual) == expected_value
         else:
             matches = actual == expected_value

@@ -8,6 +8,7 @@ import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
+from tests.support.report_materialization import authoritative_report_outcome
 
 from app.application.downstream_realization import (
     DownstreamRealizationAccessScopeDenied,
@@ -155,6 +156,8 @@ class CapturingReportClient:
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
         self.access_scope = access_scope
+        if self.outcome.accepted and self.outcome.owner_receipt is None:
+            return authoritative_report_outcome(evidence_pack)
         return self.outcome
 
 
