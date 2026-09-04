@@ -1,7 +1,20 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
+import sys
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     source_safe_receipt_digest,
