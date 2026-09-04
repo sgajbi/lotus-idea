@@ -308,6 +308,17 @@ Implemented in this slice:
     classification, and deployment-contract coverage. Transport success is
     never interpreted as review, rebalance-execution, order, fill,
     settlement, or client-publication success.
+37. Advise lost-response recovery preserves the existing submission and
+    reconciliation model. When the owner commits an intake but Idea receives
+    no response, the local record remains `reconciliation_required` and no
+    automatic intake retry occurs. The existing authorized reconciliation use
+    case reads Advise history by the source-owned conversion-intent identity
+    under exact tenant, legal-entity, and portfolio scope, validates stable
+    candidate/evidence identity, reconstructs the original version-one owner
+    receipt, and then persists the append-only Advise history. Subsequent replay
+    uses the recovered intake identity. Missing, malformed, unavailable, or
+    mismatched owner evidence cannot become acceptance. Advise still owns the
+    realization and all advisory business state.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
@@ -341,7 +352,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
 5. cross-repository exact-main/runtime acceptance of the Idea Advise and
-   Manage history consumers under the remaining timeout, restart, owner
+   Manage history consumers under the remaining timeout-before-owner-commit,
+   restart, owner
    correction, and concurrent owner-version advancement failure windows,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.

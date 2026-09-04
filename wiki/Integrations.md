@@ -299,6 +299,8 @@ adapter foundations when the corresponding adapter configuration is present:
    for Report evidence-pack requests,
 3. `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation`
    to reconcile an Advise-owned realization history from its persisted receipt,
+   or to recover a lost intake receipt through a scoped, read-only owner lookup
+   by the already-persisted conversion-intent identity,
 4. `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation`
    to reconcile the Manage-owned action outcome history
    (`lotus-manage.idea-action-outcome-history.v1`) from its persisted receipt.
@@ -320,6 +322,12 @@ extension of the typed Advise history. The history may link adviser review work
 and a proposal, or may terminate before work; either way Advise remains the
 business-state authority. Idea does not translate transport success into
 proposal acceptance, suitability, execution, or client-publication truth.
+When a response is lost after Advise commits, the same reconciliation endpoint
+uses the owner route keyed by `conversion_intent_id` under exact tenant,
+legal-entity, and portfolio scope. It reconstructs the original intake receipt
+only after candidate, intent, evidence, and scope match. The mutating intake is
+not retried; unavailable or conflicting owner evidence leaves the handoff
+uncertain or conflicted.
 
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.

@@ -498,7 +498,7 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |
-| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE` |
+| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE` |
 | Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
 | Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
 
@@ -510,6 +510,24 @@ so a healthy source adapter cannot mask an unavailable downstream handoff.
 
 `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
 timeout and defaults conservatively when absent.
+
+### Advise Lost-Response Recovery
+
+If Advise commits an intake but Idea loses the HTTP response, Idea preserves the
+submission as `reconciliation_required`; it does not infer acceptance and does
+not automatically repeat the mutating intake request. An authorized
+reconciliation call reads the Advise-owned realization by the already-persisted
+Idea `conversion_intent_id`, under the exact tenant, legal-entity, and portfolio
+scope. Idea accepts the recovery only when candidate identity, conversion
+intent, evidence fingerprint, and owner scope all match.
+
+The recovery read reconstructs the original version-one intake receipt, while
+later Advise events remain append-only owner history. Idea then commits its
+local accepted/rejected submission posture and persists the full owner history.
+Replay uses the recovered `intake_id` read route and never sends a second
+intake. A missing, malformed, unavailable, or mismatched owner response leaves
+the submission uncertain or returns a conflict; transport ambiguity never
+becomes business success.
 
 ### Local Advise, Manage, And Report Intake Fixtures
 
