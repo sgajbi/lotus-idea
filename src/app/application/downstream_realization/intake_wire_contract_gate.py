@@ -129,6 +129,10 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "receipt_outcomes": _INTAKE_RECEIPT_OUTCOMES,
         "principal_capability": "advisory.idea_proposal_intake.accept",
         "owner_history_route": ("GET /advisory/proposals/idea-intake/{intake_id}/realization"),
+        "owner_recovery_history_route": (
+            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
+            "{conversion_intent_id}/realization"
+        ),
         "history_principal_capability": "advisory.idea_proposal_realization.read",
         "history_response_fields": _ADVISE_HISTORY_RESPONSE_FIELDS,
         "history_required_server_headers": _TRUSTED_SERVICE_HEADERS
@@ -266,8 +270,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.9.0":
-        errors.append("downstream intake wire contract must be version 1.9.0")
+    if payload.get("contract_version") != "1.10.0":
+        errors.append("downstream intake wire contract must be version 1.10.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":

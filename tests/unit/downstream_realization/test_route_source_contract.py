@@ -175,7 +175,13 @@ def test_contract_requires_every_producer_owned_certification_blocker(
 
 @pytest.mark.parametrize(
     "field",
-    ["runtime_intake_receipt_proven", "receipt_outcomes", "principal_capability"],
+    [
+        "runtime_intake_receipt_proven",
+        "lost_response_read_recovery_implemented",
+        "lost_response_recovery_route",
+        "receipt_outcomes",
+        "principal_capability",
+    ],
 )
 def test_advise_contract_requires_current_intake_receipt_boundary(
     tmp_path: Path, field: str
@@ -413,6 +419,11 @@ def _contract_payload(family: str) -> dict[str, object]:
     }
     if advise:
         payload["proposal_authority"] = "lotus-advise"
+        payload["lost_response_read_recovery_implemented"] = True
+        payload["lost_response_recovery_route"] = (
+            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
+            "{conversion_intent_id}/realization"
+        )
         payload["receipt_outcomes"] = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
         payload["principal_capability"] = "advisory.idea_proposal_intake.accept"
         payload["local_dev_principal_source"] = "trusted_headers_until_production_idp_available"

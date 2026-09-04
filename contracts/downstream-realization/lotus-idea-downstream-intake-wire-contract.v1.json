@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.9.0",
+  "contract_version": "1.10.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -27,6 +27,7 @@
       ],
       "principal_capability": "advisory.idea_proposal_intake.accept",
       "owner_history_route": "GET /advisory/proposals/idea-intake/{intake_id}/realization",
+      "owner_recovery_history_route": "GET /advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization",
       "history_principal_capability": "advisory.idea_proposal_realization.read",
       "history_response_fields": [
         "realization_id",

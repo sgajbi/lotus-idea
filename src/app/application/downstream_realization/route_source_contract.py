@@ -382,6 +382,12 @@ def _contract_declares_runtime_receipt_boundary(
     if profile is ADVISE_ROUTE_PROFILE:
         return (
             payload.get("runtime_intake_receipt_proven") is True
+            and payload.get("lost_response_read_recovery_implemented") is True
+            and payload.get("lost_response_recovery_route")
+            == (
+                "GET /advisory/proposals/idea-intake/by-conversion-intent/"
+                "{conversion_intent_id}/realization"
+            )
             and receipt_outcomes_are_bounded
             and payload.get("principal_capability") == "advisory.idea_proposal_intake.accept"
             and payload.get("local_dev_principal_source")
