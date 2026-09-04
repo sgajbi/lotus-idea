@@ -343,7 +343,26 @@ class HttpAdviseProposalRealizationClient:
             raise DownstreamRealizationReadError(
                 "authoritative Advise realization history is unavailable"
             ) from exc
-        return _advise_realization_history_from_payload(payload)
+        history = _advise_realization_history_from_payload(payload)
+        self._require_advise_history_scope(history, access_scope=access_scope)
+        return history
+
+    def _require_advise_history_scope(
+        self,
+        history: AdviseProposalRealizationHistory,
+        *,
+        access_scope: ReviewAccessScope,
+    ) -> None:
+        expected_context = self._advise_service_context
+        if (
+            access_scope.tenant_id != expected_context.tenant_id
+            or history.tenant_id != expected_context.tenant_id
+            or history.legal_entity_code != expected_context.legal_entity_code
+            or history.portfolio_id != access_scope.portfolio_id
+        ):
+            raise ValueError(
+                "authoritative Advise realization history does not match requested trusted scope"
+            )
 
     def close(self) -> None:
         self._client.close()
