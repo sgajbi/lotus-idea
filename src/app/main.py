@@ -99,6 +99,7 @@ from app.api.problem_details import (
 from app.api.runtime_dependencies import (
     close_lifecycle_authority_dependencies,
     close_lotus_ai_attestation_dependencies,
+    close_lotus_ai_workflow_runtime,
     get_idea_repository,
     idea_repository_durable_storage_backed,
     idea_repository_runtime_posture,
@@ -144,6 +145,7 @@ def create_app() -> FastAPI:
     _configure_openapi_contract_overrides(application)
     application.router.add_event_handler("shutdown", close_downstream_realization_clients)
     application.router.add_event_handler("shutdown", close_lotus_ai_attestation_dependencies)
+    application.router.add_event_handler("shutdown", close_lotus_ai_workflow_runtime)
     application.router.add_event_handler("shutdown", close_lifecycle_authority_dependencies)
     configure_logging()
     return application
