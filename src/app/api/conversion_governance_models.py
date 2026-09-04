@@ -26,7 +26,6 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.domain.conversion_governance import CONVERSION_INTENT_ID_PATTERN
 from app.security.caller_context import CallerContext
 
 
@@ -34,7 +33,6 @@ class ConversionIntentRequest(CamelModel):
     conversion_intent_id: str = Field(
         ...,
         alias="conversionIntentId",
-        pattern=CONVERSION_INTENT_ID_PATTERN,
         max_length=160,
     )
     target: ConversionTarget

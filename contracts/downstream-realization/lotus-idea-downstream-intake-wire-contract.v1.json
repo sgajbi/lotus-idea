@@ -6,10 +6,9 @@
   "supportability_status": "not_certified",
   "non_authoritative": true,
   "conversion_intent_identity": {
-    "addressability": "url_safe_path_segment",
-    "allowed_pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$",
+    "addressability": "opaque_query_parameter",
     "maximum_length": 160,
-    "reason": "Every accepted conversion identity must remain addressable by owner and Idea routes."
+    "reason": "Query transport keeps every previously accepted printable identity addressable without rewriting durable records."
   },
   "consumer_contracts": [
     {
@@ -33,7 +32,7 @@
       ],
       "principal_capability": "advisory.idea_proposal_intake.accept",
       "owner_history_route": "GET /advisory/proposals/idea-intake/{intake_id}/realization",
-      "owner_recovery_history_route": "GET /advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization",
+      "owner_recovery_history_route": "GET /advisory/proposals/idea-intake/realization?conversion_intent_id={conversion_intent_id}",
       "history_principal_capability": "advisory.idea_proposal_realization.read",
       "history_response_fields": [
         "realization_id",

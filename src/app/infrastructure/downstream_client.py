@@ -187,6 +187,7 @@ class DownstreamJsonClient:
         self,
         path: str,
         *,
+        query_params: Mapping[str, str] | None = None,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         additional_headers: Mapping[str, str] | None = None,
@@ -194,6 +195,7 @@ class DownstreamJsonClient:
         return self._request_json(
             "GET",
             path,
+            query_params=query_params,
             correlation_id=correlation_id,
             trace_id=trace_id,
             additional_headers=additional_headers,
@@ -225,6 +227,7 @@ class DownstreamJsonClient:
         path: str,
         *,
         json_payload: dict[str, Any] | None = None,
+        query_params: Mapping[str, str] | None = None,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -236,6 +239,7 @@ class DownstreamJsonClient:
                 method,
                 path,
                 json_payload=json_payload,
+                query_params=query_params,
                 correlation_id=correlation_id,
                 trace_id=trace_id,
                 idempotency_key=idempotency_key,
@@ -261,6 +265,7 @@ class DownstreamJsonClient:
         path: str,
         *,
         json_payload: dict[str, Any] | None = None,
+        query_params: Mapping[str, str] | None = None,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -284,6 +289,7 @@ class DownstreamJsonClient:
                     method,
                     path,
                     json=json_payload,
+                    params=query_params,
                     headers=headers,
                 )
             except httpx.TimeoutException as exc:

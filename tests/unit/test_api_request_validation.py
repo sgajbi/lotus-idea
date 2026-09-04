@@ -84,12 +84,24 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
             build_request()
 
 
-@pytest.mark.parametrize("identity", ["conversion/intent", "i" * 161])
-def test_conversion_intent_request_rejects_non_addressable_identity(identity: str) -> None:
+def test_conversion_intent_request_preserves_opaque_identity() -> None:
+    request = ConversionIntentRequest.model_validate(
+        {
+            "conversionIntentId": "legacy/conversion intent?version=1",
+            "target": ConversionTarget.ADVISE_PROPOSAL,
+            "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
+            "requestedAtUtc": REQUESTED_AT,
+        }
+    )
+
+    assert request.conversion_intent_id == "legacy/conversion intent?version=1"
+
+
+def test_conversion_intent_request_rejects_oversized_identity() -> None:
     with pytest.raises(ValidationError, match="conversionIntentId"):
         ConversionIntentRequest.model_validate(
             {
-                "conversionIntentId": identity,
+                "conversionIntentId": "i" * 161,
                 "target": ConversionTarget.ADVISE_PROPOSAL,
                 "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
                 "requestedAtUtc": REQUESTED_AT,

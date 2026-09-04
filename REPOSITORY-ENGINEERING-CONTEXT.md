@@ -1401,11 +1401,11 @@ Downstream realization:
 3. `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`; the canonical
    owner route is
    `/advisory/proposals/idea-intake/{intake_id}/realization`,
-4. `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE`; the canonical
+4. `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH`; the canonical
    read-only lost-response recovery route is
-   `/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization`,
-   and conversion-intent creation restricts identity to a URL-safe path segment so a committed
-   identity can never be accepted but unreachable through that owner route,
+   `/advisory/proposals/idea-intake/realization?conversion_intent_id={conversion_intent_id}`,
+   where query transport preserves opaque historical conversion identities without rewriting
+   durable records,
 5. local/test-only Advise fixture:
    `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,

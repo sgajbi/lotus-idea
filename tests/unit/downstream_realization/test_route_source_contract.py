@@ -421,8 +421,8 @@ def _contract_payload(family: str) -> dict[str, object]:
         payload["proposal_authority"] = "lotus-advise"
         payload["lost_response_read_recovery_implemented"] = True
         payload["lost_response_recovery_route"] = (
-            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
-            "{conversion_intent_id}/realization"
+            "GET /advisory/proposals/idea-intake/realization?"
+            "conversion_intent_id={conversion_intent_id}"
         )
         payload["receipt_outcomes"] = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
         payload["principal_capability"] = "advisory.idea_proposal_intake.accept"
