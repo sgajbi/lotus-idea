@@ -319,3 +319,32 @@ def _reconciliation_headers() -> dict[str, str]:
 
 def _raise_unconfigured_owner_reader() -> None:
     raise DownstreamRealizationClientsUnavailableError("Manage reader is not configured")
+
+
+def test_manage_realization_reconciliation_reports_unwritable_durable_storage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When durable storage cannot accept writes, the route answers with the
+    configuration problem BEFORE reading caller scope or calling the owner -
+    no evidence can change while the ledger cannot record it."""
+
+    from fastapi.responses import JSONResponse
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "durable_write_problem",
+        lambda repository: JSONResponse(
+            status_code=503,
+            content={"code": "durable_repository_not_configured"},
+        ),
+    )
+    client = managed_test_client(app)
+
+    response = client.post(
+        "/api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/"
+        "manage-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "durable_repository_not_configured"
