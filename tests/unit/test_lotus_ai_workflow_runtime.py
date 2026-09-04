@@ -176,3 +176,23 @@ async def test_rejects_empty_attestation_run_identity_without_io() -> None:
     with pytest.raises(ValueError, match="run id must not be empty"):
         await runtime.get_run_attestation("   ")
     await runtime.close()
+
+
+@pytest.mark.asyncio
+async def test_maps_attestation_transport_failure_to_bounded_unavailable_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("secret infrastructure detail", request=request)
+
+    runtime = HttpLotusAIWorkflowRuntime(
+        base_url="http://lotus-ai.internal:8140",
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(
+        LotusAIWorkflowRuntimeUnavailable,
+        match="lotus-ai workflow runtime is unavailable",
+    ) as raised:
+        await runtime.get_run_attestation("wpr_runtime_proof_001")
+
+    assert "secret infrastructure detail" not in str(raised.value)
+    await runtime.close()
