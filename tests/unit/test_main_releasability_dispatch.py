@@ -44,6 +44,7 @@ class FakeGitHub:
         self.created: list[tuple[str, str]] = []
         self.dispatched: list[tuple[str, str, int]] = []
         self.create_error: GitHubApiError | None = None
+        self.create_race_sha: str | None = None
 
     def merge_methods(self) -> tuple[bool, bool, bool]:
         return self.policy
@@ -55,7 +56,7 @@ class FakeGitHub:
         if self.create_error is not None:
             error = self.create_error
             self.create_error = None
-            self.refs.setdefault(dispatch_ref, revision)
+            self.refs.setdefault(dispatch_ref, self.create_race_sha or revision)
             raise error
         self.refs[dispatch_ref] = revision
         self.created.append((dispatch_ref, revision))
@@ -145,6 +146,21 @@ def test_dispatch_accepts_a_same_revision_ref_creation_race() -> None:
     )
 
     assert github.dispatched == [(f"main-releasability-{REVISION_TWO}", REVISION_TWO, 123)]
+
+
+def test_dispatch_rejects_a_ref_creation_race_to_a_different_revision() -> None:
+    github = FakeGitHub()
+    github.create_error = GitHubApiError(operation="create ref", status=422)
+    github.create_race_sha = REVISION_ONE
+
+    with pytest.raises(GitHubApiError, match="HTTP 422"):
+        dispatch_merged_pull_request(
+            replace(_merged_pr(), commit_count=1),
+            github=github,
+            revision_source=lambda _sha, _count: (REVISION_TWO,),
+        )
+
+    assert github.dispatched == []
 
 
 def test_dispatch_fails_before_git_or_api_mutation_when_merge_policy_drifts() -> None:
