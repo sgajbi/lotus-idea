@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from app.domain import (
     AdviseProposalRealizationHistory,
+    AdviseProposalRealizationStatus,
     AdviseRealizationHistoryMutationDecision,
     ConversionTarget,
     DownstreamSubmissionPosture,
+    DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionRecord,
+    DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
     QueueAccessScopeFilter,
     ReviewAccessScope,
@@ -81,16 +86,15 @@ def reconcile_advise_realization_history(
         command.access_scope_filter,
         candidate_record.candidate.access_scope,
     )
-    receipt = submission.owner_receipt
-    assert receipt is not None
     if advise_reader is None:
         return _result(
             AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE,
             blocker="advise_realization_reader_not_configured",
         )
     try:
-        history = advise_reader.load_proposal_realization(
-            intake_id=receipt.owner_request_id,
+        history = _load_owner_history(
+            advise_reader=advise_reader,
+            submission=submission,
             access_scope=access_scope,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
@@ -114,6 +118,18 @@ def reconcile_advise_realization_history(
     )
     if identity_blocker is not None:
         return _result(AdviseRealizationReconciliationStatus.CONFLICT, blocker=identity_blocker)
+    if submission.owner_receipt is None:
+        recovery_blocker = _recover_submission_receipt(
+            repository=repository,
+            submission=submission,
+            history=history,
+            actor_subject=command.actor_subject,
+        )
+        if recovery_blocker is not None:
+            return _result(
+                AdviseRealizationReconciliationStatus.CONFLICT,
+                blocker=recovery_blocker,
+            )
     existing = repository.advise_realization_history_by_support_reference(command.support_reference)
     mutation = repository.persist_advise_realization_history(
         support_reference=command.support_reference,
@@ -146,6 +162,13 @@ def _submission_eligibility_blocker(submission: DownstreamSubmissionRecord) -> s
         return "advise_realization_requires_advise_target"
     if submission.source_authority is not SourceSystem.LOTUS_ADVISE:
         return "advise_realization_requires_advise_authority"
+    if submission.status in {
+        DownstreamSubmissionPosture.IN_FLIGHT,
+        DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+    }:
+        if submission.owner_receipt is not None:
+            return "advise_realization_uncertain_submission_has_owner_receipt"
+        return None
     if submission.status not in {
         DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
@@ -154,6 +177,71 @@ def _submission_eligibility_blocker(submission: DownstreamSubmissionRecord) -> s
     if submission.owner_receipt is None:
         return "advise_realization_owner_receipt_missing"
     return None
+
+
+def _load_owner_history(
+    *,
+    advise_reader: AdviseProposalRealizationReader,
+    submission: DownstreamSubmissionRecord,
+    access_scope: ReviewAccessScope,
+    correlation_id: str | None,
+    trace_id: str | None,
+) -> AdviseProposalRealizationHistory:
+    receipt = submission.owner_receipt
+    if receipt is not None:
+        return advise_reader.load_proposal_realization(
+            intake_id=receipt.owner_request_id,
+            access_scope=access_scope,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+    return advise_reader.load_proposal_realization_by_conversion_intent(
+        conversion_intent_id=submission.resource_id,
+        access_scope=access_scope,
+        correlation_id=correlation_id,
+        trace_id=trace_id,
+    )
+
+
+def _recover_submission_receipt(
+    *,
+    repository: DownstreamSubmissionRepository,
+    submission: DownstreamSubmissionRecord,
+    history: AdviseProposalRealizationHistory,
+    actor_subject: str,
+) -> str | None:
+    initial_outcome = history.outcomes[0]
+    accepted = initial_outcome.status is AdviseProposalRealizationStatus.ACCEPTED_FOR_REVIEW
+    resolution = (
+        DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM
+        if accepted
+        else DownstreamSubmissionResolution.REJECTED_BY_DOWNSTREAM
+    )
+    receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id=history.intake_id,
+        owner_realization_id=history.realization_id,
+        owner_work_id=history.review_work_id,
+        # Reconstruct the exact intake receipt that was lost. Later owner
+        # outcomes remain history evidence and must not rewrite acceptance.
+        source_event_version=initial_outcome.source_event_version,
+        source_evidence_fingerprint=history.source_evidence_fingerprint,
+    )
+    mutation = repository.reconcile_downstream_submission(
+        support_reference=submission.support_reference,
+        resolution=resolution,
+        actor_subject=actor_subject,
+        reason="authoritative_advise_owner_history_recovered",
+        change_reference=(f"advise-owner-recovery-v{history.current_source_event_version}"),
+        reconciled_at_utc=datetime.now(UTC),
+        owner_receipt=receipt,
+    )
+    if mutation.decision in {
+        DownstreamSubmissionMutationDecision.ACCEPTED,
+        DownstreamSubmissionMutationDecision.REPLAYED,
+    }:
+        return None
+    return mutation.blocker or "advise_realization_submission_recovery_conflict"
 
 
 def _history_identity_blocker(

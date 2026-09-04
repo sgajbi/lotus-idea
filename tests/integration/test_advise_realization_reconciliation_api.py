@@ -38,6 +38,7 @@ RECORDED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
 @dataclass
 class OwnerLifecycleClient:
     intent: Any = None
+    recovery_calls: int = 0
 
     def submit_proposal_intent(
         self,
@@ -117,6 +118,41 @@ class OwnerLifecycleClient:
             ),
         )
 
+    def load_proposal_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        self.recovery_calls += 1
+        assert conversion_intent_id == self.intent.intent.conversion_intent_id
+        return self.load_proposal_realization(
+            intake_id="ipi_api_001",
+            access_scope=access_scope,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+
+@dataclass
+class LostResponseOwnerLifecycleClient(OwnerLifecycleClient):
+    submission_calls: int = 0
+
+    def submit_proposal_intent(
+        self,
+        intent: Any,
+        *,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> DownstreamRealizationOutcome:
+        self.intent = intent
+        self.submission_calls += 1
+        raise TimeoutError("response lost after Advise committed")
+
 
 def test_advise_realization_reconciliation_api_persists_exact_owner_history(
     monkeypatch: pytest.MonkeyPatch,
@@ -191,6 +227,68 @@ def test_advise_realization_reconciliation_api_persists_exact_owner_history(
     )
     assert denied.status_code == 403
     assert denied.json()["code"] == "permission_denied"
+
+
+def test_advise_reconciliation_api_recovers_lost_owner_response_without_resubmission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    advise_client = LostResponseOwnerLifecycleClient()
+    clients = ConversionRealizationClients(
+        advise_client=advise_client,
+        manage_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-lost-response",
+        idempotency_prefix="advise-lost-response",
+    )
+    conversion_intent_id = "conversion-advise-lost-response-001"
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        target="advise_proposal",
+        idempotency_key=conversion_intent_id,
+    )
+    submitted = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=downstream_submission_headers("submission-advise-lost-response-001"),
+    )
+    support_reference = submitted.json()["downstreamSubmission"]["supportReference"]
+
+    recovered = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    replayed = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert submitted.status_code == 202
+    assert submitted.json()["downstreamSubmission"]["submissionStatus"] == "reconciliation_required"
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert recovered.json()["history"]["intakeId"] == "ipi_api_001"
+    assert recovered.json()["appendedOutcomeCount"] == 2
+    assert replayed.status_code == 200
+    assert replayed.json()["reconciliationStatus"] == "replayed"
+    assert advise_client.submission_calls == 1
+    assert advise_client.recovery_calls == 1
 
 
 def test_advise_realization_reconciliation_api_reports_unconfigured_owner_reader(

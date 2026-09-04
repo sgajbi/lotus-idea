@@ -514,6 +514,7 @@ class DownstreamSubmissionRepository(Protocol):
         reason: str,
         change_reference: str,
         reconciled_at_utc: datetime,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult: ...
 
     def advise_realization_history_by_support_reference(

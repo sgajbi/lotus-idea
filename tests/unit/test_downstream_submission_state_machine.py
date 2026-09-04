@@ -258,6 +258,53 @@ def test_unknown_outcome_requires_explicit_reconciliation() -> None:
     assert reconciled.record.audit_history[-1].change_reference == "CHG-334-001"
 
 
+def test_reconciliation_can_bind_recovered_owner_receipt_with_exact_replay() -> None:
+    uncertain = finalize_downstream_submission(
+        _claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="downstream_timeout",
+    ).record
+    assert uncertain is not None
+    receipt = _owner_receipt()
+
+    accepted = reconcile_downstream_submission(
+        uncertain,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_owner_history_recovered",
+        change_reference="owner-recovery-v1",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=5),
+        owner_receipt=receipt,
+    )
+    assert accepted.record is not None
+    replayed = reconcile_downstream_submission(
+        accepted.record,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_owner_history_recovered",
+        change_reference="owner-recovery-v1",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=6),
+        owner_receipt=receipt,
+    )
+    conflicting_receipt = reconcile_downstream_submission(
+        accepted.record,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_owner_history_recovered",
+        change_reference="owner-recovery-v1",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=6),
+        owner_receipt=replace(receipt, owner_request_id="ipi_conflict"),
+    )
+
+    assert accepted.record.owner_receipt == receipt
+    assert replayed.decision is DownstreamSubmissionMutationDecision.REPLAYED
+    assert conflicting_receipt.decision is DownstreamSubmissionMutationDecision.INVALID_STATE
+    assert conflicting_receipt.blocker == "downstream_submission_change_reference_conflict"
+
+
 def test_operator_can_quarantine_but_cannot_rewrite_terminal_history() -> None:
     uncertain = finalize_downstream_submission(
         _claim(),

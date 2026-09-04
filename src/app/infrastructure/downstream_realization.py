@@ -176,6 +176,7 @@ class DownstreamRealizationAdapterConfig:
     submit_path: str
     source_authority: SourceSystem
     history_path_template: str | None = None
+    recovery_history_path_template: str | None = None
     timeout_seconds: float = 2.0
     max_connections: int = 20
     max_keepalive_connections: int = 10
@@ -206,6 +207,22 @@ class DownstreamRealizationAdapterConfig:
             if "?" in self.history_path_template or "#" in self.history_path_template:
                 raise DownstreamRealizationConfigurationError(
                     "history_path_template must not include query string or fragment."
+                )
+        if self.recovery_history_path_template is not None:
+            if not self.recovery_history_path_template.startswith("/"):
+                raise DownstreamRealizationConfigurationError(
+                    "recovery_history_path_template must start with '/'."
+                )
+            if self.recovery_history_path_template.count("{conversion_intent_id}") != 1:
+                raise DownstreamRealizationConfigurationError(
+                    "recovery_history_path_template must contain one "
+                    "{conversion_intent_id} placeholder."
+                )
+            if "?" in self.recovery_history_path_template or (
+                "#" in self.recovery_history_path_template
+            ):
+                raise DownstreamRealizationConfigurationError(
+                    "recovery_history_path_template must not include query string or fragment."
                 )
         try:
             DownstreamClientConfig(
@@ -274,6 +291,44 @@ class HttpAdviseProposalRealizationClient:
         normalized_intake_id = intake_id.strip()
         if not normalized_intake_id or not normalized_intake_id.isprintable():
             raise ValueError("intake_id is required")
+        return self._load_realization_history(
+            self._config.history_path_template.format(intake_id=normalized_intake_id),
+            access_scope=access_scope,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+    def load_proposal_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        path_template = self._config.recovery_history_path_template
+        if path_template is None:
+            raise DownstreamRealizationConfigurationError(
+                "advise realization recovery_history_path_template is required."
+            )
+        normalized_conversion_intent_id = conversion_intent_id.strip()
+        if not normalized_conversion_intent_id or not normalized_conversion_intent_id.isprintable():
+            raise ValueError("conversion_intent_id is required")
+        return self._load_realization_history(
+            path_template.format(conversion_intent_id=normalized_conversion_intent_id),
+            access_scope=access_scope,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+    def _load_realization_history(
+        self,
+        path: str,
+        *,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None,
+        trace_id: str | None,
+    ) -> AdviseProposalRealizationHistory:
         headers = self._advise_service_context.request_headers()
         headers.update(
             {
@@ -283,7 +338,7 @@ class HttpAdviseProposalRealizationClient:
         )
         try:
             payload = self._client.get_json(
-                self._config.history_path_template.format(intake_id=normalized_intake_id),
+                path,
                 correlation_id=correlation_id,
                 trace_id=trace_id,
                 additional_headers=headers,

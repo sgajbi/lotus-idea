@@ -276,6 +276,47 @@ def test_postgres_reconciliation_uses_opaque_reference_and_is_audited() -> None:
     assert restarted.downstream_submissions_requiring_reconciliation(limit=10) == ()
 
 
+def test_postgres_reconciliation_persists_recovered_owner_receipt_across_restart() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = _claim("fingerprint-owner-recovery")
+    repository.claim_downstream_submission(claim)
+    repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="downstream_timeout",
+    )
+    receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_ADVISE,
+        owner_request_id="ipi_recovered",
+        owner_realization_id="ipr_recovered",
+        owner_work_id="iarw_recovered",
+        source_event_version=1,
+        source_evidence_fingerprint="sha256:evidence-recovered",
+    )
+
+    result = repository.reconcile_downstream_submission(
+        support_reference=claim.support_reference,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_owner_history_recovered",
+        change_reference="owner-recovery-v1",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        owner_receipt=receipt,
+    )
+    persisted = PostgresIdeaRepository(connection).downstream_submission_by_support_reference(
+        claim.support_reference
+    )
+
+    assert result.decision is DownstreamSubmissionMutationDecision.ACCEPTED
+    assert persisted is not None
+    assert persisted.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert persisted.owner_receipt == receipt
+
+
 def test_postgres_submission_mutations_fail_closed_for_missing_or_competing_claims() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
