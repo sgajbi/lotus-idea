@@ -10,11 +10,13 @@ from app.domain import (
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
     IdeaRepositorySnapshot,
+    ReportMaterializationReceiptEvidence,
     SourceSystem,
     create_downstream_submission_claim,
     downstream_submission_support_reference,
@@ -117,6 +119,61 @@ def test_postgres_finalization_failure_preserves_durable_in_flight_claim() -> No
     assert persisted.status is DownstreamSubmissionPosture.IN_FLIGHT
     assert retry.decision is DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED
     assert connection.rollbacks == 1
+
+
+def test_report_materialization_receipt_survives_postgres_restart_exactly() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = replace(
+        _claim("fingerprint-report"),
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id="report-pack-001",
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=SourceSystem.LOTUS_REPORT,
+    )
+    receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_REPORT,
+        owner_request_id="report-request-001",
+        owner_realization_id="report-job-001",
+        owner_work_id=None,
+        source_event_version=None,
+        source_evidence_fingerprint="sha256:report-evidence",
+        report_materialization=ReportMaterializationReceiptEvidence(
+            status="archived",
+            materialization_status="archived",
+            status_url="/reports/jobs/report-job-001",
+            report_evidence_pack_id="report-pack-001",
+            conversion_intent_id="conversion-report-001",
+            candidate_id="candidate-report-001",
+            evidence_packet_id="evidence-packet-001",
+            creates_report_job=True,
+            creates_rendered_output=True,
+            creates_archive_record=True,
+            render_job_id="render-job-001",
+            archive_document_id="archive-document-001",
+            supportability_status="not_certified",
+            remaining_blockers=(
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ),
+        ),
+    )
+
+    repository.claim_downstream_submission(claim)
+    finalized = repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        owner_receipt=receipt,
+    )
+    restarted = PostgresIdeaRepository(connection)
+
+    assert finalized.decision is DownstreamSubmissionMutationDecision.ACCEPTED
+    persisted = restarted.downstream_submission_by_idempotency_key(claim.idempotency_key)
+    assert persisted is not None
+    assert persisted.owner_receipt == receipt
 
 
 def test_postgres_reconciliation_uses_opaque_reference_and_is_audited() -> None:

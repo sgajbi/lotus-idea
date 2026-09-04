@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pydantic import Field
 
 from app.api.base_model import CamelModel
+from app.api.downstream_owner_receipt_models import DownstreamOwnerReceiptResponse
 from app.api.score_models import ScoreContributionResponse
 from app.api.signal_models import CandidateIdentityResponse
 from app.domain import (
@@ -395,6 +396,11 @@ class DownstreamSubmissionSummaryResponse(CamelModel):
         alias="grantsDownstreamAuthority",
         description="Always false; local delivery posture grants no downstream authority.",
     )
+    owner_receipt: DownstreamOwnerReceiptResponse | None = Field(
+        default=None,
+        alias="ownerReceipt",
+        description="Exact owner acknowledgement; it is not an Idea-owned business outcome.",
+    )
 
     @classmethod
     def from_domain(
@@ -415,6 +421,11 @@ class DownstreamSubmissionSummaryResponse(CamelModel):
             ),
             recordsDownstreamOutcome=False,
             grantsDownstreamAuthority=False,
+            ownerReceipt=(
+                DownstreamOwnerReceiptResponse.from_domain(submission.owner_receipt)
+                if submission.owner_receipt is not None
+                else None
+            ),
         )
 
 

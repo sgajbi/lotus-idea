@@ -207,7 +207,7 @@ def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
 
     errors = validate_downstream_intake_wire_contract(tmp_path)
 
-    assert "downstream intake wire contract must be version 1.8.0" in errors
+    assert "downstream intake wire contract must be version 1.9.0" in errors
     assert "downstream intake wire contract repository must be lotus-idea" in errors
     assert "downstream intake wire contract must remain development_only" in errors
     assert "downstream intake wire contract must remain not_certified" in errors

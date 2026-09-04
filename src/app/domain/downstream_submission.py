@@ -55,24 +55,97 @@ class DownstreamSubmissionResolution(StrEnum):
 
 
 @dataclass(frozen=True)
+class ReportMaterializationReceiptEvidence:
+    """Report-owned materialization facts returned with an accepted submission."""
+
+    status: str
+    materialization_status: str
+    status_url: str
+    report_evidence_pack_id: str
+    conversion_intent_id: str
+    candidate_id: str
+    evidence_packet_id: str
+    creates_report_job: bool
+    creates_rendered_output: bool
+    creates_archive_record: bool
+    render_job_id: str | None
+    archive_document_id: str | None
+    supportability_status: str
+    remaining_blockers: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("status", self.status),
+            ("materialization_status", self.materialization_status),
+            ("status_url", self.status_url),
+            ("report_evidence_pack_id", self.report_evidence_pack_id),
+            ("conversion_intent_id", self.conversion_intent_id),
+            ("candidate_id", self.candidate_id),
+            ("evidence_packet_id", self.evidence_packet_id),
+            ("supportability_status", self.supportability_status),
+        ):
+            _require_text(value, field_name)
+        if not self.creates_report_job:
+            raise ValueError("report materialization receipt must create a report job")
+        if self.creates_rendered_output != (self.render_job_id is not None):
+            raise ValueError("render creation posture must match render_job_id")
+        if self.creates_archive_record != (self.archive_document_id is not None):
+            raise ValueError("archive creation posture must match archive_document_id")
+        if self.creates_archive_record and not self.creates_rendered_output:
+            raise ValueError("an archive record requires rendered output")
+        if not self.remaining_blockers:
+            raise ValueError("remaining_blockers is required")
+        for blocker in self.remaining_blockers:
+            _require_text(blocker, "remaining_blocker")
+        object.__setattr__(self, "remaining_blockers", tuple(self.remaining_blockers))
+        if self.status != self.materialization_status:
+            raise ValueError("Report materialization status fields must agree")
+        if self.supportability_status != "not_certified":
+            raise ValueError("Report materialization must remain not_certified")
+        if not {
+            "client_publication_authority_blocked",
+            "supported_feature_promotion_missing",
+        }.issubset(self.remaining_blockers):
+            raise ValueError("Report materialization omits required supportability blockers")
+
+
+@dataclass(frozen=True)
 class DownstreamSubmissionOwnerReceipt:
     owner_authority: SourceSystem
     owner_request_id: str
     owner_realization_id: str
     owner_work_id: str | None
-    source_event_version: int
+    source_event_version: int | None
     source_evidence_fingerprint: str
+    report_materialization: ReportMaterializationReceiptEvidence | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.owner_request_id, "owner_request_id")
         _require_text(self.owner_realization_id, "owner_realization_id")
         if self.owner_work_id is not None:
             _require_text(self.owner_work_id, "owner_work_id")
-        if self.source_event_version <= 0:
-            raise ValueError("source_event_version must be positive")
+        if self.source_event_version is not None and self.source_event_version <= 0:
+            raise ValueError("source_event_version must be positive when present")
         _require_text(self.source_evidence_fingerprint, "source_evidence_fingerprint")
         if not self.source_evidence_fingerprint.startswith("sha256:"):
             raise ValueError("source_evidence_fingerprint must use sha256")
+        if self.owner_authority is SourceSystem.LOTUS_REPORT:
+            if self.source_event_version is not None:
+                raise ValueError("Report materialization receipt has no source event version")
+            if self.report_materialization is None:
+                raise ValueError("Report owner receipt requires materialization evidence")
+            if self.owner_work_id is not None:
+                raise ValueError("Report materialization uses owner_realization_id for the job")
+            if self.report_materialization.status_url != (
+                f"/reports/jobs/{self.owner_realization_id}"
+            ):
+                raise ValueError(
+                    "Report materialization status_url must match owner_realization_id"
+                )
+        elif self.source_event_version is None:
+            raise ValueError("evented owner receipt requires source_event_version")
+        elif self.report_materialization is not None:
+            raise ValueError("report materialization evidence requires lotus-report authority")
 
 
 @dataclass(frozen=True)

@@ -15,6 +15,7 @@ from app.domain import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
+    ReportMaterializationReceiptEvidence,
     SourceSystem,
     create_downstream_submission_claim,
     downstream_submission_support_reference,
@@ -159,6 +160,47 @@ def test_owner_receipt_and_submission_reject_contradictory_owner_evidence() -> N
             accepted,
             owner_receipt=replace(receipt, owner_authority=SourceSystem.LOTUS_MANAGE),
         )
+
+
+def test_report_owner_receipt_rejects_authority_or_supportability_inflation() -> None:
+    evidence = ReportMaterializationReceiptEvidence(
+        status="data_ready",
+        materialization_status="data_ready",
+        status_url="/reports/jobs/report-job-001",
+        report_evidence_pack_id="report-pack-001",
+        conversion_intent_id="conversion-report-001",
+        candidate_id="candidate-report-001",
+        evidence_packet_id="evidence-packet-001",
+        creates_report_job=True,
+        creates_rendered_output=False,
+        creates_archive_record=False,
+        render_job_id=None,
+        archive_document_id=None,
+        supportability_status="not_certified",
+        remaining_blockers=(
+            "client_publication_authority_blocked",
+            "supported_feature_promotion_missing",
+        ),
+    )
+    receipt = DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_REPORT,
+        owner_request_id="report-request-001",
+        owner_realization_id="report-job-001",
+        owner_work_id=None,
+        source_event_version=None,
+        source_evidence_fingerprint="sha256:report-evidence",
+        report_materialization=evidence,
+    )
+
+    assert receipt.report_materialization == evidence
+    with pytest.raises(ValueError, match="must remain not_certified"):
+        replace(evidence, supportability_status="supported")
+    with pytest.raises(ValueError, match="required supportability blockers"):
+        replace(evidence, remaining_blockers=("client_publication_authority_blocked",))
+    with pytest.raises(ValueError, match="status fields must agree"):
+        replace(evidence, materialization_status="failed")
+    with pytest.raises(ValueError, match="status_url must match"):
+        replace(receipt, owner_realization_id="report-job-drift")
 
 
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:

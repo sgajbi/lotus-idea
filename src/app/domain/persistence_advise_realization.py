@@ -92,6 +92,7 @@ def advise_realization_submission_blocker(
         return "advise_realization_owner_receipt_missing"
     if (
         receipt.owner_authority is not SourceSystem.LOTUS_ADVISE
+        or receipt.source_event_version is None
         or receipt.owner_request_id != history.intake_id
         or receipt.owner_realization_id != history.realization_id
         or receipt.owner_work_id != history.review_work_id

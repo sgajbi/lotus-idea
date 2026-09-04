@@ -157,6 +157,30 @@ def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
     assert envelope["grants_client_publication_authority"] is False
     assert envelope["requested_output_formats"] == ["json"]
     assert "content_hash" not in str(envelope)
+    assert set(contract["receipt_response_fields"]) == {
+        "report_request_id",
+        "report_job_id",
+        "status",
+        "materialization_status",
+        "status_url",
+        "idempotency_key",
+        "report_package_identity",
+        "producer",
+        "source_authority",
+        "materialization_proven",
+        "creates_report_job",
+        "creates_rendered_output",
+        "creates_archive_record",
+        "grants_client_publication_authority",
+        "supported_feature_promoted",
+        "supportability_status",
+        "remaining_blockers",
+        "evidence_refs",
+        "render_job_id",
+        "archive_document_id",
+    }
+    assert contract["receipt_invariants"]["persist_exact_owner_receipt"] is True
+    assert contract["receipt_source_authority"]["client_publication"] == "blocked"
 
 
 def test_report_service_context_matches_versioned_wire_contract() -> None:

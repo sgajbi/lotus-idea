@@ -18,6 +18,7 @@ from app.domain import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
+    ReportMaterializationReceiptEvidence,
     SourceSystem,
     evaluate_downstream_submission_claim,
     finalize_downstream_submission,
@@ -440,6 +441,32 @@ def _owner_receipt_to_json(receipt: DownstreamSubmissionOwnerReceipt) -> dict[st
         "ownerWorkId": receipt.owner_work_id,
         "sourceEventVersion": receipt.source_event_version,
         "sourceEvidenceFingerprint": receipt.source_evidence_fingerprint,
+        "reportMaterialization": (
+            _report_materialization_to_json(receipt.report_materialization)
+            if receipt.report_materialization is not None
+            else None
+        ),
+    }
+
+
+def _report_materialization_to_json(
+    evidence: ReportMaterializationReceiptEvidence,
+) -> dict[str, Any]:
+    return {
+        "status": evidence.status,
+        "materializationStatus": evidence.materialization_status,
+        "statusUrl": evidence.status_url,
+        "reportEvidencePackId": evidence.report_evidence_pack_id,
+        "conversionIntentId": evidence.conversion_intent_id,
+        "candidateId": evidence.candidate_id,
+        "evidencePacketId": evidence.evidence_packet_id,
+        "createsReportJob": evidence.creates_report_job,
+        "createsRenderedOutput": evidence.creates_rendered_output,
+        "createsArchiveRecord": evidence.creates_archive_record,
+        "renderJobId": evidence.render_job_id,
+        "archiveDocumentId": evidence.archive_document_id,
+        "supportabilityStatus": evidence.supportability_status,
+        "remainingBlockers": list(evidence.remaining_blockers),
     }
 
 
@@ -449,8 +476,9 @@ def _owner_receipt_from_json(value: Any) -> DownstreamSubmissionOwnerReceipt | N
     if not isinstance(value, Mapping):
         raise ValueError("owner_receipt_json must be an object")
     version = value.get("sourceEventVersion")
-    if not isinstance(version, int) or isinstance(version, bool):
-        raise ValueError("owner receipt sourceEventVersion must be an integer")
+    if version is not None and (not isinstance(version, int) or isinstance(version, bool)):
+        raise ValueError("owner receipt sourceEventVersion must be an integer when present")
+    report_materialization = _report_materialization_from_json(value.get("reportMaterialization"))
     return DownstreamSubmissionOwnerReceipt(
         owner_authority=SourceSystem(_required_string(value, "ownerAuthority")),
         owner_request_id=_required_string(value, "ownerRequestId"),
@@ -458,6 +486,40 @@ def _owner_receipt_from_json(value: Any) -> DownstreamSubmissionOwnerReceipt | N
         owner_work_id=_optional_string(value, "ownerWorkId"),
         source_event_version=version,
         source_evidence_fingerprint=_required_string(value, "sourceEvidenceFingerprint"),
+        report_materialization=report_materialization,
+    )
+
+
+def _report_materialization_from_json(
+    value: Any,
+) -> ReportMaterializationReceiptEvidence | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("reportMaterialization must be an object")
+    blockers = value.get("remainingBlockers")
+    if not isinstance(blockers, Sequence) or isinstance(blockers, (str, bytes, bytearray)):
+        raise ValueError("remainingBlockers must be an array")
+    normalized_blockers: list[str] = []
+    for blocker in blockers:
+        if not isinstance(blocker, str) or not blocker.strip():
+            raise ValueError("remainingBlockers must contain non-blank strings")
+        normalized_blockers.append(blocker)
+    return ReportMaterializationReceiptEvidence(
+        status=_required_string(value, "status"),
+        materialization_status=_required_string(value, "materializationStatus"),
+        status_url=_required_string(value, "statusUrl"),
+        report_evidence_pack_id=_required_string(value, "reportEvidencePackId"),
+        conversion_intent_id=_required_string(value, "conversionIntentId"),
+        candidate_id=_required_string(value, "candidateId"),
+        evidence_packet_id=_required_string(value, "evidencePacketId"),
+        creates_report_job=_required_bool(value, "createsReportJob"),
+        creates_rendered_output=_required_bool(value, "createsRenderedOutput"),
+        creates_archive_record=_required_bool(value, "createsArchiveRecord"),
+        render_job_id=_optional_string(value, "renderJobId"),
+        archive_document_id=_optional_string(value, "archiveDocumentId"),
+        supportability_status=_required_string(value, "supportabilityStatus"),
+        remaining_blockers=tuple(normalized_blockers),
     )
 
 
@@ -485,4 +547,11 @@ def _optional_string(payload: Mapping[str, Any], key: str) -> str | None:
         return None
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{key} must be a non-blank string")
+    return value
+
+
+def _required_bool(payload: Mapping[str, Any], key: str) -> bool:
+    value = payload.get(key)
+    if not isinstance(value, bool):
+        raise ValueError(f"{key} must be a boolean")
     return value
