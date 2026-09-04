@@ -55,7 +55,11 @@ class InMemoryManageRealizationRepositoryMixin:
             )
         existing = self._manage_realization_histories.get(support_reference)
         decision = evaluate_manage_realization_history_mutation(existing, history)
+        appended_event_count = 0
         if decision is ManageRealizationHistoryMutationDecision.ACCEPTED:
+            appended_event_count = len(history.events) - (
+                len(existing.events) if existing is not None else 0
+            )
             self._manage_realization_histories[support_reference] = history
         return ManageRealizationHistoryMutationResult(
             decision=decision,
@@ -69,6 +73,7 @@ class InMemoryManageRealizationRepositoryMixin:
                 if decision is ManageRealizationHistoryMutationDecision.CONFLICT
                 else None
             ),
+            appended_event_count=appended_event_count,
         )
 
 

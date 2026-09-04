@@ -114,7 +114,6 @@ def reconcile_manage_realization_history(
     )
     if identity_blocker is not None:
         return _result(ManageRealizationReconciliationStatus.CONFLICT, blocker=identity_blocker)
-    existing = repository.manage_realization_history_by_support_reference(command.support_reference)
     mutation = repository.persist_manage_realization_history(
         support_reference=command.support_reference,
         history=history,
@@ -131,11 +130,10 @@ def reconcile_manage_realization_history(
         if mutation.decision is ManageRealizationHistoryMutationDecision.REPLAYED
         else ManageRealizationReconciliationStatus.ACCEPTED
     )
-    previous_count = len(existing.events) if existing is not None else 0
     return ManageRealizationReconciliationResult(
         status=status,
         history=mutation.history,
-        appended_event_count=len(history.events) - previous_count,
+        appended_event_count=mutation.appended_event_count,
     )
 
 

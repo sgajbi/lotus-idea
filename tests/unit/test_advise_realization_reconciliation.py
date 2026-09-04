@@ -374,9 +374,25 @@ def test_reconcile_maps_repository_races_without_overstating_owner_progress(
         advise_reader=reader,
     )
 
+    monkeypatch.setattr(
+        repository,
+        "persist_advise_realization_history",
+        lambda **_kwargs: AdviseRealizationHistoryMutationResult(
+            decision=AdviseRealizationHistoryMutationDecision.REPLAYED,
+            history=reader.history,
+        ),
+    )
+    replayed_after_concurrent_commit = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
     assert missing.status is AdviseRealizationReconciliationStatus.NOT_FOUND
     assert conflict.status is AdviseRealizationReconciliationStatus.CONFLICT
     assert conflict.blocker == "advise_realization_history_conflict"
+    assert replayed_after_concurrent_commit.status is AdviseRealizationReconciliationStatus.REPLAYED
+    assert replayed_after_concurrent_commit.appended_outcome_count == 0
 
 
 def test_reconcile_rejects_ineligible_or_missing_source_resources(

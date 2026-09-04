@@ -109,6 +109,9 @@ exact replay or append-only extension. Regression, mutation of prior events,
 identity drift, malformed owner evidence, and unsupported authority claims fail
 closed. A rejected-before-work history is a valid terminal owner outcome with
 no review-work or proposal identity; its durable receipt is not discarded.
+The returned appended count is the delta committed by that serialized repository
+mutation. An exact replay, including a request that loses a concurrent append
+race, returns zero rather than overstating new owner progress.
 
 ## What It Does Not Prove
 

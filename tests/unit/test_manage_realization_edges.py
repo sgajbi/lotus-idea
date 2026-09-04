@@ -62,6 +62,21 @@ def test_event_and_history_refuse_blank_and_untimed_identities() -> None:
         replace(_history(version=1), events=())
 
 
+def test_manage_history_mutation_result_refuses_impossible_append_counts() -> None:
+    with pytest.raises(ValueError, match="must not be negative"):
+        ManageRealizationHistoryMutationResult(
+            decision=ManageRealizationHistoryMutationDecision.ACCEPTED,
+            history=_history(version=1),
+            appended_event_count=-1,
+        )
+    with pytest.raises(ValueError, match="only an accepted"):
+        ManageRealizationHistoryMutationResult(
+            decision=ManageRealizationHistoryMutationDecision.REPLAYED,
+            history=_history(version=1),
+            appended_event_count=1,
+        )
+
+
 def test_reconcile_command_requires_identifying_text() -> None:
     with pytest.raises(ValueError, match="support_reference is required"):
         ReconcileManageRealizationCommand(
@@ -164,6 +179,32 @@ def test_a_submission_vanishing_between_read_and_persist_reports_not_found() -> 
     )
 
     assert result.status is ManageRealizationReconciliationStatus.NOT_FOUND
+
+
+def test_concurrent_manage_history_replay_reports_no_appended_events() -> None:
+    repository, support_reference = _repository_with_accepted_submission()
+    owner_history = _history(version=2)
+
+    class _ConcurrentlyCommittedRepository:
+        def __getattr__(self, name: str) -> object:
+            return getattr(repository, name)
+
+        def persist_manage_realization_history(
+            self, *, support_reference: str, history: object
+        ) -> ManageRealizationHistoryMutationResult:
+            return ManageRealizationHistoryMutationResult(
+                decision=ManageRealizationHistoryMutationDecision.REPLAYED,
+                history=owner_history,
+            )
+
+    result = reconcile_manage_realization_history(
+        _command(support_reference),
+        repository=cast("DownstreamSubmissionRepository", _ConcurrentlyCommittedRepository()),
+        manage_reader=StubManageReader(owner_history),
+    )
+
+    assert result.status is ManageRealizationReconciliationStatus.REPLAYED
+    assert result.appended_event_count == 0
 
 
 def test_in_memory_persistence_fails_closed_on_unknown_and_blocked_submissions() -> None:

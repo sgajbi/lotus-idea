@@ -73,6 +73,9 @@ def persist_postgres_advise_realization_history(
                     decision=decision,
                     history=existing,
                 )
+            appended_outcome_count = len(history.outcomes) - (
+                len(existing.outcomes) if existing is not None else 0
+            )
             _store_history(
                 cursor,
                 support_reference=support_reference,
@@ -80,7 +83,11 @@ def persist_postgres_advise_realization_history(
                 persisted_at_utc=persisted_at_utc,
             )
         connection.commit()
-        return AdviseRealizationHistoryMutationResult(decision=decision, history=history)
+        return AdviseRealizationHistoryMutationResult(
+            decision=decision,
+            history=history,
+            appended_outcome_count=appended_outcome_count,
+        )
     except Exception:
         connection.rollback()
         raise

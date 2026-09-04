@@ -110,7 +110,13 @@ class AdviseRealizationReconciliationResponse(CamelModel):
     reconciliation_status: AdviseRealizationReconciliationStatus = Field(
         alias="reconciliationStatus"
     )
-    appended_outcome_count: int = Field(alias="appendedOutcomeCount")
+    appended_outcome_count: int = Field(
+        alias="appendedOutcomeCount",
+        description=(
+            "Number of owner outcomes appended by this committed mutation; exact and "
+            "concurrent replays return zero."
+        ),
+    )
     history: AdviseRealizationHistoryResponse
     durable_storage_backed: bool = Field(alias="durableStorageBacked")
     grants_execution_authority: bool = Field(alias="grantsExecutionAuthority")
