@@ -597,7 +597,7 @@ def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_pat
     dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
-            "gh workflow run main-releasability.yml",
+            "python scripts/main_releasability_dispatch.py",
             "echo missing dispatch",
         ),
         encoding="utf-8",
@@ -606,14 +606,14 @@ def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_pat
     errors = module.validate_workflows(workflow_dir)
 
     assert (
-        "merged-pr-main-releasability.yml missing `gh workflow run main-releasability.yml`"
-        in errors
+        "merged-pr-main-releasability.yml missing "
+        "`run: python scripts/main_releasability_dispatch.py`" in errors
     )
 
     dispatch_workflow.write_text(
         dispatch_workflow.read_text(encoding="utf-8").replace(
-            "github.event.pull_request.merge_commit_sha",
-            "github.event.pull_request.head.sha",
+            "github.event.pull_request.merged == true",
+            "github.event.pull_request.merged == false",
         ),
         encoding="utf-8",
     )
@@ -621,7 +621,7 @@ def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_pat
     errors = module.validate_workflows(workflow_dir)
 
     assert (
-        "merged-pr-main-releasability.yml missing `github.event.pull_request.merge_commit_sha`"
+        "merged-pr-main-releasability.yml missing `github.event.pull_request.merged == true`"
         in errors
     )
 

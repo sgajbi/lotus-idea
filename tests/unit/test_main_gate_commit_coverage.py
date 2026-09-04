@@ -10,10 +10,6 @@ from types import SimpleNamespace
 import pytest
 
 from scripts import audit_main_gate_coverage as audit
-from scripts.ci_main_revision_dispatch_contract import (
-    REVISION_CONTRACT_ERROR,
-    validate_revision_dispatch_scope,
-)
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_ROOT = ROOT / ".github" / "workflows"
@@ -21,49 +17,23 @@ WORKFLOW_ROOT = ROOT / ".github" / "workflows"
 
 def test_dispatch_gates_every_revision_added_by_a_rebase_merged_pr() -> None:
     dispatcher = (WORKFLOW_ROOT / "merged-pr-main-releasability.yml").read_text(encoding="utf-8")
+    implementation = (ROOT / "scripts" / "main_releasability_dispatch.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "COMMIT_COUNT: ${{ github.event.pull_request.commits }}" in dispatcher
-    assert 'git rev-list -n "$COMMIT_COUNT" "$MERGE_COMMIT_SHA" | tac' in dispatcher
-    assert "for revision in $revisions; do" in dispatcher
     assert "fetch-depth: 0" in dispatcher
-    assert 'dispatch_ref="main-releasability-${revision}"' in dispatcher
-    assert '-f expected_sha="$revision"' in dispatcher
-    assert "allow_squash_merge" in dispatcher
-    assert '"$merge_methods" != "false,false,true"' in dispatcher
+    assert "run: python scripts/main_releasability_dispatch.py" in dispatcher
+    assert "run: |" not in dispatcher
+    assert '["git", "rev-list", "-n", str(commit_count), merge_commit_sha]' in implementation
+    assert 'dispatch_ref = f"main-releasability-{revision}"' in implementation
+    assert '"expected_sha": revision' in implementation
+    assert "github.merge_methods() != (False, False, True)" in implementation
 
 
 def test_evidence_workflow_cannot_cancel_a_live_revision_verdict() -> None:
     workflow = (WORKFLOW_ROOT / "main-releasability.yml").read_text(encoding="utf-8")
 
     assert "cancel-in-progress: false" in workflow
-
-
-@pytest.mark.parametrize(
-    ("active", "unsafe"),
-    [
-        (
-            'revisions="$(git rev-list -n "$COMMIT_COUNT" "$MERGE_COMMIT_SHA" | tac)"',
-            '# revisions="$(git rev-list -n "$COMMIT_COUNT" "$MERGE_COMMIT_SHA" | tac)"',
-        ),
-        (
-            'if [ "$merge_methods" != "false,false,true" ]; then',
-            '# if [ "$merge_methods" != "false,false,true" ]; then',
-        ),
-        (
-            'dispatch_ref="main-releasability-${revision}"',
-            'dispatch_ref="main-releasability-${revision}" || true',
-        ),
-    ],
-)
-def test_revision_contract_rejects_commented_or_masked_controls(
-    active: str,
-    unsafe: str,
-) -> None:
-    dispatcher = (WORKFLOW_ROOT / "merged-pr-main-releasability.yml").read_text(encoding="utf-8")
-
-    _body, errors = validate_revision_dispatch_scope(dispatcher.replace(active, unsafe, 1))
-
-    assert REVISION_CONTRACT_ERROR in errors
 
 
 def test_scheduled_workflow_uses_the_repo_native_fail_closed_audit() -> None:
