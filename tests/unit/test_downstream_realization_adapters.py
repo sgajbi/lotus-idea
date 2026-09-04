@@ -6,7 +6,10 @@ from typing import Any
 
 import httpx
 import pytest
-from tests.support.report_materialization import report_materialization_receipt_payload
+from tests.support.report_materialization import (
+    duplicate_required_report_blocker,
+    report_materialization_receipt_payload,
+)
 
 from app.domain import (
     ConversionBoundary,
@@ -77,7 +80,6 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         ),
         client=downstream_json_client("https://advise.example", httpx.MockTransport(handler)),
     )
-
     outcome = adapter.submit_proposal_intent(
         conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
         access_scope=report_access_scope(),
@@ -355,7 +357,6 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
         ),
         client=downstream_json_client("https://report.example", httpx.MockTransport(handler)),
     )
-
     outcome = adapter.submit_report_evidence_pack_request(
         report_evidence_pack(),
         access_scope=report_access_scope(),
@@ -363,7 +364,6 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
         trace_id="trace-report",
         idempotency_key="report-submission-idempotency-001",
     )
-
     assert outcome.accepted is True
     assert outcome.owner_receipt is not None
     assert outcome.owner_receipt.owner_authority is SourceSystem.LOTUS_REPORT
@@ -454,11 +454,21 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     [
         lambda payload: payload.update(idempotency_key="wrong-key"),
         lambda payload: payload.update(producer="lotus-report"),
+        lambda payload: payload.update(materialization_proven=False),
+        lambda payload: payload.update(creates_report_job=False),
         lambda payload: payload.update(grants_client_publication_authority=True),
+        lambda payload: payload.update(supported_feature_promoted=True),
+        lambda payload: payload.update(supportability_status="supported"),
+        lambda payload: payload.update(source_authority=None),
         lambda payload: payload["source_authority"].update(client_publication="lotus-report"),
+        lambda payload: payload.update(report_package_identity=None),
         lambda payload: payload["report_package_identity"].update(candidate_id="candidate-drift"),
         lambda payload: payload.update(remaining_blockers=[]),
+        lambda payload: payload.update(remaining_blockers=[" "]),
+        duplicate_required_report_blocker,
+        lambda payload: payload.update(remaining_blockers=["client_publication_authority_blocked"]),
         lambda payload: payload.update(creates_rendered_output=True, render_job_id=None),
+        lambda payload: payload.update(materialization_status="failed"),
         lambda payload: payload.update(status_url="/reports/jobs/report-job-other"),
     ],
 )
@@ -482,13 +492,11 @@ def test_report_adapter_fails_closed_on_malformed_or_expanded_owner_receipt(
             httpx.MockTransport(lambda _request: httpx.Response(202, json=response_payload)),
         ),
     )
-
     outcome = adapter.submit_report_evidence_pack_request(
         report_evidence_pack(),
         access_scope=report_access_scope(),
         idempotency_key="report-submission-idempotency-001",
     )
-
     assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
     assert outcome.failure_reason == "downstream_malformed_response"
     assert outcome.owner_receipt is None

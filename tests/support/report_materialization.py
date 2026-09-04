@@ -57,6 +57,15 @@ def report_materialization_receipt_payload(
     }
 
 
+def duplicate_required_report_blocker(payload: dict[str, Any]) -> None:
+    """Corrupt a receipt with a duplicate required blocker for fail-closed tests."""
+    payload["remaining_blockers"] = [
+        "client_publication_authority_blocked",
+        "supported_feature_promotion_missing",
+        "supported_feature_promotion_missing",
+    ]
+
+
 def authoritative_report_outcome(
     evidence_pack: GovernedReportEvidencePack,
 ) -> DownstreamRealizationOutcome:
@@ -125,6 +134,7 @@ def report_owner_receipt_response(evidence_pack: GovernedReportEvidencePack) -> 
 
 __all__ = [
     "authoritative_report_outcome",
+    "duplicate_required_report_blocker",
     "report_materialization_receipt_payload",
     "report_owner_receipt_response",
 ]
