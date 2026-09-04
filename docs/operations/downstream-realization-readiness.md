@@ -71,7 +71,7 @@ The submission routes are:
 | Route | Purpose | Required capability |
 | --- | --- | --- |
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
-| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
+| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request and return bounded submission posture plus the exact validated Report-owned materialization receipt. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation` | Read the exact Advise-owned realization history for a receipt-bearing Advise submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 | `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation` | Read the exact Manage-owned action outcome history for a receipt-bearing Manage submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 
@@ -92,6 +92,14 @@ to return a durable receipt on both accepted-for-review and
 rejected-before-work responses. Idea persists that bounded receipt and uses it
 as the only owner lookup key; HTTP success alone never becomes proposal or
 business-outcome truth.
+
+An accepted Report submission must carry a typed owner receipt. Idea validates
+the exact evidence-pack identity and content fingerprint, idempotency key,
+Report job identity, source-authority partition, Render/Archive creation flags
+and identifiers, and the explicit publication/supportability blockers before
+persisting it. Exact retries return the persisted receipt without another owner
+call. Receipt validation failure is uncertain delivery requiring reconciliation;
+it is never converted into Report completion or publication truth.
 
 The Advise reconciliation route authorizes complete caller scope before owner
 I/O, reads the owner history through the typed port, validates source and
@@ -146,7 +154,7 @@ request-acceptance, downstream-record, or supportability blockers:
 | Advise route source contract | None | The owner contract declares a live executable intake receipt boundary and bounded receipt outcomes, but Idea still needs governed runtime submission evidence before `advise_live_contract_proof_missing` can clear. Suitability and proposal authority remain with `lotus-advise`. |
 | Advise idea-intake runtime execution | `advise_live_contract_proof_missing` only | The proof observes bounded local/dev route serving and source-safe receipt behavior from `lotus-advise`. It does not create an advisory proposal, grant suitability or policy authority, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
 | Manage route source contract | None | The source contract must use Manage-native action-intake vocabulary (`runtime_action_receipt_proven`, `manage.idea_action_intake.accept`, bounded `ACCEPTED` / `ACCEPTED_REPLAYED` / `REJECTED` receipts). Source declarations still do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
-| Manage action-intake runtime execution | `manage_live_contract_proof_missing` only | The proof observes bounded local/dev route serving, trusted-header authorization, tenant-scoped idempotency, accepted/replayed/rejected receipts, idempotency conflict, and authorization denial from `lotus-manage`. It does not create an action-register record, grant rebalance or execution authority, create orders, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
+| Manage action-intake runtime execution | `manage_live_contract_proof_missing` only | The proof observes bounded local/dev route serving, trusted-header authorization, tenant-scoped idempotency, durable pending-review action creation, accepted/replayed/rejected receipts, idempotency conflict, and authorization denial from `lotus-manage`. It does not grant rebalance or execution authority, create orders, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report intake runtime execution | `lotus_report_live_intake_route_proof_missing` only | The proof observes bounded local/dev Report route serving and source-safe accepted/replayed/conflict/rejection receipts for `POST /reports/idea-evidence-packs` through an isolated Report intake ledger. It does not create a report job, prove materialization, create rendered output, create an Archive record, grant client-publication authority, certify production identity, or promote support. |
 | Report materialization source contract | None | The v3 artifact links the closed Report owner proof `sgajbi/lotus-report#152` as provenance while preserving materialization execution, rendered output creation, archive record creation, client publication, and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
