@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
+from app.infrastructure.downstream_realization import (
+    HttpManageActionRealizationClient,
+)
 from app.runtime.downstream_realization_state import (
     ADVISE_ACTOR_ID_ENV,
     ADVISE_BASE_URL_ENV,
@@ -13,6 +18,7 @@ from app.runtime.downstream_realization_state import (
     ADVISE_TENANT_ID_ENV,
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
+    DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
     MANAGE_BASE_URL_ENV,
     MANAGE_ACTOR_ID_ENV,
     MANAGE_CAPABILITIES_ENV,
@@ -57,6 +63,10 @@ def test_conversion_realization_clients_are_built_from_environment(
 
     assert isinstance(clients, ConversionRealizationClients)
     assert get_conversion_realization_clients() is clients
+    # The manage client is read-capable out of the box: the owner history
+    # route (manage#660) is the default, not opt-in configuration.
+    manage_client = cast(HttpManageActionRealizationClient, clients.manage_client)
+    assert manage_client._config.history_path_template == DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE
 
 
 def test_report_realization_client_is_built_from_environment(
@@ -410,11 +420,14 @@ def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(MANAGE_BASE_URL_ENV, "https://manage.example")
     monkeypatch.setenv(MANAGE_SUBMIT_PATH_ENV, "/manage/idea-intake")
     monkeypatch.setenv(MANAGE_ACTOR_ID_ENV, "lotus-idea-local-development")
-    monkeypatch.setenv(MANAGE_ROLE_ENV, "service")
+    monkeypatch.setenv(MANAGE_ROLE_ENV, "SERVICE")
     monkeypatch.setenv(MANAGE_TENANT_ID_ENV, "local-development")
     monkeypatch.setenv(MANAGE_LEGAL_ENTITY_CODE_ENV, "SGPB")
     monkeypatch.setenv(MANAGE_SERVICE_IDENTITY_ENV, "lotus-idea-local-development")
-    monkeypatch.setenv(MANAGE_CAPABILITIES_ENV, "manage.write")
+    monkeypatch.setenv(
+        MANAGE_CAPABILITIES_ENV,
+        "manage.idea_action_intake.accept,manage.idea_action_intake.read",
+    )
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")
 
 

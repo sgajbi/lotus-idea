@@ -13,6 +13,7 @@ from app.domain.outbox.events import (
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.advise_realization import AdviseProposalRealizationHistory
+from app.domain.manage_realization import ManageActionRealizationHistory
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
 from app.domain.persistence_ai_lineage import InMemoryAIExplanationRepositoryMixin
@@ -24,6 +25,9 @@ from app.domain.persistence_downstream_submission import (
 )
 from app.domain.persistence_advise_realization import (
     InMemoryAdviseRealizationRepositoryMixin,
+)
+from app.domain.persistence_manage_realization import (
+    InMemoryManageRealizationRepositoryMixin,
 )
 from app.domain.persistence_presentation_receipts import (
     InMemoryPresentationReceiptRepositoryMixin,
@@ -84,6 +88,7 @@ class InMemoryIdeaRepository(
     InMemoryReviewWorkflowRepositoryMixin,
     InMemoryDownstreamSubmissionRepositoryMixin,
     InMemoryAdviseRealizationRepositoryMixin,
+    InMemoryManageRealizationRepositoryMixin,
     InMemoryPresentationReceiptRepositoryMixin,
 ):
     """Behavioral reference repository for local development and unit tests."""
@@ -101,6 +106,7 @@ class InMemoryIdeaRepository(
         self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
         self._advise_realization_histories: dict[str, AdviseProposalRealizationHistory] = {}
+        self._manage_realization_histories: dict[str, ManageActionRealizationHistory] = {}
         self._presentation_receipts: dict[str, CandidatePresentationReceipt] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
@@ -114,6 +120,7 @@ class InMemoryIdeaRepository(
             self._outbox_events.update(snapshot.outbox_events)
             self._downstream_submission_records.update(snapshot.downstream_submission_records)
             self._advise_realization_histories.update(snapshot.advise_realization_histories)
+            self._manage_realization_histories.update(snapshot.manage_realization_histories)
             self._presentation_receipts.update(snapshot.presentation_receipts)
             self._lotus_ai_attestation_replay.restore(
                 (lineage.request_id, lineage.attestation_receipt)
@@ -806,6 +813,7 @@ class InMemoryIdeaRepository(
             outbox_events=self._outbox_events,
             downstream_submission_records=self._downstream_submission_records,
             advise_realization_histories=self._advise_realization_histories,
+            manage_realization_histories=self._manage_realization_histories,
             presentation_receipts=self._presentation_receipts,
         )
 

@@ -246,8 +246,10 @@ def test_advise_realization_reconciliation_api_denial_emits_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     events: list[tuple[str, str, str | None]] = []
+    import app.api.realization_reconciliation_common as reconciliation_common
+
     monkeypatch.setattr(
-        reconciliation_api,
+        reconciliation_common,
         "emit_api_foundation_operation_event",
         lambda operation, outcome, error_code: events.append(
             (operation.value, outcome.value, error_code)

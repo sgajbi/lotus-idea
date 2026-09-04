@@ -10,6 +10,9 @@ from tests.unit.postgres_downstream_submission_fake_helpers import (
 from tests.unit.postgres_advise_realization_fake_helpers import (
     execute_advise_realization_query,
 )
+from tests.unit.postgres_manage_realization_fake_helpers import (
+    execute_manage_realization_query,
+)
 from tests.unit.postgres_bounded_mutation_fake_helpers import (
     execute_bounded_mutation_query,
 )
@@ -584,6 +587,7 @@ class FakePostgresConnection:
             "idea_report_evidence_pack_request": [],
             "idea_downstream_submission": [],
             "idea_advise_realization_history": [],
+            "idea_manage_realization_history": [],
             "idea_ai_explanation_lineage": [],
             "idea_outbox_recovery_audit": [],
             "idea_data_lifecycle_control": [],
@@ -632,6 +636,7 @@ def _table_from_select(query: str) -> str:
         "idea_report_evidence_pack_request",
         "idea_downstream_submission",
         "idea_advise_realization_history",
+        "idea_manage_realization_history",
         "idea_ai_explanation_lineage",
         "idea_outbox_recovery_audit",
         "idea_data_lifecycle_control",
@@ -647,6 +652,7 @@ _FAKE_SQL_HANDLERS = (
     _execute_data_lifecycle_query,
     execute_downstream_submission_query,
     execute_advise_realization_query,
+    execute_manage_realization_query,
     _execute_outbox_recovery_query,
     _execute_review_queue_query,
     _execute_readiness_summary_query,

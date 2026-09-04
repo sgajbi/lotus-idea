@@ -731,58 +731,6 @@ def test_downstream_adapter_rejects_wrong_source_authority() -> None:
         )
 
 
-def test_manage_adapter_posts_owner_contract_payload_and_server_context() -> None:
-    captured: dict[str, Any] = {}
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        captured["headers"] = dict(request.headers)
-        captured["payload"] = request.read()
-        return httpx.Response(202, json={"accepted": True})
-
-    adapter = HttpManageActionRealizationClient(
-        DownstreamRealizationAdapterConfig(
-            base_url="https://manage.example",
-            submit_path="/api/v1/rebalance/idea-action-intake",
-            source_authority=SourceSystem.LOTUS_MANAGE,
-            manage_service_context=manage_service_context(),
-        ),
-        client=downstream_json_client("https://manage.example", httpx.MockTransport(handler)),
-    )
-
-    outcome = adapter.submit_action_intent(
-        conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE),
-        access_scope=report_access_scope(),
-        correlation_id="corr-downstream",
-        trace_id="trace-downstream",
-        idempotency_key="submission-idempotency-001",
-    )
-
-    assert outcome.accepted is True
-    assert httpx.Response(200, content=captured["payload"]).json() == {
-        "source_system": "lotus-idea",
-        "source_product": "lotus-idea:IdeaCandidate:v1",
-        "idea_candidate_id": "idea_high_cash_redacted",
-        "conversion_intent_id": "conversion-001",
-        "intent_type": "REVIEW_FOR_REBALANCE",
-        "source_refs": [
-            {
-                "source_system": "lotus-idea",
-                "source_type": "IdeaCandidate",
-                "source_id": "idea_high_cash_redacted",
-                "content_hash": "sha256:evidence-redacted",
-            }
-        ],
-    }
-    assert captured["headers"]["x-actor-id"] == "lotus-idea-local-development"
-    assert captured["headers"]["x-role"] == "service"
-    assert captured["headers"]["x-tenant-id"] == "local-development"
-    assert captured["headers"]["x-service-identity"] == "lotus-idea-local-development"
-    assert captured["headers"]["x-capabilities"] == "manage.write"
-    assert captured["headers"]["x-correlation-id"] == "corr-downstream"
-    assert captured["headers"]["x-trace-id"] == "trace-downstream"
-    assert captured["headers"]["idempotency-key"] == "submission-idempotency-001"
-
-
 def test_manage_adapter_requires_server_context() -> None:
     with pytest.raises(DownstreamRealizationConfigurationError, match="service context"):
         HttpManageActionRealizationClient(
@@ -1083,11 +1031,11 @@ def _advise_history_payload() -> dict[str, Any]:
 def manage_service_context() -> ManageRealizationServiceContext:
     return ManageRealizationServiceContext(
         actor_id="lotus-idea-local-development",
-        role="service",
+        role="SERVICE",
         tenant_id="local-development",
         legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
-        capabilities="manage.write",
+        capabilities="manage.idea_action_intake.accept,manage.idea_action_intake.read",
     )
 
 

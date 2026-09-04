@@ -11,6 +11,10 @@ from app.domain import (
     AdviseProposalRealizationStatus,
     AdviseProposalReviewWorkStatus,
     ConversionTarget,
+    ManageActionRealizationEvent,
+    ManageActionRealizationEventType,
+    ManageActionRealizationHistory,
+    ManageActionRealizationStatus,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     ReviewAccessScope,
@@ -325,8 +329,45 @@ class HttpManageActionRealizationClient:
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
-            additional_headers=self._manage_service_context.request_headers(),
+            additional_headers=self._manage_scoped_headers(access_scope),
+            accepted_response_mapper=_manage_outcome_from_receipt,
         )
+
+    def load_action_realization(
+        self,
+        *,
+        intake_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        if self._config.history_path_template is None:
+            raise DownstreamRealizationConfigurationError(
+                "manage realization history_path_template is required."
+            )
+        normalized_intake_id = intake_id.strip()
+        if not normalized_intake_id or not normalized_intake_id.isprintable():
+            raise ValueError("intake_id is required")
+        try:
+            payload = self._client.get_json(
+                self._config.history_path_template.format(intake_id=normalized_intake_id),
+                correlation_id=correlation_id,
+                trace_id=trace_id,
+                additional_headers=self._manage_scoped_headers(access_scope),
+            )
+        except DownstreamServiceError as exc:
+            raise DownstreamRealizationReadError(
+                "authoritative Manage realization history is unavailable"
+            ) from exc
+        return _manage_realization_history_from_payload(payload)
+
+    def _manage_scoped_headers(self, access_scope: ReviewAccessScope) -> dict[str, str]:
+        # manage#660 authenticates a trusted service principal whose portfolio
+        # entitlement arrives as X-Portfolio-Ids; the governed candidate scope
+        # is the only portfolio this call is entitled to.
+        headers = self._manage_service_context.request_headers()
+        headers["X-Portfolio-Ids"] = access_scope.portfolio_id
+        return headers
 
     def close(self) -> None:
         self._client.close()
@@ -451,6 +492,108 @@ def _advise_outcome_from_receipt(
     if accepted is not True:
         raise ValueError("intake_receipt_accepted must be boolean")
     return DownstreamRealizationOutcome.accepted_by_downstream(receipt)
+
+
+def _manage_outcome_from_receipt(
+    payload: Mapping[str, Any],
+) -> DownstreamRealizationOutcome:
+    accepted = payload.get("action_receipt_accepted")
+    if accepted is False:
+        # A rejected intake creates no durable management action
+        # (action_register_created is false, management_action_id is null),
+        # so there is no owner identity to carry - the rejection reason is
+        # the only owner fact.
+        return DownstreamRealizationOutcome.rejected_by_downstream(
+            _manage_rejection_reason(payload)
+        )
+    if accepted is not True:
+        raise ValueError("action_receipt_accepted must be boolean")
+    for authority_field in (
+        "rebalance_execution_authority_granted",
+        "order_created",
+        "client_publication_authorized",
+    ):
+        if payload.get(authority_field) is not False:
+            raise ValueError(f"{authority_field} must be false")
+    if payload.get("action_register_created") is not True:
+        raise ValueError("accepted intake must create the action register record")
+    management_action_id = _required_response_text(payload, "management_action_id")
+    return DownstreamRealizationOutcome.accepted_by_downstream(
+        DownstreamOwnerReceipt(
+            owner_authority=SourceSystem.LOTUS_MANAGE,
+            owner_request_id=_required_response_text(payload, "intake_id"),
+            owner_realization_id=management_action_id,
+            owner_work_id=management_action_id,
+            source_event_version=_required_response_int(payload, "source_event_version"),
+            # Manage restates no evidence hash; its request fingerprint is the
+            # owner's commitment to the exact intake request (which carries the
+            # evidence content hash inside source_refs).
+            source_evidence_fingerprint=_required_response_text(
+                payload,
+                "request_fingerprint",
+            ),
+        )
+    )
+
+
+def _manage_rejection_reason(payload: Mapping[str, Any]) -> str:
+    reasons = payload.get("outcome_reason_codes")
+    if isinstance(reasons, list):
+        for reason in reasons:
+            if isinstance(reason, str) and reason.strip():
+                return reason.strip()
+    return "downstream_rejected"
+
+
+def _manage_realization_history_from_payload(
+    payload: Mapping[str, Any],
+) -> ManageActionRealizationHistory:
+    raw_events = payload.get("events")
+    if not isinstance(raw_events, list):
+        raise ValueError("events must be an array")
+    return ManageActionRealizationHistory(
+        contract_version=_required_response_text(payload, "contract_version"),
+        intake_id=_required_response_text(payload, "intake_id"),
+        management_action_id=_required_response_text(payload, "management_action_id"),
+        source_authority=_required_response_text(payload, "source_authority"),
+        portfolio_id=_required_response_text(payload, "portfolio_id"),
+        idea_candidate_id=_required_response_text(payload, "idea_candidate_id"),
+        conversion_intent_id=_required_response_text(payload, "conversion_intent_id"),
+        status=ManageActionRealizationStatus(_required_response_text(payload, "status")),
+        source_event_version=_required_response_int(payload, "source_event_version"),
+        rebalance_execution_proven=_required_response_bool(
+            payload,
+            "rebalance_execution_proven",
+        ),
+        order_execution_proven=_required_response_bool(payload, "order_execution_proven"),
+        client_publication_proven=_required_response_bool(
+            payload,
+            "client_publication_proven",
+        ),
+        events=tuple(_manage_realization_event_from_payload(item) for item in raw_events),
+    )
+
+
+def _manage_realization_event_from_payload(payload: object) -> ManageActionRealizationEvent:
+    if not isinstance(payload, Mapping):
+        raise ValueError("Manage realization event must be an object")
+    previous_status = _optional_response_text(payload, "previous_status")
+    return ManageActionRealizationEvent(
+        event_id=_required_response_text(payload, "event_id"),
+        action_id=_required_response_text(payload, "action_id"),
+        source_event_version=_required_response_int(payload, "source_event_version"),
+        event_type=ManageActionRealizationEventType(_required_response_text(payload, "event_type")),
+        previous_status=(
+            ManageActionRealizationStatus(previous_status) if previous_status is not None else None
+        ),
+        status=ManageActionRealizationStatus(_required_response_text(payload, "status")),
+        occurred_at_utc=_required_response_datetime(payload, "occurred_at"),
+        actor_id=_required_response_text(payload, "actor_id"),
+        actor_role=_required_response_text(payload, "actor_role"),
+        reason_code=_required_response_text(payload, "reason_code"),
+        correlation_id=_required_response_text(payload, "correlation_id"),
+        causation_id=_required_response_text(payload, "causation_id"),
+    )
 
 
 def _required_response_text(payload: Mapping[str, Any], field_name: str) -> str:
@@ -588,8 +731,9 @@ def _conversion_intent_envelope(
             }
         ],
     }
-    if intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
-        envelope["portfolio_id"] = access_scope.portfolio_id
+    # Both shipped owner intakes bind the authoritative portfolio scope in
+    # the request body (advise#608, manage#660); omitting it is a live 422.
+    envelope["portfolio_id"] = access_scope.portfolio_id
     return envelope
 
 

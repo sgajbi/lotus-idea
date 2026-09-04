@@ -1418,6 +1418,36 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, caller context, response shapes, bounded authority claims, and product-safe error examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Read and persist the authoritative append-only Manage action outcome history for a receipt-bound Idea action submission without transferring downstream business authority.",
+      "when_to_use": "Use when an internal caller has idea.downstream-realization.reconcile capability, complete tenant/book/portfolio/client entitlement scope, and an accepted or rejected Manage submission carrying a durable owner receipt that must be reconciled with the source-owned outcome history.",
+      "when_not_to_use": "Do not use to infer management approval from transport success, treat an APPROVED review as rebalance execution or order proof, overwrite owner history, define a Gateway contract, claim Workbench product proof, authorize client-ready publication, or claim supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/manage-realization-reconciliation with X-Caller-Capabilities: idea.downstream-realization.reconcile and complete entitlement scope"
+      ],
+      "response_examples": [
+        "{\"reconciliationStatus\":\"accepted\",\"appendedEventCount\":2,\"history\":{\"intakeId\":\"iai_1f2e3d4c5b6a7f8e9d0c\",\"managementActionId\":\"ima_9f8e7d6c5b4a3f2e1d0c\",\"realizationAuthority\":\"lotus-manage\",\"portfolioId\":\"portfolio-001\",\"status\":\"APPROVED\",\"sourceEventVersion\":2,\"events\":[{\"eventId\":\"imae_0001\",\"sourceEventVersion\":1,\"eventType\":\"INTAKE_ACCEPTED\",\"previousStatus\":null,\"status\":\"PENDING_REVIEW\",\"occurredAtUtc\":\"2026-09-03T10:00:00+00:00\",\"actorRole\":\"SERVICE\",\"reasonCode\":\"idea_conversion_intent_accepted_for_management_review\"},{\"eventId\":\"imae_0002\",\"sourceEventVersion\":2,\"eventType\":\"APPROVE\",\"previousStatus\":\"PENDING_REVIEW\",\"status\":\"APPROVED\",\"occurredAtUtc\":\"2026-09-03T10:05:00+00:00\",\"actorRole\":\"PORTFOLIO_MANAGER\",\"reasonCode\":\"REVIEW_APPROVED\"}],\"rebalanceExecutionProven\":false,\"orderExecutionProven\":false,\"clientPublicationProven\":false},\"durableStorageBacked\":true,\"grantsRebalanceExecutionAuthority\":false,\"grantsOrderAuthority\":false,\"grantsClientPublicationAuthority\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.reconcile capability, complete entitlement scope, or access to the receipt-bound submission.",
+        "404 returns downstream_submission_not_found for an unknown opaque support reference.",
+        "409 returns a stable blocker when the submission is ineligible or the Manage history has identity drift, version gaps, event-chain defects, or unsupported authority claims.",
+        "503 returns manage_realization_owner_unavailable, durable_repository_not_configured, or durable_repository_unavailable without changing persisted evidence."
+      ],
+      "test_evidence": [
+        "tests/integration/test_manage_realization_reconciliation_api.py::test_manage_realization_reconciliation_api_persists_exact_owner_history",
+        "tests/integration/test_manage_realization_reconciliation_api.py::test_manage_realization_reconciliation_api_denial_emits_operation_event",
+        "tests/integration/test_manage_realization_reconciliation_api.py::test_manage_realization_reconciliation_api_reports_unconfigured_owner_reader",
+        "tests/unit/test_manage_realization_reconciliation.py::test_reconcile_manage_history_fails_closed_on_owner_identity_drift",
+        "tests/unit/test_manage_realization_reconciliation.py::test_reconcile_manage_history_refuses_prefix_rewrites",
+        "tests/unit/test_postgres_manage_realization.py::test_postgres_manage_history_survives_restart_and_appends_monotonically"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, caller context, response shapes, bounded authority claims, and product-safe error examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/downstream-submissions/reconciliation",
       "certification_status": "certified",

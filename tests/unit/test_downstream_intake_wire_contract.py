@@ -48,10 +48,9 @@ def test_conversion_intent_adapter_envelope_matches_versioned_wire_contract(
     assert set(envelope) == set(contract["request_fields"])
     assert envelope["intent_type"] == contract["intent_type"]
     assert envelope["source_system"] == "lotus-idea"
-    if target is ConversionTarget.ADVISE_PROPOSAL:
-        assert envelope["portfolio_id"] == "PB_SG_GLOBAL_BAL_001"
-    else:
-        assert "portfolio_id" not in envelope
+    # Both shipped owner intakes bind the authoritative portfolio scope in
+    # the request body (advise#608, manage#660).
+    assert envelope["portfolio_id"] == "PB_SG_GLOBAL_BAL_001"
     assert envelope["source_refs"] == [
         {
             "source_system": "lotus-idea",
@@ -66,14 +65,18 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
     contract = _consumer_contract(ConversionTarget.MANAGE_REVIEW.value)
     context = ManageRealizationServiceContext(
         actor_id="lotus-idea-local-development",
-        role="service",
+        role="SERVICE",
         tenant_id="local-development",
         legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
-        capabilities="manage.write",
+        capabilities="manage.idea_action_intake.accept,manage.idea_action_intake.read",
     )
 
-    assert set(context.request_headers()) == set(contract["required_server_headers"])
+    # manage#660 authenticates the trusted principal portfolio entitlement
+    # via X-Portfolio-Ids; the adapter adds it per call from the governed
+    # candidate scope, so the wire headers are context headers plus that one.
+    wire_headers = set(context.request_headers()) | {"X-Portfolio-Ids"}
+    assert wire_headers == set(contract["required_server_headers"])
     assert contract["receipt_outcomes"] == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
     assert contract["local_dev_principal_source"] == (
         "trusted_headers_until_production_idp_available"

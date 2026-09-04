@@ -73,6 +73,9 @@ from scripts.postgres_disaster_recovery_fixture_data import (  # noqa: E402
 from scripts.downstream_realization.advise_recovery_fixture import (  # noqa: E402
     seed_advise_realization_recovery_fixture,
 )
+from scripts.downstream_realization.manage_recovery_fixture import (  # noqa: E402
+    seed_manage_realization_recovery_fixture,
+)
 
 DATABASE_URL_ENV = "LOTUS_IDEA_DR_SOURCE_DATABASE_URL"
 
@@ -333,6 +336,13 @@ def _seed_downstream_submissions(repository: PostgresIdeaRepository) -> None:
     )
 
     seed_advise_realization_recovery_fixture(
+        repository,
+        fixture_time=FIXTURE_TIME,
+        candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
+        conversion_intent_id="dr-fixture-conversion-intent-001",
+        portfolio_id="portfolio-dr-fixture-conversion",
+    )
+    seed_manage_realization_recovery_fixture(
         repository,
         fixture_time=FIXTURE_TIME,
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",

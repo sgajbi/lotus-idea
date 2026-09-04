@@ -116,6 +116,17 @@ from app.domain.advise_realization import (
     TERMINAL_ADVISE_REALIZATION_STATUSES,
     evaluate_advise_realization_history_mutation,
 )
+from app.domain.manage_realization import (
+    MANAGE_ACTION_OUTCOME_HISTORY_CONTRACT_VERSION,
+    ManageActionRealizationEvent,
+    ManageActionRealizationEventType,
+    ManageActionRealizationHistory,
+    ManageActionRealizationStatus,
+    ManageRealizationHistoryMutationDecision,
+    ManageRealizationHistoryMutationResult,
+    VALID_MANAGE_REVIEW_TRANSITIONS,
+    evaluate_manage_realization_history_mutation,
+)
 from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionAuditEntry,
@@ -431,6 +442,15 @@ __all__ = [
     "AdviseProposalReviewWorkStatus",
     "AdviseRealizationHistoryMutationDecision",
     "AdviseRealizationHistoryMutationResult",
+    "MANAGE_ACTION_OUTCOME_HISTORY_CONTRACT_VERSION",
+    "ManageActionRealizationEvent",
+    "ManageActionRealizationEventType",
+    "ManageActionRealizationHistory",
+    "ManageActionRealizationStatus",
+    "ManageRealizationHistoryMutationDecision",
+    "ManageRealizationHistoryMutationResult",
+    "VALID_MANAGE_REVIEW_TRANSITIONS",
+    "evaluate_manage_realization_history_mutation",
     "TERMINAL_ADVISE_REALIZATION_STATUSES",
     "evaluate_advise_realization_history_mutation",
     "DownstreamSubmissionPosture",

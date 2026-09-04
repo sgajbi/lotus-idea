@@ -6,6 +6,7 @@ from typing import Protocol
 
 from app.domain import (
     AdviseProposalRealizationHistory,
+    ManageActionRealizationHistory,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     ReviewAccessScope,
@@ -128,6 +129,18 @@ class AdviseProposalRealizationReader(Protocol):
         trace_id: str | None = None,
     ) -> AdviseProposalRealizationHistory:
         """Load the exact Advise-owned realization history in trusted scope."""
+
+
+class ManageActionRealizationReader(Protocol):
+    def load_action_realization(
+        self,
+        *,
+        intake_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        """Load the exact Manage-owned action outcome history in trusted scope."""
 
 
 class ManageActionRealizationClient(Protocol):
