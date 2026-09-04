@@ -37,7 +37,10 @@ clean branch hygiene.
    trigger. Because the repository is rebase-only, it enumerates every revision
    added by the merged PR and dispatches one exact-revision run for each;
    manual reruns remain available through `workflow_dispatch`. The gate does
-   not also run on `push` to `main`.
+   not also run on `push` to `main`. The workflow itself is declarative and
+   delegates event validation, revision enumeration, immutable tag handling,
+   and dispatch to the typed, unit-tested
+   `scripts/main_releasability_dispatch.py` program.
 5. Non-suppressed auto-merge token enforcement through `LOTUS_AUTOMERGE_TOKEN`;
    without that secret, the helper warns, skips auto-merge, and requires a
    human/release actor to rebase merge.
@@ -229,6 +232,10 @@ authoritative release-proof run per revision rather than duplicate trigger
 paths. The dispatcher also asserts the repository remains rebase-only before
 using the merged PR commit count to enumerate revisions; a merge-policy change
 therefore fails closed instead of silently leaving deployable commits ungated.
+The CI contract gate rejects embedded multiline shell, direct workflow
+dispatch, and direct Git-ref manipulation in the merged-PR workflow. This keeps
+security-sensitive parsing and exact-ref decisions in one typed implementation
+with behavioral tests, rather than depending on shell whitespace or tokenization.
 
 Main Releasability runs set `cancel-in-progress: false`. A repeated or later
 dispatch can consume more capacity, but it cannot cancel the only verdict being

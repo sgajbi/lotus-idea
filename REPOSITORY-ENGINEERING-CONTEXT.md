@@ -318,7 +318,13 @@ Mainline release evidence is revision-scoped, not PR-scoped. The repository is
 configured for rebase-only merging, so the merged-PR dispatcher enumerates every
 revision added by the PR, oldest first, and starts one immutable Main
 Releasability run for each revision. The dispatcher fails closed if repository
-merge methods no longer match that assumption. Evidence runs use
+merge methods no longer match that assumption. Security-sensitive event
+validation, revision enumeration, immutable tag creation/reconciliation, and
+workflow dispatch live in the typed, unit-tested
+`scripts/main_releasability_dispatch.py` program. The workflow supplies only the
+GitHub token and invokes that entrypoint; the CI contract gate rejects embedded
+shell dispatch logic so shell tokenization cannot weaken the fail-closed checks.
+Evidence runs use
 `cancel-in-progress: false`: a newer dispatch must not erase an in-flight
 verdict for an independently deployable revision. A final always-run job in the
 same workflow reclaims only the exact temporary dispatch tag after CI signal

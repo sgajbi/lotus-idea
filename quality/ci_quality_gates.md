@@ -148,7 +148,12 @@ Main Releasability is intentionally `workflow_dispatch` only: merged PRs use
 `merged-pr-main-releasability.yml` to dispatch one authoritative post-merge
 release-proof run, and manual reruns use the same dispatchable workflow. The
 CI contract gate rejects reintroducing a `push` trigger that would create
-expected push-cancelled / dispatch-success duplicate run pairs.
+expected push-cancelled / dispatch-success duplicate run pairs. The merged-PR
+workflow is deliberately declarative: it passes the GitHub token to the typed,
+unit-tested `scripts/main_releasability_dispatch.py` entrypoint. The contract
+gate rejects embedded multiline dispatch shell, direct workflow dispatch, and
+direct Git-ref manipulation in the workflow so exact-ref safety is enforced by
+one testable implementation.
 
 GitHub Security posture is also under the CI contract gate. The repository has
 Dependabot alerts/security updates enabled, secret scanning with push
