@@ -510,6 +510,16 @@ replay without another adapter call, changed-fingerprint reuse returns
 target, resource id, bounded failure reason, correlation id, trace id, and
 timestamp without source payloads or raw downstream responses.
 
+For an Advise intake whose response is lost after the owner commits, preserve
+the `reconciliation_required` support reference and invoke the existing
+authorized Advise realization reconciliation route. Idea performs a read-only,
+scope-bound lookup at
+`/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization`,
+validates the exact candidate, intent, evidence, tenant, legal entity, and
+portfolio, reconstructs the original intake receipt, and persists the
+Advise-owned history. It never repeats the intake POST. Missing, unavailable,
+malformed, or mismatched owner evidence cannot advance local posture.
+
 For local Compose only, Advise intake requires server-process settings:
 `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,

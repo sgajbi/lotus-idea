@@ -1401,7 +1401,10 @@ Downstream realization:
 3. `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`; the canonical
    owner route is
    `/advisory/proposals/idea-intake/{intake_id}/realization`,
-4. local/test-only Advise fixture:
+4. `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE`; the canonical
+   read-only lost-response recovery route is
+   `/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization`,
+5. local/test-only Advise fixture:
    `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,
    `LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID`,
@@ -1412,9 +1415,9 @@ Downstream realization:
    `POST /advisory/proposals/idea-intake` receipt route. They are not browser
    headers, production authn/authz, suitability authority, proposal lifecycle
    authority, or supported-feature evidence,
-5. `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL`,
-6. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
-7. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
+6. `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL`,
+7. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
+8. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
    `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE`,
@@ -1425,9 +1428,9 @@ Downstream realization:
    and `X-Principal-Status: ACTIVE`; they are not browser headers,
    production authn/authz, suitability authority, rebalance authority, or
    supported-feature evidence,
-8. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
-9. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
-10. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+9. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
+10. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
+11. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
    `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
    `LOTUS_IDEA_REPORT_REALIZATION_REGION`. The owner-authorized synthetic
@@ -1436,13 +1439,13 @@ Downstream realization:
    `lotus-report:idea-evidence-retention:v1` reference maps to the
    Report-owned `generated-report-standard` selector. Do not persist that
    selector in Idea or treat it as trusted production identity,
-11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
-12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
-15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
-16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
-17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+18. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
 
 The Advise, Manage, and Report fixtures are server-side local/test development aids
 only. They never trust browser-supplied identity headers and fail closed in
@@ -1456,7 +1459,11 @@ the application verifies that scope against the source candidate before claim
 or dispatch and binds all four dimensions into the idempotency fingerprint.
 Advise submission persists the owner receipt for both accepted-for-review and
 rejected-before-work terminal postures. Reconciliation loads owner history only
-by that receipt, after complete entitlement authorization, and accepts only
+by that receipt after normal delivery. When the intake response is lost after
+the owner commits, reconciliation instead performs a scoped, read-only lookup
+by the already-persisted conversion-intent identity, reconstructs the original
+owner receipt, and never repeats the intake POST. After complete entitlement
+authorization, either read path accepts only
 exact replay or append-only progression with stable scope, evidence, work, and
 proposal identity. This does not grant suitability, proposal lifecycle, or client-publication
 authority. Manage submission likewise preserves the accepted action identity and
