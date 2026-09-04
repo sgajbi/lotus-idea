@@ -514,13 +514,13 @@ For an Advise intake whose response is lost after the owner commits, preserve
 the `reconciliation_required` support reference and invoke the existing
 authorized Advise realization reconciliation route. Idea performs a read-only,
 scope-bound lookup at
-`/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization`,
+`/advisory/proposals/idea-intake/realization?conversion_intent_id={conversion_intent_id}`,
 validates the exact candidate, intent, evidence, tenant, legal entity, and
 portfolio, reconstructs the original intake receipt, and persists the
 Advise-owned history. It never repeats the intake POST. Missing, unavailable,
 malformed, or mismatched owner evidence cannot advance local posture.
-Conversion-intent creation rejects identities that are not URL-safe path segments; therefore an
-accepted identity cannot become unreachable through this recovery route.
+The owner lookup carries the opaque conversion identity as a query parameter, preserving recovery
+for previously accepted printable identities without rewriting durable records.
 
 For local Compose only, Advise intake requires server-process settings:
 `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,

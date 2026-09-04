@@ -130,8 +130,8 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "principal_capability": "advisory.idea_proposal_intake.accept",
         "owner_history_route": ("GET /advisory/proposals/idea-intake/{intake_id}/realization"),
         "owner_recovery_history_route": (
-            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
-            "{conversion_intent_id}/realization"
+            "GET /advisory/proposals/idea-intake/realization?"
+            "conversion_intent_id={conversion_intent_id}"
         ),
         "history_principal_capability": "advisory.idea_proposal_realization.read",
         "history_response_fields": _ADVISE_HISTORY_RESPONSE_FIELDS,
@@ -231,10 +231,12 @@ _INTAKE_SECURITY_BOUNDARY_REQUIRED_TRUE_FIELDS = (
     "does_not_grant_downstream_business_authority",
 )
 _EXPECTED_CONVERSION_INTENT_IDENTITY = {
-    "addressability": "url_safe_path_segment",
-    "allowed_pattern": r"^[A-Za-z0-9][A-Za-z0-9._~-]*$",
+    "addressability": "opaque_query_parameter",
     "maximum_length": 160,
-    "reason": "Every accepted conversion identity must remain addressable by owner and Idea routes.",
+    "reason": (
+        "Query transport keeps every previously accepted printable identity addressable without "
+        "rewriting durable records."
+    ),
 }
 _REPORT_INTAKE_CONSUMER_FIELDS = (
     "purpose_mapping",

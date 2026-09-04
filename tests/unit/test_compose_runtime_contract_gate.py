@@ -19,9 +19,8 @@ def _normalized_model(*, include_worker: bool = True) -> dict[str, Any]:
                 "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE": (
                     "/advisory/proposals/idea-intake/{intake_id}/realization"
                 ),
-                "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE": (
-                    "/advisory/proposals/idea-intake/by-conversion-intent/"
-                    "{conversion_intent_id}/realization"
+                "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH": (
+                    "/advisory/proposals/idea-intake/realization"
                 ),
                 "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES": (
                     "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
@@ -116,7 +115,7 @@ def test_normalized_compose_contract_requires_advise_history_capability() -> Non
 def test_normalized_compose_contract_requires_advise_recovery_history_configuration() -> None:
     model = _normalized_model()
     del model["services"]["lotus-idea"]["environment"][
-        "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE"
+        "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH"
     ]
 
     errors = validate_compose_model(model, include_worker=True)

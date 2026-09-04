@@ -14,10 +14,8 @@ API_SERVICE = "lotus-idea"
 WORKER_SERVICE = "lotus-idea-source-ingestion-worker"
 ADVISE_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE"
 ADVISE_HISTORY_PATH = "/advisory/proposals/idea-intake/{intake_id}/realization"
-ADVISE_RECOVERY_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE"
-ADVISE_RECOVERY_HISTORY_PATH = (
-    "/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization"
-)
+ADVISE_RECOVERY_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH"
+ADVISE_RECOVERY_HISTORY_PATH = "/advisory/proposals/idea-intake/realization"
 ADVISE_CAPABILITIES_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"
 REQUIRED_ADVISE_CAPABILITIES = {
     "advisory.idea_proposal_intake.accept",

@@ -498,7 +498,7 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |
-| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE` |
+| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH` |
 | Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
 | Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
 
@@ -520,8 +520,8 @@ reconciliation call reads the Advise-owned realization by the already-persisted
 Idea `conversion_intent_id`, under the exact tenant, legal-entity, and portfolio
 scope. Idea accepts the recovery only when candidate identity, conversion
 intent, evidence fingerprint, and owner scope all match.
-Conversion-intent creation accepts only URL-safe path-segment identities so every persisted
-identity remains addressable by Idea and owner reconciliation routes.
+The owner lookup carries the opaque conversion identity as a query parameter, so previously
+accepted printable identities remain addressable without rewriting durable records.
 
 The recovery read reconstructs the original version-one intake receipt, while
 later Advise events remain append-only owner history. Idea then commits its

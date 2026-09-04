@@ -183,8 +183,8 @@ def _advise_contract_payload() -> dict[str, object]:
         "target_route": ADVISE_PROPOSAL_ROUTE,
         "lost_response_read_recovery_implemented": True,
         "lost_response_recovery_route": (
-            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
-            "{conversion_intent_id}/realization"
+            "GET /advisory/proposals/idea-intake/realization?"
+            "conversion_intent_id={conversion_intent_id}"
         ),
         "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
         "principal_capability": "advisory.idea_proposal_intake.accept",

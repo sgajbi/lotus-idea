@@ -100,8 +100,8 @@ def test_advise_service_context_matches_versioned_wire_contract() -> None:
         "GET /advisory/proposals/idea-intake/{intake_id}/realization"
     )
     assert contract["owner_recovery_history_route"] == (
-        "GET /advisory/proposals/idea-intake/by-conversion-intent/"
-        "{conversion_intent_id}/realization"
+        "GET /advisory/proposals/idea-intake/realization?"
+        "conversion_intent_id={conversion_intent_id}"
     )
     assert contract["history_principal_capability"] == ("advisory.idea_proposal_realization.read")
     assert set(contract["history_required_server_headers"]) == set(context.request_headers()) | {

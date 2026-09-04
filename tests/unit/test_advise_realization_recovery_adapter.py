@@ -19,9 +19,7 @@ from tests.unit.test_downstream_realization_adapters import (
 )
 
 
-RECOVERY_PATH = (
-    "/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization"
-)
+RECOVERY_PATH = "/advisory/proposals/idea-intake/realization"
 
 
 def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
@@ -29,6 +27,7 @@ def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured["path"] = request.url.path
+        captured["query"] = dict(request.url.params)
         captured["headers"] = dict(request.headers)
         return httpx.Response(200, json=_advise_history_payload())
 
@@ -36,7 +35,7 @@ def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
         DownstreamRealizationAdapterConfig(
             base_url="https://advise.example",
             submit_path="/advisory/proposals/idea-intake",
-            recovery_history_path_template=RECOVERY_PATH,
+            recovery_history_path=RECOVERY_PATH,
             source_authority=SourceSystem.LOTUS_ADVISE,
             advise_service_context=advise_service_context(),
         ),
@@ -44,15 +43,14 @@ def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
     )
 
     history = adapter.load_proposal_realization_by_conversion_intent(
-        conversion_intent_id="conversion-advise_proposal-001",
+        conversion_intent_id="legacy/conversion intent?version=1",
         access_scope=report_access_scope(),
         correlation_id="corr-recovery",
         trace_id="trace-recovery",
     )
 
-    assert captured["path"] == RECOVERY_PATH.format(
-        conversion_intent_id="conversion-advise_proposal-001"
-    )
+    assert captured["path"] == RECOVERY_PATH
+    assert captured["query"] == {"conversion_intent_id": "legacy/conversion intent?version=1"}
     assert captured["headers"]["x-portfolio-id"] == "PB_SG_GLOBAL_BAL_001"
     assert captured["headers"]["x-correlation-id"] == "corr-recovery"
     assert captured["headers"]["x-trace-id"] == "trace-recovery"
@@ -65,13 +63,8 @@ def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
 @pytest.mark.parametrize(
     ("recovery_path_template", "message"),
     [
-        ("advisory/{conversion_intent_id}", "start with '/'"),
-        ("/advisory/history", "one {conversion_intent_id} placeholder"),
-        (
-            "/advisory/{conversion_intent_id}/{conversion_intent_id}",
-            "one {conversion_intent_id} placeholder",
-        ),
-        ("/advisory/{conversion_intent_id}?debug=true", "query string or fragment"),
+        ("advisory/history", "start with '/'"),
+        ("/advisory/history?debug=true", "query string or fragment"),
     ],
 )
 def test_advise_recovery_history_config_rejects_ambiguous_routes(
@@ -82,7 +75,7 @@ def test_advise_recovery_history_config_rejects_ambiguous_routes(
         DownstreamRealizationAdapterConfig(
             base_url="https://advise.example",
             submit_path="/advisory/proposals/idea-intake",
-            recovery_history_path_template=recovery_path_template,
+            recovery_history_path=recovery_path_template,
             source_authority=SourceSystem.LOTUS_ADVISE,
             advise_service_context=advise_service_context(),
         )
@@ -104,7 +97,7 @@ def test_advise_recovery_reader_requires_configured_route_and_printable_identity
 
     with pytest.raises(
         DownstreamRealizationConfigurationError,
-        match="recovery_history_path_template",
+        match="recovery_history_path",
     ):
         adapter.load_proposal_realization_by_conversion_intent(
             conversion_intent_id="conversion-001",
@@ -115,7 +108,7 @@ def test_advise_recovery_reader_requires_configured_route_and_printable_identity
         DownstreamRealizationAdapterConfig(
             base_url="https://advise.example",
             submit_path="/advisory/proposals/idea-intake",
-            recovery_history_path_template=RECOVERY_PATH,
+            recovery_history_path=RECOVERY_PATH,
             source_authority=SourceSystem.LOTUS_ADVISE,
             advise_service_context=advise_service_context(),
         ),

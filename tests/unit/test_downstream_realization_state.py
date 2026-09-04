@@ -20,7 +20,7 @@ from app.runtime.downstream_realization_state import (
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
-    DEFAULT_ADVISE_RECOVERY_HISTORY_PATH_TEMPLATE,
+    DEFAULT_ADVISE_RECOVERY_HISTORY_PATH,
     MANAGE_BASE_URL_ENV,
     MANAGE_ACTOR_ID_ENV,
     MANAGE_CAPABILITIES_ENV,
@@ -70,10 +70,7 @@ def test_conversion_realization_clients_are_built_from_environment(
     manage_client = cast(HttpManageActionRealizationClient, clients.manage_client)
     assert manage_client._config.history_path_template == DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE
     advise_client = cast(HttpAdviseProposalRealizationClient, clients.advise_client)
-    assert (
-        advise_client._config.recovery_history_path_template
-        == DEFAULT_ADVISE_RECOVERY_HISTORY_PATH_TEMPLATE
-    )
+    assert advise_client._config.recovery_history_path == DEFAULT_ADVISE_RECOVERY_HISTORY_PATH
 
 
 def test_report_realization_client_is_built_from_environment(
