@@ -435,3 +435,10 @@ def _load_generator_script() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_rejects_valid_looking_proof_whose_generation_predates_receipt_completion() -> None:
+    proof = _valid_proof()
+    proof["generatedAtUtc"] = datetime(2026, 7, 13, 0, 0, tzinfo=UTC).isoformat()
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
