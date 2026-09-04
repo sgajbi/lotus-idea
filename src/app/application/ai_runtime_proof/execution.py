@@ -75,13 +75,13 @@ class AIRuntimeExecutionReceipt:
     completed_at_utc: str
 
 
-def execute_ai_workflow_pack_runtime_proof(
+async def execute_ai_workflow_pack_runtime_proof(
     *,
     runtime: LotusAIWorkflowRuntime,
     generated_at_utc: datetime,
 ) -> dict[str, Any]:
     request = _runtime_proof_request(generated_at_utc)
-    response = runtime.execute_workflow_pack(request, caller_app=_CALLER_APP)
+    response = await runtime.execute_workflow_pack(request, caller_app=_CALLER_APP)
     receipt = _map_runtime_execution_receipt(response)
     receipt_completed_at_utc = parse_timezone_aware_datetime(receipt.completed_at_utc)
     if (

@@ -26,15 +26,15 @@ def get_lotus_ai_workflow_runtime() -> HttpLotusAIWorkflowRuntime:
     return _WORKFLOW_RUNTIME
 
 
-def close_lotus_ai_workflow_runtime() -> None:
+async def close_lotus_ai_workflow_runtime() -> None:
     global _WORKFLOW_RUNTIME
     if _WORKFLOW_RUNTIME is not None:
-        _WORKFLOW_RUNTIME.close()
+        await _WORKFLOW_RUNTIME.close()
         _WORKFLOW_RUNTIME = None
 
 
-def reset_lotus_ai_workflow_runtime() -> None:
-    close_lotus_ai_workflow_runtime()
+async def reset_lotus_ai_workflow_runtime() -> None:
+    await close_lotus_ai_workflow_runtime()
 
 
 def _timeout_seconds() -> float:

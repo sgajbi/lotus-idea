@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 from datetime import datetime
 import json
 import sys
@@ -31,12 +32,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         generated_at_utc = _aware_datetime(args.generated_at_utc)
-        payload = execute_ai_workflow_pack_runtime_proof(
-            generated_at_utc=generated_at_utc,
-            runtime=HttpLotusAIWorkflowRuntime(
+        payload = asyncio.run(
+            _execute_proof(
+                generated_at_utc=generated_at_utc,
                 base_url=args.lotus_ai_base_url,
                 timeout_seconds=args.timeout_seconds,
-            ),
+            )
         )
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"AI workflow-pack runtime execution proof error: {exc}", file=sys.stderr)
@@ -50,6 +51,25 @@ def main(argv: list[str] | None = None) -> int:
     if args.allow_runtime_unavailable and not payload["aiWorkflowPackRuntimeExecutionProofValid"]:
         return 0
     return 0 if payload["aiWorkflowPackRuntimeExecutionProofValid"] else 1
+
+
+async def _execute_proof(
+    *,
+    generated_at_utc: datetime,
+    base_url: str,
+    timeout_seconds: float,
+) -> dict[str, object]:
+    runtime = HttpLotusAIWorkflowRuntime(
+        base_url=base_url,
+        timeout_seconds=timeout_seconds,
+    )
+    try:
+        return await execute_ai_workflow_pack_runtime_proof(
+            generated_at_utc=generated_at_utc,
+            runtime=runtime,
+        )
+    finally:
+        await runtime.close()
 
 
 def _parser() -> argparse.ArgumentParser:
