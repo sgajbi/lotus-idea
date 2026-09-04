@@ -136,6 +136,7 @@ class CapturingManageClient:
 @dataclass
 class CapturingReportClient:
     outcome: DownstreamRealizationOutcome
+    authoritative_receipt_on_accept: bool = True
     submitted: tuple[GovernedReportEvidencePack, ...] = ()
     correlation_id: str | None = None
     trace_id: str | None = None
@@ -156,7 +157,11 @@ class CapturingReportClient:
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
         self.access_scope = access_scope
-        if self.outcome.accepted and self.outcome.owner_receipt is None:
+        if (
+            self.authoritative_receipt_on_accept
+            and self.outcome.accepted
+            and self.outcome.owner_receipt is None
+        ):
             return authoritative_report_outcome(evidence_pack)
         return self.outcome
 
@@ -635,6 +640,29 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         client_id="client-redacted",
     )
+
+
+def test_submit_report_evidence_pack_quarantines_acceptance_without_owner_receipt() -> None:
+    repository = repository_with_report_pack()
+    report_client = CapturingReportClient(
+        DownstreamRealizationOutcome.accepted_by_downstream(),
+        authoritative_receipt_on_accept=False,
+    )
+
+    result = submit_report_evidence_pack_to_downstream(
+        RealizeReportEvidencePackCommand(
+            report_evidence_pack_id="report-evidence-pack-001",
+            idempotency_key="submission-report-pack-missing-receipt-001",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+        ),
+        repository=repository,
+        report_client=report_client,
+    )
+
+    assert result.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert result.downstream_failure_reason == "downstream_call_outcome_unknown"
+    assert result.owner_receipt is None
 
 
 def test_submit_report_evidence_pack_replays_local_submission_without_client_call() -> None:

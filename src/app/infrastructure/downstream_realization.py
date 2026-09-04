@@ -626,8 +626,6 @@ def _report_outcome_from_receipt(
         supportability_status="not_certified",
         remaining_blockers=tuple(blockers),
     )
-    if evidence.status != evidence.materialization_status:
-        raise ValueError("Report receipt status fields must agree")
     return DownstreamRealizationOutcome.accepted_by_downstream(
         DownstreamOwnerReceipt(
             owner_authority=SourceSystem.LOTUS_REPORT,

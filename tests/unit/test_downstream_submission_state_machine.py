@@ -199,8 +199,36 @@ def test_report_owner_receipt_rejects_authority_or_supportability_inflation() ->
         replace(evidence, remaining_blockers=("client_publication_authority_blocked",))
     with pytest.raises(ValueError, match="status fields must agree"):
         replace(evidence, materialization_status="failed")
+    with pytest.raises(ValueError, match="must create a report job"):
+        replace(evidence, creates_report_job=False)
+    with pytest.raises(ValueError, match="render creation posture"):
+        replace(evidence, creates_rendered_output=True)
+    with pytest.raises(ValueError, match="archive creation posture"):
+        replace(evidence, creates_archive_record=True)
+    with pytest.raises(ValueError, match="archive record requires rendered output"):
+        replace(evidence, creates_archive_record=True, archive_document_id="archive-001")
+    with pytest.raises(ValueError, match="remaining_blockers is required"):
+        replace(evidence, remaining_blockers=())
     with pytest.raises(ValueError, match="status_url must match"):
         replace(receipt, owner_realization_id="report-job-drift")
+    with pytest.raises(ValueError, match="has no source event version"):
+        replace(receipt, source_event_version=1)
+    with pytest.raises(ValueError, match="requires materialization evidence"):
+        replace(receipt, report_materialization=None)
+    with pytest.raises(ValueError, match="uses owner_realization_id"):
+        replace(receipt, owner_work_id="report-work-001")
+    with pytest.raises(ValueError, match="evented owner receipt requires"):
+        replace(
+            receipt,
+            owner_authority=SourceSystem.LOTUS_ADVISE,
+            report_materialization=None,
+        )
+    with pytest.raises(ValueError, match="requires lotus-report authority"):
+        replace(
+            receipt,
+            owner_authority=SourceSystem.LOTUS_ADVISE,
+            source_event_version=1,
+        )
 
 
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:

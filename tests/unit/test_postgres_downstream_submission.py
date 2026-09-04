@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from typing import Any, Callable
 
 import pytest
 
@@ -174,6 +175,71 @@ def test_report_materialization_receipt_survives_postgres_restart_exactly() -> N
     persisted = restarted.downstream_submission_by_idempotency_key(claim.idempotency_key)
     assert persisted is not None
     assert persisted.owner_receipt == receipt
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda payload: payload.clear(), "ownerAuthority is required"),
+        (
+            lambda payload: payload.update(sourceEventVersion=True),
+            "sourceEventVersion must be an integer",
+        ),
+        (
+            lambda payload: payload.update(reportMaterialization="not-an-object"),
+            "reportMaterialization must be an object",
+        ),
+        (
+            lambda payload: payload["reportMaterialization"].update(
+                remainingBlockers="not-an-array"
+            ),
+            "remainingBlockers must be an array",
+        ),
+        (
+            lambda payload: payload["reportMaterialization"].update(remainingBlockers=[" "]),
+            "remainingBlockers must contain non-blank strings",
+        ),
+        (
+            lambda payload: payload["reportMaterialization"].update(createsReportJob="true"),
+            "createsReportJob must be a boolean",
+        ),
+    ],
+)
+def test_report_owner_receipt_decoder_rejects_malformed_persisted_evidence(
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    payload = {
+        "ownerAuthority": "lotus-report",
+        "ownerRequestId": "report-request-001",
+        "ownerRealizationId": "report-job-001",
+        "ownerWorkId": None,
+        "sourceEventVersion": None,
+        "sourceEvidenceFingerprint": "sha256:report-evidence",
+        "reportMaterialization": {
+            "status": "data_ready",
+            "materializationStatus": "data_ready",
+            "statusUrl": "/reports/jobs/report-job-001",
+            "reportEvidencePackId": "report-pack-001",
+            "conversionIntentId": "conversion-report-001",
+            "candidateId": "candidate-report-001",
+            "evidencePacketId": "evidence-packet-001",
+            "createsReportJob": True,
+            "createsRenderedOutput": False,
+            "createsArchiveRecord": False,
+            "renderJobId": None,
+            "archiveDocumentId": None,
+            "supportabilityStatus": "not_certified",
+            "remainingBlockers": [
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ],
+        },
+    }
+    mutate(payload)
+
+    with pytest.raises(ValueError, match=message):
+        postgres_submission._owner_receipt_from_json(payload)
 
 
 def test_postgres_reconciliation_uses_opaque_reference_and_is_audited() -> None:

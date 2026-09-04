@@ -378,8 +378,7 @@ def _validate_report_owner_outcome(
     if receipt is None or receipt.owner_authority is not SourceSystem.LOTUS_REPORT:
         raise ValueError("accepted Report submission requires an authoritative owner receipt")
     evidence = receipt.report_materialization
-    if evidence is None:
-        raise ValueError("accepted Report submission requires materialization evidence")
+    assert evidence is not None
     expected_identity = (
         evidence_pack.report_evidence_pack_id,
         evidence_pack.conversion_intent_id,
