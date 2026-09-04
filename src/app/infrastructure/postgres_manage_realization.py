@@ -73,6 +73,9 @@ def persist_postgres_manage_realization_history(
                     decision=decision,
                     history=existing,
                 )
+            appended_event_count = len(history.events) - (
+                len(existing.events) if existing is not None else 0
+            )
             _store_manage_history(
                 cursor,
                 support_reference=support_reference,
@@ -80,7 +83,11 @@ def persist_postgres_manage_realization_history(
                 persisted_at_utc=persisted_at_utc,
             )
         connection.commit()
-        return ManageRealizationHistoryMutationResult(decision=decision, history=history)
+        return ManageRealizationHistoryMutationResult(
+            decision=decision,
+            history=history,
+            appended_event_count=appended_event_count,
+        )
     except Exception:
         connection.rollback()
         raise

@@ -104,7 +104,13 @@ class ManageRealizationReconciliationResponse(CamelModel):
     reconciliation_status: ManageRealizationReconciliationStatus = Field(
         alias="reconciliationStatus"
     )
-    appended_event_count: int = Field(alias="appendedEventCount")
+    appended_event_count: int = Field(
+        alias="appendedEventCount",
+        description=(
+            "Number of owner events appended by this committed mutation; exact and concurrent "
+            "replays return zero."
+        ),
+    )
     history: ManageRealizationHistoryResponse
     durable_storage_backed: bool = Field(alias="durableStorageBacked")
     grants_rebalance_execution_authority: bool = Field(alias="grantsRebalanceExecutionAuthority")

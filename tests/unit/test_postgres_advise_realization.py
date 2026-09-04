@@ -70,9 +70,13 @@ def test_postgres_advise_history_survives_restart_and_appends_monotonically() ->
     )
 
     assert accepted.decision is AdviseRealizationHistoryMutationDecision.ACCEPTED
+    assert accepted.appended_outcome_count == 2
     assert replayed.decision is AdviseRealizationHistoryMutationDecision.REPLAYED
+    assert replayed.appended_outcome_count == 0
     assert progressed.decision is AdviseRealizationHistoryMutationDecision.ACCEPTED
+    assert progressed.appended_outcome_count == 1
     assert conflict.decision is AdviseRealizationHistoryMutationDecision.CONFLICT
+    assert conflict.appended_outcome_count == 0
     assert conflict.blocker == "advise_realization_history_conflict"
     loaded = restarted.advise_realization_history_by_support_reference(claim.support_reference)
     assert loaded == _postgres_history(version=3)

@@ -153,6 +153,16 @@ class AdviseRealizationHistoryMutationResult:
     decision: AdviseRealizationHistoryMutationDecision
     history: AdviseProposalRealizationHistory | None
     blocker: str | None = None
+    appended_outcome_count: int = 0
+
+    def __post_init__(self) -> None:
+        if self.appended_outcome_count < 0:
+            raise ValueError("appended_outcome_count must not be negative")
+        if (
+            self.decision is not AdviseRealizationHistoryMutationDecision.ACCEPTED
+            and self.appended_outcome_count != 0
+        ):
+            raise ValueError("only an accepted history mutation may append outcomes")
 
 
 def evaluate_advise_realization_history_mutation(

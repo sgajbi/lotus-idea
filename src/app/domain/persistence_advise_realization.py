@@ -55,7 +55,11 @@ class InMemoryAdviseRealizationRepositoryMixin:
             )
         existing = self._advise_realization_histories.get(support_reference)
         decision = evaluate_advise_realization_history_mutation(existing, history)
+        appended_outcome_count = 0
         if decision is AdviseRealizationHistoryMutationDecision.ACCEPTED:
+            appended_outcome_count = len(history.outcomes) - (
+                len(existing.outcomes) if existing is not None else 0
+            )
             self._advise_realization_histories[support_reference] = history
         return AdviseRealizationHistoryMutationResult(
             decision=decision,
@@ -69,6 +73,7 @@ class InMemoryAdviseRealizationRepositoryMixin:
                 if decision is AdviseRealizationHistoryMutationDecision.CONFLICT
                 else None
             ),
+            appended_outcome_count=appended_outcome_count,
         )
 
 

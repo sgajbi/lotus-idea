@@ -130,7 +130,6 @@ def reconcile_advise_realization_history(
                 AdviseRealizationReconciliationStatus.CONFLICT,
                 blocker=recovery_blocker,
             )
-    existing = repository.advise_realization_history_by_support_reference(command.support_reference)
     mutation = repository.persist_advise_realization_history(
         support_reference=command.support_reference,
         history=history,
@@ -147,11 +146,10 @@ def reconcile_advise_realization_history(
         if mutation.decision is AdviseRealizationHistoryMutationDecision.REPLAYED
         else AdviseRealizationReconciliationStatus.ACCEPTED
     )
-    previous_count = len(existing.outcomes) if existing is not None else 0
     return AdviseRealizationReconciliationResult(
         status=status,
         history=mutation.history,
-        appended_outcome_count=len(history.outcomes) - previous_count,
+        appended_outcome_count=mutation.appended_outcome_count,
     )
 
 

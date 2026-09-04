@@ -65,9 +65,13 @@ def test_postgres_manage_history_survives_restart_and_appends_monotonically() ->
     )
 
     assert accepted.decision is ManageRealizationHistoryMutationDecision.ACCEPTED
+    assert accepted.appended_event_count == 2
     assert replayed.decision is ManageRealizationHistoryMutationDecision.REPLAYED
+    assert replayed.appended_event_count == 0
     assert reopened.decision is ManageRealizationHistoryMutationDecision.ACCEPTED
+    assert reopened.appended_event_count == 1
     assert rewritten.decision is ManageRealizationHistoryMutationDecision.CONFLICT
+    assert rewritten.appended_event_count == 0
     assert rewritten.blocker == "manage_realization_history_conflict"
     loaded = restarted.manage_realization_history_by_support_reference(_SUPPORT_REFERENCE)
     assert loaded == _postgres_history(version=3)

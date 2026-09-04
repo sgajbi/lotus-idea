@@ -12,11 +12,27 @@ from app.domain import (
     AdviseProposalRealizationStatus,
     AdviseProposalReviewWorkStatus,
     AdviseRealizationHistoryMutationDecision,
+    AdviseRealizationHistoryMutationResult,
     evaluate_advise_realization_history_mutation,
 )
 
 
 CREATED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
+
+
+def test_advise_history_mutation_result_refuses_impossible_append_counts() -> None:
+    with pytest.raises(ValueError, match="must not be negative"):
+        AdviseRealizationHistoryMutationResult(
+            decision=AdviseRealizationHistoryMutationDecision.ACCEPTED,
+            history=_history(),
+            appended_outcome_count=-1,
+        )
+    with pytest.raises(ValueError, match="only an accepted"):
+        AdviseRealizationHistoryMutationResult(
+            decision=AdviseRealizationHistoryMutationDecision.REPLAYED,
+            history=_history(),
+            appended_outcome_count=1,
+        )
 
 
 def test_advise_realization_history_accepts_exact_monotonic_owner_chain() -> None:
