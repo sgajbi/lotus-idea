@@ -33,9 +33,7 @@ class HttpLotusAIWorkflowRuntime:
         if not 0 < timeout_seconds <= 30:
             raise ValueError("lotus-ai runtime timeout must be greater than 0 and at most 30")
         self._base_url = normalized_base_url
-        self._execution_endpoint = urljoin(
-            normalized_base_url, self._EXECUTION_PATH.lstrip("/")
-        )
+        self._execution_endpoint = urljoin(normalized_base_url, self._EXECUTION_PATH.lstrip("/"))
         self._client = httpx.AsyncClient(
             timeout=timeout_seconds,
             follow_redirects=False,
@@ -73,9 +71,9 @@ class HttpLotusAIWorkflowRuntime:
             raise ValueError("lotus-ai workflow run id must not be empty")
         endpoint = urljoin(
             self._base_url,
-            self._ATTESTATION_PATH_TEMPLATE.format(
-                run_id=quote(normalized_run_id, safe="")
-            ).lstrip("/"),
+            self._ATTESTATION_PATH_TEMPLATE.format(run_id=quote(normalized_run_id, safe="")).lstrip(
+                "/"
+            ),
         )
         try:
             response = await self._client.get(

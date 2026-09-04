@@ -58,9 +58,7 @@ async def test_runtime_io_yields_control_while_lotus_ai_is_pending() -> None:
         transport=httpx.MockTransport(handler),
     )
 
-    execution = asyncio.create_task(
-        runtime.execute_workflow_pack({}, caller_app="lotus-idea")
-    )
+    execution = asyncio.create_task(runtime.execute_workflow_pack({}, caller_app="lotus-idea"))
     await request_started.wait()
     competing_work_completed = await asyncio.sleep(0, result=True)
 

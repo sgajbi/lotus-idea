@@ -177,9 +177,7 @@ def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
     ],
 )
 @pytest.mark.asyncio
-async def test_rejects_tampered_runtime_response(
-    path: tuple[str, ...], bad_value: object
-) -> None:
+async def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: object) -> None:
     response = lotus_ai_runtime_execution_response()
     target: dict[str, object] = response
     for key in path[:-1]:
