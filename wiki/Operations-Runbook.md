@@ -519,6 +519,8 @@ validates the exact candidate, intent, evidence, tenant, legal entity, and
 portfolio, reconstructs the original intake receipt, and persists the
 Advise-owned history. It never repeats the intake POST. Missing, unavailable,
 malformed, or mismatched owner evidence cannot advance local posture.
+Conversion-intent creation rejects identities that are not URL-safe path segments; therefore an
+accepted identity cannot become unreachable through this recovery route.
 
 For local Compose only, Advise intake requires server-process settings:
 `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,

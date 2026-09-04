@@ -230,6 +230,12 @@ _INTAKE_SECURITY_BOUNDARY_REQUIRED_TRUE_FIELDS = (
     "idp_session_and_token_claim_mapping_deferred",
     "does_not_grant_downstream_business_authority",
 )
+_EXPECTED_CONVERSION_INTENT_IDENTITY = {
+    "addressability": "url_safe_path_segment",
+    "allowed_pattern": r"^[A-Za-z0-9][A-Za-z0-9._~-]*$",
+    "maximum_length": 160,
+    "reason": "Every accepted conversion identity must remain addressable by owner and Idea routes.",
+}
 _REPORT_INTAKE_CONSUMER_FIELDS = (
     "purpose_mapping",
     "owner_retention_policy_mapping",
@@ -254,6 +260,8 @@ def validate_downstream_intake_wire_contract(repository_root: Path) -> list[str]
 
     errors: list[str] = []
     errors.extend(_validate_downstream_intake_contract_envelope(payload))
+    if payload.get("conversion_intent_identity") != _EXPECTED_CONVERSION_INTENT_IDENTITY:
+        errors.append("downstream intake wire contract conversion_intent_identity drifted")
     errors.extend(_validate_downstream_intake_security_boundary(payload))
 
     consumers = payload.get("consumer_contracts")

@@ -5,6 +5,12 @@
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
   "non_authoritative": true,
+  "conversion_intent_identity": {
+    "addressability": "url_safe_path_segment",
+    "allowed_pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$",
+    "maximum_length": 160,
+    "reason": "Every accepted conversion identity must remain addressable by owner and Idea routes."
+  },
   "consumer_contracts": [
     {
       "conversion_target": "advise_proposal",

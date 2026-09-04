@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -25,6 +26,8 @@ from app.domain.ideas import (
     SourceSystem,
     transition_candidate,
 )
+
+CONVERSION_INTENT_ID_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._~-]*$"
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -80,6 +83,13 @@ class ConversionIntentCommand:
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
+        if (
+            len(self.conversion_intent_id) > 160
+            or re.fullmatch(CONVERSION_INTENT_ID_PATTERN, self.conversion_intent_id) is None
+        ):
+            raise ValueError(
+                "conversion_intent_id must be a URL-safe path segment of at most 160 characters"
+            )
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")

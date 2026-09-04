@@ -520,6 +520,8 @@ reconciliation call reads the Advise-owned realization by the already-persisted
 Idea `conversion_intent_id`, under the exact tenant, legal-entity, and portfolio
 scope. Idea accepts the recovery only when candidate identity, conversion
 intent, evidence fingerprint, and owner scope all match.
+Conversion-intent creation accepts only URL-safe path-segment identities so every persisted
+identity remains addressable by Idea and owner reconciliation routes.
 
 The recovery read reconstructs the original version-one intake receipt, while
 later Advise events remain append-only owner history. Idea then commits its

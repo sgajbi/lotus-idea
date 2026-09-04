@@ -84,6 +84,19 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
             build_request()
 
 
+@pytest.mark.parametrize("identity", ["conversion/intent", "i" * 161])
+def test_conversion_intent_request_rejects_non_addressable_identity(identity: str) -> None:
+    with pytest.raises(ValidationError, match="conversionIntentId"):
+        ConversionIntentRequest.model_validate(
+            {
+                "conversionIntentId": identity,
+                "target": ConversionTarget.ADVISE_PROPOSAL,
+                "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
+                "requestedAtUtc": REQUESTED_AT,
+            }
+        )
+
+
 def test_feedback_request_requires_the_explicit_taxonomy_contract() -> None:
     with pytest.raises(ValidationError, match="taxonomyVersion"):
         FeedbackRequest.model_validate(

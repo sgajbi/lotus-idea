@@ -1404,6 +1404,8 @@ Downstream realization:
 4. `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE`; the canonical
    read-only lost-response recovery route is
    `/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization`,
+   and conversion-intent creation restricts identity to a URL-safe path segment so a committed
+   identity can never be accepted but unreachable through that owner route,
 5. local/test-only Advise fixture:
    `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,

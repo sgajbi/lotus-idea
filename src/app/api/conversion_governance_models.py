@@ -26,21 +26,20 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
+from app.domain.conversion_governance import CONVERSION_INTENT_ID_PATTERN
 from app.security.caller_context import CallerContext
 
 
 class ConversionIntentRequest(CamelModel):
-    conversion_intent_id: str = Field(..., alias="conversionIntentId")
+    conversion_intent_id: str = Field(
+        ...,
+        alias="conversionIntentId",
+        pattern=CONVERSION_INTENT_ID_PATTERN,
+        max_length=160,
+    )
     target: ConversionTarget
     reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
     requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
-
-    @field_validator("conversion_intent_id")
-    @classmethod
-    def _intent_id_must_not_be_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("conversionIntentId is required")
-        return value
 
     _reason_codes_must_not_be_empty = field_validator("reason_codes")(
         require_non_empty_reason_codes

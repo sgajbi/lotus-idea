@@ -198,6 +198,17 @@ def test_conversion_intent_requires_human_review_approved_ready_candidate() -> N
 
 
 def test_conversion_command_validates_idempotency_reason_and_time() -> None:
+    for invalid_identity in ("intent/invalid", "i" * 161):
+        with pytest.raises(ValueError, match="URL-safe path segment"):
+            ConversionIntentCommand(
+                conversion_intent_id=invalid_identity,
+                target=ConversionTarget.REPORT_EVIDENCE,
+                actor_subject="advisor-001",
+                idempotency_key="conversion-request-001",
+                reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
+                requested_at_utc=REQUESTED_AT,
+            )
+
     with pytest.raises(ValueError, match="idempotency_key is required"):
         ConversionIntentCommand(
             conversion_intent_id="intent-invalid",
