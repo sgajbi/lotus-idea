@@ -38,6 +38,9 @@ class HttpLotusAIWorkflowRuntime:
             transport=transport,
         )
 
+    def close(self) -> None:
+        self._client.close()
+
     def execute_workflow_pack(
         self,
         request: Mapping[str, object],

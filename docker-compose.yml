@@ -58,6 +58,7 @@ services:
       LOTUS_PERFORMANCE_BASE_URL: "${LOTUS_PERFORMANCE_BASE_URL:-http://host.docker.internal:8002}"
       LOTUS_ADVISE_BASE_URL: "${LOTUS_ADVISE_BASE_URL:-http://host.docker.internal:8000}"
       LOTUS_MANAGE_BASE_URL: "${LOTUS_MANAGE_BASE_URL:-http://host.docker.internal:8001}"
+      LOTUS_AI_BASE_URL: "${LOTUS_AI_BASE_URL:-http://host.docker.internal:8140}"
       LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL: "${LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:-http://host.docker.internal:8000}"
       LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH:-/advisory/proposals/idea-intake}"
       LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE: "${LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE:-/advisory/proposals/idea-intake/{intake_id}/realization}"

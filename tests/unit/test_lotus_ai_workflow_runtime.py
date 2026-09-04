@@ -89,3 +89,15 @@ def test_rejects_unsuccessful_or_malformed_runtime_response(response: httpx.Resp
 
     with pytest.raises(InvalidLotusAIWorkflowRuntimeResponse):
         runtime.execute_workflow_pack({}, caller_app="lotus-idea")
+
+
+def test_close_releases_the_underlying_http_client() -> None:
+    runtime = HttpLotusAIWorkflowRuntime(
+        base_url="http://lotus-ai.internal:8140",
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json={})),
+    )
+
+    runtime.close()
+
+    with pytest.raises(RuntimeError):
+        runtime.execute_workflow_pack({"pack_id": "idea_explanation.pack"}, caller_app="lotus-idea")
