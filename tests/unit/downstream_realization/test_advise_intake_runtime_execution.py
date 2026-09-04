@@ -8,6 +8,7 @@ import pytest
 
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
+    REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
     advise_intake_runtime_execution_is_valid,
     build_advise_intake_runtime_execution_payload,
     load_advise_intake_runtime_execution_from_env,
@@ -28,9 +29,7 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
 
     assert advise_intake_runtime_execution_is_valid(payload)
     assert payload["aggregateBlockersSatisfied"] == ("advise_live_contract_proof_missing",)
-    assert payload["remainingCertificationBlockers"] == (
-        "suitability_policy_authority_remains_lotus_advise",
-    )
+    assert payload["remainingCertificationBlockers"] == REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS
     assert nested_payload_section(payload, "nonProofClaims")["supportedFeaturePromoted"] is False
 
 
@@ -43,10 +42,53 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         advise_root=None,
         runtime_mode="local_asgi_testclient",
         receipt_evidence=receipt_evidence_for_builder(baseline),
+        submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
+        owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
     )
 
     assert payload["runtimeChecks"]["acceptedReceiptObserved"] is True
     assert payload["runtimeChecks"]["tenantIsolationObserved"] is True
+    assert payload["runtimeChecks"]["concurrentDuplicateConvergenceObserved"] is True
+    assert payload["runtimeChecks"]["ownerRealizationReadbackObserved"] is True
+
+
+@pytest.mark.parametrize(
+    ("receipt_name", "field", "replacement"),
+    (
+        ("concurrentAccepted", "ownerIdentityDigest", "sha256:" + "1" * 64),
+        ("concurrentReplay", "scopeDigest", "sha256:" + "2" * 64),
+        ("acceptedReplay", "ownerIdentityDigest", "sha256:" + "3" * 64),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_divergent_owner_identity(
+    receipt_name: str,
+    field: str,
+    replacement: str,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    set_receipt_evidence_value(payload, receipt_name, field, replacement)
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
+        ("ownerIdentityDigest", "sha256:" + "4" * 64),
+        ("scopeDigest", "sha256:" + "5" * 64),
+        ("sourceIntentDigest", "sha256:" + "6" * 64),
+        ("currentSourceEventVersion", 2),
+        ("currentStatus", "REJECTED"),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_owner_readback_mismatch(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ownerRealizationEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
 
 
 def test_advise_intake_runtime_execution_builder_requires_aware_generation_time() -> None:
@@ -59,6 +101,8 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             advise_root=None,
             runtime_mode="local_asgi_testclient",
             receipt_evidence=receipt_evidence_for_builder(baseline),
+            submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
+            owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
         )
     except ValueError as exc:
         assert "timezone-aware" in str(exc)
@@ -119,6 +163,10 @@ def test_advise_intake_runtime_execution_rejects_runtime_metadata_drift() -> Non
 def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift() -> None:
     payload = deepcopy(valid_advise_intake_runtime_execution())
     payload["unexpectedClaim"] = True
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["submittedIntentEvidence"]["scopeDigest"] = "not-a-digest"  # type: ignore[index]
     assert not advise_intake_runtime_execution_is_valid(payload)
 
     payload = deepcopy(valid_advise_intake_runtime_execution())

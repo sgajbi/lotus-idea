@@ -25,6 +25,17 @@ def http_post(
         return {"statusCode": exc.code, "body": body}
 
 
+def http_get(endpoint: str, headers: Mapping[str, str]) -> dict[str, Any]:
+    req = request.Request(endpoint, headers=dict(headers), method="GET")
+    try:
+        with request.urlopen(req, timeout=15) as response:
+            body = json.loads(response.read().decode())
+            return {"statusCode": response.status, "body": body}
+    except error.HTTPError as exc:
+        body = json.loads(exc.read().decode())
+        return {"statusCode": exc.code, "body": body}
+
+
 def body_get(body: object, key: str) -> object:
     if isinstance(body, Mapping):
         return body.get(key)
@@ -54,6 +65,7 @@ def idea_conversion_payload(
         "idea_candidate_id": "idea_candidate_001",
         "conversion_intent_id": conversion_intent_id,
         "intent_type": intent_type,
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "source_refs": [
             {
                 "source_system": "lotus-idea",
