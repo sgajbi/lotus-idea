@@ -33,8 +33,9 @@ class RecordingRuntime:
     def __init__(self, response: Mapping[str, object]) -> None:
         self.response = response
         self.requests: list[tuple[Mapping[str, object], str]] = []
+        self.closed = False
 
-    def execute_workflow_pack(
+    async def execute_workflow_pack(
         self,
         request: Mapping[str, object],
         *,
@@ -42,6 +43,12 @@ class RecordingRuntime:
     ) -> Mapping[str, object]:
         self.requests.append((request, caller_app))
         return self.response
+
+    async def get_run_attestation(self, run_id: str) -> Mapping[str, object]:
+        raise AssertionError(f"unexpected attestation request for {run_id}")
+
+    async def close(self) -> None:
+        self.closed = True
 
 
 def test_builds_source_safe_proof_from_actual_execution_receipt() -> None:
@@ -71,14 +78,15 @@ def test_builds_source_safe_proof_from_actual_execution_receipt() -> None:
         assert forbidden not in serialized
 
 
-def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
+@pytest.mark.asyncio
+async def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
     response = lotus_ai_runtime_execution_response()
     audit = cast(dict[str, object], cast(dict[str, object], response["execution"])["audit"])
     audit["model_id"] = "deterministic-proof-model"
     audit["model_version"] = "v1"
     runtime = RecordingRuntime(response)
 
-    proof = execute_ai_workflow_pack_runtime_proof(
+    proof = await execute_ai_workflow_pack_runtime_proof(
         runtime=runtime,
         generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
     )
@@ -98,8 +106,9 @@ def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
     assert "output_preview" not in receipt
 
 
-def test_actual_runtime_proof_generation_time_is_not_before_receipt_completion() -> None:
-    proof = execute_ai_workflow_pack_runtime_proof(
+@pytest.mark.asyncio
+async def test_actual_runtime_proof_generation_time_is_not_before_receipt_completion() -> None:
+    proof = await execute_ai_workflow_pack_runtime_proof(
         runtime=RecordingRuntime(lotus_ai_runtime_execution_response()),
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
     )
@@ -167,7 +176,10 @@ def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
         (("workflow_pack_run", "runtime_state"), "FAILED"),
     ],
 )
-def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: object) -> None:
+@pytest.mark.asyncio
+async def test_rejects_tampered_runtime_response(
+    path: tuple[str, ...], bad_value: object
+) -> None:
     response = lotus_ai_runtime_execution_response()
     target: dict[str, object] = response
     for key in path[:-1]:
@@ -175,7 +187,7 @@ def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: obj
     target[path[-1]] = bad_value
 
     with pytest.raises(InvalidAIRuntimeExecutionReceipt):
-        execute_ai_workflow_pack_runtime_proof(
+        await execute_ai_workflow_pack_runtime_proof(
             runtime=RecordingRuntime(response),
             generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
         )
@@ -190,7 +202,8 @@ def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: obj
         (("workflow_pack_run", "review_required"), "true"),
     ],
 )
-def test_rejects_malformed_runtime_response_field_types(
+@pytest.mark.asyncio
+async def test_rejects_malformed_runtime_response_field_types(
     path: tuple[str, ...],
     bad_value: object,
 ) -> None:
@@ -201,7 +214,7 @@ def test_rejects_malformed_runtime_response_field_types(
     target[path[-1]] = bad_value
 
     with pytest.raises(InvalidAIRuntimeExecutionReceipt):
-        execute_ai_workflow_pack_runtime_proof(
+        await execute_ai_workflow_pack_runtime_proof(
             runtime=RecordingRuntime(response),
             generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
         )
@@ -333,6 +346,7 @@ def test_runtime_proof_cli_invokes_configured_runtime_and_writes_proof(
         json.loads(output_path.read_text(encoding="utf-8"))
     )
     assert len(runtime.requests) == 1
+    assert runtime.closed is True
 
 
 @pytest.mark.parametrize("generated_at_utc", ["not-a-timestamp", "2026-07-14T00:00:00"])
