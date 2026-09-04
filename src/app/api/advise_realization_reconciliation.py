@@ -34,13 +34,14 @@ from app.application.advise_realization_reconciliation import (
     reconcile_advise_realization_history,
 )
 from app.domain import AdviseProposalRealizationHistory
-from app.observability import IdeaOperation, OperationOutcome
-from app.api.operation_events import emit_api_foundation_operation_event
+from app.api.realization_reconciliation_common import (
+    emit_reconciliation_event,
+    request_context_id,
+    require_reconciliation_caller,
+)
+from app.observability import OperationOutcome
 from app.ports.downstream_realization import AdviseProposalRealizationReader
-from app.security.caller_context import CallerContext, PermissionDeniedError
-
-
-_RECONCILE_CAPABILITY = "idea.downstream-realization.reconcile"
+from app.security.caller_context import PermissionDeniedError
 
 
 class AdviseRealizationOutcomeResponse(CamelModel):
@@ -128,9 +129,9 @@ async def post_advise_realization_reconciliation(
     ),
 ) -> AdviseRealizationReconciliationResponse | JSONResponse:
     try:
-        _require_reconciliation_caller(caller)
+        require_reconciliation_caller(caller)
     except PermissionDeniedError:
-        _emit(OperationOutcome.PERMISSION_DENIED, "permission_denied")
+        emit_reconciliation_event(OperationOutcome.PERMISSION_DENIED, "permission_denied")
         return problem_details_response(
             status_code=status.HTTP_403_FORBIDDEN,
             code="permission_denied",
@@ -154,14 +155,14 @@ async def post_advise_realization_reconciliation(
                 support_reference=support_reference,
                 actor_subject=caller.subject,
                 access_scope_filter=access_scope_filter,
-                correlation_id=_request_context_id(request, "correlation_id"),
-                trace_id=_request_context_id(request, "trace_id"),
+                correlation_id=request_context_id(request, "correlation_id"),
+                trace_id=request_context_id(request, "trace_id"),
             ),
             repository=repository,
             advise_reader=advise_reader,
         )
     except AdviseRealizationAccessScopeDenied:
-        _emit(OperationOutcome.PERMISSION_DENIED, "permission_denied")
+        emit_reconciliation_event(OperationOutcome.PERMISSION_DENIED, "permission_denied")
         return problem_details_response(
             status_code=status.HTTP_403_FORBIDDEN,
             code="permission_denied",
@@ -180,7 +181,7 @@ def _response(
     durable_storage_backed: bool,
 ) -> AdviseRealizationReconciliationResponse | JSONResponse:
     if result.status is AdviseRealizationReconciliationStatus.NOT_FOUND:
-        _emit(OperationOutcome.NOT_FOUND, "downstream_submission_not_found")
+        emit_reconciliation_event(OperationOutcome.NOT_FOUND, "downstream_submission_not_found")
         return problem_details_response(
             status_code=status.HTTP_404_NOT_FOUND,
             code="downstream_submission_not_found",
@@ -191,7 +192,7 @@ def _response(
         AdviseRealizationReconciliationStatus.NOT_ELIGIBLE,
         AdviseRealizationReconciliationStatus.CONFLICT,
     }:
-        _emit(OperationOutcome.CONFLICT, result.blocker)
+        emit_reconciliation_event(OperationOutcome.CONFLICT, result.blocker)
         return problem_details_response(
             status_code=status.HTTP_409_CONFLICT,
             code=result.blocker or "advise_realization_reconciliation_conflict",
@@ -199,7 +200,7 @@ def _response(
             detail="The owner history failed eligibility or evidence validation.",
         )
     if result.status is AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE:
-        _emit(OperationOutcome.BLOCKED, result.blocker)
+        emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
         return problem_details_response(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             code=result.blocker or "advise_realization_owner_unavailable",
@@ -207,7 +208,7 @@ def _response(
             detail="The authoritative Advise history could not be read; no evidence changed.",
         )
     assert result.history is not None
-    _emit(
+    emit_reconciliation_event(
         OperationOutcome.REPLAYED
         if result.status is AdviseRealizationReconciliationStatus.REPLAYED
         else OperationOutcome.ACCEPTED,
@@ -222,27 +223,6 @@ def _response(
         grantsSuitabilityAuthority=result.grants_suitability_authority,
         grantsClientPublicationAuthority=result.grants_client_publication_authority,
         supportedFeaturePromoted=False,
-    )
-
-
-def _require_reconciliation_caller(caller: CallerContext) -> None:
-    if not caller.has_capability(_RECONCILE_CAPABILITY):
-        raise PermissionDeniedError(_RECONCILE_CAPABILITY)
-    scope = caller.entitlement_scope
-    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
-        raise PermissionDeniedError("idea.downstream-realization.entitlement_scope")
-
-
-def _request_context_id(request: Request, attribute: str) -> str | None:
-    value = getattr(request.state, attribute, None)
-    return str(value) if value else None
-
-
-def _emit(outcome: OperationOutcome, error_code: str | None) -> None:
-    emit_api_foundation_operation_event(
-        IdeaOperation.DOWNSTREAM_RECONCILIATION_RESOLVE,
-        outcome,
-        error_code,
     )
 
 

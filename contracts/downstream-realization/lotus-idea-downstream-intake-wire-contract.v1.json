@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.7.0",
+  "contract_version": "1.8.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -96,6 +96,7 @@
         "idea_candidate_id",
         "conversion_intent_id",
         "intent_type",
+        "portfolio_id",
         "source_refs"
       ],
       "receipt_outcomes": [
@@ -112,8 +113,47 @@
         "X-Legal-Entity-Code",
         "X-Service-Identity",
         "X-Capabilities",
-        "X-Principal-Status"
-      ]
+        "X-Principal-Status",
+        "X-Portfolio-Ids"
+      ],
+      "owner_history_route": "GET /api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes",
+      "history_principal_capability": "manage.idea_action_intake.read",
+      "history_response_fields": [
+        "contract_version",
+        "source_authority",
+        "intake_id",
+        "management_action_id",
+        "portfolio_id",
+        "idea_candidate_id",
+        "conversion_intent_id",
+        "status",
+        "source_event_version",
+        "events",
+        "rebalance_execution_proven",
+        "order_execution_proven",
+        "client_publication_proven"
+      ],
+      "history_required_server_headers": [
+        "X-Actor-Id",
+        "X-Role",
+        "X-Tenant-Id",
+        "X-Legal-Entity-Code",
+        "X-Service-Identity",
+        "X-Capabilities",
+        "X-Principal-Status",
+        "X-Portfolio-Ids"
+      ],
+      "scope_boundary": {
+        "portfolio_source": "governed_candidate_access_scope",
+        "complete_caller_entitlement_required": true,
+        "idempotency_scope_fields": [
+          "tenant_id",
+          "book_id",
+          "portfolio_id",
+          "client_id"
+        ],
+        "client_id_exposed": false
+      }
     },
     {
       "conversion_target": "report_evidence",
@@ -162,7 +202,9 @@
       "local_test_service_context": {
         "tenant_id": "tenant-sg",
         "region": "APAC",
-        "output_formats": ["json"]
+        "output_formats": [
+          "json"
+        ]
       },
       "boundary": "REPORT_JOB_MATERIALIZATION",
       "required_server_headers": [

@@ -48,10 +48,12 @@
         "clean_target_instance_required": true,
         "source_and_target_must_differ": true,
         "post_migration_restore_required": true,
-        "allowed_unvalidated_constraints": ["ck_idea_candidate_record_state_policy_v1"],
+        "allowed_unvalidated_constraints": [
+            "ck_idea_candidate_record_state_policy_v1"
+        ],
         "required_non_empty_tables": [
-            "idea_ai_explanation_lineage",
             "idea_advise_realization_history",
+            "idea_ai_explanation_lineage",
             "idea_audit_event",
             "idea_candidate_presentation_receipt",
             "idea_candidate_record",
@@ -64,14 +66,15 @@
             "idea_feedback_event",
             "idea_idempotency_record",
             "idea_lifecycle_history",
+            "idea_manage_realization_history",
             "idea_outbox_event",
             "idea_outbox_recovery_audit",
             "idea_report_evidence_pack_request",
             "idea_review_decision"
         ],
         "owned_tables": [
-            "idea_ai_explanation_lineage",
             "idea_advise_realization_history",
+            "idea_ai_explanation_lineage",
             "idea_audit_event",
             "idea_candidate_presentation_receipt",
             "idea_candidate_record",
@@ -86,6 +89,7 @@
             "idea_feedback_event",
             "idea_idempotency_record",
             "idea_lifecycle_history",
+            "idea_manage_realization_history",
             "idea_outbox_event",
             "idea_outbox_recovery_audit",
             "idea_report_evidence_pack_request",

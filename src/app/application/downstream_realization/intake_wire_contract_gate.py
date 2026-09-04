@@ -15,7 +15,9 @@ _REQUIRED_INTAKE_REQUEST_FIELDS = {
     "intent_type",
     "source_refs",
 }
-_REQUIRED_ADVISE_INTAKE_REQUEST_FIELDS = _REQUIRED_INTAKE_REQUEST_FIELDS | {"portfolio_id"}
+# Both shipped conversion intakes (advise#608, manage#660) require the
+# authoritative portfolio scope in the request body.
+_REQUIRED_CONVERSION_INTAKE_REQUEST_FIELDS = _REQUIRED_INTAKE_REQUEST_FIELDS | {"portfolio_id"}
 _REQUIRED_REPORT_INTAKE_PAYLOAD_FIELDS = {
     "report_evidence_pack_id",
     "conversion_intent_id",
@@ -49,6 +51,21 @@ _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
     "supportability_status",
 }
 _INTAKE_RECEIPT_OUTCOMES = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+_MANAGE_HISTORY_RESPONSE_FIELDS = {
+    "contract_version",
+    "source_authority",
+    "intake_id",
+    "management_action_id",
+    "portfolio_id",
+    "idea_candidate_id",
+    "conversion_intent_id",
+    "status",
+    "source_event_version",
+    "events",
+    "rebalance_execution_proven",
+    "order_execution_proven",
+    "client_publication_proven",
+}
 _ADVISE_HISTORY_RESPONSE_FIELDS = {
     "realization_id",
     "intake_id",
@@ -96,7 +113,7 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         | {"X-Portfolio-Id", "X-Authorized-Portfolio-Id"},
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",
         "required_server_headers": _TRUSTED_SERVICE_HEADERS,
-        "request_fields": _REQUIRED_ADVISE_INTAKE_REQUEST_FIELDS,
+        "request_fields": _REQUIRED_CONVERSION_INTAKE_REQUEST_FIELDS,
         "scope_boundary": {
             "portfolio_source": "governed_candidate_access_scope",
             "complete_caller_entitlement_required": True,
@@ -115,8 +132,24 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "intent_type": "REVIEW_FOR_REBALANCE",
         "receipt_outcomes": _INTAKE_RECEIPT_OUTCOMES,
         "principal_capability": "manage.idea_action_intake.accept",
+        "owner_history_route": ("GET /api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"),
+        "history_principal_capability": "manage.idea_action_intake.read",
+        "history_response_fields": _MANAGE_HISTORY_RESPONSE_FIELDS,
+        "history_required_server_headers": _TRUSTED_SERVICE_HEADERS | {"X-Portfolio-Ids"},
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",
-        "required_server_headers": _TRUSTED_SERVICE_HEADERS,
+        "required_server_headers": _TRUSTED_SERVICE_HEADERS | {"X-Portfolio-Ids"},
+        "request_fields": _REQUIRED_CONVERSION_INTAKE_REQUEST_FIELDS,
+        "scope_boundary": {
+            "portfolio_source": "governed_candidate_access_scope",
+            "complete_caller_entitlement_required": True,
+            "idempotency_scope_fields": [
+                "tenant_id",
+                "book_id",
+                "portfolio_id",
+                "client_id",
+            ],
+            "client_id_exposed": False,
+        },
     },
     "report_evidence": {
         "owner_repository": "lotus-report",
@@ -187,8 +220,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.7.0":
-        errors.append("downstream intake wire contract must be version 1.7.0")
+    if payload.get("contract_version") != "1.8.0":
+        errors.append("downstream intake wire contract must be version 1.8.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -281,7 +314,7 @@ def _validate_advise_manage_intake_consumer(
         and consumer.get("scope_boundary") != expected["scope_boundary"]
     ):
         errors.append(f"{target} intake wire contract scope_boundary drifted")
-    if target == "advise_proposal":
+    if "owner_history_route" in expected:
         for field in ("owner_history_route", "history_principal_capability"):
             if consumer.get(field) != expected[field]:
                 errors.append(f"{target} intake wire contract {field} drifted")

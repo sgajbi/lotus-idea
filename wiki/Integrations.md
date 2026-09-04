@@ -293,7 +293,10 @@ adapter foundations when the corresponding adapter configuration is present:
 2. `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
    for Report evidence-pack requests,
 3. `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation`
-   to reconcile an Advise-owned realization history from its persisted receipt.
+   to reconcile an Advise-owned realization history from its persisted receipt,
+4. `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation`
+   to reconcile the Manage-owned action outcome history
+   (`lotus-manage.idea-action-outcome-history.v1`) from its persisted receipt.
 
 Those submission routes require `idea.downstream-realization.submit` and
 `Idempotency-Key`, precheck a local idempotency ledger, propagate

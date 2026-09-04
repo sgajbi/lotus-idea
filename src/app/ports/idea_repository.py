@@ -25,6 +25,8 @@ from app.domain import (
     DownstreamSubmissionOwnerReceipt,
     AdviseProposalRealizationHistory,
     AdviseRealizationHistoryMutationResult,
+    ManageActionRealizationHistory,
+    ManageRealizationHistoryMutationResult,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
@@ -525,6 +527,18 @@ class DownstreamSubmissionRepository(Protocol):
         support_reference: str,
         history: AdviseProposalRealizationHistory,
     ) -> AdviseRealizationHistoryMutationResult: ...
+
+    def manage_realization_history_by_support_reference(
+        self,
+        support_reference: str,
+    ) -> ManageActionRealizationHistory | None: ...
+
+    def persist_manage_realization_history(
+        self,
+        *,
+        support_reference: str,
+        history: ManageActionRealizationHistory,
+    ) -> ManageRealizationHistoryMutationResult: ...
 
 
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):

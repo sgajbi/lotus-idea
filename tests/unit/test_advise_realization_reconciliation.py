@@ -10,10 +10,10 @@ import pytest
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from app.api.advise_realization_reconciliation import (
-    _request_context_id,
-    _require_reconciliation_caller,
-    _response,
+from app.api.advise_realization_reconciliation import _response
+from app.api.realization_reconciliation_common import (
+    request_context_id as _request_context_id,
+    require_reconciliation_caller as _require_reconciliation_caller,
 )
 
 from app.application.advise_realization_reconciliation import (

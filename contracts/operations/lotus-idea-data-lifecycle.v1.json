@@ -107,7 +107,10 @@
       "table": "idea_candidate_record",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_client_data",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "opportunity_candidate_and_deterministic_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -118,7 +121,10 @@
       "table": "idea_candidate_presentation_receipt",
       "field_classification_profile_ref": "regulated_audit:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence", "confidential_operational_metadata"],
+      "data_classes": [
+        "restricted_advisory_evidence",
+        "confidential_operational_metadata"
+      ],
       "purpose": "immutable_bounded_advisor_queue_presentation_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -129,7 +135,10 @@
       "table": "idea_candidate_version_history",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_client_data",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "immutable_economic_candidate_version_and_evidence_lineage",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -140,7 +149,9 @@
       "table": "idea_idempotency_record",
       "field_classification_profile_ref": "operational_delivery:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["confidential_operational_metadata"],
+      "data_classes": [
+        "confidential_operational_metadata"
+      ],
       "purpose": "duplicate_mutation_prevention",
       "policy_ref": "lotus-idea:operational-delivery:four-hundred-day:v1",
       "hold_behavior": "freeze_expiry_and_purge",
@@ -151,7 +162,10 @@
       "table": "idea_lifecycle_history",
       "field_classification_profile_ref": "regulated_audit:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "data_classes": [
+        "restricted_advisory_evidence",
+        "restricted_audit_identity"
+      ],
       "purpose": "immutable_candidate_lifecycle_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -162,7 +176,10 @@
       "table": "idea_audit_event",
       "field_classification_profile_ref": "regulated_audit:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_security_audit", "restricted_audit_identity"],
+      "data_classes": [
+        "restricted_security_audit",
+        "restricted_audit_identity"
+      ],
       "purpose": "immutable_decision_and_operator_audit",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -173,7 +190,10 @@
       "table": "idea_outbox_event",
       "field_classification_profile_ref": "operational_delivery:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["confidential_operational_metadata", "restricted_advisory_evidence"],
+      "data_classes": [
+        "confidential_operational_metadata",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "durable_event_publication",
       "policy_ref": "lotus-idea:operational-delivery:four-hundred-day:v1",
       "hold_behavior": "freeze_expiry_and_purge",
@@ -184,7 +204,10 @@
       "table": "idea_review_decision",
       "field_classification_profile_ref": "regulated_audit:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "data_classes": [
+        "restricted_advisory_evidence",
+        "restricted_audit_identity"
+      ],
       "purpose": "human_review_decision_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -195,7 +218,10 @@
       "table": "idea_feedback_event",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_client_data",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "advisor_feedback_and_quality_learning",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -206,7 +232,10 @@
       "table": "idea_conversion_intent",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "data_classes": [
+        "restricted_advisory_evidence",
+        "restricted_audit_identity"
+      ],
       "purpose": "non_executing_downstream_conversion_intent",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -217,7 +246,9 @@
       "table": "idea_conversion_outcome",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_advisory_evidence"
+      ],
       "purpose": "source_owned_downstream_outcome_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -228,7 +259,10 @@
       "table": "idea_report_evidence_pack_request",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_client_data",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "report_evidence_pack_request_and_lineage",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -239,7 +273,10 @@
       "table": "idea_downstream_submission",
       "field_classification_profile_ref": "operational_delivery:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["confidential_operational_metadata", "restricted_advisory_evidence"],
+      "data_classes": [
+        "confidential_operational_metadata",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "claim_before_call_delivery_and_reconciliation_fence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -250,8 +287,25 @@
       "table": "idea_advise_realization_history",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence", "confidential_operational_metadata"],
+      "data_classes": [
+        "restricted_advisory_evidence",
+        "confidential_operational_metadata"
+      ],
       "purpose": "advise_owned_realization_outcome_history_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_owner_outcome_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_manage_realization_history",
+      "field_classification_profile_ref": "regulated_payload:v1",
+      "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
+      "data_classes": [
+        "restricted_management_review_evidence",
+        "confidential_operational_metadata"
+      ],
+      "purpose": "manage_owned_realization_outcome_history_evidence",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
       "erasure_policy": "redact_payload_preserve_owner_outcome_tombstone",
@@ -261,7 +315,10 @@
       "table": "idea_ai_explanation_lineage",
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_ai_governance", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_ai_governance",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "governed_ai_output_integrity_and_evidence_lineage",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -272,7 +329,10 @@
       "table": "idea_outbox_recovery_audit",
       "field_classification_profile_ref": "regulated_audit:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_security_audit", "confidential_operational_metadata"],
+      "data_classes": [
+        "restricted_security_audit",
+        "confidential_operational_metadata"
+      ],
       "purpose": "operator_authorized_dead_letter_recovery_audit",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -283,7 +343,10 @@
       "table": "idea_data_lifecycle_control",
       "field_classification_profile_ref": "privacy_control:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_privacy_control", "confidential_operational_metadata"],
+      "data_classes": [
+        "restricted_privacy_control",
+        "confidential_operational_metadata"
+      ],
       "purpose": "tenant_scoped_retention_hold_erasure_and_purge_state",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "authoritative_local_hold_projection",
@@ -294,7 +357,10 @@
       "table": "idea_data_lifecycle_operation",
       "field_classification_profile_ref": "privacy_control:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_security_audit", "restricted_privacy_control"],
+      "data_classes": [
+        "restricted_security_audit",
+        "restricted_privacy_control"
+      ],
       "purpose": "immutable_authorized_lifecycle_operation_audit",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
@@ -305,7 +371,10 @@
       "table": "idea_candidate_state_quarantine",
       "field_classification_profile_ref": "quarantine:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_client_data",
+        "restricted_advisory_evidence"
+      ],
       "purpose": "legacy_candidate_state_reconciliation",
       "policy_ref": "lotus-idea:quarantine:ninety-day:v1",
       "hold_behavior": "freeze_expiry_and_purge",
@@ -316,7 +385,9 @@
       "table": "idea_conversion_outcome_quarantine",
       "field_classification_profile_ref": "quarantine:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
-      "data_classes": ["restricted_advisory_evidence"],
+      "data_classes": [
+        "restricted_advisory_evidence"
+      ],
       "purpose": "legacy_conversion_outcome_reconciliation",
       "policy_ref": "lotus-idea:quarantine:ninety-day:v1",
       "hold_behavior": "freeze_expiry_and_purge",
@@ -349,7 +420,11 @@
     "key_discovery_path": "/.well-known/lotus-lifecycle-authority-keys",
     "signature_algorithm": "EdDSA",
     "signature_curve": "Ed25519",
-    "required_runtime_profiles": ["demo", "staging", "production"],
+    "required_runtime_profiles": [
+      "demo",
+      "staging",
+      "production"
+    ],
     "bound_claims": [
       "tenant_id",
       "candidate_id",
@@ -359,9 +434,18 @@
       "change_reference",
       "validity_window"
     ],
-    "legal_and_records_actions": ["apply_hold", "release_hold"],
-    "privacy_actions": ["erase", "purge"],
-    "accepted_key_statuses": ["active", "rotated"],
+    "legal_and_records_actions": [
+      "apply_hold",
+      "release_hold"
+    ],
+    "privacy_actions": [
+      "erase",
+      "purge"
+    ],
+    "accepted_key_statuses": [
+      "active",
+      "rotated"
+    ],
     "revoked_or_unknown_keys_fail_closed": true,
     "dry_run_reserves_decision": false,
     "applied_decision_and_nonce_single_use": true,

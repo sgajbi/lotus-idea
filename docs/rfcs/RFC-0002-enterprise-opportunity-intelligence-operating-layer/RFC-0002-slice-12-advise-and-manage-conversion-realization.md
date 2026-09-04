@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, bounded owner runtime proof consumption, and an implementation-backed Advise receipt/history reconciliation consumer; suitability, Manage action-register persistence/rebalance execution, Report/Render/Archive materialization, production identity, cross-repository product realization, and supported product proof remain blocked
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, bounded owner runtime proof consumption, and implementation-backed Advise and Manage receipt/history reconciliation consumers; suitability, rebalance execution, Report/Render/Archive materialization, production identity, cross-repository product realization, and supported product proof remain blocked
 
 ## Outcome
 
@@ -281,6 +281,28 @@ Implemented in this slice:
     providers accept only exact replay or append-only extension; migration 022
     persists receipts and histories. Transport success is never interpreted as
     proposal, suitability, execution, or publication success.
+36. The Manage realization consumer mirrors the certified Advise consumer
+    against the shipped manage#660 owner contract
+    (`lotus-manage.idea-action-outcome-history.v1`). The intake envelope now
+    carries the required `portfolio_id`, the trusted principal carries its
+    `X-Portfolio-Ids` entitlement, and the ACCEPTED receipt binds the owner
+    identity (intake id, durable `management_action_id`, source event
+    version, and the owner's request fingerprint) instead of inferring
+    acceptance from HTTP 202; a REJECTED intake carries the owner reason and,
+    honestly, no receipt, because the owner creates no durable action. The
+    typed history boundary models the owner machine verbatim - review status
+    is NOT absorbing (REQUEST_CHANGES reopens APPROVED and REJECTED), so
+    monotonicity is enforced on the append-only contiguous event versions,
+    with the owner's exact transition table, chain contiguity, chronology,
+    stable action identity, and refused
+    rebalance/order/client-publication authority claims.
+    `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation`
+    checks complete entitlement scope before owner I/O; in-memory and
+    PostgreSQL providers accept only exact replay or append-only extension
+    (migration 023), with disaster-recovery fixture, lifecycle
+    classification, and deployment-contract coverage. Transport success is
+    never interpreted as review, rebalance-execution, order, fill,
+    settlement, or client-publication success.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
@@ -313,8 +335,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. cross-repository exact-main/runtime acceptance of the Idea Advise history
-   consumer plus Manage failure/rejection/completion integration,
+5. cross-repository exact-main/runtime acceptance of the Idea Advise and
+   Manage history consumers under live canonical failure windows,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 

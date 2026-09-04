@@ -73,6 +73,7 @@ The submission routes are:
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation` | Read the exact Advise-owned realization history for a receipt-bearing Advise submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
+| `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation` | Read the exact Manage-owned action outcome history for a receipt-bearing Manage submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 
 These routes are API-certified internal foundations. They propagate
 correlation, trace, and idempotency headers to configured adapters after a

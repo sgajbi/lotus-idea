@@ -38,6 +38,8 @@ ADVISE_SERVICE_IDENTITY_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY"
 ADVISE_CAPABILITIES_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"
 MANAGE_BASE_URL_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL"
 MANAGE_SUBMIT_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH"
+MANAGE_HISTORY_PATH_TEMPLATE_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE"
+DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE = "/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"
 REPORT_BASE_URL_ENV = "LOTUS_IDEA_REPORT_REALIZATION_BASE_URL"
 REPORT_SUBMIT_PATH_ENV = "LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS"
@@ -206,6 +208,10 @@ def _manage_adapter_config(
         return DownstreamRealizationAdapterConfig(
             base_url=_required_env(base_url_env),
             submit_path=_required_env(submit_path_env),
+            history_path_template=os.getenv(
+                MANAGE_HISTORY_PATH_TEMPLATE_ENV,
+                DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
+            ).strip(),
             source_authority=source_authority,
             timeout_seconds=_timeout_seconds(),
             max_connections=_positive_int_env(
