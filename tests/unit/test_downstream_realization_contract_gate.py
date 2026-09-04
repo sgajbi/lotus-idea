@@ -197,6 +197,7 @@ def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
     payload["lifecycle_status"] = "active"
     payload["supportability_status"] = "supported"
     payload["non_authoritative"] = False
+    payload["conversion_intent_identity"] = {}
     payload["security_boundary"] = {
         "development_fixture_only": False,
         "client_supplied_principal_rejected": True,
@@ -212,6 +213,7 @@ def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
     assert "downstream intake wire contract must remain development_only" in errors
     assert "downstream intake wire contract must remain not_certified" in errors
     assert "downstream intake wire contract must remain non_authoritative" in errors
+    assert "downstream intake wire contract conversion_intent_identity drifted" in errors
     assert (
         "downstream intake wire contract security_boundary.development_fixture_only must be true"
     ) in errors
