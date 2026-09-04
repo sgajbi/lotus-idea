@@ -32,6 +32,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         generated_at_utc = _aware_datetime(args.generated_at_utc)
+    except ValueError as exc:
+        print(f"AI workflow-pack runtime execution proof error: {exc}", file=sys.stderr)
+        return 2
+    try:
         payload = asyncio.run(
             _execute_proof(
                 generated_at_utc=generated_at_utc,

@@ -348,23 +348,27 @@ def test_runtime_proof_cli_invokes_configured_runtime_and_writes_proof(
 
 
 @pytest.mark.parametrize("generated_at_utc", ["not-a-timestamp", "2026-07-14T00:00:00"])
+@pytest.mark.parametrize("allow_runtime_unavailable", [False, True])
 def test_runtime_proof_cli_rejects_invalid_generation_timestamp_without_writing_proof(
     generated_at_utc: str,
+    allow_runtime_unavailable: bool,
     tmp_path: Path,
 ) -> None:
     module = _load_generator_script()
     output_path = tmp_path / "runtime-proof.json"
 
-    result = module.main(
-        [
-            "--generated-at-utc",
-            generated_at_utc,
-            "--lotus-ai-base-url",
-            "http://lotus-ai.internal:8140",
-            "--output",
-            str(output_path),
-        ]
-    )
+    arguments = [
+        "--generated-at-utc",
+        generated_at_utc,
+        "--lotus-ai-base-url",
+        "http://lotus-ai.internal:8140",
+        "--output",
+        str(output_path),
+    ]
+    if allow_runtime_unavailable:
+        arguments.append("--allow-runtime-unavailable")
+
+    result = module.main(arguments)
 
     assert result == 2
     assert not output_path.exists()
