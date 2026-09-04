@@ -9,6 +9,8 @@ import pytest
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
     REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
+    _owner_realization_matches,
+    _same_owner_identity,
     advise_intake_runtime_execution_is_valid,
     build_advise_intake_runtime_execution_payload,
     load_advise_intake_runtime_execution_from_env,
@@ -156,6 +158,10 @@ def test_advise_intake_runtime_execution_rejects_runtime_metadata_drift() -> Non
     assert not advise_intake_runtime_execution_is_valid(payload)
 
     payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ownerReadRoute"] = "GET /untrusted/latest"
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_advise_intake_runtime_execution())
     set_nested_payload_value(payload, "runtimeChecks", "routeServingObserved", False)
     assert not advise_intake_runtime_execution_is_valid(payload)
 
@@ -172,6 +178,44 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     payload = deepcopy(valid_advise_intake_runtime_execution())
     set_receipt_evidence_value(payload, "accepted", "unexpectedField", True)
     assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("section", "replacement"),
+    (
+        ("ownerRealizationEvidence", None),
+        ("submittedIntentEvidence", None),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_non_object_causal_evidence(
+    section: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload[section] = replacement
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+def test_advise_intake_runtime_execution_rejects_invalid_owner_evidence_digest() -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ownerRealizationEvidence"]["sourceIntentDigest"] = "not-a-digest"  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+def test_owner_realization_comparison_rejects_non_object_accepted_receipt() -> None:
+    baseline = valid_advise_intake_runtime_execution()
+
+    assert not _owner_realization_matches(
+        nested_payload_section(baseline, "ownerRealizationEvidence"),
+        None,
+        nested_payload_section(baseline, "submittedIntentEvidence"),
+    )
+
+
+def test_owner_identity_comparison_rejects_non_object_evidence() -> None:
+    assert _same_owner_identity({}, None) is False
 
 
 def test_load_advise_intake_runtime_execution_from_env_returns_payload_and_relative_ref(
