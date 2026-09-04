@@ -181,6 +181,11 @@ def _advise_contract_payload() -> dict[str, object]:
         "downstream_execution_proven": False,
         "supported_feature_promoted": False,
         "target_route": ADVISE_PROPOSAL_ROUTE,
+        "lost_response_read_recovery_implemented": True,
+        "lost_response_recovery_route": (
+            "GET /advisory/proposals/idea-intake/by-conversion-intent/"
+            "{conversion_intent_id}/realization"
+        ),
         "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
         "principal_capability": "advisory.idea_proposal_intake.accept",
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",

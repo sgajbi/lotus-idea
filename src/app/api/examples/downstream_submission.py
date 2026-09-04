@@ -532,6 +532,7 @@ class _ExampleDownstreamSubmissionRepository(
         reason: str,
         change_reference: str,
         reconciled_at_utc: datetime,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
         raise AssertionError("example submissions do not invoke operator reconciliation")
 

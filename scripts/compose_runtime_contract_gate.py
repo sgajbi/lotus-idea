@@ -14,6 +14,10 @@ API_SERVICE = "lotus-idea"
 WORKER_SERVICE = "lotus-idea-source-ingestion-worker"
 ADVISE_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE"
 ADVISE_HISTORY_PATH = "/advisory/proposals/idea-intake/{intake_id}/realization"
+ADVISE_RECOVERY_HISTORY_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH_TEMPLATE"
+ADVISE_RECOVERY_HISTORY_PATH = (
+    "/advisory/proposals/idea-intake/by-conversion-intent/{conversion_intent_id}/realization"
+)
 ADVISE_CAPABILITIES_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"
 REQUIRED_ADVISE_CAPABILITIES = {
     "advisory.idea_proposal_intake.accept",
@@ -81,6 +85,11 @@ def validate_compose_model(
         errors.append(
             "normalized Compose lotus-idea service must configure the canonical Advise "
             "realization history path"
+        )
+    if api_environment.get(ADVISE_RECOVERY_HISTORY_PATH_ENV) != ADVISE_RECOVERY_HISTORY_PATH:
+        errors.append(
+            "normalized Compose lotus-idea service must configure the canonical Advise "
+            "lost-response recovery history path"
         )
     capabilities = {
         value.strip()
