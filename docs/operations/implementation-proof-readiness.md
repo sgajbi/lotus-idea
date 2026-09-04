@@ -1468,8 +1468,9 @@ passes it into aggregate readiness unless
 accepted, replayed, rejected, idempotency-conflict, authorization-denied, and
 tenant-scoped idempotency calls while storing only source-safe receipt posture
 and canonical receipt digests. It clears only
-`manage_live_contract_proof_missing`. It does not create action-register
-records, grant rebalance or execution authority, create orders, certify
+`manage_live_contract_proof_missing`. It proves the bounded owner intake can
+create a durable pending-review action record; it does not grant rebalance or
+execution authority, create orders, certify
 production identity, authorize client publication, prove Gateway/Workbench
 behavior, or promote support.
 

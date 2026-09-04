@@ -490,7 +490,7 @@ The internal downstream submission routes are available for callers with
 | Route | Current use | Boundary |
 | --- | --- | --- |
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters. | Submission posture only; no outcome recording, suitability, execution, Gateway/Workbench proof, or supported-feature promotion. |
-| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter. | Submission posture only; no package intake proof, render output, archive record, client-ready publication, or supported-feature promotion. |
+| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request and durably retain the validated Report-owned materialization receipt. | The receipt exposes exact report-job and current render/archive creation posture only; it grants no client publication, production support, or supported-feature promotion. |
 
 Missing adapter configuration returns `503 downstream_realization_not_configured`
 instead of producing a false support claim. The submission routes persist
@@ -532,13 +532,13 @@ identity from a browser or use this as evidence of IdP/session/token-claim
 integration, suitability, rebalance, or downstream acceptance. Track the future
 trusted identity integration through issue `#380`.
 
-Report intake uses the same server-only local/test fixture posture. It requires
+Report materialization intake uses the same server-only local/test fixture posture. It requires
 `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
 `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
 `LOTUS_IDEA_REPORT_REALIZATION_REGION`; the adapter forwards them only as
 `X-Actor-Id`, `X-Caller-Application`, `X-Tenant-Id`, and `X-Region` to the
-Report-owned `POST /reports/idea-evidence-packs` route. The adapter maps the
+Report-owned `POST /reports/idea-evidence-packs/materializations` route. The adapter maps the
 Idea envelope to the owner's strict snake-case contract. It translates the
 Idea-owned `lotus-report:idea-evidence-retention:v1` reference only at that
 boundary to the Report-owned `generated-report-standard` selector and keeps
@@ -546,9 +546,14 @@ the persisted Idea lifecycle reference unchanged. The synthetic Report fixture
 is limited to `tenant-sg` / `APAC`; other local/test tenant or region values
 fail closed. It is restricted to
 `local` and `test`, fails closed in demo/staging/production, does not trust
-browser identity, and does not prove Report acceptance, materialization,
-rendering, archive creation, client publication, or IdP/session/token-claim
-integration. Issue `#380` tracks the production identity path.
+browser identity. It accepts a receipt only when the owner restates the exact
+submitted package identity and idempotency key, preserves the governed source
+authority split, creates a Report job, and explicitly denies client-publication
+and supported-feature authority. The exact receipt survives replay and database
+restart. Treat missing, malformed, identity-drifting, or authority-expanding
+receipts as reconciliation-required; never infer Report completion, rendering,
+archive creation, or publication from transport success. Issue `#380` tracks
+the production identity path.
 
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`

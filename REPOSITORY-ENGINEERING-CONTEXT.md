@@ -1453,12 +1453,17 @@ rejected-before-work terminal postures. Reconciliation loads owner history only
 by that receipt, after complete entitlement authorization, and accepts only
 exact replay or append-only progression with stable scope, evidence, work, and
 proposal identity. This does not grant suitability, proposal lifecycle, or client-publication
-authority. The Manage envelope remains unchanged pending an owner-contract
-change. The Report
-adapter maps the Idea evidence envelope into
+authority. Manage submission likewise preserves the accepted action identity and
+reconciles the exact owner event history without inferring rebalance or order
+execution. The Report adapter maps the Idea evidence envelope into
 the Report-owned strict snake-case intake contract, performs only the governed
-retention-policy selector translation documented above, and does not grant
-Report, Render, Archive, or publication authority.
+retention-policy selector translation documented above, and validates the
+returned package identity, job identity, ownership boundary, creation posture,
+idempotency key, and remaining supportability blockers before persisting the
+exact owner receipt. A malformed or authority-expanding receipt becomes
+reconciliation-required. The receipt is owner evidence, not an Idea assertion
+of Report completion, Render or Archive authority, client publication, or
+supported-feature promotion.
 
 Outbox broker:
 
