@@ -208,13 +208,18 @@ Implemented in this slice:
     `scripts/downstream_realization/advise_intake_runtime_execution_gate.py`,
     and `make advise-intake-runtime-execution-proof-gate` now define a
     closed-field, source-safe `runtime_execution` proof for the Advise owner
-    route `POST /advisory/proposals/idea-intake`. The proof observes bounded
-    accepted, replayed, rejected, idempotency-conflict, authorization-denied,
-    and tenant-scoped idempotency receipts through local ASGI or configured
-    HTTP service execution, binds exact current Advise source-authority
-    digests, and stores only bounded receipt posture plus canonical receipt
-    digests. Aggregate and downstream readiness can use a valid current artifact
-    to clear only `advise_live_contract_proof_missing`.
+    intake and realization-read routes. The proof observes bounded accepted,
+    replayed, rejected, idempotency-conflict, authorization-denied, and
+    tenant-scoped idempotency receipts, executes an identical concurrent
+    duplicate pair, and reads the accepted intake's Advise-owned realization
+    history. It retains source-safe digests of trusted scope, source intent,
+    and owner identities plus the evidence fingerprint, status, version, and
+    bounded outcome history needed to prove causal identity. Exactly one
+    concurrent call must be accepted and
+    one replayed, both must converge on the same owner work, and the readback
+    must match the original candidate and conversion intent. Aggregate and
+    downstream readiness can still clear only
+    `advise_live_contract_proof_missing`.
 30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/unit/test_implementation_proof_readiness.py`,
@@ -336,7 +341,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
 5. cross-repository exact-main/runtime acceptance of the Idea Advise and
-   Manage history consumers under live canonical failure windows,
+   Manage history consumers under the remaining timeout, restart, owner
+   correction, and concurrent owner-version advancement failure windows,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
@@ -350,9 +356,10 @@ Valid Advise and Manage source contracts prove only that governed declarations
 exist at bound digests; they are not route-serving, acceptance, authorization,
 tenant-isolation, suitability, rebalance, execution, client-publication, or
 supported-feature proof. The Advise idea-intake runtime proof adds bounded
-route-serving and receipt-execution evidence only. It is not suitability,
-proposal creation, production identity, client-publication, Workbench/Gateway,
-or supported-feature proof.
+  route-serving, concurrent duplicate convergence, and exact owner-history
+  readback evidence only. It is not restart, timeout, owner-correction,
+  suitability, proposal creation, production identity, client-publication,
+  Workbench/Gateway, or supported-feature proof.
 
 ## Required Work
 

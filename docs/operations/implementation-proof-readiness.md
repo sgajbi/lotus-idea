@@ -1452,11 +1452,14 @@ passes it into aggregate readiness unless
 `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` is set. A valid artifact is
 `runtime_execution` evidence: it observes the Advise owner route serving
 accepted, replayed, rejected, idempotency-conflict, authorization-denied, and
-tenant-scoped idempotency calls while storing only source-safe receipt posture
-and canonical receipt digests. It clears only
+tenant-scoped idempotency calls. It additionally requires concurrent duplicate
+convergence and an exact Advise-owned realization-history readback bound to the
+accepted source-intent digest, trusted-scope digest, evidence fingerprint,
+owner-identity digest, status, and source-event version. It clears only
 `advise_live_contract_proof_missing`. It does not create proposals, grant
 suitability or policy authority, certify production identity, authorize client
-publication, prove Gateway/Workbench behavior, or promote support.
+publication, prove timeout/restart/correction handling, prove
+Gateway/Workbench behavior, or promote support.
 
 Manage action-intake runtime-execution evidence is captured by
 `scripts/downstream_realization/generate_manage_intake_runtime_execution.py`.
