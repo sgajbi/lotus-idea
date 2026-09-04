@@ -5,6 +5,7 @@ from typing import cast
 import pytest
 
 from app.infrastructure.downstream_realization import (
+    HttpAdviseProposalRealizationClient,
     HttpManageActionRealizationClient,
 )
 from app.runtime.downstream_realization_state import (
@@ -19,6 +20,7 @@ from app.runtime.downstream_realization_state import (
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
+    DEFAULT_ADVISE_RECOVERY_HISTORY_PATH_TEMPLATE,
     MANAGE_BASE_URL_ENV,
     MANAGE_ACTOR_ID_ENV,
     MANAGE_CAPABILITIES_ENV,
@@ -67,6 +69,11 @@ def test_conversion_realization_clients_are_built_from_environment(
     # route (manage#660) is the default, not opt-in configuration.
     manage_client = cast(HttpManageActionRealizationClient, clients.manage_client)
     assert manage_client._config.history_path_template == DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE
+    advise_client = cast(HttpAdviseProposalRealizationClient, clients.advise_client)
+    assert (
+        advise_client._config.recovery_history_path_template
+        == DEFAULT_ADVISE_RECOVERY_HISTORY_PATH_TEMPLATE
+    )
 
 
 def test_report_realization_client_is_built_from_environment(

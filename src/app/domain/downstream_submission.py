@@ -372,18 +372,25 @@ def reconcile_downstream_submission(
     reason: str,
     change_reference: str,
     reconciled_at_utc: datetime,
+    owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamSubmissionMutationResult:
     _require_text(actor_subject, "actor_subject")
     _require_text(reason, "reason")
     _require_text(change_reference, "change_reference")
     _require_aware_utc(reconciled_at_utc, "reconciled_at_utc")
     posture = DownstreamSubmissionPosture(resolution.value)
+    if owner_receipt is not None:
+        if resolution is DownstreamSubmissionResolution.QUARANTINED:
+            raise ValueError("quarantined reconciliation forbids an owner receipt")
+        if owner_receipt.owner_authority is not record.source_authority:
+            raise ValueError("owner_receipt authority must match source_authority")
     last_audit = record.audit_history[-1]
     if last_audit.change_reference == change_reference:
         if (
             last_audit.current_posture is posture
             and last_audit.actor_subject == actor_subject
             and last_audit.reason == reason
+            and record.owner_receipt == owner_receipt
         ):
             return DownstreamSubmissionMutationResult(
                 decision=DownstreamSubmissionMutationDecision.REPLAYED,
@@ -419,6 +426,7 @@ def reconcile_downstream_submission(
             None if resolution is DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM else reason
         ),
         change_reference=change_reference,
+        owner_receipt=owner_receipt,
     )
     return DownstreamSubmissionMutationResult(
         decision=DownstreamSubmissionMutationDecision.ACCEPTED,

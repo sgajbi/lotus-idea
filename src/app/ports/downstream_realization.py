@@ -137,6 +137,16 @@ class AdviseProposalRealizationReader(Protocol):
     ) -> AdviseProposalRealizationHistory:
         """Load the exact Advise-owned realization history in trusted scope."""
 
+    def load_proposal_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        """Recover exact owner history when the intake response was unavailable."""
+
 
 class ManageActionRealizationReader(Protocol):
     def load_action_realization(

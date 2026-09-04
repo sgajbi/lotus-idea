@@ -142,6 +142,7 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
         reason: str,
         change_reference: str,
         reconciled_at_utc: datetime,
+        owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
         existing = self.downstream_submission_by_support_reference(support_reference)
         if existing is None:
@@ -157,6 +158,7 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
             reason=reason,
             change_reference=change_reference,
             reconciled_at_utc=reconciled_at_utc,
+            owner_receipt=owner_receipt,
         )
         if result.decision is DownstreamSubmissionMutationDecision.ACCEPTED:
             assert result.record is not None

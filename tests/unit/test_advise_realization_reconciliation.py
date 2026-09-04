@@ -74,6 +74,7 @@ AUTHORIZED_SCOPE = QueueAccessScopeFilter(
 class StubAdviseReader:
     history: AdviseProposalRealizationHistory
     calls: int = 0
+    recovery_calls: int = 0
 
     def load_proposal_realization(
         self,
@@ -85,6 +86,19 @@ class StubAdviseReader:
     ) -> AdviseProposalRealizationHistory:
         self.calls += 1
         assert intake_id == "ipi_001"
+        assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+        return self.history
+
+    def load_proposal_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        self.recovery_calls += 1
+        assert conversion_intent_id == "conversion-advise_proposal-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         return self.history
 
@@ -121,6 +135,97 @@ def test_reconcile_advise_history_persists_append_only_owner_evidence() -> None:
     assert progressed.grants_execution_authority is False
     assert progressed.grants_suitability_authority is False
     assert progressed.grants_client_publication_authority is False
+
+
+def test_reconcile_advise_history_recovers_lost_acceptance_without_resubmission() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+
+    class LostResponseClient:
+        def submit_proposal_intent(
+            self, *_args: object, **_kwargs: object
+        ) -> DownstreamRealizationOutcome:
+            raise TimeoutError("response lost after owner commit")
+
+    submitted = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-advise-lost-response-001",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+            submitted_at_utc=RECORDED_AT,
+        ),
+        repository=repository,
+        advise_client=LostResponseClient(),
+        manage_client=None,
+    )
+    assert submitted.status.value == "reconciliation_required"
+    assert submitted.support_reference is not None
+    reader = StubAdviseReader(_history(version=2))
+
+    recovered = reconcile_advise_realization_history(
+        _command(submitted.support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+    replayed = reconcile_advise_realization_history(
+        _command(submitted.support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert recovered.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    assert recovered.appended_outcome_count == 2
+    assert replayed.status is AdviseRealizationReconciliationStatus.REPLAYED
+    assert reader.recovery_calls == 1
+    assert reader.calls == 1
+    stored = repository.downstream_submission_by_support_reference(submitted.support_reference)
+    assert stored is not None
+    assert stored.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert stored.downstream_failure_reason is None
+    assert stored.owner_receipt is not None
+    assert stored.owner_receipt.owner_request_id == "ipi_001"
+    assert stored.owner_receipt.owner_realization_id == "ipr_001"
+    assert stored.owner_receipt.owner_work_id == "iarw_001"
+    assert stored.owner_receipt.source_event_version == 1
+
+
+def test_reconcile_advise_history_recovers_lost_rejection_without_false_acceptance() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+
+    class LostResponseClient:
+        def submit_proposal_intent(
+            self, *_args: object, **_kwargs: object
+        ) -> DownstreamRealizationOutcome:
+            raise TimeoutError("response lost after owner rejection")
+
+    submitted = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-advise-lost-rejection-001",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+            submitted_at_utc=RECORDED_AT,
+        ),
+        repository=repository,
+        advise_client=LostResponseClient(),
+        manage_client=None,
+    )
+    assert submitted.support_reference is not None
+
+    result = reconcile_advise_realization_history(
+        _command(submitted.support_reference),
+        repository=repository,
+        advise_reader=StubAdviseReader(_rejected_history()),
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    stored = repository.downstream_submission_by_support_reference(submitted.support_reference)
+    assert stored is not None
+    assert stored.status is DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM
+    assert stored.downstream_failure_reason == "authoritative_advise_owner_history_recovered"
+    assert stored.owner_receipt is not None
+    assert stored.owner_receipt.owner_work_id is None
+    assert stored.owner_receipt.source_event_version == 1
 
 
 def test_reconcile_advise_history_fails_closed_on_owner_identity_drift() -> None:
@@ -180,6 +285,11 @@ def test_reconcile_maps_owner_read_failure_without_infrastructure_dependency() -
         def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
             raise DownstreamRealizationReadError("owner unavailable")
 
+        def load_proposal_realization_by_conversion_intent(
+            self, **_kwargs: object
+        ) -> AdviseProposalRealizationHistory:
+            raise DownstreamRealizationReadError("owner unavailable")
+
     result = reconcile_advise_realization_history(
         _command(support_reference),
         repository=repository,
@@ -214,6 +324,11 @@ def test_reconcile_rejects_malformed_authoritative_history() -> None:
 
     class MalformedReader:
         def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
+            raise ValueError("owner payload is malformed")
+
+        def load_proposal_realization_by_conversion_intent(
+            self, **_kwargs: object
+        ) -> AdviseProposalRealizationHistory:
             raise ValueError("owner payload is malformed")
 
     result = reconcile_advise_realization_history(
@@ -304,7 +419,7 @@ def test_reconcile_rejects_ineligible_or_missing_source_resources(
     assert missing_source.blocker == "advise_realization_source_resource_missing"
 
 
-def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() -> None:
+def test_advise_reconciliation_eligibility_allows_uncertain_owner_recovery() -> None:
     repository, support_reference = _repository_with_accepted_submission()
     submission = repository.downstream_submission_by_support_reference(support_reference)
     assert submission is not None
@@ -334,15 +449,6 @@ def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() ->
             "advise_realization_requires_advise_authority",
         ),
         (
-            replace(
-                submission,
-                status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
-                downstream_failure_reason="owner_outcome_uncertain",
-                owner_receipt=None,
-            ),
-            "advise_realization_requires_terminal_owner_submission",
-        ),
-        (
             replace(submission, owner_receipt=None),
             "advise_realization_owner_receipt_missing",
         ),
@@ -352,6 +458,13 @@ def test_advise_reconciliation_eligibility_requires_terminal_advise_receipt() ->
         assert _submission_eligibility_blocker(malformed) == expected
         assert advise_realization_submission_blocker(malformed, _history(version=2)) == expected
     assert _submission_eligibility_blocker(submission) is None
+    uncertain = replace(
+        submission,
+        status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        downstream_failure_reason="owner_outcome_uncertain",
+        owner_receipt=None,
+    )
+    assert _submission_eligibility_blocker(uncertain) is None
 
     assert submission.owner_receipt is not None
     conflicting_receipt = replace(
