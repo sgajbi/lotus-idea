@@ -399,6 +399,7 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
             "operatorReconciliationRequired": True,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
+            "ownerReceipt": None,
         }
     ]
     serialized_submissions = str(payload["downstreamSubmissions"])
