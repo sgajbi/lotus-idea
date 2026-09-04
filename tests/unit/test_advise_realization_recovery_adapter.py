@@ -61,6 +61,41 @@ def test_advise_adapter_recovers_exact_owner_history_in_trusted_scope() -> None:
 
 
 @pytest.mark.parametrize(
+    ("field_name", "different_value"),
+    [
+        ("tenant_id", "tenant-other"),
+        ("legal_entity_code", "OTHER_BANK"),
+        ("portfolio_id", "portfolio-other"),
+    ],
+)
+def test_advise_adapter_rejects_owner_history_outside_requested_trusted_scope(
+    field_name: str,
+    different_value: str,
+) -> None:
+    payload = _advise_history_payload()
+    payload[field_name] = different_value
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            recovery_history_path=RECOVERY_PATH,
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="does not match requested trusted scope"):
+        adapter.load_proposal_realization_by_conversion_intent(
+            conversion_intent_id="conversion-001",
+            access_scope=report_access_scope(),
+        )
+
+
+@pytest.mark.parametrize(
     ("recovery_path_template", "message"),
     [
         ("advisory/history", "start with '/'"),
