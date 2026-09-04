@@ -252,7 +252,12 @@ runtime evidence exists. The separate Advise idea-intake runtime-execution
 artifact is `runtime_execution` evidence and can clear only
 `advise_live_contract_proof_missing` after it observes source-safe accepted,
 replayed, rejected, idempotency-conflict, authorization-denied, and
-tenant-scoped idempotency receipts from the Advise owner route. Suitability,
+tenant-scoped idempotency receipts, identical concurrent duplicate
+convergence, and an exact Advise-owned realization-history readback. The
+readback must bind source-safe digests of the accepted source intent, trusted
+scope, and owner work plus the evidence fingerprint, status, and source-event
+version. Raw governed identifiers are not retained in the artifact.
+Timeout, restart, owner correction, concurrent owner advancement, suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked. The separate Manage action-intake

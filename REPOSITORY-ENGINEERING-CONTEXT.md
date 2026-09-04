@@ -2356,7 +2356,12 @@ and gated by `make advise-intake-runtime-execution-proof-gate`. A valid
 aggregate-current artifact may clear only `advise_live_contract_proof_missing`
 after observing the Advise owner route's accepted, replayed, rejected,
 idempotency-conflict, authorization-denied, and tenant-scoped idempotency
-receipt behavior. It must retain `suitability_policy_authority_remains_lotus_advise`,
+receipt behavior. The v2 artifact also proves identical concurrent duplicate
+convergence and exact owner-history readback bound through source-safe source
+intent, trusted-scope, and owner-identity digests plus the evidence fingerprint,
+status, and source-event version. It retains explicit timeout, restart,
+owner-correction, concurrent owner-advancement, and
+`suitability_policy_authority_remains_lotus_advise` blockers,
 must not create or assert an advisory proposal, and must not claim production
 identity, client-publication authority, Workbench/Gateway behavior, support, or
 supported-feature promotion. This is the durable #688/#706 lesson: source

@@ -254,11 +254,17 @@ generated artifact should be consumed instead.
 
 The artifact validates closed receipt posture for accepted, replayed, rejected,
 idempotency-conflict, authorization-denied, and tenant-scoped idempotency calls.
-It stores only bounded status fields and canonical receipt digests. It clears
+It also requires an identical concurrent duplicate pair to converge on one
+accepted receipt and one exact replay, then reads Advise's owner history and
+binds source-safe digests of trusted scope, source intent, and owner work plus
+the evidence fingerprint, status, and version to the accepted receipt. It
+stores only the bounded fields needed for that causal
+proof. It clears
 `advise_live_contract_proof_missing` only when the proof is valid and
 aggregate-current; it deliberately preserves suitability authority, proposal
 lifecycle persistence, client publication, production identity, production
-certification, and supported-feature blockers.
+certification, supported-feature, timeout, restart, owner-correction, and
+concurrent owner-version advancement blockers.
 
 ## Manage Action-Intake Runtime Execution Proof
 
