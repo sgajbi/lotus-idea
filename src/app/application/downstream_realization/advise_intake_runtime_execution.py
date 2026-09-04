@@ -25,20 +25,34 @@ from app.application.source_authority import (
     source_authority_records_are_valid,
 )
 from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_runtime_evidence import is_sha256
 from app.domain.proof_evidence import EvidenceClass
 
 ADVISE_INTAKE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF"
-ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v1"
+ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v2"
 ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED = ("advise_live_contract_proof_missing",)
-REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = ("suitability_policy_authority_remains_lotus_advise",)
+REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = (
+    "advise_timeout_uncertainty_certification_missing",
+    "advise_restart_replay_certification_missing",
+    "advise_owner_correction_certification_missing",
+    "advise_concurrent_owner_advancement_certification_missing",
+    "suitability_policy_authority_remains_lotus_advise",
+)
+ADVISE_REALIZATION_READ_ROUTE = "GET /advisory/proposals/idea-intake/{intake_id}/realization"
+ADVISE_INTAKE_RUNTIME_SOURCE_REFS = (
+    *ADVISE_ROUTE_PROFILE.source_refs,
+    "src/core/proposals/idea_realization_read_model.py",
+)
 ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS = (
     "../lotus-advise/contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
     "../lotus-advise/src/api/proposals/routes_idea_intake.py",
     "../lotus-advise/src/api/proposals/idea_intake_principal.py",
     "../lotus-advise/src/core/proposals/idea_intake_authority.py",
     "../lotus-advise/src/core/proposals/idea_proposal_intake.py",
+    "../lotus-advise/src/core/proposals/idea_realization_read_model.py",
     "../lotus-advise/tests/unit/advisory/api/test_idea_proposal_intake_api.py",
     "src/app/application/downstream_realization/advise_intake_runtime_execution.py",
+    "scripts/downstream_realization/advise_runtime_evidence_projection.py",
     "scripts/downstream_realization/generate_advise_intake_runtime_execution.py",
     "scripts/downstream_realization/advise_intake_runtime_execution_gate.py",
     "GET /api/v1/downstream-realization/readiness",
@@ -57,10 +71,13 @@ _PAYLOAD_FIELDS = frozenset(
         "sourceRepository",
         "downstreamAuthority",
         "targetRoute",
+        "ownerReadRoute",
         "runtimeMode",
         "sourceAuthority",
         "evidenceRefs",
         "receiptEvidence",
+        "submittedIntentEvidence",
+        "ownerRealizationEvidence",
         "runtimeChecks",
         "aggregateBlockersSatisfied",
         "remainingCertificationBlockers",
@@ -72,6 +89,8 @@ _RECEIPT_EVIDENCE_FIELDS = frozenset(
     {
         "accepted",
         "acceptedReplay",
+        "concurrentAccepted",
+        "concurrentReplay",
         "rejected",
         "idempotencyConflict",
         "authorizationDenied",
@@ -86,6 +105,12 @@ _RECEIPT_FIELDS = frozenset(
         "idempotencyReplay",
         "receiptDigest",
         "reasonCodes",
+        "ownerIdentityDigest",
+        "scopeDigest",
+        "reviewWorkStatus",
+        "sourceEvidenceFingerprint",
+        "realizationStatus",
+        "sourceEventVersion",
         "proposalRecordCreated",
         "suitabilityAuthorityGranted",
         "orderCreated",
@@ -98,6 +123,12 @@ _RECEIPT_DIGEST_FIELDS = (
     "intakeReceiptAccepted",
     "idempotencyReplay",
     "reasonCodes",
+    "ownerIdentityDigest",
+    "scopeDigest",
+    "reviewWorkStatus",
+    "sourceEvidenceFingerprint",
+    "realizationStatus",
+    "sourceEventVersion",
     "proposalRecordCreated",
     "suitabilityAuthorityGranted",
     "orderCreated",
@@ -121,6 +152,8 @@ _RUNTIME_CHECK_FIELDS = frozenset(
         "replayReceiptObserved",
         "rejectedReceiptObserved",
         "idempotencyConflictObserved",
+        "concurrentDuplicateConvergenceObserved",
+        "ownerRealizationReadbackObserved",
         "proposalAuthorityRetained",
         "suitabilityAuthorityRetained",
         "clientPublicationAuthorityRetained",
@@ -153,6 +186,8 @@ def build_advise_intake_runtime_execution_payload(
     advise_root: Path | None,
     runtime_mode: str,
     receipt_evidence: Mapping[str, Mapping[str, Any]],
+    submitted_intent_evidence: Mapping[str, Any],
+    owner_realization_evidence: Mapping[str, Any],
 ) -> dict[str, Any]:
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
@@ -162,6 +197,8 @@ def build_advise_intake_runtime_execution_payload(
         source_authority=source_authority,
         runtime_mode=runtime_mode,
         receipt_evidence=receipt_evidence,
+        submitted_intent_evidence=submitted_intent_evidence,
+        owner_realization_evidence=owner_realization_evidence,
     )
     return {
         "schemaVersion": ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -174,12 +211,15 @@ def build_advise_intake_runtime_execution_payload(
         "sourceRepository": _EXPECTED_SOURCE_REPOSITORY,
         "downstreamAuthority": _EXPECTED_DOWNSTREAM_AUTHORITY,
         "targetRoute": ADVISE_PROPOSAL_ROUTE,
+        "ownerReadRoute": ADVISE_REALIZATION_READ_ROUTE,
         "runtimeMode": runtime_mode,
         "sourceAuthority": source_authority,
         "evidenceRefs": ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
         "receiptEvidence": {
             name: dict(receipt_evidence.get(name, {})) for name in _RECEIPT_EVIDENCE_FIELDS
         },
+        "submittedIntentEvidence": dict(submitted_intent_evidence),
+        "ownerRealizationEvidence": dict(owner_realization_evidence),
         "runtimeChecks": runtime_checks,
         "aggregateBlockersSatisfied": ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
         "remainingCertificationBlockers": REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
@@ -210,6 +250,7 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         "sourceRepository": _EXPECTED_SOURCE_REPOSITORY,
         "downstreamAuthority": _EXPECTED_DOWNSTREAM_AUTHORITY,
         "targetRoute": ADVISE_PROPOSAL_ROUTE,
+        "ownerReadRoute": ADVISE_REALIZATION_READ_ROUTE,
     }
     if any(payload.get(key) != value for key, value in expected.items()):
         return False
@@ -249,15 +290,27 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
     ):
         return False
     receipt_evidence = payload.get("receiptEvidence")
-    return isinstance(receipt_evidence, Mapping) and intake_receipt_evidence_is_valid(
-        receipt_evidence,
-        expected_fields=_RECEIPT_EVIDENCE_FIELDS,
-        accepted_receipt_is_valid=_accepted_receipt_is_valid,
-        replay_receipt_is_valid=_replay_receipt_is_valid,
-        rejected_receipt_is_valid=_rejected_receipt_is_valid,
-        conflict_receipt_is_valid=_conflict_receipt_is_valid,
-        authorization_denied_receipt_is_valid=_authorization_denied_receipt_is_valid,
-        tenant_isolation_receipt_is_valid=_tenant_isolation_receipt_is_valid,
+    submitted_intent = payload.get("submittedIntentEvidence")
+    owner_realization = payload.get("ownerRealizationEvidence")
+    return (
+        isinstance(receipt_evidence, Mapping)
+        and intake_receipt_evidence_is_valid(
+            receipt_evidence,
+            expected_fields=_RECEIPT_EVIDENCE_FIELDS,
+            accepted_receipt_is_valid=_accepted_receipt_is_valid,
+            replay_receipt_is_valid=_replay_receipt_is_valid,
+            rejected_receipt_is_valid=_rejected_receipt_is_valid,
+            conflict_receipt_is_valid=_conflict_receipt_is_valid,
+            authorization_denied_receipt_is_valid=_authorization_denied_receipt_is_valid,
+            tenant_isolation_receipt_is_valid=_tenant_isolation_receipt_is_valid,
+        )
+        and _same_owner_identity(
+            receipt_evidence.get("accepted"), receipt_evidence.get("acceptedReplay")
+        )
+        and _concurrent_duplicate_converges(receipt_evidence)
+        and _owner_realization_matches(
+            owner_realization, receipt_evidence.get("accepted"), submitted_intent
+        )
     )
 
 
@@ -286,6 +339,8 @@ def _runtime_checks(
     source_authority: tuple[dict[str, str | None], ...],
     runtime_mode: str,
     receipt_evidence: Mapping[str, Mapping[str, Any]],
+    submitted_intent_evidence: Mapping[str, Any],
+    owner_realization_evidence: Mapping[str, Any],
 ) -> dict[str, bool]:
     return {
         "timezoneAwareGeneratedAtUtc": (
@@ -303,10 +358,19 @@ def _runtime_checks(
         ),
         "runtimeExecutionObserved": runtime_mode in _SUPPORTED_RUNTIME_MODES,
         "acceptedReceiptObserved": _accepted_receipt_is_valid(receipt_evidence.get("accepted")),
-        "replayReceiptObserved": _replay_receipt_is_valid(receipt_evidence.get("acceptedReplay")),
+        "replayReceiptObserved": _replay_receipt_is_valid(receipt_evidence.get("acceptedReplay"))
+        and _same_owner_identity(
+            receipt_evidence.get("accepted"), receipt_evidence.get("acceptedReplay")
+        ),
         "rejectedReceiptObserved": _rejected_receipt_is_valid(receipt_evidence.get("rejected")),
         "idempotencyConflictObserved": _conflict_receipt_is_valid(
             receipt_evidence.get("idempotencyConflict")
+        ),
+        "concurrentDuplicateConvergenceObserved": _concurrent_duplicate_converges(receipt_evidence),
+        "ownerRealizationReadbackObserved": _owner_realization_matches(
+            owner_realization_evidence,
+            receipt_evidence.get("accepted"),
+            submitted_intent_evidence,
         ),
         "proposalAuthorityRetained": True,
         "suitabilityAuthorityRetained": True,
@@ -323,7 +387,7 @@ def _accepted_receipt_is_valid(value: object) -> bool:
         accepted=True,
         replay=False,
         reason_codes=("idea_intake_receipt_accepted",),
-    )
+    ) and _receipt_has_owner_identity(value)
 
 
 def _replay_receipt_is_valid(value: object) -> bool:
@@ -334,7 +398,7 @@ def _replay_receipt_is_valid(value: object) -> bool:
         accepted=True,
         replay=True,
         reason_codes=("idea_intake_receipt_replayed",),
-    )
+    ) and _receipt_has_owner_identity(value)
 
 
 def _rejected_receipt_is_valid(value: object) -> bool:
@@ -353,6 +417,126 @@ def _rejected_receipt_is_valid(value: object) -> bool:
 
 def _tenant_isolation_receipt_is_valid(value: object) -> bool:
     return _accepted_receipt_is_valid(value)
+
+
+def _receipt_has_owner_identity(value: object) -> bool:
+    return (
+        isinstance(value, Mapping)
+        and all(
+            isinstance(value.get(field), str) and bool(value.get(field))
+            for field in (
+                "reviewWorkStatus",
+                "realizationStatus",
+            )
+        )
+        and all(
+            is_sha256(value.get(field))
+            for field in (
+                "ownerIdentityDigest",
+                "scopeDigest",
+                "sourceEvidenceFingerprint",
+            )
+        )
+        and value.get("sourceEventVersion") == 1
+    )
+
+
+def _concurrent_duplicate_converges(receipts: Mapping[str, Any]) -> bool:
+    accepted = receipts.get("concurrentAccepted")
+    replay = receipts.get("concurrentReplay")
+    return (
+        _accepted_receipt_is_valid(accepted)
+        and _replay_receipt_is_valid(replay)
+        and _same_owner_identity(accepted, replay)
+    )
+
+
+def _same_owner_identity(left: object, right: object) -> bool:
+    if not isinstance(left, Mapping) or not isinstance(right, Mapping):
+        return False
+    return all(
+        left.get(field) == right.get(field)
+        for field in (
+            "ownerIdentityDigest",
+            "scopeDigest",
+            "sourceEvidenceFingerprint",
+            "sourceEventVersion",
+        )
+    )
+
+
+_OWNER_REALIZATION_FIELDS = frozenset(
+    {
+        "statusCode",
+        "ownerIdentityDigest",
+        "scopeDigest",
+        "reviewWorkStatus",
+        "sourceIntentDigest",
+        "sourceEvidenceFingerprint",
+        "currentStatus",
+        "currentSourceEventVersion",
+        "proposalIdentityPresent",
+        "proposalRecordCreated",
+        "suitabilityAuthorityGranted",
+        "orderCreated",
+        "clientPublicationAuthorized",
+        "outcomes",
+    }
+)
+
+
+_SUBMITTED_INTENT_FIELDS = frozenset({"scopeDigest", "sourceIntentDigest"})
+
+
+def _owner_realization_matches(value: object, accepted: object, submitted: object) -> bool:
+    if not isinstance(value, Mapping) or set(value) != _OWNER_REALIZATION_FIELDS:
+        return False
+    if not isinstance(accepted, Mapping):
+        return False
+    if not isinstance(submitted, Mapping) or set(submitted) != _SUBMITTED_INTENT_FIELDS:
+        return False
+    if not all(is_sha256(submitted.get(field)) for field in _SUBMITTED_INTENT_FIELDS):
+        return False
+    if not all(
+        is_sha256(value.get(field))
+        for field in (
+            "ownerIdentityDigest",
+            "scopeDigest",
+            "sourceIntentDigest",
+            "sourceEvidenceFingerprint",
+        )
+    ):
+        return False
+    outcomes = value.get("outcomes")
+    return (
+        value.get("statusCode") == 200
+        and value.get("proposalIdentityPresent") is False
+        and all(
+            value.get(field) is False
+            for field in (
+                "proposalRecordCreated",
+                "suitabilityAuthorityGranted",
+                "orderCreated",
+                "clientPublicationAuthorized",
+            )
+        )
+        and value.get("ownerIdentityDigest") == accepted.get("ownerIdentityDigest")
+        and value.get("reviewWorkStatus") == accepted.get("reviewWorkStatus")
+        and value.get("scopeDigest") == accepted.get("scopeDigest")
+        and value.get("scopeDigest") == submitted.get("scopeDigest")
+        and value.get("sourceIntentDigest") == submitted.get("sourceIntentDigest")
+        and value.get("sourceEvidenceFingerprint") == accepted.get("sourceEvidenceFingerprint")
+        and value.get("currentStatus") == accepted.get("realizationStatus")
+        and value.get("currentSourceEventVersion") == accepted.get("sourceEventVersion")
+        and isinstance(outcomes, list)
+        and len(outcomes) == 1
+        and isinstance(outcomes[0], Mapping)
+        and outcomes[0].get("sourceEventVersion") == value.get("currentSourceEventVersion")
+        and outcomes[0].get("status") == value.get("currentStatus")
+        and outcomes[0].get("ownerWorkBound") is True
+        and outcomes[0].get("proposalIdentityPresent") is False
+        and outcomes[0].get("terminal") is False
+    )
 
 
 def _conflict_receipt_is_valid(value: object) -> bool:
@@ -407,7 +591,7 @@ def _source_authority(advise_root: Path) -> tuple[dict[str, str | None], ...]:
                 f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
                 advise_root / ref,
             )
-            for ref in ADVISE_ROUTE_PROFILE.source_refs
+            for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
         )
     )
 
@@ -421,6 +605,6 @@ def _source_authority_is_valid(value: object) -> bool:
                 f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
                 Path(ref),
             )
-            for ref in ADVISE_ROUTE_PROFILE.source_refs
+            for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
         ),
     )

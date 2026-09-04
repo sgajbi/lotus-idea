@@ -55,13 +55,20 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     assert set(receipts) == {
         "accepted",
         "acceptedReplay",
+        "concurrentAccepted",
+        "concurrentReplay",
         "rejected",
         "idempotencyConflict",
         "authorizationDenied",
         "tenantScopedIdempotency",
+        "ownerRealization",
+        "submittedIntent",
     }
     assert captured["args"][0:2] == ["python-test", "-c"]
     assert "acceptedReplay" in captured["args"][2]
+    assert "ThreadPoolExecutor" in captured["args"][2]
+    assert "/realization" in captured["args"][2]
+    assert '"portfolio_id": "PB_SG_GLOBAL_BAL_001"' in captured["args"][2]
     assert "authorizationDenied" in captured["args"][2]
     assert captured["cwd"] == tmp_path
     assert captured["check"] is True
@@ -83,10 +90,34 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     assert accepted["orderCreated"] is False
     assert accepted["clientPublicationAuthorized"] is False
     assert isinstance(accepted["receiptDigest"], str)
+    assert accepted["ownerIdentityDigest"].startswith("sha256:")
+    assert accepted["scopeDigest"].startswith("sha256:")
 
     conflict = receipts["idempotencyConflict"]
     assert conflict["statusCode"] == 409
     assert conflict["reasonCodes"] == ["IDEA_PROPOSAL_INTAKE_IDEMPOTENCY_CONFLICT"]
+
+    owner = receipts["ownerRealization"]
+    assert owner["statusCode"] == 200
+    assert owner["ownerIdentityDigest"] == accepted["ownerIdentityDigest"]
+    assert owner["scopeDigest"] == accepted["scopeDigest"]
+    assert owner["currentSourceEventVersion"] == 1
+
+    submitted = receipts["submittedIntent"]
+    assert submitted["scopeDigest"].startswith("sha256:")
+    assert submitted["sourceIntentDigest"].startswith("sha256:")
+    serialized_evidence = json.dumps(receipts)
+    for forbidden_marker in (
+        "portfolioId",
+        "candidateId",
+        "tenantId",
+        "legalEntityCode",
+        "intakeId",
+        "realizationId",
+        "reviewWorkId",
+        "conversionIntentId",
+    ):
+        assert forbidden_marker not in serialized_evidence
 
 
 def test_advise_testclient_stdout_decoder_rejects_non_object() -> None:
@@ -101,7 +132,7 @@ def test_advise_testclient_stdout_decoder_rejects_non_object() -> None:
 
 
 def _advise_receipt_responses() -> dict[str, dict[str, object]]:
-    return {
+    responses = {
         "accepted": _response(
             status_code=202,
             intake_status="ACCEPTED",
@@ -110,6 +141,20 @@ def _advise_receipt_responses() -> dict[str, dict[str, object]]:
             reason_codes=["idea_intake_receipt_accepted"],
         ),
         "acceptedReplay": _response(
+            status_code=202,
+            intake_status="ACCEPTED_REPLAYED",
+            accepted=True,
+            replay=True,
+            reason_codes=["idea_intake_receipt_replayed"],
+        ),
+        "concurrentAccepted": _response(
+            status_code=202,
+            intake_status="ACCEPTED",
+            accepted=True,
+            replay=False,
+            reason_codes=["idea_intake_receipt_accepted"],
+        ),
+        "concurrentReplay": _response(
             status_code=202,
             intake_status="ACCEPTED_REPLAYED",
             accepted=True,
@@ -139,6 +184,35 @@ def _advise_receipt_responses() -> dict[str, dict[str, object]]:
             reason_codes=["idea_intake_receipt_accepted"],
         ),
     }
+    responses["ownerRealization"] = {
+        "statusCode": 200,
+        "body": {
+            "intake_id": "ipi_001",
+            "realization_id": "ipr_001",
+            "review_work_id": "iarw_001",
+            "review_work_status": "PENDING_ADVISER_REVIEW",
+            "tenant_id": "tenant-private-bank-sg",
+            "legal_entity_code": "SGPB",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+            "source_evidence_fingerprint": "sha256:" + "a" * 64,
+            "current_status": "ACCEPTED_FOR_REVIEW",
+            "current_source_event_version": 1,
+            "proposal_id": None,
+            "proposal_record_created": False,
+            "suitability_authority_granted": False,
+            "order_created": False,
+            "client_publication_authorized": False,
+            "outcomes": [{"source_event_version": 1, "status": "ACCEPTED_FOR_REVIEW"}],
+        },
+    }
+    responses["submittedIntent"] = {
+        "ideaCandidateId": "idea_candidate_001",
+        "conversionIntentId": "conversion_intent_001",
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "tenantId": "tenant-private-bank-sg",
+        "legalEntityCode": "SGPB",
+    }
+    return responses
 
 
 def _response(
@@ -152,6 +226,20 @@ def _response(
     return {
         "statusCode": status_code,
         "body": {
+            "intake_id": "ipi_001",
+            "realization_id": "ipr_001",
+            "review_work_id": "iarw_001",
+            "review_work_status": "PENDING_ADVISER_REVIEW",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+            "idea_candidate_id": "idea_candidate_001",
+            "conversion_intent_id": "conversion_intent_001",
+            "source_evidence_fingerprint": "sha256:" + "a" * 64,
+            "realization_status": "ACCEPTED_FOR_REVIEW",
+            "source_event_version": 1,
+            "trusted_scope": {
+                "tenant_id": "tenant-private-bank-sg",
+                "legal_entity_code": "SGPB",
+            },
             "intake_status": intake_status,
             "intake_receipt_accepted": accepted,
             "idempotency_replay": replay,

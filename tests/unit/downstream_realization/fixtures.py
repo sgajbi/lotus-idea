@@ -10,8 +10,12 @@ from app.application.downstream_realization.advise_intake_runtime_execution impo
     ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
     ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
     ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
+    ADVISE_INTAKE_RUNTIME_SOURCE_REFS,
     REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
     source_safe_receipt_digest,
+)
+from app.application.downstream_realization.intake_runtime_execution_common import (
+    source_safe_binding_digest,
 )
 from app.application.downstream_realization.manage_intake_runtime_execution import (
     MANAGE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
@@ -61,6 +65,7 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         "sourceRepository": "lotus-idea",
         "downstreamAuthority": "lotus-advise",
         "targetRoute": "POST /advisory/proposals/idea-intake",
+        "ownerReadRoute": "GET /advisory/proposals/idea-intake/{intake_id}/realization",
         "runtimeMode": "local_asgi_testclient",
         "sourceAuthority": tuple(
             {
@@ -68,10 +73,19 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
                 "ref": f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
                 "sha256": "b" * 64,
             }
-            for ref in ADVISE_ROUTE_PROFILE.source_refs
+            for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
         ),
         "evidenceRefs": ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
         "receiptEvidence": receipt_evidence,
+        "submittedIntentEvidence": {
+            "scopeDigest": source_safe_binding_digest(
+                "tenant-private-bank-sg", "SGPB", "PB_SG_GLOBAL_BAL_001"
+            ),
+            "sourceIntentDigest": source_safe_binding_digest(
+                "idea_candidate_001", "conversion_intent_001"
+            ),
+        },
+        "ownerRealizationEvidence": _valid_advise_owner_realization_evidence(),
         "runtimeChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "sourceAuthorityDigestBound": True,
@@ -83,6 +97,8 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             "replayReceiptObserved": True,
             "rejectedReceiptObserved": True,
             "idempotencyConflictObserved": True,
+            "concurrentDuplicateConvergenceObserved": True,
+            "ownerRealizationReadbackObserved": True,
             "proposalAuthorityRetained": True,
             "suitabilityAuthorityRetained": True,
             "clientPublicationAuthorityRetained": True,
@@ -346,6 +362,20 @@ def _valid_advise_intake_receipt_evidence() -> dict[str, dict[str, object]]:
             reason_codes=("idea_intake_receipt_accepted",),
         ),
         "acceptedReplay": _receipt(
+            status_code=202,
+            intake_status="ACCEPTED_REPLAYED",
+            accepted=True,
+            replay=True,
+            reason_codes=("idea_intake_receipt_replayed",),
+        ),
+        "concurrentAccepted": _receipt(
+            status_code=202,
+            intake_status="ACCEPTED",
+            accepted=True,
+            replay=False,
+            reason_codes=("idea_intake_receipt_accepted",),
+        ),
+        "concurrentReplay": _receipt(
             status_code=202,
             intake_status="ACCEPTED_REPLAYED",
             accepted=True,
@@ -632,10 +662,56 @@ def _receipt(
         "idempotencyReplay": replay,
         "receiptDigest": None,
         "reasonCodes": reason_codes,
+        "ownerIdentityDigest": source_safe_binding_digest(
+            "ipi_001" if accepted else None,
+            "ipr_001" if accepted else None,
+            "iarw_001" if accepted else None,
+        ),
+        "scopeDigest": source_safe_binding_digest(
+            "tenant-private-bank-sg" if accepted else None,
+            "SGPB" if accepted else None,
+            "PB_SG_GLOBAL_BAL_001" if accepted else None,
+        ),
+        "reviewWorkStatus": "PENDING_ADVISER_REVIEW" if accepted else None,
+        "sourceEvidenceFingerprint": f"sha256:{'a' * 64}" if accepted else None,
+        "realizationStatus": "ACCEPTED_FOR_REVIEW" if accepted else None,
+        "sourceEventVersion": 1 if accepted else None,
         "proposalRecordCreated": False,
         "suitabilityAuthorityGranted": False,
         "orderCreated": False,
         "clientPublicationAuthorized": False,
+    }
+
+
+def _valid_advise_owner_realization_evidence() -> dict[str, object]:
+    return {
+        "statusCode": 200,
+        "ownerIdentityDigest": source_safe_binding_digest("ipi_001", "ipr_001", "iarw_001"),
+        "scopeDigest": source_safe_binding_digest(
+            "tenant-private-bank-sg", "SGPB", "PB_SG_GLOBAL_BAL_001"
+        ),
+        "reviewWorkStatus": "PENDING_ADVISER_REVIEW",
+        "sourceIntentDigest": source_safe_binding_digest(
+            "idea_candidate_001", "conversion_intent_001"
+        ),
+        "sourceEvidenceFingerprint": f"sha256:{'a' * 64}",
+        "currentStatus": "ACCEPTED_FOR_REVIEW",
+        "currentSourceEventVersion": 1,
+        "proposalIdentityPresent": False,
+        "proposalRecordCreated": False,
+        "suitabilityAuthorityGranted": False,
+        "orderCreated": False,
+        "clientPublicationAuthorized": False,
+        "outcomes": [
+            {
+                "sourceEventVersion": 1,
+                "status": "ACCEPTED_FOR_REVIEW",
+                "reasonCode": "idea_intake_receipt_accepted",
+                "ownerWorkBound": True,
+                "proposalIdentityPresent": False,
+                "terminal": False,
+            }
+        ],
     }
 
 

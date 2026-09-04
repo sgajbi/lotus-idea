@@ -18,6 +18,11 @@ def source_safe_intake_receipt_digest(
     return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
+def source_safe_binding_digest(*values: object) -> str:
+    encoded = json.dumps(values, separators=(",", ":")).encode()
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+
+
 def intake_receipt_evidence_is_valid(
     receipt_evidence: Mapping[str, Any],
     *,
