@@ -156,6 +156,28 @@ def test_manage_adapter_refuses_receipts_claiming_unsupported_authority() -> Non
     assert outcome.failure_reason == "downstream_malformed_response"
 
 
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda payload: payload.update(action_receipt_accepted="yes"),
+        lambda payload: payload.update(action_register_created=False),
+    ],
+)
+def test_manage_adapter_refuses_malformed_acceptance_receipts(mutate: Any) -> None:
+    payload = _manage_intake_receipt_payload()
+    mutate(payload)
+    adapter = _manage_adapter(lambda _request: httpx.Response(202, json=payload))
+
+    outcome = adapter.submit_action_intent(
+        conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE),
+        access_scope=report_access_scope(),
+    )
+
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
+    assert outcome.failure_reason == "downstream_malformed_response"
+    assert outcome.owner_receipt is None
+
+
 def test_manage_adapter_loads_the_exact_owner_outcome_history() -> None:
     """The read leg fetches the owner history route with the trusted
     portfolio-scoped principal and parses the exact owner body - including
@@ -211,6 +233,28 @@ def test_manage_adapter_maps_owner_read_failures_and_invalid_histories() -> None
             access_scope=report_access_scope(),
         )
 
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda payload: payload.update(events={}),
+        lambda payload: payload.update(events=["not-an-event"]),
+    ],
+)
+def test_manage_adapter_refuses_malformed_owner_history_collections(mutate: Any) -> None:
+    payload = _manage_history_payload()
+    mutate(payload)
+    adapter = _manage_adapter(
+        lambda _request: httpx.Response(200, json=payload),
+        history_path_template="/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes",
+    )
+
+    with pytest.raises(ValueError):
+        adapter.load_action_realization(
+            intake_id="iai_1f2e3d4c5b6a7f8e9d0c",
+            access_scope=report_access_scope(),
+        )
+
     def invalid(request: httpx.Request) -> httpx.Response:
         payload = _manage_history_payload()
         payload["events"][1]["event_type"] = "INTAKE_ACCEPTED"
@@ -235,6 +279,16 @@ def test_manage_adapter_requires_history_path_template_for_reads() -> None:
     with pytest.raises(DownstreamRealizationConfigurationError, match="history_path_template"):
         adapter.load_action_realization(
             intake_id="iai_1f2e3d4c5b6a7f8e9d0c",
+            access_scope=report_access_scope(),
+        )
+
+    configured = _manage_adapter(
+        handler,
+        history_path_template="/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes",
+    )
+    with pytest.raises(ValueError, match="intake_id is required"):
+        configured.load_action_realization(
+            intake_id=" ",
             access_scope=report_access_scope(),
         )
 
