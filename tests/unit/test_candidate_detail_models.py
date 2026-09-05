@@ -36,7 +36,9 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
     assert response["candidate"]["candidateId"] == candidate.candidate_id
     assert response["candidate"]["applicabilityExpiresAtUtc"] == expiry
     assert response["evidence"]["applicabilityExpiresAtUtc"] == expiry
-    assert response["evidence"]["evidenceContentHash"] == "sha256:candidate-detail"
+    assert response["evidence"]["evidenceContentHash"] == (
+        candidate.evidence_packet.lineage_ref.content_hash
+    )
     assert response["evidence"]["sourceRefs"][0] == {
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "sourceSystem": "lotus-core",
