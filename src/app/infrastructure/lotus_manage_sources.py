@@ -7,8 +7,9 @@ from typing import Any
 from urllib.parse import quote
 
 from app.application.runtime_evidence import identity_hash
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, SourceRef, SourceRevisionClaims, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_revision_claims import build_source_revision_claims
 from app.ports.manage_sources import (
     ManageActionRegisterRuntimeEvidence,
     ManageMandateHealthEvidence,
@@ -133,6 +134,9 @@ def _action_register_source_ref(
         content_hash=runtime.source_batch_fingerprint,
         data_quality_status=posture.supportability_state or "unknown",
         freshness=_freshness(posture),
+        revision_claims=build_source_revision_claims(
+            source_batch_id=runtime.source_batch_fingerprint,
+        ),
     )
 
 
@@ -178,7 +182,53 @@ def _source_product_ref(
         or _text_field(ref_payload, "healthState")
         or "unknown",
         freshness=_freshness_from_ref_payload(ref_payload),
+        revision_claims=_source_revision_claims(ref_payload),
     )
+
+
+def _source_revision_claims(payload: dict[str, Any]) -> SourceRevisionClaims | None:
+    methodology = payload.get("methodology_posture") or payload.get("methodologyPosture")
+    methodology_payload = methodology if isinstance(methodology, dict) else {}
+    return build_source_revision_claims(
+        snapshot_id=_text_from_payloads((payload,), "snapshot_id", "snapshotId"),
+        source_revision=_text_from_payloads((payload,), "source_revision", "sourceRevision"),
+        restatement_version=_text_from_payloads(
+            (payload,),
+            "restatement_version",
+            "restatementVersion",
+        ),
+        source_batch_id=_text_from_payloads(
+            (payload,),
+            "source_batch_fingerprint",
+            "sourceBatchFingerprint",
+        ),
+        source_cut_id=_text_from_payloads((payload,), "source_cut_id", "sourceCutId"),
+        calculation_run_id=_text_from_payloads(
+            (payload,),
+            "calculation_id",
+            "calculationId",
+        ),
+        methodology_version=_text_from_payloads(
+            (methodology_payload, payload),
+            "methodology_version",
+            "methodologyVersion",
+        ),
+        policy_version=_text_from_payloads((payload,), "policy_version", "policyVersion"),
+        reconciliation_status=_text_from_payloads(
+            (payload,),
+            "reconciliation_status",
+            "reconciliationStatus",
+        ),
+    )
+
+
+def _text_from_payloads(payloads: tuple[dict[str, Any], ...], *keys: str) -> str | None:
+    for payload in payloads:
+        for key in keys:
+            value = _text_field(payload, key)
+            if value is not None:
+                return value
+    return None
 
 
 def _source_ref_payload(

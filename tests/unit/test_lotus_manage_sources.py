@@ -124,6 +124,8 @@ def test_lotus_manage_adapter_fetches_declared_action_register_source_product() 
     assert evidence.action_register_ref.route == "/api/v1/rebalance/supportability/summary"
     assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.action_register_ref.content_hash == "sha256:" + "a" * 64
+    assert evidence.action_register_ref.revision_claims is not None
+    assert evidence.action_register_ref.revision_claims.source_batch_id == "sha256:" + "a" * 64
     assert evidence.manage_diagnostic == "manage_action_register_ready_portfolio_scope"
     assert evidence.action_register_runtime is not None
     assert evidence.action_register_runtime.tenant_id_hash == identity_hash("tenant-a")

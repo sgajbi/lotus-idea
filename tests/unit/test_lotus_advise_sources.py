@@ -138,6 +138,9 @@ def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product(
     assert evidence.policy_ref.route == "/advisory/policy-evaluations/pev_001/workflow"
     assert evidence.policy_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.policy_ref.content_hash == "sha256:advisory-policy-evaluation-record"
+    assert evidence.policy_ref.revision_claims is not None
+    assert evidence.policy_ref.revision_claims.calculation_run_id == "pev_001"
+    assert evidence.policy_ref.revision_claims.policy_version == "2026.06"
     assert evidence.workflow_runtime is not None
     assert evidence.workflow_runtime.evaluation_id == "pev_001"
     assert evidence.workflow_runtime.portfolio_id == "portfolio-001"
