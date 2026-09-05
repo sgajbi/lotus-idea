@@ -297,6 +297,26 @@ REQUIRED_MIGRATIONS = (
             "legacy_fixed_policy",
         ),
     ),
+    MigrationContract(
+        version="025",
+        forward_path=MIGRATIONS_DIR / "025_exact_review_authority.sql",
+        rollback_path=MIGRATIONS_DIR / "025_exact_review_authority.rollback.sql",
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "legacy_unverified",
+            "review_authority_grant",
+            "CREATE VIEW idea_review_authority_migration_audit",
+            "legacy_review_authority_unverified",
+            "conversion_intent_without_exact_review_authority",
+            "approved_candidate_without_exact_review_authority",
+        ),
+        required_rollback_fragments=(
+            "DROP VIEW IF EXISTS idea_review_authority_migration_audit",
+            "intent_json - 'review_authority_grant'",
+            "decision_json - 'review_channel' - 'review_policy_version'",
+        ),
+    ),
 )
 
 

@@ -31,10 +31,11 @@ def test_disaster_recovery_fixture_requires_explicit_disposable_confirmation() -
 def test_disaster_recovery_fixture_uses_source_safe_synthetic_identifiers() -> None:
     source = "\n".join(
         (ROOT / path).read_text(encoding="utf-8")
-        for path in (
-            "scripts/seed_postgres_disaster_recovery_fixture.py",
-            "scripts/postgres_disaster_recovery_fixture_data.py",
-        )
+            for path in (
+                "scripts/seed_postgres_disaster_recovery_fixture.py",
+                "scripts/postgres_disaster_recovery_fixture_data.py",
+                "scripts/postgres_disaster_recovery_presentation_seed.py",
+            )
     )
 
     assert "PB_SG_GLOBAL_BAL_001" not in source

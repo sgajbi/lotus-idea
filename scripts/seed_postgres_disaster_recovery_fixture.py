@@ -32,13 +32,11 @@ from app.domain import (  # noqa: E402
     AIExplanationCommand,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
-    CandidatePresentationReceipt,
     ConversionTarget,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
-    PresentationReceiptDecision,
     ReviewPosture,
     SourceSystem,
     apply_review_action,
@@ -67,8 +65,12 @@ from scripts.postgres_disaster_recovery_fixture_data import (  # noqa: E402
     conversion_outcome_command,
     feedback_command,
     high_cash_candidate,
+    presentation_receipt,
     report_pack_command,
     review_command,
+)
+from scripts.postgres_disaster_recovery_presentation_seed import (  # noqa: E402
+    seed_presentation_receipt,
 )
 from scripts.downstream_realization.advise_recovery_fixture import (  # noqa: E402
     seed_advise_realization_recovery_fixture,
@@ -78,7 +80,6 @@ from scripts.downstream_realization.manage_recovery_fixture import (  # noqa: E4
 )
 
 DATABASE_URL_ENV = "LOTUS_IDEA_DR_SOURCE_DATABASE_URL"
-
 
 def seed_disaster_recovery_fixture(
     database_url: str,
@@ -94,7 +95,7 @@ def seed_disaster_recovery_fixture(
         _assert_empty_migrated_database(typed_connection)
         repository = PostgresIdeaRepository(typed_connection)
         review_ready, approved = _seed_workflow_records(repository)
-        _seed_presentation_receipt(repository, review_ready)
+        seed_presentation_receipt(repository, review_ready)
         _seed_data_lifecycle_operation(repository, review_ready)
         _seed_ai_lineage(repository, review_ready)
         _seed_downstream_submissions(repository)
@@ -133,14 +134,14 @@ def _seed_workflow_records(
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_review",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
-    approved = replace(
+    conversion_review_ready = replace(
         conversion_base,
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
-        lifecycle_status=IdeaLifecycleStatus.APPROVED,
-        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
     )
     _persist_candidate(repository, review_ready, "dr-fixture-review")
-    _persist_candidate(repository, approved, "dr-fixture-conversion")
+    _persist_candidate(repository, conversion_review_ready, "dr-fixture-conversion")
 
     lifecycle = repository.record_lifecycle_transition(
         review_ready.candidate_id,
@@ -154,10 +155,13 @@ def _seed_workflow_records(
     )
     if lifecycle.record is None:
         raise RuntimeError("fixture lifecycle transition was not persisted")
+    review_receipt = presentation_receipt(lifecycle.record.candidate)
+    repository.record_presentation_receipt(review_receipt)
     review_result = apply_review_action(
         lifecycle.record.candidate,
-        review_command(),
+        review_command(lifecycle.record.candidate),
         accepted_at_utc=FIXTURE_TIME + timedelta(minutes=2),
+        presentation_receipt=review_receipt,
     )
     review = repository.record_review_action(
         review_result,
@@ -177,10 +181,31 @@ def _seed_workflow_records(
         payload={"feedbackId": feedback_result.feedback_event.feedback.feedback_id},
     )
 
+    conversion_review_id = "dr-fixture-conversion-review-001"
+    conversion_receipt = presentation_receipt(conversion_review_ready)
+    repository.record_presentation_receipt(conversion_receipt)
+    conversion_review_result = apply_review_action(
+        conversion_review_ready,
+        review_command(conversion_review_ready, review_id=conversion_review_id),
+        accepted_at_utc=FIXTURE_TIME + timedelta(minutes=2),
+        presentation_receipt=conversion_receipt,
+    )
+    conversion_review = repository.record_review_action(
+        conversion_review_result,
+        idempotency_key="dr-fixture-conversion-review-action",
+        payload={"reviewId": conversion_review_id},
+    )
+    if conversion_review.record is None:
+        raise RuntimeError("fixture conversion review was not persisted")
+    approved = conversion_review.record.candidate
+    authority_grant = conversion_review_result.decision.authority_grant
+    if authority_grant is None:
+        raise RuntimeError("fixture conversion review did not grant authority")
     conversion_result = request_conversion_intent(
         approved,
-        conversion_command(),
+        conversion_command(approved, expected_review_id=conversion_review_id),
         accepted_at_utc=FIXTURE_TIME + timedelta(minutes=4),
+        review_authority_grant=authority_grant,
     )
     conversion = repository.record_conversion_intent(
         conversion_result,
@@ -214,30 +239,6 @@ def _seed_workflow_records(
         payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
     )
     return review_ready, approved
-
-
-def _seed_presentation_receipt(
-    repository: PostgresIdeaRepository,
-    candidate: IdeaCandidate,
-) -> None:
-    result = repository.record_presentation_receipt(
-        CandidatePresentationReceipt(
-            receipt_id="dr-fixture-presentation-receipt-001",
-            candidate_id=candidate.candidate_id,
-            tenant_id="tenant-dr-fixture",
-            presented_at_utc=FIXTURE_TIME + timedelta(minutes=15),
-            rank_at_presentation=1,
-            visible_candidate_count=2,
-            queue_snapshot_digest=f"sha256:{'c' * 64}",
-            queue_policy_version="idea-review-queue-v1",
-            ranking_policy_version="idea-score-v2",
-            candidate_material_version=candidate.identity.material_version,
-            candidate_evidence_version=candidate.identity.evidence_version,
-            accepted_at_utc=FIXTURE_TIME + timedelta(minutes=15),
-        )
-    )
-    if result.decision is not PresentationReceiptDecision.ACCEPTED:
-        raise RuntimeError("fixture presentation receipt was not persisted")
 
 
 def _persist_candidate(
