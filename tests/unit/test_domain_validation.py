@@ -127,6 +127,8 @@ def ai_lineage_record() -> AIExplanationLineageRecord:
         candidate_id="idea-candidate-001",
         evidence_packet_id="evidence-packet-001",
         evidence_content_hash="sha256:evidence",
+        source_revision_vector_digest="legacy:unknown",
+        source_cut_posture="unknown",
         workflow_pack_id="workflow-pack-001",
         workflow_pack_version="v1",
         purpose="advisor_review_support",

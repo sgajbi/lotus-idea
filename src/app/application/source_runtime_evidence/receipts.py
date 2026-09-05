@@ -17,6 +17,12 @@ from app.domain import (
 )
 from app.domain.evidence_hashing import evidence_hash_for_source_refs
 from app.domain.proof_evidence import parse_timezone_aware_datetime
+from app.domain.source_revision import (
+    SourceCutPosture,
+    source_cut_posture,
+    source_revision_claims_payload,
+    source_revision_vector_digest,
+)
 
 SOURCE_RECEIPT_KEYS = frozenset(
     {
@@ -28,6 +34,7 @@ SOURCE_RECEIPT_KEYS = frozenset(
         "contentHash",
         "dataQualityStatus",
         "freshness",
+        "revisionClaims",
         "sourceReceiptSha256",
     }
 )
@@ -37,6 +44,8 @@ PERSISTENCE_RECEIPT_KEYS = frozenset(
         "candidateFamily",
         "candidateLifecycleStatus",
         "sourceEvidenceHash",
+        "sourceRevisionVectorDigest",
+        "sourceCutPosture",
         "scopeFingerprint",
         "persistedAtUtc",
         "persistenceReceiptSha256",
@@ -81,6 +90,8 @@ def build_runtime_receipts(
         "candidateFamily": candidate.family.value,
         "candidateLifecycleStatus": candidate.lifecycle_status.value,
         "sourceEvidenceHash": record.evidence_hash,
+        "sourceRevisionVectorDigest": source_revision_vector_digest(source_refs),
+        "sourceCutPosture": source_cut_posture(source_refs).value,
         "scopeFingerprint": sha256_json(
             {
                 "tenantId": scope.tenant_id,
@@ -137,7 +148,19 @@ def persistence_receipt_is_valid(
         return False
     if value.get("candidateFamily") != family.value:
         return False
-    if not all(is_sha256(value.get(key)) for key in ("sourceEvidenceHash", "scopeFingerprint")):
+    if not all(
+        is_sha256(value.get(key))
+        for key in (
+            "sourceEvidenceHash",
+            "sourceRevisionVectorDigest",
+            "scopeFingerprint",
+        )
+    ):
+        return False
+    if value.get("sourceCutPosture") not in {
+        SourceCutPosture.COHERENT.value,
+        SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE.value,
+    }:
         return False
     persisted_at_utc = parse_timezone_aware_datetime(value.get("persistedAtUtc"))
     if persisted_at_utc is None or persisted_at_utc > generated_at_utc:
@@ -148,17 +171,35 @@ def persistence_receipt_is_valid(
 
 def source_evidence_hash(source_receipt: Mapping[str, Any]) -> str:
     return sha256_json(
-        [
+        {
+            "source_posture": [
             {
-                "content_hash": source_receipt["contentHash"],
                 "data_quality_status": source_receipt["dataQualityStatus"],
                 "freshness": source_receipt["freshness"],
                 "product_id": source_receipt["productId"],
                 "product_version": source_receipt["productVersion"],
                 "source_system": source_receipt["sourceSystem"],
             }
-        ]
+            ],
+            "source_revision_vector_digest": source_revision_vector_digest_from_receipt(
+                source_receipt
+            ),
+        }
     )
+
+
+def source_revision_vector_digest_from_receipt(source_receipt: Mapping[str, Any]) -> str:
+    payload = [
+        {
+            "as_of_date": source_receipt["asOfDate"],
+            "claims": source_receipt["revisionClaims"],
+            "content_hash": source_receipt["contentHash"],
+            "product_id": source_receipt["productId"],
+            "product_version": source_receipt["productVersion"],
+            "source_system": source_receipt["sourceSystem"],
+        }
+    ]
+    return sha256_json(payload)
 
 
 def sha256_json(value: object) -> str:
@@ -191,6 +232,7 @@ def _source_receipt(source_ref: SourceRef) -> dict[str, Any]:
         "contentHash": source_ref.content_hash,
         "dataQualityStatus": source_ref.data_quality_status,
         "freshness": source_ref.freshness.value,
+        "revisionClaims": source_revision_claims_payload(source_ref.revision_claims),
     }
     receipt["sourceReceiptSha256"] = sha256_json(receipt)
     return receipt

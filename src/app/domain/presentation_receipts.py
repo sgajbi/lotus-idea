@@ -12,9 +12,11 @@ from app.domain.control_time import (
     require_observed_time_within_policy,
 )
 from app.domain.ideas import IdeaCandidate
+from app.domain.source_revision import SourceCutPosture
 
 
-PRESENTATION_RECEIPT_SCHEMA_VERSION = "lotus-idea.candidate-presentation-receipt.v1"
+PRESENTATION_RECEIPT_SCHEMA_VERSION = "lotus-idea.candidate-presentation-receipt.v2"
+LEGACY_PRESENTATION_RECEIPT_SCHEMA_VERSION = "lotus-idea.candidate-presentation-receipt.v1"
 PRESENTATION_SURFACE = "advisor_review_queue"
 PRESENTATION_PRODUCER = "lotus-workbench"
 MAX_PRESENTED_CANDIDATE_COUNT = 100
@@ -41,6 +43,8 @@ class CandidatePresentationReceipt:
     ranking_policy_version: str
     candidate_material_version: int
     candidate_evidence_version: int
+    source_revision_vector_digest: str | None
+    source_cut_posture: SourceCutPosture
     accepted_at_utc: datetime
     acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     schema_version: str = PRESENTATION_RECEIPT_SCHEMA_VERSION
@@ -60,7 +64,10 @@ class CandidatePresentationReceipt:
                 raise ValueError(f"{field_name} must be a governed reference")
             if _REFERENCE_PATTERN.fullmatch(value) is None:
                 raise ValueError(f"{field_name} must be a governed reference")
-        if self.schema_version != PRESENTATION_RECEIPT_SCHEMA_VERSION:
+        if self.schema_version not in {
+            PRESENTATION_RECEIPT_SCHEMA_VERSION,
+            LEGACY_PRESENTATION_RECEIPT_SCHEMA_VERSION,
+        }:
             raise ValueError("unsupported presentation receipt schema_version")
         if self.surface != PRESENTATION_SURFACE:
             raise ValueError("unsupported presentation receipt surface")
@@ -90,6 +97,20 @@ class CandidatePresentationReceipt:
             _DIGEST_PATTERN.fullmatch(self.queue_snapshot_digest) is None
         ):
             raise ValueError("queue_snapshot_digest must be a sha256 digest")
+        if self.schema_version == PRESENTATION_RECEIPT_SCHEMA_VERSION:
+            if not isinstance(self.source_revision_vector_digest, str) or (
+                _DIGEST_PATTERN.fullmatch(self.source_revision_vector_digest) is None
+            ):
+                raise ValueError("source_revision_vector_digest must be a sha256 digest")
+        elif self.source_revision_vector_digest is not None:
+            raise ValueError("legacy presentation receipts cannot claim a revision vector")
+        if not isinstance(self.source_cut_posture, SourceCutPosture):
+            raise ValueError("source_cut_posture must be a governed posture")
+        if (
+            self.schema_version == LEGACY_PRESENTATION_RECEIPT_SCHEMA_VERSION
+            and self.source_cut_posture is not SourceCutPosture.UNKNOWN
+        ):
+            raise ValueError("legacy presentation receipts must retain unknown source cut posture")
         for field_name in ("candidate_material_version", "candidate_evidence_version"):
             value = getattr(self, field_name)
             if not _is_integer(value) or value <= 0:
@@ -110,6 +131,8 @@ class CandidatePresentationReceipt:
             self.ranking_policy_version,
             self.candidate_material_version,
             self.candidate_evidence_version,
+            self.source_revision_vector_digest,
+            self.source_cut_posture,
             self.schema_version,
             self.surface,
             self.producer,
@@ -125,6 +148,8 @@ class CandidatePresentationReceipt:
             other.ranking_policy_version,
             other.candidate_material_version,
             other.candidate_evidence_version,
+            other.source_revision_vector_digest,
+            other.source_cut_posture,
             other.schema_version,
             other.surface,
             other.producer,
@@ -158,6 +183,12 @@ def validate_presentation_receipt_candidate(
         raise PresentationReceiptCandidateStateError("candidate material version does not match")
     if receipt.candidate_evidence_version != candidate.identity.evidence_version:
         raise PresentationReceiptCandidateStateError("candidate evidence version does not match")
+    if receipt.source_revision_vector_digest != candidate.evidence_packet.source_revision_vector_digest:
+        raise PresentationReceiptCandidateStateError(
+            "candidate source revision vector does not match receipt"
+        )
+    if receipt.source_cut_posture is not candidate.evidence_packet.source_cut_posture:
+        raise PresentationReceiptCandidateStateError("candidate source cut posture does not match")
     if receipt.accepted_at_utc < candidate.updated_at_utc:
         raise PresentationReceiptCandidateStateError(
             "presentation acceptance predates the referenced candidate version"
@@ -170,6 +201,7 @@ def _is_integer(value: Any) -> bool:
 
 __all__ = [
     "MAX_PRESENTED_CANDIDATE_COUNT",
+    "LEGACY_PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_PRODUCER",
     "PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_SURFACE",

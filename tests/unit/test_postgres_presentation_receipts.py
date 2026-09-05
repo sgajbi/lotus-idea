@@ -9,6 +9,7 @@ from app.domain import (
     CandidatePresentationReceipt,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
+    SourceCutPosture,
 )
 from app.infrastructure.postgres_presentation_receipts import _record_presentation_receipt
 from app.infrastructure.postgres_presentation_receipts import (
@@ -174,6 +175,8 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
         "ranking_policy_version": "idea-score-v2",
         "candidate_material_version": 1,
         "candidate_evidence_version": 1,
+        "source_revision_vector_digest": f"sha256:{'b' * 64}",
+        "source_cut_posture": SourceCutPosture.COHERENT,
         "accepted_at_utc": datetime(2026, 8, 30, 12, 0, 1, tzinfo=UTC),
     }
     values.update(overrides)
@@ -193,6 +196,8 @@ def _row(receipt: CandidatePresentationReceipt) -> dict[str, Any]:
         "ranking_policy_version": receipt.ranking_policy_version,
         "candidate_material_version": receipt.candidate_material_version,
         "candidate_evidence_version": receipt.candidate_evidence_version,
+        "source_revision_vector_digest": receipt.source_revision_vector_digest,
+        "source_cut_posture": receipt.source_cut_posture.value,
         "accepted_at_utc": receipt.accepted_at_utc,
         "acceptance_time_source": receipt.acceptance_time_source.value,
         "schema_version": receipt.schema_version,

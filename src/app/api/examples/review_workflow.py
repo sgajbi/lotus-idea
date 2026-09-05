@@ -30,6 +30,8 @@ def build_review_action_response_examples() -> dict[str, dict[str, Any]]:
                 "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                 "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
                 "evidenceContentHash": "sha256:review-evidence-example",
+                "sourceRevisionVectorDigest": "sha256:source-revision-vector",
+                "sourceCutPosture": "coherent",
                 "candidateMaterialVersion": 1,
                 "candidateEvidenceVersion": 1,
                 "reviewChannel": "workbench",

@@ -29,6 +29,7 @@ from app.domain import (
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
+    SourceCutPosture,
     SuppressionReason,
 )
 from app.security.caller_context import CallerContext
@@ -51,6 +52,14 @@ class ReviewActionRequest(CamelModel):
     expected_evidence_version: int = Field(..., alias="expectedEvidenceVersion", gt=0)
     expected_evidence_packet_id: str = Field(..., alias="expectedEvidencePacketId")
     expected_evidence_content_hash: str = Field(..., alias="expectedEvidenceContentHash")
+    expected_source_revision_vector_digest: str = Field(
+        ...,
+        alias="expectedSourceRevisionVectorDigest",
+    )
+    expected_source_cut_posture: SourceCutPosture = Field(
+        ...,
+        alias="expectedSourceCutPosture",
+    )
     presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
     suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
     snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")
@@ -59,6 +68,7 @@ class ReviewActionRequest(CamelModel):
         "review_id",
         "expected_evidence_packet_id",
         "expected_evidence_content_hash",
+        "expected_source_revision_vector_digest",
     )
     @classmethod
     def _review_id_must_not_be_blank(cls, value: str) -> str:
@@ -105,6 +115,10 @@ class ReviewActionRequest(CamelModel):
                     evidence_version=self.expected_evidence_version,
                     evidence_packet_id=self.expected_evidence_packet_id,
                     evidence_content_hash=self.expected_evidence_content_hash,
+                    source_revision_vector_digest=(
+                        self.expected_source_revision_vector_digest
+                    ),
+                    source_cut_posture=self.expected_source_cut_posture,
                 ),
                 review_channel=self.review_channel,
                 presentation_receipt_id=self.presentation_receipt_id,
@@ -177,6 +191,8 @@ class ReviewDecisionResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: SourceCutPosture = Field(..., alias="sourceCutPosture")
     candidate_material_version: int = Field(..., alias="candidateMaterialVersion")
     candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion")
     review_channel: ReviewChannel = Field(..., alias="reviewChannel")
@@ -202,6 +218,8 @@ class ReviewDecisionResponse(CamelModel):
             candidateId=decision.candidate_id,
             evidencePacketId=decision.evidence_packet_id,
             evidenceContentHash=decision.evidence_content_hash,
+            sourceRevisionVectorDigest=decision.source_revision_vector_digest,
+            sourceCutPosture=decision.source_cut_posture,
             candidateMaterialVersion=decision.candidate_material_version,
             candidateEvidenceVersion=decision.candidate_evidence_version,
             reviewChannel=decision.review_channel,

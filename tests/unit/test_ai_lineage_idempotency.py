@@ -96,6 +96,8 @@ def test_ai_lineage_lookup_returns_none_when_request_id_is_absent() -> None:
                 candidate_id="idea-ai-001",
                 evidence_packet_id="iep-ai-001",
                 evidence_content_hash="sha256:evidence",
+                source_revision_vector_digest="legacy:unknown",
+                source_cut_posture="unknown",
                 workflow_pack_id="lotus-ai:idea-explanation:v1",
                 workflow_pack_version="v1",
                 purpose="advisor_review",

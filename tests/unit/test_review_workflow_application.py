@@ -51,6 +51,8 @@ from app.domain import (
     ReviewPersistenceResult,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     SuppressionReason,
     apply_review_action as _apply_review_action,
@@ -84,6 +86,11 @@ def source_ref() -> SourceRef:
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-snapshot-review-workflow-001",
+            source_cut_id="core-cut-review-workflow-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
@@ -175,6 +182,10 @@ def presentation_receipt(source_candidate: IdeaCandidate) -> CandidatePresentati
         ranking_policy_version="idea-deterministic-ranking-v1",
         candidate_material_version=source_candidate.identity.material_version,
         candidate_evidence_version=source_candidate.identity.evidence_version,
+        source_revision_vector_digest=(
+            source_candidate.evidence_packet.source_revision_vector_digest
+        ),
+        source_cut_posture=source_candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=DECIDED_AT,
     )
 

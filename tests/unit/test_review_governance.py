@@ -43,6 +43,8 @@ from app.domain import (
     ReviewMutationType,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     SuppressionReason,
     UnsupportedEvidenceReason,
@@ -74,6 +76,11 @@ def source_ref() -> SourceRef:
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-snapshot-review-001",
+            source_cut_id="core-cut-review-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
@@ -134,6 +141,25 @@ def candidate(
     )
 
 
+def candidate_with_revision_claims(
+    revision_claims: SourceRevisionClaims | None,
+) -> IdeaCandidate:
+    source_candidate = candidate()
+    source_ref_with_claims = replace(
+        source_candidate.evidence_packet.source_refs[0],
+        revision_claims=revision_claims,
+    )
+    evidence_packet_with_claims = replace(
+        source_candidate.evidence_packet,
+        source_refs=(source_ref_with_claims,),
+        lineage_ref=replace(
+            source_candidate.evidence_packet.lineage_ref,
+            source_refs=(source_ref_with_claims,),
+        ),
+    )
+    return replace(source_candidate, evidence_packet=evidence_packet_with_claims)
+
+
 def access_scope() -> ReviewAccessScope:
     return ReviewAccessScope(
         tenant_id="tenant-private-bank-sg",
@@ -168,6 +194,10 @@ def presentation_receipt(source_candidate: IdeaCandidate) -> CandidatePresentati
         ranking_policy_version="idea-deterministic-ranking-v1",
         candidate_material_version=source_candidate.identity.material_version,
         candidate_evidence_version=source_candidate.identity.evidence_version,
+        source_revision_vector_digest=(
+            source_candidate.evidence_packet.source_revision_vector_digest
+        ),
+        source_cut_posture=source_candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=DECIDED_AT - timedelta(minutes=1),
     )
 
@@ -244,6 +274,39 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.audit_event.attributes["candidate_id"] == "idea-review-001"
     assert result.audit_event.attributes["prior_lifecycle_status"] == "ready_for_review"
     assert result.audit_event.attributes["prior_review_posture"] == "advisor_review_required"
+
+
+@pytest.mark.parametrize(
+    "revision_claims",
+    (
+        None,
+        SourceRevisionClaims(
+            methodology_version="core-methodology-v1",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
+        SourceRevisionClaims(
+            snapshot_id="core-snapshot-failed-reconciliation",
+            reconciliation_posture=SourceReconciliationPosture.FAILED,
+        ),
+    ),
+)
+def test_review_cannot_approve_non_authoritative_source_cut(
+    revision_claims: SourceRevisionClaims | None,
+) -> None:
+    source_candidate = candidate_with_revision_claims(revision_claims)
+    command = replace(
+        decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+    )
+
+    with pytest.raises(InvalidReviewAction):
+        apply_review_action(source_candidate, command)
+
+    rejection = replace(
+        decision_command(ReviewAction.REJECT),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+    )
+    assert apply_review_action(source_candidate, rejection).decision.action is ReviewAction.REJECT
 
 
 def test_review_refuses_stale_expected_evidence_before_candidate_mutation() -> None:
@@ -835,8 +898,12 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
         GovernedReviewDecision(
             review_id="review-no-decision-reason",
             candidate_id="idea-review-001",
-            evidence_packet_id="iep_review_test",
-            evidence_content_hash="sha256:review-lineage",
+                evidence_packet_id="iep_review_test",
+                evidence_content_hash="sha256:review-lineage",
+                source_revision_vector_digest=(
+                    candidate().evidence_packet.source_revision_vector_digest
+                ),
+                source_cut_posture=candidate().evidence_packet.source_cut_posture,
             candidate_material_version=1,
             candidate_evidence_version=1,
             review_channel=ReviewChannel.WORKBENCH,

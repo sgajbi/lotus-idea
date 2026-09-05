@@ -338,6 +338,8 @@ class RedactedIdeaEvidenceResponse(CamelModel):
     review_posture: str = Field(..., alias="reviewPosture")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: str = Field(..., alias="sourceCutPosture")
     supportability: str
     source_refs: tuple[RedactedSourceRefResponse, ...] = Field(..., alias="sourceRefs")
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
@@ -355,6 +357,8 @@ class RedactedIdeaEvidenceResponse(CamelModel):
             reviewPosture=evidence.review_posture.value,
             evidencePacketId=evidence.evidence_packet_id,
             evidenceContentHash=evidence.evidence_content_hash,
+            sourceRevisionVectorDigest=evidence.source_revision_vector_digest,
+            sourceCutPosture=evidence.source_cut_posture.value,
             supportability=evidence.supportability.value,
             sourceRefs=tuple(
                 RedactedSourceRefResponse.from_domain(source_ref)

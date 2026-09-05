@@ -42,6 +42,8 @@ def presentation_receipt_for_candidate(
         ),
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=accepted_at_utc,
     )
 
@@ -86,6 +88,10 @@ def approved_review_decision_for_candidate(
         candidate_id=candidate.candidate_id,
         evidence_packet_id=grant.candidate_evidence.evidence_packet_id,
         evidence_content_hash=grant.candidate_evidence.evidence_content_hash,
+        source_revision_vector_digest=(
+            grant.candidate_evidence.source_revision_vector_digest
+        ),
+        source_cut_posture=grant.candidate_evidence.source_cut_posture,
         candidate_material_version=grant.candidate_evidence.material_version,
         candidate_evidence_version=grant.candidate_evidence.evidence_version,
         review_channel=grant.review_channel,

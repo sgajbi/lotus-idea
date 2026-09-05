@@ -13,7 +13,14 @@ from app.application.drawdown_review_signal import (
 from app.application.risk_drawdown_runtime_evidence import (
     build_risk_drawdown_runtime_execution,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.risk_sources import RiskDrawdownEvidence, RiskDrawdownEvidenceRequest
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -84,6 +91,10 @@ def risk_evidence(
             content_hash="sha256:drawdown-analytics-report",
             data_quality_status="ready",
             freshness=freshness,
+            revision_claims=SourceRevisionClaims(
+                calculation_run_id="risk-run-drawdown-runtime-evidence",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         ),
         risk_diagnostic="risk_drawdown_source_ready",
     )

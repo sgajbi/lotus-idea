@@ -22,7 +22,14 @@ from app.application.risk_concentration_runtime_evidence import (
     build_risk_concentration_runtime_execution,
     risk_concentration_runtime_execution_is_valid,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.risk_sources import RiskConcentrationEvidence, RiskConcentrationEvidenceRequest
 
 
@@ -44,6 +51,10 @@ class _Source:
                 content_hash="sha256:risk-concentration-contract-gate",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
+                revision_claims=SourceRevisionClaims(
+                    calculation_run_id="risk-run-concentration-contract-gate",
+                    reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+                ),
             ),
             concentration_diagnostic="risk_issuer_coverage_complete",
         )

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.domain import EvidenceSupportability
+from app.domain import EvidenceSupportability, SourceCutPosture
 from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.review_authority import (
     REVIEW_AUTHORITY_POLICY_VERSION,
@@ -43,6 +43,8 @@ def presentation_receipt(
         ranking_policy_version="idea-deterministic-ranking-v1",
         candidate_material_version=identity.material_version,
         candidate_evidence_version=identity.evidence_version,
+        source_revision_vector_digest=identity.source_revision_vector_digest,
+        source_cut_posture=identity.source_cut_posture,
         accepted_at_utc=accepted_at_utc,
     )
 
@@ -73,6 +75,8 @@ def test_expected_candidate_evidence_binds_material_evidence_packet_and_hash() -
         replace(expected, evidence_version=expected.evidence_version + 1),
         replace(expected, evidence_packet_id="iep-review-new"),
         replace(expected, evidence_content_hash="sha256:review-new"),
+        replace(expected, source_revision_vector_digest="sha256:revision-vector-new"),
+        replace(expected, source_cut_posture=SourceCutPosture.MIXED),
     ):
         with pytest.raises(ReviewAuthorityConflict, match="evidence identity is stale"):
             validate_expected_candidate_evidence(changed, candidate())

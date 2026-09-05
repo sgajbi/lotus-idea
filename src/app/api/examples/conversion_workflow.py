@@ -35,6 +35,8 @@ def build_conversion_intent_response_examples() -> dict[str, dict[str, Any]]:
                 "targetSourceAuthority": "lotus-report",
                 "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
                 "evidenceContentHash": "sha256:evidence-lineage",
+                "sourceRevisionVectorDigest": "sha256:source-revision-vector",
+                "sourceCutPosture": "coherent",
                 "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
                 "reviewId": "review-approve-001",
                 "reviewChannel": "workbench",

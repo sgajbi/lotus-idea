@@ -48,6 +48,8 @@ from app.domain import (
     CandidateEvidenceIdentity,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     UnscopedCandidatePersistenceError,
     build_ai_explanation_request,
@@ -271,6 +273,8 @@ def test_postgres_repository_snapshot_round_trip_preserves_presentation_receipts
         ranking_policy_version="idea-score-v2",
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=EVALUATED_AT,
     )
     snapshot = replace(
@@ -1056,6 +1060,11 @@ def source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef
         content_hash=content_hash or f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id=f"snapshot:{product_id}",
+            source_cut_id="core-cut-postgres-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 

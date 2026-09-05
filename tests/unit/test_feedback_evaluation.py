@@ -405,6 +405,10 @@ def _record(
                 candidate_id=candidate.candidate_id,
                 evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
                 evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+                source_revision_vector_digest=(
+                    candidate.evidence_packet.source_revision_vector_digest
+                ),
+                source_cut_posture=candidate.evidence_packet.source_cut_posture,
                 candidate_material_version=candidate.identity.material_version,
                 candidate_evidence_version=candidate.identity.evidence_version,
                 review_channel=ReviewChannel.LEGACY_UNVERIFIED,

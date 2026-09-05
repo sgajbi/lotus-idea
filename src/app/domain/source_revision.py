@@ -24,6 +24,19 @@ class SourceCutPosture(StrEnum):
     UNKNOWN = "unknown"
 
 
+SOURCE_CUT_AUTHORITY_POLICY_VERSION = "idea-source-cut-authority-v1"
+AUTHORITATIVE_SOURCE_CUT_POSTURES = frozenset(
+    {
+        SourceCutPosture.COHERENT,
+        SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE,
+    }
+)
+
+
+def source_cut_is_authoritative(posture: SourceCutPosture) -> bool:
+    return posture in AUTHORITATIVE_SOURCE_CUT_POSTURES
+
+
 def _require_normalized_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")

@@ -37,6 +37,8 @@ from app.domain import (
     ReasonCode,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     CandidateEvidenceIdentity,
 )
@@ -359,6 +361,11 @@ def approved_candidate(
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-snapshot-conversion-workflow-001",
+            source_cut_id="core-cut-conversion-workflow-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
     evidence_packet = IdeaEvidencePacket(
         evidence_packet_id="iep_conversion_workflow_test",

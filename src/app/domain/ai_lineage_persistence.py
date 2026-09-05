@@ -14,6 +14,7 @@ from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.audit import AuditEvent
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
+from app.domain.source_revision import SourceCutPosture
 
 if TYPE_CHECKING:
     from app.domain.persistence import CandidatePersistenceRecord
@@ -32,6 +33,8 @@ class AIExplanationLineageRecord:
     candidate_id: str
     evidence_packet_id: str
     evidence_content_hash: str
+    source_revision_vector_digest: str
+    source_cut_posture: str
     workflow_pack_id: str
     workflow_pack_version: str
     purpose: str
@@ -61,6 +64,8 @@ class AIExplanationLineageRecord:
             "candidate_id",
             "evidence_packet_id",
             "evidence_content_hash",
+            "source_revision_vector_digest",
+            "source_cut_posture",
             "workflow_pack_id",
             "workflow_pack_version",
             "purpose",
@@ -85,6 +90,7 @@ class AIExplanationLineageRecord:
             digest=self.output_content_digest,
         )
         AIExecutionProvenancePosture(self.execution_provenance_posture)
+        SourceCutPosture(self.source_cut_posture)
         verified_posture = (
             self.execution_provenance_posture
             == AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED.value
@@ -172,6 +178,10 @@ def _ai_lineage_hash_payload_from_result(
         "candidate_id": result.request.redacted_evidence.candidate_id,
         "claim_ids": _ai_output_claim_ids(output),
         "evidence_content_hash": result.request.redacted_evidence.evidence_content_hash,
+        "source_revision_vector_digest": (
+            result.request.redacted_evidence.source_revision_vector_digest
+        ),
+        "source_cut_posture": result.request.redacted_evidence.source_cut_posture.value,
         "evidence_packet_id": result.request.redacted_evidence.evidence_packet_id,
         "fallback_reason": (
             result.fallback_reason.value if result.fallback_reason is not None else None
@@ -217,6 +227,10 @@ def _ai_lineage_record_from_result(
         candidate_id=result.request.redacted_evidence.candidate_id,
         evidence_packet_id=result.request.redacted_evidence.evidence_packet_id,
         evidence_content_hash=result.request.redacted_evidence.evidence_content_hash,
+        source_revision_vector_digest=(
+            result.request.redacted_evidence.source_revision_vector_digest
+        ),
+        source_cut_posture=result.request.redacted_evidence.source_cut_posture.value,
         workflow_pack_id=result.request.workflow_pack.workflow_pack_id,
         workflow_pack_version=result.request.workflow_pack.workflow_pack_version,
         purpose=result.request.purpose.value,
@@ -280,6 +294,8 @@ def _ai_lineage_hash_payload_from_record(
         "candidate_id": record.candidate_id,
         "claim_ids": list(record.claim_ids),
         "evidence_content_hash": record.evidence_content_hash,
+        "source_revision_vector_digest": record.source_revision_vector_digest,
+        "source_cut_posture": record.source_cut_posture,
         "evidence_packet_id": record.evidence_packet_id,
         "fallback_reason": record.fallback_reason,
         "fallback_used": record.fallback_used,

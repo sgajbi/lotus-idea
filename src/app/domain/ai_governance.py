@@ -33,6 +33,7 @@ from app.domain.ideas import (
     SourceSystem,
     UnsupportedEvidenceReason,
 )
+from app.domain.source_revision import SourceCutPosture
 
 
 @dataclass(frozen=True)
@@ -154,6 +155,8 @@ class RedactedIdeaEvidence:
     review_posture: ReviewPosture
     evidence_packet_id: str
     evidence_content_hash: str
+    source_revision_vector_digest: str
+    source_cut_posture: SourceCutPosture
     supportability: EvidenceSupportability
     source_refs: tuple[RedactedSourceRef, ...]
     reason_codes: tuple[ReasonCode, ...]
@@ -172,6 +175,7 @@ class RedactedIdeaEvidence:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_text(self.evidence_content_hash, "evidence_content_hash")
+        _require_text(self.source_revision_vector_digest, "source_revision_vector_digest")
         if not self.source_refs:
             raise ValueError("source_refs is required")
         if not self.reason_codes:
@@ -204,6 +208,10 @@ class RedactedIdeaEvidence:
             review_posture=candidate.review_posture,
             evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
             evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+            source_revision_vector_digest=(
+                candidate.evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate.evidence_packet.source_cut_posture,
             supportability=candidate.evidence_packet.supportability,
             source_refs=tuple(
                 RedactedSourceRef(
@@ -729,6 +737,10 @@ def _ai_audit_event(
         occurred_at_utc=occurred_at_utc,
         attributes={
             "evidence_packet_id": request.redacted_evidence.evidence_packet_id,
+            "source_revision_vector_digest": (
+                request.redacted_evidence.source_revision_vector_digest
+            ),
+            "source_cut_posture": request.redacted_evidence.source_cut_posture.value,
             "fallback_used": str(posture is AIExplanationPosture.FALLBACK_USED).lower(),
             "posture": posture.value,
             "purpose": request.purpose.value,

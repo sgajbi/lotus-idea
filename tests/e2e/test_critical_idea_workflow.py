@@ -230,6 +230,8 @@ def _assert_advisor_queue_contains_candidate(
         "expectedEvidenceVersion": candidate["evidenceVersion"],
         "expectedEvidencePacketId": candidate["evidencePacketId"],
         "expectedEvidenceContentHash": evidence["evidenceContentHash"],
+        "expectedSourceRevisionVectorDigest": evidence["sourceRevisionVectorDigest"],
+        "expectedSourceCutPosture": evidence["sourceCutPosture"],
     }
 
 

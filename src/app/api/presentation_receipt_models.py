@@ -11,6 +11,7 @@ from app.domain import (
     MAX_PRESENTED_CANDIDATE_COUNT,
     CandidatePresentationReceipt,
     PresentationReceiptResult,
+    SourceCutPosture,
 )
 
 
@@ -52,6 +53,12 @@ class PresentationReceiptRequest(CamelModel):
         ge=1,
         strict=True,
     )
+    source_revision_vector_digest: str = Field(
+        ...,
+        alias="sourceRevisionVectorDigest",
+        pattern=_SHA256_DIGEST,
+    )
+    source_cut_posture: SourceCutPosture = Field(..., alias="sourceCutPosture")
 
     @field_validator("presented_at_utc")
     @classmethod
@@ -77,6 +84,8 @@ class PresentationReceiptRequest(CamelModel):
             ranking_policy_version=self.ranking_policy_version,
             candidate_material_version=self.candidate_material_version,
             candidate_evidence_version=self.candidate_evidence_version,
+            source_revision_vector_digest=self.source_revision_vector_digest,
+            source_cut_posture=self.source_cut_posture,
             accepted_at_utc=accepted_at_utc,
         )
 
@@ -95,6 +104,8 @@ class PresentationReceiptEvidenceResponse(CamelModel):
     ranking_policy_version: str = Field(..., alias="rankingPolicyVersion")
     candidate_material_version: int = Field(..., alias="candidateMaterialVersion")
     candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion")
+    source_revision_vector_digest: str | None = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: SourceCutPosture = Field(..., alias="sourceCutPosture")
     schema_version: str = Field(..., alias="schemaVersion")
     surface: str
     producer: str
