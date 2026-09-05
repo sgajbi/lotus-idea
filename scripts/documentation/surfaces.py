@@ -18,3 +18,4 @@ class PolishedDocumentationSurface:
     min_markdown_tables: int
     min_code_fences: int
     min_mermaid_fences: int = 0
+    max_mermaid_fences: int | None = None
