@@ -223,7 +223,8 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
         "Records immutable, bounded evidence that a specific candidate version was visibly "
         "rendered in the governed advisor review queue. Idempotency-Key is the stable receipt "
         "identity. The write is fenced by candidate, exact tenant, material version, evidence "
-        "version, and UTC chronology. Idea global rank and Workbench visible-set size remain "
+        "version, source revision vector, source-cut posture, and UTC chronology. Idea global "
+        "rank and Workbench visible-set size remain "
         "independent facts. Queue retrieval is not presentation evidence. This route "
         "does not promote effectiveness certification until Gateway pass-through and Workbench "
         "visible-render production are independently certified on main."
@@ -252,7 +253,9 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
                             "rankingPolicyVersion": "idea-score-v2",
                             "candidateMaterialVersion": 1,
                             "candidateEvidenceVersion": 1,
-                            "schemaVersion": ("lotus-idea.candidate-presentation-receipt.v1"),
+                            "sourceRevisionVectorDigest": f"sha256:{'b' * 64}",
+                            "sourceCutPosture": "coherent",
+                            "schemaVersion": ("lotus-idea.candidate-presentation-receipt.v2"),
                             "surface": "advisor_review_queue",
                             "producer": "lotus-workbench",
                         },

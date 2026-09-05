@@ -16,6 +16,7 @@ from app.domain import (
     OpportunityFamily,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
+    SourceCutPosture,
     validate_presentation_receipt_candidate,
 )
 from tests.support.opportunity_effectiveness_fixture import (
@@ -40,6 +41,18 @@ def test_candidate_presentation_receipt_keeps_global_rank_separate_from_visible_
 
     assert receipt.rank_at_presentation == 25
     assert receipt.visible_candidate_count == 1
+
+
+def test_legacy_receipt_retains_unknown_cut_and_cannot_match_current_candidate() -> None:
+    receipt = _receipt(
+        schema_version="lotus-idea.candidate-presentation-receipt.v1",
+        source_revision_vector_digest=None,
+        source_cut_posture=SourceCutPosture.UNKNOWN,
+    )
+
+    assert receipt.source_revision_vector_digest is None
+    with pytest.raises(PresentationReceiptCandidateStateError, match="revision vector"):
+        validate_presentation_receipt_candidate(receipt, _candidate())
 
 
 @pytest.mark.parametrize(

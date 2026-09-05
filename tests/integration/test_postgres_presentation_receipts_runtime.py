@@ -137,15 +137,22 @@ def test_postgres_rank_migration_rollback_fails_closed_for_independent_rank(
             SELECT conname
             FROM pg_constraint
             WHERE conrelid = 'idea_candidate_presentation_receipt'::regclass
-              AND conname = 'ck_idea_candidate_presentation_receipt_values_v2'
+              AND conname = 'ck_idea_candidate_presentation_receipt_values_v3'
             """
         ).fetchone()
 
     assert persisted == (25, 1)
-    assert active_constraint == ("ck_idea_candidate_presentation_receipt_values_v2",)
+    assert active_constraint == ("ck_idea_candidate_presentation_receipt_values_v3",)
 
 
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
+    candidate = candidate_fixture(
+        "candidate-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
+        tenant_id="tenant-a",
+    )
     values: dict[str, Any] = {
         "receipt_id": "receipt-presentation-001",
         "candidate_id": "candidate-presentation-001",
@@ -158,6 +165,8 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
         "ranking_policy_version": "idea-score-v2",
         "candidate_material_version": 1,
         "candidate_evidence_version": 1,
+        "source_revision_vector_digest": candidate.evidence_packet.source_revision_vector_digest,
+        "source_cut_posture": candidate.evidence_packet.source_cut_posture,
         "accepted_at_utc": datetime(2026, 8, 30, 12, tzinfo=UTC),
     }
     values.update(overrides)
