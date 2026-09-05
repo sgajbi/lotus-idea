@@ -250,6 +250,9 @@ def source_cut_posture(
         for item in present_claims
     ):
         return SourceCutPosture.PARTIAL
+    causal_posture = _causal_input_posture(source_refs)
+    if causal_posture is not None:
+        return causal_posture
     if len(source_refs) == 1:
         return SourceCutPosture.COHERENT
     if len({source_ref.as_of_date for source_ref in source_refs}) != 1:
@@ -267,6 +270,42 @@ def source_cut_posture(
     if observed_skew > tolerance.maximum_generated_time_skew_seconds:
         return SourceCutPosture.MIXED
     return SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE
+
+
+def _causal_input_posture(
+    source_refs: tuple[RevisionSourceRef, ...],
+) -> SourceCutPosture | None:
+    sources_by_product_id: dict[str, list[RevisionSourceRef]] = {}
+    for source_ref in source_refs:
+        sources_by_product_id.setdefault(source_ref.product_id, []).append(source_ref)
+
+    comparison_unavailable = False
+    for source_ref in source_refs:
+        claims = source_ref.revision_claims
+        if claims is None:
+            continue
+        for causal_claim in claims.causal_input_revisions:
+            corresponding_sources = sources_by_product_id.get(causal_claim.product_id, [])
+            if len(corresponding_sources) != 1:
+                comparison_unavailable = True
+                continue
+            corresponding_claims = corresponding_sources[0].revision_claims
+            if corresponding_claims is None or corresponding_claims.source_revision is None:
+                comparison_unavailable = True
+                continue
+            if corresponding_claims.source_revision != causal_claim.source_revision:
+                return SourceCutPosture.MIXED
+            if corresponding_claims.restatement_version == causal_claim.restatement_version:
+                continue
+            if None in (
+                corresponding_claims.restatement_version,
+                causal_claim.restatement_version,
+            ):
+                comparison_unavailable = True
+                continue
+            return SourceCutPosture.MIXED
+
+    return SourceCutPosture.PARTIAL if comparison_unavailable else None
 
 
 def _require_unique_sources(source_refs: tuple[RevisionSourceRef, ...]) -> None:

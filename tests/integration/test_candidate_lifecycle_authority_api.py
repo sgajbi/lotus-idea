@@ -9,12 +9,68 @@ from tests.integration.test_review_workflow_api import (
     approve_review_payload,
     conversion_intent_headers,
     conversion_intent_payload,
+    high_cash_payload,
     lifecycle_headers,
     lifecycle_payload,
+    persist_headers,
     persisted_candidate_id,
     review_headers,
     transition_candidate_to_review_ready,
 )
+
+
+def test_causal_revision_contradiction_refuses_owned_review_and_conversion() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    request = high_cash_payload()
+    holdings = request["sourceEvidence"]["holdingsRef"]
+    holdings["revisionClaims"]["sourceRevision"] = "holdings-revision-2"
+    request["sourceEvidence"]["portfolioStateRef"]["revisionClaims"]["causalInputRevisions"] = [
+        {
+            "productId": holdings["productId"],
+            "sourceRevision": "holdings-revision-1",
+        }
+    ]
+    headers = persist_headers("causal-revision-conflict-001")
+
+    accepted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=request,
+        headers=headers,
+    )
+    replayed = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=request,
+        headers=headers,
+    )
+    assert accepted.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    candidate_id = accepted.json()["persistence"]["candidateId"]
+    transition_candidate_to_review_ready(client, candidate_id)
+
+    review_request = approve_review_payload(candidate_id)
+    review = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=review_request,
+        headers=review_headers("causal-revision-conflict-review-001"),
+    )
+    conversion = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(
+            conversion_intent_id="causal-revision-conflict-conversion-001"
+        ),
+        headers=conversion_intent_headers("causal-revision-conflict-conversion-001"),
+    )
+
+    assert review.status_code == 409
+    assert review.json()["code"] == "review_action_conflict"
+    assert conversion.status_code == 409
+    assert conversion.json()["code"] == "conversion_intent_conflict"
+    record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    assert record.candidate.evidence_packet.source_cut_posture.value == "mixed"
+    assert record.review_decisions == ()
+    assert record.conversion_intents == ()
 
 
 def test_owned_review_and_conversion_use_acceptance_chronology_and_retain_observed_time() -> None:

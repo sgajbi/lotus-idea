@@ -17,7 +17,9 @@ from app.infrastructure.postgres_codecs import idea_candidate_from_json, idea_ca
 from tests.support.opportunity_effectiveness_fixture import candidate_fixture
 
 
-def _candidate_with_revision_claims() -> IdeaCandidate:
+def _candidate_with_revision_claims(
+    *, causal_source_revision: str = "holdings-31"
+) -> IdeaCandidate:
     candidate = candidate_fixture(
         "candidate-source-revision",
         family=OpportunityFamily.HIGH_CASH,
@@ -36,16 +38,28 @@ def _candidate_with_revision_claims() -> IdeaCandidate:
             causal_input_revisions=(
                 CausalInputRevision(
                     product_id="lotus-core:HoldingsAsOf:v1",
-                    source_revision="holdings-31",
+                    source_revision=causal_source_revision,
+                    restatement_version="restatement-2",
                 ),
             ),
             reconciliation_posture=SourceReconciliationPosture.COMPLETE,
         ),
     )
+    holdings = replace(
+        candidate.evidence_packet.source_refs[0],
+        product_id="lotus-core:HoldingsAsOf:v1",
+        content_hash="sha256:holdings-source-revision",
+        revision_claims=SourceRevisionClaims(
+            source_revision="holdings-31",
+            restatement_version="restatement-2",
+            source_cut_id="close-2026-09-04",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
+    )
     packet = replace(
         candidate.evidence_packet,
-        source_refs=(source,),
-        lineage_ref=replace(candidate.evidence_packet.lineage_ref, source_refs=(source,)),
+        source_refs=(source, holdings),
+        lineage_ref=replace(candidate.evidence_packet.lineage_ref, source_refs=(source, holdings)),
     )
     return replace(candidate, evidence_packet=packet)
 
@@ -63,6 +77,17 @@ def test_postgres_codec_round_trips_source_revision_identity_and_derived_posture
     )
 
 
+def test_postgres_codec_retains_causal_revision_contradiction_posture() -> None:
+    candidate = _candidate_with_revision_claims(causal_source_revision="holdings-30")
+
+    payload = idea_candidate_to_json(candidate)
+    restored = idea_candidate_from_json(payload)
+
+    assert candidate.evidence_packet.source_cut_posture is SourceCutPosture.MIXED
+    assert payload["evidence_packet"]["source_cut_posture"] == "mixed"
+    assert restored.evidence_packet.source_cut_posture is SourceCutPosture.MIXED
+
+
 def test_postgres_codec_decodes_pre_migration_source_refs_as_explicit_unknown() -> None:
     payload = idea_candidate_to_json(_candidate_with_revision_claims())
     legacy_payload = deepcopy(payload)
@@ -70,8 +95,10 @@ def test_postgres_codec_decodes_pre_migration_source_refs_as_explicit_unknown() 
     packet.pop("source_cut_posture")
     packet.pop("source_cut_tolerance")
     packet.pop("source_revision_vector_digest")
-    packet["source_refs"][0].pop("revision_claims")
-    packet["lineage_ref"]["source_refs"][0].pop("revision_claims")
+    for source_ref in packet["source_refs"]:
+        source_ref.pop("revision_claims")
+    for source_ref in packet["lineage_ref"]["source_refs"]:
+        source_ref.pop("revision_claims")
 
     restored = idea_candidate_from_json(legacy_payload)
 
