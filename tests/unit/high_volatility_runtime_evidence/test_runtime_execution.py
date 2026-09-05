@@ -46,7 +46,9 @@ def test_runtime_execution_binds_risk_source_and_durable_persistence_receipts() 
     execution = payload["execution"]
     assert execution["periodName"] == "YTD"
     assert execution["sourceReceipt"]["productId"] == "lotus-risk:RiskMetricsReport:v1"
+    assert execution["sourceReceipt"]["revisionClaims"]["claim_posture"] == "owner_claimed"
     assert execution["persistenceReceipt"]["decision"] == "accepted"
+    assert execution["persistenceReceipt"]["sourceCutPosture"] == "coherent"
     assert high_volatility_runtime_execution_is_valid(payload) is True
 
 

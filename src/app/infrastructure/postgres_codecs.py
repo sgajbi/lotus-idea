@@ -64,6 +64,7 @@ from app.domain.review_authority import (
 )
 from app.domain.review_queue import QueuePriorityBucket
 from app.domain.scoring import CandidateScorePolicyVersion
+from app.domain.source_revision import SourceCutPosture
 from app.ports.evidence_payloads import (
     access_scope_payload,
     source_cut_tolerance_from_payload,
@@ -270,6 +271,8 @@ def _review_decision_to_json(decision: GovernedReviewDecision) -> dict[str, Any]
         "candidate_id": decision.candidate_id,
         "evidence_packet_id": decision.evidence_packet_id,
         "evidence_content_hash": decision.evidence_content_hash,
+        "source_revision_vector_digest": decision.source_revision_vector_digest,
+        "source_cut_posture": decision.source_cut_posture.value,
         "candidate_material_version": decision.candidate_material_version,
         "candidate_evidence_version": decision.candidate_evidence_version,
         "review_channel": decision.review_channel.value,
@@ -307,6 +310,12 @@ def _review_decision_from_json(payload: Mapping[str, Any]) -> GovernedReviewDeci
         candidate_id=str(payload["candidate_id"]),
         evidence_packet_id=str(payload["evidence_packet_id"]),
         evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_revision_vector_digest=str(
+            payload.get("source_revision_vector_digest", "legacy:unknown")
+        ),
+        source_cut_posture=SourceCutPosture(
+            payload.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)
+        ),
         candidate_material_version=int(payload.get("candidate_material_version", 1)),
         candidate_evidence_version=int(payload.get("candidate_evidence_version", 1)),
         review_channel=ReviewChannel(payload.get("review_channel", "legacy_unverified")),
@@ -444,6 +453,8 @@ def _conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, An
         },
         "evidence_packet_id": intent.evidence_packet_id,
         "evidence_content_hash": intent.evidence_content_hash,
+        "source_revision_vector_digest": intent.source_revision_vector_digest,
+        "source_cut_posture": intent.source_cut_posture.value,
         "source_signal_ids": list(intent.source_signal_ids),
         "actor_subject": intent.actor_subject,
         "idempotency_key": intent.idempotency_key,
@@ -468,6 +479,12 @@ def _conversion_intent_from_json(payload: Mapping[str, Any]) -> GovernedConversi
         ),
         evidence_packet_id=str(payload["evidence_packet_id"]),
         evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_revision_vector_digest=str(
+            payload.get("source_revision_vector_digest", "legacy:unknown")
+        ),
+        source_cut_posture=SourceCutPosture(
+            payload.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)
+        ),
         source_signal_ids=tuple(payload["source_signal_ids"]),
         actor_subject=str(payload["actor_subject"]),
         idempotency_key=str(payload["idempotency_key"]),
@@ -496,6 +513,11 @@ def _review_authority_grant_to_json(
             "evidence_version": evidence.evidence_version,
             "evidence_packet_id": evidence.evidence_packet_id,
             "evidence_content_hash": evidence.evidence_content_hash,
+            "source_revision_vector_digest": evidence.source_revision_vector_digest,
+            "source_cut_posture": evidence.source_cut_posture.value,
+            "source_cut_authority_policy_version": (
+                evidence.source_cut_authority_policy_version
+            ),
         },
         "review_channel": grant.review_channel.value,
         "actor_subject": grant.actor_subject,
@@ -528,6 +550,15 @@ def _review_authority_grant_from_json(payload: Any) -> ReviewAuthorityGrant | No
             evidence_version=int(evidence["evidence_version"]),
             evidence_packet_id=str(evidence["evidence_packet_id"]),
             evidence_content_hash=str(evidence["evidence_content_hash"]),
+            source_revision_vector_digest=str(
+                evidence.get("source_revision_vector_digest", "legacy:unknown")
+            ),
+            source_cut_posture=SourceCutPosture(
+                evidence.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)
+            ),
+            source_cut_authority_policy_version=str(
+                evidence.get("source_cut_authority_policy_version", "legacy-unverified")
+            ),
         ),
         review_channel=ReviewChannel(payload["review_channel"]),
         actor_subject=str(payload["actor_subject"]),
@@ -661,6 +692,8 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
         "candidate_id": record.candidate_id,
         "evidence_packet_id": record.evidence_packet_id,
         "evidence_content_hash": record.evidence_content_hash,
+        "source_revision_vector_digest": record.source_revision_vector_digest,
+        "source_cut_posture": record.source_cut_posture,
         "workflow_pack_id": record.workflow_pack_id,
         "workflow_pack_version": record.workflow_pack_version,
         "purpose": record.purpose,
@@ -702,6 +735,12 @@ def _ai_explanation_lineage_from_json(
         candidate_id=str(payload["candidate_id"]),
         evidence_packet_id=str(payload["evidence_packet_id"]),
         evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_revision_vector_digest=str(
+            payload.get("source_revision_vector_digest", "legacy:unknown")
+        ),
+        source_cut_posture=str(
+            payload.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)
+        ),
         workflow_pack_id=str(payload["workflow_pack_id"]),
         workflow_pack_version=str(payload["workflow_pack_version"]),
         purpose=str(payload["purpose"]),

@@ -6,6 +6,11 @@ from enum import StrEnum
 
 from app.domain.ideas import EvidenceSupportability, IdeaCandidate
 from app.domain.presentation_receipts import CandidatePresentationReceipt
+from app.domain.source_revision import (
+    SOURCE_CUT_AUTHORITY_POLICY_VERSION,
+    SourceCutPosture,
+    source_cut_is_authoritative,
+)
 
 
 REVIEW_AUTHORITY_POLICY_VERSION = "idea-review-authority-v1"
@@ -40,12 +45,17 @@ class CandidateEvidenceIdentity:
     evidence_version: int
     evidence_packet_id: str
     evidence_content_hash: str
+    source_revision_vector_digest: str
+    source_cut_posture: SourceCutPosture
+    source_cut_authority_policy_version: str = SOURCE_CUT_AUTHORITY_POLICY_VERSION
 
     def __post_init__(self) -> None:
         for field_name in (
             "candidate_id",
             "evidence_packet_id",
             "evidence_content_hash",
+            "source_revision_vector_digest",
+            "source_cut_authority_policy_version",
         ):
             _require_text(getattr(self, field_name), field_name)
         for field_name in ("material_version", "evidence_version"):
@@ -61,6 +71,10 @@ class CandidateEvidenceIdentity:
             evidence_version=candidate.identity.evidence_version,
             evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
             evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+            source_revision_vector_digest=(
+                candidate.evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate.evidence_packet.source_cut_posture,
         )
 
 
@@ -120,6 +134,8 @@ class ReviewAuthorityGrant:
             return ReviewAuthorityStatus.REVOKED
         if self.candidate_evidence != CandidateEvidenceIdentity.from_candidate(candidate):
             return ReviewAuthorityStatus.SUPERSEDED
+        if not source_cut_is_authoritative(candidate.evidence_packet.source_cut_posture):
+            return ReviewAuthorityStatus.REVOKED
         if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
             return ReviewAuthorityStatus.REVOKED
         if (

@@ -32,6 +32,10 @@ def record_workbench_presentation(
             ranking_policy_version=candidate.score.policy_version,
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
+            source_revision_vector_digest=(
+                candidate.evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate.evidence_packet.source_cut_posture,
             accepted_at_utc=accepted_at_utc,
         )
     )
@@ -53,6 +57,10 @@ def exact_candidate_evidence_payload(candidate_id: str) -> dict[str, Any]:
         "expectedEvidenceVersion": candidate.identity.evidence_version,
         "expectedEvidencePacketId": candidate.evidence_packet.evidence_packet_id,
         "expectedEvidenceContentHash": candidate.evidence_packet.lineage_ref.content_hash,
+        "expectedSourceRevisionVectorDigest": (
+            candidate.evidence_packet.source_revision_vector_digest
+        ),
+        "expectedSourceCutPosture": candidate.evidence_packet.source_cut_posture.value,
     }
 
 
@@ -81,6 +89,8 @@ def _missing_candidate_authority(candidate_id: str) -> dict[str, Any]:
         "expectedEvidenceVersion": 1,
         "expectedEvidencePacketId": "missing-evidence-packet",
         "expectedEvidenceContentHash": "sha256:missing-evidence",
+        "expectedSourceRevisionVectorDigest": "sha256:missing-source-revision-vector",
+        "expectedSourceCutPosture": "unknown",
         "presentationReceiptId": f"receipt-{candidate_id}",
     }
 

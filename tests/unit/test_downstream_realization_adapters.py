@@ -12,6 +12,7 @@ from tests.support.report_materialization import (
 )
 
 from app.domain import (
+    SourceCutPosture,
     ConversionBoundary,
     ConversionTarget,
     EvidenceFreshness,
@@ -1160,6 +1161,8 @@ def conversion_intent(
         ),
         evidence_packet_id="iep-redacted",
         evidence_content_hash="sha256:evidence-redacted",
+        source_revision_vector_digest="sha256:source-revision-redacted",
+        source_cut_posture=SourceCutPosture.COHERENT,
         source_signal_ids=("signal-redacted",),
         actor_subject="advisor-redacted",
         idempotency_key="idempotency-redacted",

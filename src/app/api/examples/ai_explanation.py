@@ -269,6 +269,8 @@ def _local_fixture_payload() -> dict[str, Any]:
             "reviewPosture": "advisor_review_required",
             "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
             "evidenceContentHash": "sha256:evidence-lineage",
+            "sourceRevisionVectorDigest": "sha256:source-revision-vector",
+            "sourceCutPosture": "coherent",
             "supportability": "ready",
             "sourceRefs": [
                 {

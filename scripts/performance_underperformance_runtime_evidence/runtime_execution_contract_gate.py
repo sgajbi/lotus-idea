@@ -22,7 +22,14 @@ from app.application.underperformance_signal import (
     EvaluateUnderperformanceFromPerformanceCommand,
     evaluate_and_persist_underperformance_signal_from_performance,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.performance_sources import (
     PerformanceUnderperformanceEvidence,
     PerformanceUnderperformanceEvidenceRequest,
@@ -47,6 +54,10 @@ class _Source:
                 content_hash="sha256:performance-underperformance-contract-gate",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
+                revision_claims=SourceRevisionClaims(
+                    calculation_run_id="performance-run-underperformance-contract-gate",
+                    reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+                ),
             ),
             performance_diagnostic="performance_benchmark_context_ready",
         )

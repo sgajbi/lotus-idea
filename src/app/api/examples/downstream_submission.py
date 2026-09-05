@@ -16,6 +16,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import (
+    SourceCutPosture,
     AdviseProposalRealizationHistory,
     ManageActionRealizationHistory,
     CandidatePersistenceRecord,
@@ -294,6 +295,8 @@ def _conversion_intent(target: ConversionTarget) -> GovernedConversionIntent:
         ),
         evidence_packet_id="iep_example",
         evidence_content_hash="sha256:example-evidence",
+        source_revision_vector_digest="sha256:example-source-revision-vector",
+        source_cut_posture=SourceCutPosture.COHERENT,
         source_signal_ids=("signal_example",),
         actor_subject=_ACTOR,
         idempotency_key="conversion-example",

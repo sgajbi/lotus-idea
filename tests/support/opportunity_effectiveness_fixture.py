@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from app.domain import (
+    SourceCutPosture,
     CandidateChangeReason,
     CandidateVersionHistoryEntry,
     ConversionBoundary,
@@ -149,6 +150,8 @@ def review_fixture(
         candidate_id=candidate_id,
         evidence_packet_id=f"evidence-{candidate_id}",
         evidence_content_hash=f"sha256:{'2' * 64}",
+        source_revision_vector_digest="legacy:unknown",
+        source_cut_posture=SourceCutPosture.UNKNOWN,
         candidate_material_version=1,
         candidate_evidence_version=1,
         review_channel=ReviewChannel.LEGACY_UNVERIFIED,
@@ -271,6 +274,8 @@ def conversion_intent_fixture(
         ),
         evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
         evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         source_signal_ids=candidate.source_signal_ids,
         actor_subject="advisor-sensitive-subject",
         idempotency_key=f"intent-key-{candidate.candidate_id}",

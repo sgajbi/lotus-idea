@@ -37,6 +37,7 @@ def _path() -> str:
 
 
 def _payload() -> dict[str, object]:
+    candidate = _candidate()
     return {
         "tenantId": "tenant-a",
         "presentedAtUtc": "2026-08-30T12:00:00Z",
@@ -47,7 +48,19 @@ def _payload() -> dict[str, object]:
         "rankingPolicyVersion": "idea-score-v2",
         "candidateMaterialVersion": 1,
         "candidateEvidenceVersion": 1,
+        "sourceRevisionVectorDigest": candidate.evidence_packet.source_revision_vector_digest,
+        "sourceCutPosture": candidate.evidence_packet.source_cut_posture.value,
     }
+
+
+def _candidate():
+    return candidate_fixture(
+        "candidate-presentation-001",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("88"),
+        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
+        tenant_id="tenant-a",
+    )
 
 
 def _headers(
@@ -73,13 +86,7 @@ def reset_repository(monkeypatch: pytest.MonkeyPatch) -> None:
         "get_trusted_clock",
         lambda: FixedClock(accepted_at),
     )
-    candidate = candidate_fixture(
-        "candidate-presentation-001",
-        family=OpportunityFamily.HIGH_CASH,
-        score=Decimal("88"),
-        created_at=datetime(2026, 8, 30, 11, tzinfo=UTC),
-        tenant_id="tenant-a",
-    )
+    candidate = _candidate()
     reset_idea_repository_for_tests(
         InMemoryIdeaRepository(snapshot_fixture(record_fixture(candidate)))
     )
@@ -116,7 +123,9 @@ def test_presentation_receipt_api_accepts_and_replays_exact_visible_render_evide
         "rankingPolicyVersion": "idea-score-v2",
         "candidateMaterialVersion": 1,
         "candidateEvidenceVersion": 1,
-        "schemaVersion": "lotus-idea.candidate-presentation-receipt.v1",
+        "sourceRevisionVectorDigest": _candidate().evidence_packet.source_revision_vector_digest,
+        "sourceCutPosture": "unknown",
+        "schemaVersion": "lotus-idea.candidate-presentation-receipt.v2",
         "surface": "advisor_review_queue",
         "producer": "lotus-workbench",
     }

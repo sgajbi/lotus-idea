@@ -20,6 +20,10 @@ def test_builds_redacted_review_gated_lotus_ai_input_from_idea_truth() -> None:
     assert isinstance(supportability, dict)
     assert redacted["candidate_id"] == "idea-ai-001"
     assert redacted["evidence_packet_id"] == "iep_ai_test"
+    assert redacted["source_revision_vector_digest"] == (
+        request.redacted_evidence.source_revision_vector_digest
+    )
+    assert redacted["source_cut_posture"] == request.redacted_evidence.source_cut_posture.value
     assert redacted["score_components"] == [
         {
             "component": "materiality",
@@ -40,7 +44,7 @@ def test_builds_redacted_review_gated_lotus_ai_input_from_idea_truth() -> None:
     assert "place_orders" in supportability["forbidden_actions"]
     assert evidence.source_refs == ("lotus-idea:evidence-packet:iep_ai_test",)
     assert lotus_ai_input_evidence_sha256(evidence) == (
-        "96afd0a6d1a129c3b5335ada2af5d6e8389721e2e43d32315e3ce2f8a63d8081"
+        "96cd189c6d5ac7449449b9bffb3a6025e7846b2581b4295f6dc0e5fbf521dfeb"
     )
 
 

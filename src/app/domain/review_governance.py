@@ -48,6 +48,7 @@ from app.domain.review_authority import (
     validate_workbench_presentation,
 )
 from app.domain.presentation_receipts import CandidatePresentationReceipt
+from app.domain.source_revision import SourceCutPosture, source_cut_is_authoritative
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -291,6 +292,8 @@ class GovernedReviewDecision:
     candidate_id: str
     evidence_packet_id: str
     evidence_content_hash: str
+    source_revision_vector_digest: str
+    source_cut_posture: SourceCutPosture
     candidate_material_version: int
     candidate_evidence_version: int
     review_channel: ReviewChannel
@@ -328,6 +331,8 @@ class GovernedReviewDecision:
                 evidence_version=self.candidate_evidence_version,
                 evidence_packet_id=self.evidence_packet_id,
                 evidence_content_hash=self.evidence_content_hash,
+                source_revision_vector_digest=self.source_revision_vector_digest,
+                source_cut_posture=self.source_cut_posture,
             ),
             review_channel=self.review_channel,
             actor_subject=self.actor_subject,
@@ -349,6 +354,7 @@ class GovernedReviewDecision:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_text(self.evidence_content_hash, "evidence_content_hash")
+        _require_text(self.source_revision_vector_digest, "source_revision_vector_digest")
         _require_text(self.actor_subject, "actor_subject")
         _require_aware_utc(self.decided_at_utc, "decided_at_utc")
         _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
@@ -358,6 +364,8 @@ class GovernedReviewDecision:
             evidence_version=self.candidate_evidence_version,
             evidence_packet_id=self.evidence_packet_id,
             evidence_content_hash=self.evidence_content_hash,
+            source_revision_vector_digest=self.source_revision_vector_digest,
+            source_cut_posture=self.source_cut_posture,
         )
         _require_text(self.review_policy_version, "review_policy_version")
         _require_text(
@@ -643,6 +651,8 @@ def apply_review_action(
         candidate_id=candidate.candidate_id,
         evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
         evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
         review_channel=command.review_channel,
@@ -941,6 +951,10 @@ def _ensure_evidence_ready(
 ) -> None:
     if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
         raise _invalid_review_action(candidate, action)
+    if action is ReviewAction.APPROVE_FOR_CONVERSION and not source_cut_is_authoritative(
+        candidate.evidence_packet.source_cut_posture
+    ):
+        raise _invalid_review_action(candidate, action)
     applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
     if applicability_expiry is not None and accepted_at_utc >= applicability_expiry:
         raise _invalid_review_action(candidate, action)
@@ -978,6 +992,8 @@ def _review_audit_event(
             "actor_role": decision.actor_role.value,
             "candidate_id": candidate_before.candidate_id,
             "candidate_family": candidate_before.family.value,
+            "source_revision_vector_digest": decision.source_revision_vector_digest,
+            "source_cut_posture": decision.source_cut_posture.value,
             "evidence_packet_id": decision.evidence_packet_id,
             "candidate_material_version": str(decision.candidate_material_version),
             "candidate_evidence_version": str(decision.candidate_evidence_version),

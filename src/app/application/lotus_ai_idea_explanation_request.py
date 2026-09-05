@@ -51,6 +51,8 @@ def build_lotus_ai_idea_explanation_input(
             "review_posture": evidence.review_posture.value,
             "evidence_packet_id": evidence.evidence_packet_id,
             "evidence_content_hash": evidence.evidence_content_hash,
+            "source_revision_vector_digest": evidence.source_revision_vector_digest,
+            "source_cut_posture": evidence.source_cut_posture.value,
             "supportability": evidence.supportability.value,
             "score_policy_version": evidence.score_policy_version,
             "score": str(evidence.score) if evidence.score is not None else None,

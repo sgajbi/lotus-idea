@@ -13,7 +13,14 @@ from app.application.underperformance_signal import (
     EvaluateUnderperformanceFromPerformanceCommand,
     evaluate_and_persist_underperformance_signal_from_performance,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.performance_sources import (
     PerformanceUnderperformanceEvidence,
     PerformanceUnderperformanceEvidenceRequest,
@@ -94,6 +101,10 @@ def performance_evidence(
             content_hash="sha256:performance-returns-series",
             data_quality_status="ready",
             freshness=freshness,
+            revision_claims=SourceRevisionClaims(
+                calculation_run_id="performance-run-underperformance-runtime-evidence",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         ),
         performance_diagnostic="performance_benchmark_context_ready",
     )

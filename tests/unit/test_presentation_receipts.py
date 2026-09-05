@@ -50,7 +50,7 @@ def test_candidate_presentation_receipt_keeps_global_rank_separate_from_visible_
         ("tenant_id", 42, "tenant_id must be a governed reference"),
         ("queue_policy_version", "v 1", "queue_policy_version must be a governed reference"),
         ("ranking_policy_version", "v", "ranking_policy_version must be a governed reference"),
-        ("schema_version", "lotus-idea.candidate-presentation-receipt.v2", "unsupported"),
+        ("schema_version", "lotus-idea.candidate-presentation-receipt.v3", "unsupported"),
         ("surface", "search_results", "unsupported"),
         ("producer", "lotus-gateway", "unsupported"),
         ("presented_at_utc", datetime(2026, 8, 30), "timezone-aware"),
@@ -72,6 +72,7 @@ def test_candidate_presentation_receipt_keeps_global_rank_separate_from_visible_
         ("visible_candidate_count", MAX_PRESENTED_CANDIDATE_COUNT + 1, "must be between"),
         ("visible_candidate_count", True, "must be between"),
         ("queue_snapshot_digest", "queue-snapshot", "must be a sha256 digest"),
+        ("source_revision_vector_digest", "source-vector", "must be a sha256 digest"),
         ("candidate_material_version", 0, "must be a positive integer"),
         ("candidate_material_version", True, "must be a positive integer"),
         ("candidate_evidence_version", 0, "must be a positive integer"),
@@ -154,6 +155,7 @@ def test_in_memory_repository_does_not_disclose_receipt_across_candidate_scope()
         {"tenant_id": "tenant-other"},
         {"candidate_material_version": 2},
         {"candidate_evidence_version": 2},
+        {"source_revision_vector_digest": f"sha256:{'f' * 64}"},
         {"accepted_at_utc": datetime(2026, 8, 30, 11, 59, 59, tzinfo=UTC)},
     ),
 )
@@ -181,6 +183,7 @@ def test_candidate_validation_rejects_mismatched_identity_before_other_claims() 
 
 
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
+    candidate = _candidate()
     values: dict[str, Any] = {
         "receipt_id": "receipt-0001",
         "candidate_id": "candidate-0001",
@@ -193,6 +196,8 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
         "ranking_policy_version": "idea-score-v2",
         "candidate_material_version": 1,
         "candidate_evidence_version": 1,
+        "source_revision_vector_digest": candidate.evidence_packet.source_revision_vector_digest,
+        "source_cut_posture": candidate.evidence_packet.source_cut_posture,
         "accepted_at_utc": datetime(2026, 8, 30, 12, 0, 1, tzinfo=UTC),
     }
     values.update(overrides)
@@ -200,11 +205,15 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
 
 
 def _repository() -> InMemoryIdeaRepository:
-    candidate = candidate_fixture(
+    candidate = _candidate()
+    return InMemoryIdeaRepository(snapshot_fixture(record_fixture(candidate)))
+
+
+def _candidate():
+    return candidate_fixture(
         "candidate-0001",
         family=OpportunityFamily.HIGH_CASH,
         score=Decimal("88"),
         created_at=datetime(2026, 8, 30, 12, tzinfo=UTC),
         tenant_id="tenant-0001",
     )
-    return InMemoryIdeaRepository(snapshot_fixture(record_fixture(candidate)))

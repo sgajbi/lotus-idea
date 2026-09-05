@@ -27,6 +27,7 @@ from app.domain import (
     ReasonCode,
     ReviewChannel,
     SourceSystem,
+    SourceCutPosture,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext
@@ -46,11 +47,20 @@ class ConversionIntentRequest(CamelModel):
     expected_evidence_version: int = Field(..., alias="expectedEvidenceVersion", gt=0)
     expected_evidence_packet_id: str = Field(..., alias="expectedEvidencePacketId")
     expected_evidence_content_hash: str = Field(..., alias="expectedEvidenceContentHash")
+    expected_source_revision_vector_digest: str = Field(
+        ...,
+        alias="expectedSourceRevisionVectorDigest",
+    )
+    expected_source_cut_posture: SourceCutPosture = Field(
+        ...,
+        alias="expectedSourceCutPosture",
+    )
 
     @field_validator(
         "expected_review_id",
         "expected_evidence_packet_id",
         "expected_evidence_content_hash",
+        "expected_source_revision_vector_digest",
     )
     @classmethod
     def _authority_identity_must_not_be_blank(cls, value: str) -> str:
@@ -93,6 +103,10 @@ class ConversionIntentRequest(CamelModel):
                     evidence_version=self.expected_evidence_version,
                     evidence_packet_id=self.expected_evidence_packet_id,
                     evidence_content_hash=self.expected_evidence_content_hash,
+                    source_revision_vector_digest=(
+                        self.expected_source_revision_vector_digest
+                    ),
+                    source_cut_posture=self.expected_source_cut_posture,
                 ),
             ),
             idempotency_key=idempotency_key,
@@ -177,6 +191,8 @@ class ConversionIntentResponse(CamelModel):
     target_source_authority: SourceSystem = Field(..., alias="targetSourceAuthority")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: SourceCutPosture = Field(..., alias="sourceCutPosture")
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
     review_id: str | None = Field(default=None, alias="reviewId")
     review_channel: ReviewChannel | None = Field(default=None, alias="reviewChannel")
@@ -203,6 +219,8 @@ class ConversionIntentResponse(CamelModel):
             targetSourceAuthority=intent.target_source_authority,
             evidencePacketId=intent.evidence_packet_id,
             evidenceContentHash=intent.evidence_content_hash,
+            sourceRevisionVectorDigest=intent.source_revision_vector_digest,
+            sourceCutPosture=intent.source_cut_posture,
             sourceSignalIds=intent.source_signal_ids,
             reviewId=grant.review_id if grant is not None else None,
             reviewChannel=grant.review_channel if grant is not None else None,

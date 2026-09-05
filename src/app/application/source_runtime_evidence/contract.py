@@ -9,6 +9,7 @@ from app.application.source_runtime_evidence.receipts import (
     persistence_receipt_is_valid,
     source_evidence_hash,
     source_receipt_is_valid,
+    source_revision_vector_digest_from_receipt,
 )
 from app.domain import OpportunityFamily, SourceSystem
 from app.domain.proof_evidence import parse_timezone_aware_datetime
@@ -56,4 +57,9 @@ def runtime_execution_receipts_are_valid(
     ):
         return False
     assert isinstance(source, Mapping) and isinstance(persistence, Mapping)
-    return persistence.get("sourceEvidenceHash") == source_evidence_hash(source)
+    source_hash_matches = persistence.get("sourceEvidenceHash") == source_evidence_hash(source)
+    revision_vector_matches = (
+        persistence.get("sourceRevisionVectorDigest")
+        == source_revision_vector_digest_from_receipt(source)
+    )
+    return source_hash_matches and revision_vector_matches

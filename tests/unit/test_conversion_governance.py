@@ -34,6 +34,8 @@ from app.domain import (
     ReviewPosture,
     ReviewAuthorityStatus,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     SuppressionReason,
     UnsupportedEvidenceReason,
@@ -81,6 +83,11 @@ def source_ref() -> SourceRef:
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-snapshot-conversion-001",
+            source_cut_id="core-cut-conversion-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
@@ -140,6 +147,25 @@ def candidate(
     )
 
 
+def candidate_with_revision_claims(
+    revision_claims: SourceRevisionClaims | None,
+) -> IdeaCandidate:
+    source_candidate = candidate()
+    source_ref_with_claims = replace(
+        source_candidate.evidence_packet.source_refs[0],
+        revision_claims=revision_claims,
+    )
+    evidence_packet_with_claims = replace(
+        source_candidate.evidence_packet,
+        source_refs=(source_ref_with_claims,),
+        lineage_ref=replace(
+            source_candidate.evidence_packet.lineage_ref,
+            source_refs=(source_ref_with_claims,),
+        ),
+    )
+    return replace(source_candidate, evidence_packet=evidence_packet_with_claims)
+
+
 def intent_command(
     target: ConversionTarget = ConversionTarget.REPORT_EVIDENCE,
 ) -> ConversionIntentCommand:
@@ -174,6 +200,40 @@ def test_review_approved_candidate_can_request_report_conversion_intent() -> Non
     assert result.audit_event.attributes["target_source_authority"] == "lotus-report"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
+
+
+@pytest.mark.parametrize(
+    "revision_claims, expected_posture",
+    (
+        (None, "unknown"),
+        (
+            SourceRevisionClaims(
+                methodology_version="core-methodology-v1",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
+            "partial",
+        ),
+        (
+            SourceRevisionClaims(
+                snapshot_id="core-snapshot-failed-reconciliation",
+                reconciliation_posture=SourceReconciliationPosture.FAILED,
+            ),
+            "mixed",
+        ),
+    ),
+)
+def test_conversion_rejects_non_authoritative_source_cut(
+    revision_claims: SourceRevisionClaims | None,
+    expected_posture: str,
+) -> None:
+    source_candidate = candidate_with_revision_claims(revision_claims)
+    command = replace(
+        intent_command(),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+    )
+
+    with pytest.raises(InvalidConversionIntent, match=f"source cut is {expected_posture}"):
+        request_conversion_intent(source_candidate, command)
 
 
 def test_conversion_intent_uses_server_acceptance_time_for_control_chronology() -> None:
@@ -591,6 +651,8 @@ def test_governed_conversion_intent_requires_source_provenance() -> None:
             intent=intent.intent,
             evidence_packet_id=intent.evidence_packet_id,
             evidence_content_hash=intent.evidence_content_hash,
+            source_revision_vector_digest=intent.source_revision_vector_digest,
+            source_cut_posture=intent.source_cut_posture,
             source_signal_ids=(),
             actor_subject=intent.actor_subject,
             idempotency_key=intent.idempotency_key,
@@ -604,6 +666,8 @@ def test_governed_conversion_intent_requires_source_provenance() -> None:
             intent=intent.intent,
             evidence_packet_id=intent.evidence_packet_id,
             evidence_content_hash=intent.evidence_content_hash,
+            source_revision_vector_digest=intent.source_revision_vector_digest,
+            source_cut_posture=intent.source_cut_posture,
             source_signal_ids=intent.source_signal_ids,
             actor_subject=intent.actor_subject,
             idempotency_key=intent.idempotency_key,

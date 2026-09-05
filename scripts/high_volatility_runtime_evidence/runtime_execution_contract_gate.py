@@ -22,7 +22,14 @@ from app.application.high_volatility_signal import (
     EvaluateHighVolatilityFromRiskCommand,
     evaluate_and_persist_high_volatility_signal_from_risk,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.risk_sources import RiskVolatilityEvidence, RiskVolatilityEvidenceRequest
 
 
@@ -43,6 +50,11 @@ class _Source:
                 content_hash="sha256:high-volatility-contract-gate",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
+                revision_claims=SourceRevisionClaims(
+                    calculation_run_id="risk-run-high-volatility-contract-gate",
+                    methodology_version="risk-volatility-v1",
+                    reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+                ),
             ),
             risk_diagnostic="risk_metrics_ready",
         )

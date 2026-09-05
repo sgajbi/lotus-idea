@@ -12,6 +12,7 @@ from app.domain.presentation_receipts import (
     PresentationReceiptDecision,
     PresentationReceiptResult,
 )
+from app.domain.source_revision import SourceCutPosture
 from app.infrastructure.postgres_codecs import read_row_value
 from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCursor
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
@@ -106,15 +107,18 @@ def _insert_receipt(
             receipt_id, candidate_id, tenant_id, presented_at_utc,
             rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
             queue_policy_version, ranking_policy_version, candidate_material_version,
-            candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+            candidate_evidence_version, source_revision_vector_digest, source_cut_posture,
+            accepted_at_utc, acceptance_time_source,
             schema_version, surface, producer
         )
-        SELECT %s, candidate_id, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        SELECT %s, candidate_id, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         FROM idea_candidate_record
         WHERE candidate_id = %s
           AND candidate_json->'access_scope'->>'tenant_id' = %s
           AND (candidate_json->'identity'->>'material_version')::INTEGER = %s
           AND (candidate_json->'identity'->>'evidence_version')::INTEGER = %s
+          AND candidate_json->'evidence_packet'->>'source_revision_vector_digest' = %s
+          AND candidate_json->'evidence_packet'->>'source_cut_posture' = %s
           AND updated_at_utc <= %s
         ON CONFLICT (receipt_id) DO NOTHING
         RETURNING receipt_id
@@ -130,6 +134,8 @@ def _insert_receipt(
             receipt.ranking_policy_version,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
+            receipt.source_revision_vector_digest,
+            receipt.source_cut_posture.value,
             receipt.accepted_at_utc,
             receipt.acceptance_time_source.value,
             receipt.schema_version,
@@ -139,6 +145,8 @@ def _insert_receipt(
             receipt.tenant_id,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
+            receipt.source_revision_vector_digest,
+            receipt.source_cut_posture.value,
             receipt.accepted_at_utc,
         ),
     )
@@ -154,7 +162,8 @@ def _load_receipt(
         SELECT receipt_id, candidate_id, tenant_id, presented_at_utc,
                rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
                queue_policy_version, ranking_policy_version, candidate_material_version,
-               candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+               candidate_evidence_version, source_revision_vector_digest, source_cut_posture,
+               accepted_at_utc, acceptance_time_source,
                schema_version, surface, producer
         FROM idea_candidate_presentation_receipt
         WHERE receipt_id = %s
@@ -182,7 +191,8 @@ def _load_receipt_by_scope(
             SELECT receipt_id, candidate_id, tenant_id, presented_at_utc,
                    rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
                    queue_policy_version, ranking_policy_version, candidate_material_version,
-                   candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+                   candidate_evidence_version, source_revision_vector_digest, source_cut_posture,
+                   accepted_at_utc, acceptance_time_source,
                    schema_version, surface, producer
             FROM idea_candidate_presentation_receipt
             WHERE receipt_id = %s
@@ -205,6 +215,7 @@ def load_presentation_receipts(
                receipt.visible_candidate_count, receipt.queue_snapshot_digest,
                receipt.queue_policy_version, receipt.ranking_policy_version,
                receipt.candidate_material_version, receipt.candidate_evidence_version,
+               receipt.source_revision_vector_digest, receipt.source_cut_posture,
                receipt.accepted_at_utc, receipt.acceptance_time_source,
                receipt.schema_version, receipt.surface, receipt.producer
         FROM idea_candidate_presentation_receipt AS receipt
@@ -232,10 +243,11 @@ def insert_presentation_receipt_snapshot(
             receipt_id, candidate_id, tenant_id, presented_at_utc,
             rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
             queue_policy_version, ranking_policy_version, candidate_material_version,
-            candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+            candidate_evidence_version, source_revision_vector_digest, source_cut_posture,
+            accepted_at_utc, acceptance_time_source,
             schema_version, surface, producer
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             receipt.receipt_id,
@@ -249,6 +261,8 @@ def insert_presentation_receipt_snapshot(
             receipt.ranking_policy_version,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
+            receipt.source_revision_vector_digest,
+            receipt.source_cut_posture.value,
             receipt.accepted_at_utc,
             receipt.acceptance_time_source.value,
             receipt.schema_version,
@@ -271,6 +285,10 @@ def _receipt_from_row(row: object) -> CandidatePresentationReceipt:
         ranking_policy_version=str(read_row_value(row, "ranking_policy_version")),
         candidate_material_version=int(read_row_value(row, "candidate_material_version")),
         candidate_evidence_version=int(read_row_value(row, "candidate_evidence_version")),
+        source_revision_vector_digest=str(
+            read_row_value(row, "source_revision_vector_digest")
+        ),
+        source_cut_posture=SourceCutPosture(read_row_value(row, "source_cut_posture")),
         accepted_at_utc=read_row_value(row, "accepted_at_utc"),
         acceptance_time_source=AcceptanceTimeSource(read_row_value(row, "acceptance_time_source")),
         schema_version=str(read_row_value(row, "schema_version")),

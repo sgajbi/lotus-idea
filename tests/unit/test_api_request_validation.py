@@ -34,6 +34,8 @@ CONVERSION_AUTHORITY_FIELDS = {
     "expectedEvidenceVersion": 1,
     "expectedEvidencePacketId": "evidence-packet-001",
     "expectedEvidenceContentHash": "sha256:evidence-001",
+    "expectedSourceRevisionVectorDigest": "sha256:source-revision-vector-001",
+    "expectedSourceCutPosture": "coherent",
 }
 
 
@@ -141,6 +143,8 @@ def test_human_authority_requests_reject_blank_or_ambiguous_fields() -> None:
         "expectedEvidenceVersion": 1,
         "expectedEvidencePacketId": "evidence-packet-001",
         "expectedEvidenceContentHash": "sha256:evidence-001",
+        "expectedSourceRevisionVectorDigest": "sha256:source-revision-vector-001",
+        "expectedSourceCutPosture": "coherent",
         "presentationReceiptId": "receipt-001",
         "snoozedUntilUtc": None,
     }

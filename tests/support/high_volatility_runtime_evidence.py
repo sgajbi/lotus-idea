@@ -13,7 +13,14 @@ from app.application.high_volatility_signal import (
     EvaluateHighVolatilityFromRiskCommand,
     evaluate_and_persist_high_volatility_signal_from_risk,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.risk_sources import RiskVolatilityEvidence, RiskVolatilityEvidenceRequest
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -86,6 +93,11 @@ def risk_evidence(
             content_hash="sha256:risk-metrics-report",
             data_quality_status="ready",
             freshness=freshness,
+            revision_claims=SourceRevisionClaims(
+                calculation_run_id="risk-run-high-volatility-runtime-evidence",
+                methodology_version="risk-volatility-v1",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         ),
         risk_diagnostic="risk_metrics_ready",
     )

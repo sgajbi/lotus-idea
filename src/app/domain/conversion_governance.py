@@ -36,6 +36,7 @@ from app.domain.review_authority import (
     ReviewAuthorityGrant,
     ReviewAuthorityStatus,
 )
+from app.domain.source_revision import SourceCutPosture, source_cut_is_authoritative
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -109,6 +110,8 @@ class GovernedConversionIntent:
     intent: IdeaConversionIntent
     evidence_packet_id: str
     evidence_content_hash: str
+    source_revision_vector_digest: str
+    source_cut_posture: SourceCutPosture
     source_signal_ids: tuple[str, ...]
     actor_subject: str
     idempotency_key: str
@@ -126,6 +129,7 @@ class GovernedConversionIntent:
     def __post_init__(self) -> None:
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_text(self.evidence_content_hash, "evidence_content_hash")
+        _require_text(self.source_revision_vector_digest, "source_revision_vector_digest")
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
         _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
@@ -141,6 +145,12 @@ class GovernedConversionIntent:
                 raise ValueError("review authority evidence packet must match conversion intent")
             if grant.candidate_evidence.evidence_content_hash != self.evidence_content_hash:
                 raise ValueError("review authority evidence hash must match conversion intent")
+            if (
+                grant.candidate_evidence.source_revision_vector_digest
+                != self.source_revision_vector_digest
+                or grant.candidate_evidence.source_cut_posture is not self.source_cut_posture
+            ):
+                raise ValueError("review authority source revision must match conversion intent")
             if grant.accepted_at_utc > self.accepted_at_utc:
                 raise ValueError("review authority cannot postdate conversion acceptance")
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
@@ -267,6 +277,8 @@ def request_conversion_intent(
         intent=intent,
         evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
         evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         source_signal_ids=candidate.source_signal_ids,
         actor_subject=command.actor_subject,
         idempotency_key=command.idempotency_key,
@@ -288,6 +300,8 @@ def request_conversion_intent(
         attributes={
             "boundary": governed_intent.boundary.value,
             "candidate_family": candidate.family.value,
+            "source_revision_vector_digest": governed_intent.source_revision_vector_digest,
+            "source_cut_posture": governed_intent.source_cut_posture.value,
             "conversion_target": command.target.value,
             "evidence_packet_id": candidate.evidence_packet.evidence_packet_id,
             "target_source_authority": governed_intent.target_source_authority.value,
@@ -423,6 +437,11 @@ def _ensure_candidate_ready_for_conversion(
         raise InvalidConversionIntent(candidate.candidate_id, "review posture is not approved")
     if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
         raise InvalidConversionIntent(candidate.candidate_id, "evidence is not ready")
+    if not source_cut_is_authoritative(candidate.evidence_packet.source_cut_posture):
+        raise InvalidConversionIntent(
+            candidate.candidate_id,
+            f"source cut is {candidate.evidence_packet.source_cut_posture.value}",
+        )
     applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
     if applicability_expiry is not None and accepted_at_utc >= applicability_expiry:
         raise InvalidConversionIntent(candidate.candidate_id, "candidate applicability has expired")
