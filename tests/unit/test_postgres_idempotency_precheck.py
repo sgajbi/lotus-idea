@@ -24,6 +24,7 @@ from tests.unit.test_postgres_repository import (
 )
 from tests.support.review_authority import presentation_receipt_for_candidate
 
+
 def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)

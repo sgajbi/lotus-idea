@@ -293,9 +293,7 @@ def request_conversion_intent(
             "target_source_authority": governed_intent.target_source_authority.value,
             "review_id": review_authority_grant.review_id,
             "review_policy_version": review_authority_grant.review_policy_version,
-            "review_authority_policy_version": (
-                review_authority_grant.authority_policy_version
-            ),
+            "review_authority_policy_version": (review_authority_grant.authority_policy_version),
             "observed_at_utc": command.requested_at_utc.isoformat(),
         },
     )

@@ -64,9 +64,7 @@ def review_authority_grant_for_candidate(
         actor_role="advisor",
         review_policy_version="idea-human-review-v1",
         accepted_at_utc=accepted_at_utc,
-        applicability_expires_at_utc=(
-            candidate.evidence_packet.applicability_expires_at_utc
-        ),
+        applicability_expires_at_utc=(candidate.evidence_packet.applicability_expires_at_utc),
         presentation_receipt_id="receipt-review-test-001",
         queue_snapshot_digest="sha256:" + "a" * 64,
     )
@@ -154,6 +152,8 @@ def with_in_memory_review_authority(
             },
         )
     )
+
+
 __all__ = [
     "evidence_identity_for_candidate",
     "approved_review_decision_for_candidate",

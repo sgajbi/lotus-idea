@@ -24,6 +24,7 @@ from tests.unit.test_postgres_repository import (
 )
 from tests.support.postgres_review_authority import persist_candidate_with_review_authority
 
+
 def approved_candidate() -> IdeaCandidate:
     return replace(
         high_cash_candidate(candidate_scope=access_scope()),

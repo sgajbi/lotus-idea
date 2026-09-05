@@ -177,8 +177,7 @@ class ReviewMutationIdentity:
                 "and authority policy"
             )
         elif (
-            self.review_channel is ReviewChannel.WORKBENCH
-            and self.presentation_receipt_id is None
+            self.review_channel is ReviewChannel.WORKBENCH and self.presentation_receipt_id is None
         ):
             raise ValueError("Workbench review identity requires presentation receipt")
         elif (
@@ -985,9 +984,7 @@ def _review_audit_event(
             "review_channel": decision.review_channel.value,
             "presentation_receipt_id": decision.presentation_receipt_id or "none",
             "review_action_policy_version": decision.review_policy_version,
-            "review_authority_policy_version": (
-                decision.review_authority_policy_version
-            ),
+            "review_authority_policy_version": (decision.review_authority_policy_version),
             "policy_version": CANDIDATE_STATE_POLICY_VERSION,
             "prior_lifecycle_status": candidate_before.lifecycle_status.value,
             "prior_review_posture": candidate_before.review_posture.value,

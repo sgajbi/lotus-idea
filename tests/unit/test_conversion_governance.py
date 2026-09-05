@@ -47,6 +47,7 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 OUTCOME_AT = datetime(2026, 6, 21, 10, 20, tzinfo=UTC)
 
+
 def request_conversion_intent(
     source_candidate: IdeaCandidate,
     command: ConversionIntentCommand,
@@ -61,6 +62,8 @@ def request_conversion_intent(
             review_id=command.expected_review_id,
         ),
     )
+
+
 record_conversion_outcome = partial(
     _record_conversion_outcome,
     accepted_at_utc=OUTCOME_AT,
