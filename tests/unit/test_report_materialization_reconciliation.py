@@ -21,6 +21,7 @@ from app.application.report_materialization_reconciliation import (
 from app.domain import (
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
+    DownstreamSubmissionRecord,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
     ConversionTarget,
@@ -289,33 +290,32 @@ def test_active_in_flight_submission_cannot_be_reconciled_while_post_may_still_r
 
 
 @pytest.mark.parametrize(
-    ("changes", "expected_blocker"),
+    ("identity_change", "expected_blocker"),
     (
         (
-            {"resource_type": DownstreamSubmissionResourceType.CONVERSION_INTENT},
+            "resource_type",
             "report_materialization_requires_evidence_pack_submission",
         ),
         (
-            {"target": ConversionTarget.ADVISE_PROPOSAL},
+            "target",
             "report_materialization_requires_report_target",
         ),
         (
-            {"source_authority": SourceSystem.LOTUS_ADVISE},
+            "source_authority",
             "report_materialization_requires_report_authority",
         ),
     ),
 )
 def test_non_report_submission_identity_is_not_eligible_for_owner_recovery(
-    changes: dict[str, object],
+    identity_change: str,
     expected_blocker: str,
 ) -> None:
     repository, evidence_pack, support_reference, _ = _uncertain_submission()
     submission = repository.downstream_submission_by_support_reference(support_reference)
     assert submission is not None
     submission_repository = SimpleNamespace(
-        downstream_submission_by_support_reference=lambda _support_reference: replace(
-            submission,
-            **changes,
+        downstream_submission_by_support_reference=lambda _support_reference: (
+            _submission_with_non_report_identity(submission, identity_change)
         )
     )
     reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
@@ -391,28 +391,19 @@ def test_repository_conflict_cannot_advance_recovered_receipt() -> None:
 
 
 @pytest.mark.parametrize(
-    "changes",
+    "invalid_field",
     (
-        {"support_reference": " "},
-        {"actor_subject": " "},
-        {"accepted_at_utc": datetime(2026, 9, 5, 14, 45)},
-        {
-            "accepted_at_utc": datetime(
-                2026,
-                9,
-                5,
-                15,
-                45,
-                tzinfo=timezone(timedelta(hours=1)),
-            )
-        },
+        "support_reference",
+        "actor_subject",
+        "naive_accepted_at",
+        "non_utc_accepted_at",
     ),
 )
 def test_reconciliation_command_rejects_incomplete_or_untrusted_time(
-    changes: dict[str, object],
+    invalid_field: str,
 ) -> None:
     with pytest.raises(ValueError):
-        replace(_command("downstream-submission-0123456789abcdef01234567"), **changes)
+        _invalid_command(invalid_field)
 
 
 @pytest.mark.parametrize(
@@ -464,6 +455,59 @@ class _RepositoryOverride:
                 blocker="concurrent_report_reconciliation",
             )
         return self.repository.reconcile_downstream_submission(**kwargs)
+
+
+def _submission_with_non_report_identity(
+    submission: DownstreamSubmissionRecord,
+    identity_change: str,
+) -> DownstreamSubmissionRecord:
+    if identity_change == "resource_type":
+        return replace(
+            submission,
+            resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        )
+    if identity_change == "target":
+        return replace(submission, target=ConversionTarget.ADVISE_PROPOSAL)
+    if identity_change == "source_authority":
+        return replace(submission, source_authority=SourceSystem.LOTUS_ADVISE)
+    raise AssertionError(f"unsupported identity change: {identity_change}")
+
+
+def _invalid_command(invalid_field: str) -> ReconcileReportMaterializationCommand:
+    support_reference = "downstream-submission-0123456789abcdef01234567"
+    if invalid_field == "support_reference":
+        return ReconcileReportMaterializationCommand(
+            support_reference=" ",
+            actor_subject="operator-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+            accepted_at_utc=ACCEPTED_AT,
+        )
+    if invalid_field == "actor_subject":
+        return ReconcileReportMaterializationCommand(
+            support_reference=support_reference,
+            actor_subject=" ",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+            accepted_at_utc=ACCEPTED_AT,
+        )
+    if invalid_field == "naive_accepted_at":
+        accepted_at_utc = datetime(2026, 9, 5, 14, 45)
+    elif invalid_field == "non_utc_accepted_at":
+        accepted_at_utc = datetime(
+            2026,
+            9,
+            5,
+            15,
+            45,
+            tzinfo=timezone(timedelta(hours=1)),
+        )
+    else:
+        raise AssertionError(f"unsupported invalid field: {invalid_field}")
+    return ReconcileReportMaterializationCommand(
+        support_reference=support_reference,
+        actor_subject="operator-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+        accepted_at_utc=accepted_at_utc,
+    )
 
 
 def _uncertain_submission() -> tuple[
