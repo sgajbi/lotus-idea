@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -8,8 +9,19 @@ from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import InMemoryIdeaRepository, ReviewPosture
+from app.runtime import trusted_clock_state
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
+from tests.support.fixed_utc_clock import FixedUtcClock
+
+
+@pytest.fixture(autouse=True)
+def _review_queue_snapshot_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 10, tzinfo=UTC)),
+    )
 
 
 def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
@@ -636,7 +648,9 @@ def test_advisor_review_queue_api_rejects_stale_snapshot_after_backdated_insert(
     assert response.json()["code"] == "review_queue_snapshot_conflict"
 
 
-def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() -> None:
+def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     visible_ids = [
@@ -654,6 +668,11 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() 
         headers=queue_headers(),
     )
     snapshot_token = first_page.json()["page"]["snapshotToken"]
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 11, tzinfo=UTC)),
+    )
     future_id = persist_candidate(
         client,
         cash_weight="0.29",

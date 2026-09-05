@@ -385,6 +385,42 @@ def test_review_entitlement_fails_closed_for_wrong_portfolio_scope() -> None:
         )
 
 
+def test_review_entitlement_is_checked_before_observed_time_policy() -> None:
+    wrong_scope_actor = replace(
+        advisor_context(),
+        portfolio_ids=frozenset({"different-portfolio"}),
+    )
+
+    with pytest.raises(ReviewEntitlementDenied):
+        _apply_review_action(
+            candidate(),
+            decision_command(ReviewAction.REJECT, actor=wrong_scope_actor),
+            accepted_at_utc=DECIDED_AT + timedelta(days=2),
+        )
+
+
+def test_feedback_entitlement_is_checked_before_observed_time_policy() -> None:
+    wrong_scope_actor = replace(
+        advisor_context(),
+        portfolio_ids=frozenset({"different-portfolio"}),
+    )
+    command = FeedbackCommand(
+        feedback_id="feedback-wrong-scope-stale-time",
+        actor=wrong_scope_actor,
+        outcome=FeedbackOutcome.USEFUL,
+        reason=FeedbackReason.RELEVANT,
+        taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
+        recorded_at_utc=DECIDED_AT,
+    )
+
+    with pytest.raises(ReviewEntitlementDenied):
+        _record_feedback(
+            candidate(),
+            command,
+            accepted_at_utc=DECIDED_AT + timedelta(days=2),
+        )
+
+
 def test_non_advisor_role_cannot_take_first_wave_review_action() -> None:
     pm_actor = ReviewActorContext(
         actor_subject="pm-001",

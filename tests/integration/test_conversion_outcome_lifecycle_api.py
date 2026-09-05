@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
+import pytest
 from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.main import app
+from app.runtime import trusted_clock_state
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from tests.integration.test_candidate_detail_api import detail_headers
 from tests.integration.test_review_workflow_api import (
@@ -14,6 +17,16 @@ from tests.integration.test_review_workflow_api import (
     conversion_outcome_headers,
     persisted_candidate_id,
 )
+from tests.support.fixed_utc_clock import FixedUtcClock
+
+
+@pytest.fixture(autouse=True)
+def _owner_outcome_acceptance_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 20, tzinfo=UTC)),
+    )
 
 
 def setup_conversion_intent(client: ManagedTestClient, seed: str) -> tuple[str, str]:

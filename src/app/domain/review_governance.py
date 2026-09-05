@@ -495,6 +495,7 @@ def apply_review_action(
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> ReviewActionResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    _ensure_allowed(candidate, command, policy)
     require_observed_time_within_policy(
         command.decided_at_utc,
         accepted_at_utc,
@@ -502,7 +503,6 @@ def apply_review_action(
     )
     if command.snoozed_until_utc is not None and command.snoozed_until_utc <= accepted_at_utc:
         raise ValueError("snoozed_until_utc must be after accepted_at_utc")
-    _ensure_allowed(candidate, command, policy)
     updated_candidate = _candidate_after_review(
         candidate,
         command,
@@ -558,17 +558,17 @@ def record_feedback(
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> FeedbackResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
-    require_observed_time_within_policy(
-        command.recorded_at_utc,
-        accepted_at_utc,
-        FEEDBACK_TIME_POLICY,
-    )
     _ensure_actor_scope(
         candidate_id=candidate.candidate_id,
         action=ReviewAction.NO_ACTION,
         actor=command.actor,
         access_scope=candidate.access_scope,
         policy=policy,
+    )
+    require_observed_time_within_policy(
+        command.recorded_at_utc,
+        accepted_at_utc,
+        FEEDBACK_TIME_POLICY,
     )
     feedback = IdeaFeedback(
         feedback_id=command.feedback_id,
