@@ -8,11 +8,10 @@ from typing import Any
 from app.domain import (
     EvidenceFreshness,
     SourceRef,
-    SourceRevisionClaims,
     SourceSystem,
 )
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
-from app.infrastructure.source_revision_claims import build_source_revision_claims
+from app.infrastructure.source_revision_claims import source_revision_claims_from_payloads
 from app.infrastructure.source_product_payloads import first_reason_code
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
@@ -349,7 +348,7 @@ def _source_ref(payload: dict[str, Any]) -> SourceRef:
         content_hash=content_hash,
         data_quality_status=supportability_state,
         freshness=_freshness(metadata, payload),
-        revision_claims=_source_revision_claims(metadata, payload),
+        revision_claims=source_revision_claims_from_payloads(metadata, payload),
     )
 
 
@@ -376,7 +375,7 @@ def _drawdown_source_ref(payload: dict[str, Any]) -> SourceRef:
         content_hash=_content_hash(metadata, payload),
         data_quality_status=supportability_state,
         freshness=_freshness(metadata, payload),
-        revision_claims=_source_revision_claims(metadata, payload),
+        revision_claims=source_revision_claims_from_payloads(metadata, payload),
     )
 
 
@@ -403,7 +402,7 @@ def _risk_metrics_source_ref(payload: dict[str, Any]) -> SourceRef:
         content_hash=_content_hash(metadata, payload),
         data_quality_status=supportability_state,
         freshness=_freshness(metadata, payload),
-        revision_claims=_source_revision_claims(metadata, payload),
+        revision_claims=source_revision_claims_from_payloads(metadata, payload),
     )
 
 
@@ -423,72 +422,8 @@ def _mandate_health_source_ref(
         content_hash=_content_hash(payload),
         data_quality_status=_required_text_field(payload, "health_state"),
         freshness=EvidenceFreshness.UNAVAILABLE,
-        revision_claims=_source_revision_claims(methodology_payload, payload),
+        revision_claims=source_revision_claims_from_payloads(methodology_payload, payload),
     )
-
-
-def _source_revision_claims(*payloads: dict[str, Any]) -> SourceRevisionClaims | None:
-    snapshot_id = _text_from_payloads(payloads, "snapshot_id", "snapshotId")
-    source_revision = _text_from_payloads(payloads, "source_revision", "sourceRevision")
-    restatement_version = _text_from_payloads(
-        payloads,
-        "restatement_version",
-        "restatementVersion",
-    )
-    source_batch_id = _text_from_payloads(
-        payloads,
-        "source_batch_fingerprint",
-        "sourceBatchFingerprint",
-    )
-    source_cut_id = _text_from_payloads(payloads, "source_cut_id", "sourceCutId")
-    calculation_run_id = _text_from_payloads(
-        payloads,
-        "calculation_id",
-        "calculationId",
-    )
-    methodology_version = _text_from_payloads(
-        payloads,
-        "methodology_version",
-        "methodologyVersion",
-    )
-    policy_version = _text_from_payloads(payloads, "policy_version", "policyVersion")
-    if not any(
-        (
-            snapshot_id,
-            source_revision,
-            restatement_version,
-            source_batch_id,
-            source_cut_id,
-            calculation_run_id,
-            methodology_version,
-            policy_version,
-        )
-    ):
-        return None
-    return build_source_revision_claims(
-        snapshot_id=snapshot_id,
-        source_revision=source_revision,
-        restatement_version=restatement_version,
-        source_batch_id=source_batch_id,
-        source_cut_id=source_cut_id,
-        calculation_run_id=calculation_run_id,
-        methodology_version=methodology_version,
-        policy_version=policy_version,
-        reconciliation_status=_text_from_payloads(
-            payloads,
-            "reconciliation_status",
-            "reconciliationStatus",
-        ),
-    )
-
-
-def _text_from_payloads(payloads: tuple[dict[str, Any], ...], *keys: str) -> str | None:
-    for payload in payloads:
-        for key in keys:
-            value = _text_field(payload, key)
-            if value is not None:
-                return value
-    return None
 
 
 def _validate_mandate_health_payload(payload: dict[str, Any]) -> None:

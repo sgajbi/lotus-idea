@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from app.domain import (
     CausalInputRevision,
     SourceReconciliationPosture,
@@ -58,3 +61,38 @@ def source_reconciliation_posture(value: str | None) -> SourceReconciliationPost
         "not_applicable": SourceReconciliationPosture.NOT_APPLICABLE,
     }
     return aliases.get(normalized, SourceReconciliationPosture.UNKNOWN)
+
+
+def source_revision_claims_from_payloads(
+    *payloads: Mapping[str, Any],
+) -> SourceRevisionClaims | None:
+    """Map common snake/camel owner fields without inferring missing authority."""
+
+    return build_source_revision_claims(
+        snapshot_id=first_text_from_payloads(payloads, "snapshot_id", "snapshotId"),
+        source_revision=first_text_from_payloads(payloads, "source_revision", "sourceRevision"),
+        restatement_version=first_text_from_payloads(
+            payloads, "restatement_version", "restatementVersion"
+        ),
+        source_batch_id=first_text_from_payloads(
+            payloads, "source_batch_fingerprint", "sourceBatchFingerprint"
+        ),
+        source_cut_id=first_text_from_payloads(payloads, "source_cut_id", "sourceCutId"),
+        calculation_run_id=first_text_from_payloads(payloads, "calculation_id", "calculationId"),
+        methodology_version=first_text_from_payloads(
+            payloads, "methodology_version", "methodologyVersion"
+        ),
+        policy_version=first_text_from_payloads(payloads, "policy_version", "policyVersion"),
+        reconciliation_status=first_text_from_payloads(
+            payloads, "reconciliation_status", "reconciliationStatus"
+        ),
+    )
+
+
+def first_text_from_payloads(payloads: tuple[Mapping[str, Any], ...], *keys: str) -> str | None:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
