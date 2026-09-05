@@ -13,6 +13,7 @@ from app.runtime import trusted_clock_state
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
 from tests.support.fixed_utc_clock import FixedUtcClock
+from tests.support.source_revision import lotus_core_source_ref
 
 
 @pytest.fixture(autouse=True)
@@ -25,22 +26,7 @@ def _review_queue_snapshot_time(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def source_ref(product_id: str, suffix: str = "") -> dict[str, Any]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-        "revisionClaims": {
-            "sourceRevision": f"revision:{product_id}{suffix}",
-            "sourceCutId": f"core-close-2026-06-21{suffix}",
-            "reconciliationPosture": "complete",
-        },
-    }
+    return lotus_core_source_ref(product_id, suffix=suffix)
 
 
 def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:

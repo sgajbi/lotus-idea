@@ -31,28 +31,14 @@ from app.runtime.source_ingestion_state import (
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 from tests.support import review_authority_api
+from tests.support.source_revision import lotus_core_source_ref
 
 
 OperationEventCall = tuple[str, str, str, bool, str | None]
 
 
 def source_ref(product_id: str, suffix: str = "") -> dict[str, Any]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-        "revisionClaims": {
-            "sourceRevision": f"revision:{product_id}{suffix}",
-            "sourceCutId": f"core-close-2026-06-21{suffix}",
-            "reconciliationPosture": "complete",
-        },
-    }
+    return lotus_core_source_ref(product_id, suffix=suffix)
 
 
 def high_cash_payload(*, suffix: str = "", scoped: bool = False) -> dict[str, Any]:

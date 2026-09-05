@@ -20,25 +20,11 @@ from app.domain import (
 from app.main import app
 from app.runtime.repository_state import get_idea_repository
 from tests.support import review_authority_api
+from tests.support.source_revision import lotus_core_source_ref
 
 
 def source_ref(product_id: str) -> dict[str, Any]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-        "revisionClaims": {
-            "sourceRevision": f"revision:{product_id}",
-            "sourceCutId": "core-close-2026-06-21",
-            "reconciliationPosture": "complete",
-        },
-    }
+    return lotus_core_source_ref(product_id)
 
 
 def high_cash_payload(*, scoped: bool = False) -> dict[str, Any]:
