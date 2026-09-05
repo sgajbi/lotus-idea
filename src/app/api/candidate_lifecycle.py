@@ -32,6 +32,7 @@ from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
+    get_trusted_clock,
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
@@ -73,14 +74,6 @@ class CallerSettableIdeaLifecycleStatus(StrEnum):
     SCORED = "scored"
     GOVERNANCE_CHECKED = "governance_checked"
     READY_FOR_REVIEW = "ready_for_review"
-    REVIEWED_BY_ADVISOR = "reviewed_by_advisor"
-    APPROVED = "approved"
-    CONVERTED_TO_PROPOSAL = "converted_to_proposal"
-    CONVERTED_TO_MANAGE_REVIEW = "converted_to_manage_review"
-    CONVERTED_TO_REPORT = "converted_to_report"
-    REJECTED = "rejected"
-    EXPIRED = "expired"
-    CLOSED = "closed"
 
     def to_domain_status(self) -> IdeaLifecycleStatus:
         return IdeaLifecycleStatus(self.value)
@@ -92,9 +85,9 @@ class CandidateLifecycleTransitionRequest(CamelModel):
         ...,
         alias="targetLifecycleStatus",
         description=(
-            "Internal lotus-idea lifecycle target. Downstream-authority statuses such as "
-            "accepted or executed are intentionally not valid input; downstream posture is "
-            "recorded through conversion outcome and downstream submission contracts."
+            "Pre-review lotus-idea processing target. Review, rejection, expiry, conversion, "
+            "and downstream outcome states are intentionally excluded and require their owned "
+            "commands and evidence."
         ),
     )
     changed_at_utc: datetime = Field(..., alias="changedAtUtc")
@@ -131,12 +124,14 @@ class CandidateLifecycleTransitionRequest(CamelModel):
         caller: CallerContext,
         idempotency_key: str,
         event_lineage: EventLineageContext,
+        accepted_at_utc: datetime,
     ) -> ApplyCandidateLifecycleTransitionCommand:
         return ApplyCandidateLifecycleTransitionCommand(
             candidate_id=candidate_id,
             transition_id=self.transition_id,
             target_status=self.target_lifecycle_status.to_domain_status(),
             changed_at_utc=self.changed_at_utc,
+            accepted_at_utc=accepted_at_utc,
             reason_codes=tuple(reason.value for reason in self.reason_codes),
             actor_subject=caller.subject,
             idempotency_key=idempotency_key,
@@ -149,6 +144,7 @@ class CandidateLifecycleTransitionSummaryResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
     lifecycle_status: IdeaLifecycleStatus = Field(..., alias="lifecycleStatus")
     changed_at_utc: datetime = Field(..., alias="changedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
 
@@ -162,6 +158,7 @@ class CandidateLifecycleTransitionSummaryResponse(CamelModel):
             candidateId=transition.candidate_id,
             lifecycleStatus=transition.lifecycle_status,
             changedAtUtc=transition.changed_at_utc,
+            acceptedAtUtc=transition.accepted_at_utc,
             reasonCodes=transition.reason_codes,
             grantsDownstreamAuthority=False,
         )
@@ -364,6 +361,7 @@ def _lifecycle_transition_command(
             http_request,
             causation_id=x_causation_id,
         ),
+        accepted_at_utc=get_trusted_clock().now_utc(),
     )
 
 
@@ -465,12 +463,14 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
     "summary": "Record an idea candidate lifecycle transition",
     "description": (
         "Records an internal governed lifecycle transition for a persisted idea candidate "
-        "through the RFC-0002 Slice 06 lifecycle and audit foundation. The route requires "
+        "through the RFC-0002 Slice 06 pre-review lifecycle. The route requires "
         "a lifecycle transition capability and Idempotency-Key, applies the canonical "
         "domain lifecycle transition graph, writes lifecycle history plus audit evidence, "
+        "uses trusted acceptance for mutation chronology while retaining observed changedAtUtc, "
         "returns the exact persisted transition on accepted and replayed success, and fails "
         "closed when that persisted evidence cannot be resolved uniquely. It does not "
-        "grant downstream proposal, manage-review, report, suitability, "
+        "record review, approval, rejection, expiry, conversion, or grant downstream proposal, "
+        "manage-review, report, suitability, "
         "execution, or client-communication authority."
     ),
     "status_code": status.HTTP_200_OK,
@@ -487,6 +487,7 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                             "lifecycleStatus": "ready_for_review",
                             "changedAtUtc": "2026-06-21T10:04:00Z",
+                            "acceptedAtUtc": "2026-06-21T10:05:00Z",
                             "reasonCodes": ["review_required"],
                             "grantsDownstreamAuthority": False,
                         },

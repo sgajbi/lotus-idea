@@ -48,6 +48,11 @@ PRESENTATION_TIME_POLICY = ObservedTimePolicy(
     maximum_past_skew=timedelta(minutes=15),
     maximum_future_skew=timedelta(minutes=5),
 )
+LIFECYCLE_TRANSITION_TIME_POLICY = ObservedTimePolicy(
+    policy_id="idea-lifecycle-transition-observed-time-v1",
+    maximum_past_skew=timedelta(hours=24),
+    maximum_future_skew=timedelta(minutes=5),
+)
 
 
 def require_observed_time_within_policy(
@@ -75,6 +80,7 @@ __all__ = [
     "CONVERSION_INTENT_TIME_POLICY",
     "DOWNSTREAM_OUTCOME_TIME_POLICY",
     "FEEDBACK_TIME_POLICY",
+    "LIFECYCLE_TRANSITION_TIME_POLICY",
     "ObservedTimePolicy",
     "ObservedTimeSkewError",
     "PRESENTATION_TIME_POLICY",
