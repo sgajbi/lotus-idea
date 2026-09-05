@@ -18,6 +18,7 @@ from app.domain import (
     evaluate_underperformance_signal,
 )
 from app.application.access_scope import portfolio_only_scope
+from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.application.candidate_persistence_identity import build_candidate_idempotency_payload
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.idea_repository import CandidatePersistenceRepository
@@ -57,6 +58,7 @@ class EvaluateAndPersistUnderperformanceFromPerformanceCommand:
     evaluation: EvaluateUnderperformanceFromPerformanceCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
 
 
 @dataclass(frozen=True)
@@ -122,7 +124,10 @@ def evaluate_and_persist_underperformance_signal_from_performance(
         performance_source=performance_source,
         policy=policy,
     )
-    evaluation = source_evaluation.evaluation
+    evaluation = accept_candidate_evaluation(
+        source_evaluation.evaluation,
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if evaluation.candidate is None:
         return UnderperformanceSignalPersistenceResult(
             evaluation=evaluation,
@@ -143,7 +148,7 @@ def evaluate_and_persist_underperformance_signal_from_performance(
             evaluation=evaluation,
         ),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
     )
     return UnderperformanceSignalPersistenceResult(
         evaluation=evaluation,

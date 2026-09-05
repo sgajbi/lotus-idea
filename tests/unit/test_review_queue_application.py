@@ -121,6 +121,7 @@ def persist_high_cash_candidate(
             ),
             idempotency_key=idempotency_key,
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
     )
@@ -793,6 +794,7 @@ def test_snooze_survives_evidence_refresh_but_not_new_material_version() -> None
             ),
             idempotency_key="signal-ingestion:high-cash:evidence-refresh",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         ),
         repository=repository,
     )
@@ -818,6 +820,7 @@ def test_snooze_survives_evidence_refresh_but_not_new_material_version() -> None
             ),
             idempotency_key="signal-ingestion:high-cash:material-change",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
         ),
         repository=repository,
     )

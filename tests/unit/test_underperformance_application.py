@@ -116,6 +116,7 @@ def test_underperformance_application_persists_candidate_and_replays_idempotentl
         evaluation=_command(),
         idempotency_key="performance-underperformance-runtime-proof",
         actor_subject="lotus-idea-runtime-proof",
+        accepted_at_utc=EVALUATED_AT,
     )
 
     accepted = evaluate_and_persist_underperformance_signal_from_performance(
@@ -144,6 +145,7 @@ def test_underperformance_application_does_not_persist_non_candidate() -> None:
             evaluation=_command(),
             idempotency_key="performance-underperformance-non-candidate",
             actor_subject="lotus-idea-runtime-proof",
+            accepted_at_utc=EVALUATED_AT,
         ),
         performance_source=StubPerformanceSource(
             PerformanceUnderperformanceEvidence(
@@ -168,6 +170,7 @@ def test_underperformance_persistence_requires_operational_identity(
         evaluation=_command(),
         idempotency_key="performance-underperformance-runtime-proof",
         actor_subject="lotus-idea-runtime-proof",
+        accepted_at_utc=EVALUATED_AT,
     )
     invalid_command = (
         replace(command, idempotency_key=value)

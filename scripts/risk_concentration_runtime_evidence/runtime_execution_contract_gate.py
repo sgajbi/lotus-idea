@@ -59,6 +59,7 @@ def validate_risk_concentration_runtime_execution_contract() -> list[str]:
         ),
         idempotency_key="risk-concentration-contract-gate",
         actor_subject="contract-gate",
+        accepted_at_utc=evaluated_at,
     )
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
         command,

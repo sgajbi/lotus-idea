@@ -19,6 +19,7 @@ from app.domain import (
     evaluate_concentration_risk_signal,
 )
 from app.application.access_scope import portfolio_only_scope
+from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
 from app.ports.idea_repository import CandidatePersistenceRepository
@@ -57,6 +58,7 @@ class EvaluateAndPersistConcentrationRiskSignalCommand:
     evaluation: EvaluateConcentrationRiskSignalCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
 
 
 @dataclass(frozen=True)
@@ -64,6 +66,7 @@ class EvaluateAndPersistConcentrationRiskFromRiskCommand:
     evaluation: EvaluateConcentrationRiskFromRiskCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
 
 
 @dataclass(frozen=True)
@@ -147,7 +150,10 @@ def evaluate_and_persist_concentration_risk_signal(
 ) -> ConcentrationRiskSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
-    evaluation = evaluate_concentration_risk_signal_command(command.evaluation, policy=policy)
+    evaluation = accept_candidate_evaluation(
+        evaluate_concentration_risk_signal_command(command.evaluation, policy=policy),
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if evaluation.candidate is None:
         return ConcentrationRiskSignalPersistenceResult(evaluation=evaluation, persistence=None)
 
@@ -156,7 +162,7 @@ def evaluate_and_persist_concentration_risk_signal(
         idempotency_key=command.idempotency_key,
         payload=_idempotency_payload_for_concentration(command.evaluation, policy=policy),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
     )
     return ConcentrationRiskSignalPersistenceResult(
         evaluation=evaluation,
@@ -215,7 +221,10 @@ def evaluate_and_persist_concentration_risk_signal_from_risk(
             source_diagnostic_codes=(exc.code,),
         )
 
-    evaluation = _evaluate_concentration_risk_evidence(command.evaluation, evidence, policy=policy)
+    evaluation = accept_candidate_evaluation(
+        _evaluate_concentration_risk_evidence(command.evaluation, evidence, policy=policy),
+        accepted_at_utc=command.accepted_at_utc,
+    )
     source_diagnostic_codes = _risk_source_diagnostic_codes(evidence)
     if evaluation.candidate is None:
         return ConcentrationRiskSignalPersistenceResult(
@@ -229,7 +238,7 @@ def evaluate_and_persist_concentration_risk_signal_from_risk(
         idempotency_key=command.idempotency_key,
         payload=_idempotency_payload_for_risk_concentration(command.evaluation, evaluation, policy),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
     )
     return ConcentrationRiskSignalPersistenceResult(
         evaluation=evaluation,

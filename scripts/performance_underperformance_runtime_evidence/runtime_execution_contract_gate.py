@@ -63,6 +63,7 @@ def validate_performance_underperformance_runtime_execution_contract() -> list[s
         ),
         idempotency_key="performance-underperformance-contract-gate",
         actor_subject="contract-gate",
+        accepted_at_utc=evaluated_at,
     )
     result = evaluate_and_persist_underperformance_signal_from_performance(
         command,

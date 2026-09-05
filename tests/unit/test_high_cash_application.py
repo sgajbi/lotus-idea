@@ -212,11 +212,13 @@ def persist_command(
     *,
     evaluation: EvaluateHighCashSignalCommand | None = None,
     idempotency_key: str = "signal-ingestion:high-cash:pb-001:2026-06-21",
+    accepted_at_utc: datetime = EVALUATED_AT,
 ) -> EvaluateAndPersistHighCashSignalCommand:
     return EvaluateAndPersistHighCashSignalCommand(
         evaluation=evaluation or command(),
         idempotency_key=idempotency_key,
         actor_subject="signal-ingestion-worker",
+        accepted_at_utc=accepted_at_utc,
     )
 
 
@@ -233,6 +235,28 @@ def test_application_persists_created_high_cash_candidate_with_audit_event() -> 
     assert result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
     assert result.persistence.record is not None
     assert result.persistence.record.audit_events[0].event_type == "idea.candidate.persisted"
+
+
+def test_persisted_evaluation_separates_source_observation_from_server_acceptance() -> None:
+    repository = InMemoryIdeaRepository()
+    accepted_at = EVALUATED_AT + datetime.resolution
+
+    result = evaluate_and_persist_high_cash_signal(
+        persist_command(accepted_at_utc=accepted_at),
+        repository=repository,
+    )
+
+    assert result.evaluation.signal is not None
+    assert result.evaluation.signal.detected_at_utc == EVALUATED_AT
+    assert result.evaluation.candidate is not None
+    assert result.evaluation.candidate.created_at_utc == accepted_at
+    assert result.evaluation.candidate.updated_at_utc == accepted_at
+    assert result.evaluation.candidate.evidence_packet.created_at_utc == accepted_at
+    assert result.persistence is not None
+    assert result.persistence.record is not None
+    assert result.persistence.record.persisted_at_utc == accepted_at
+    assert result.persistence.audit_event is not None
+    assert result.persistence.audit_event.occurred_at_utc == accepted_at
 
 
 def test_application_replays_same_high_cash_idempotency_payload() -> None:
@@ -448,6 +472,7 @@ def test_application_persists_core_backed_high_cash_candidate() -> None:
             evaluation=from_core_command(),
             idempotency_key="signal-ingestion:high-cash:core:pb-001:2026-06-21",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         core_source=source,
         repository=repository,
@@ -467,6 +492,7 @@ def test_core_ingestion_retires_candidate_when_source_condition_is_no_longer_eli
         evaluation=from_core_command(),
         idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
         actor_subject="signal-ingestion-worker",
+        accepted_at_utc=EVALUATED_AT,
     )
     created = evaluate_and_persist_high_cash_signal_from_core(
         initial_command,
@@ -507,6 +533,7 @@ def test_core_source_failure_does_not_retire_existing_candidate() -> None:
         evaluation=from_core_command(),
         idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
         actor_subject="signal-ingestion-worker",
+        accepted_at_utc=EVALUATED_AT,
     )
     created = evaluate_and_persist_high_cash_signal_from_core(
         initial_command,

@@ -145,6 +145,7 @@ def _command(
         ),
         idempotency_key=idempotency_key,
         actor_subject=ACTOR_SUBJECT,
+        accepted_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
     )
 
 

@@ -81,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         result = run_high_cash_source_ingestion_batch(
             plan.command,
+            accepted_at_utc=generated_at_utc,
             core_source=core_source,
             repository=repository,
         )

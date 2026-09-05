@@ -99,6 +99,7 @@ def _persist_eligible_high_cash_candidate(repository: InMemoryIdeaRepository) ->
             ),
             idempotency_key="openapi-example:advisor-review-queue:items-available",
             actor_subject="openapi-example-generator",
+            accepted_at_utc=_EVALUATED_AT,
         ),
         repository=repository,
     )

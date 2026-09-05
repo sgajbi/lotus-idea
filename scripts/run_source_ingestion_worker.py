@@ -34,6 +34,7 @@ from app.infrastructure.downstream_client import (
     DownstreamServiceError,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
+from app.infrastructure.system_utc_clock import SystemUtcClock
 from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
 from app.runtime.repository_state import (
     get_idea_repository,
@@ -85,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         result = run_high_cash_source_ingestion_batch(
             plan.command,
+            accepted_at_utc=SystemUtcClock().now_utc(),
             core_source=core_source,
             repository=repository,
         )

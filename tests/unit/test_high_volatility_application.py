@@ -158,6 +158,7 @@ def test_evaluate_and_persist_high_volatility_accepts_then_replays_same_command(
         evaluation=command(),
         idempotency_key="high-volatility-runtime",
         actor_subject="runtime-evidence",
+        accepted_at_utc=EVALUATED_AT,
     )
 
     accepted = evaluate_and_persist_high_volatility_signal_from_risk(
@@ -194,6 +195,7 @@ def test_evaluate_and_persist_high_volatility_fails_before_persistence_on_source
             evaluation=command(),
             idempotency_key="high-volatility-runtime",
             actor_subject="runtime-evidence",
+            accepted_at_utc=EVALUATED_AT,
         ),
         risk_source=StubRiskSource(exc=exception),
         repository=InMemoryIdeaRepository(),
@@ -215,6 +217,7 @@ def test_evaluate_and_persist_high_volatility_requires_command_identity(
                 evaluation=command(),
                 idempotency_key=idempotency_key,
                 actor_subject=actor_subject,
+                accepted_at_utc=EVALUATED_AT,
             ),
             risk_source=StubRiskSource(),
             repository=InMemoryIdeaRepository(),

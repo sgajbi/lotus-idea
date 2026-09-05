@@ -59,6 +59,7 @@ def validate_high_volatility_runtime_execution_contract() -> list[str]:
         ),
         idempotency_key="high-volatility-contract-gate",
         actor_subject="contract-gate",
+        accepted_at_utc=evaluated_at,
     )
     result = evaluate_and_persist_high_volatility_signal_from_risk(
         command,

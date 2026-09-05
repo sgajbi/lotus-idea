@@ -39,6 +39,7 @@ def runtime_command() -> EvaluateAndPersistDrawdownReviewFromRiskCommand:
         ),
         idempotency_key="risk-drawdown-runtime-evidence",
         actor_subject="runtime-evidence-test",
+        accepted_at_utc=GENERATED_AT,
     )
 
 

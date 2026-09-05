@@ -16,6 +16,7 @@ from app.api.runtime_dependencies import (
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     get_idea_repository,
+    get_trusted_clock,
     idea_repository_durable_storage_backed,
 )
 from app.api.runtime_dependencies import (
@@ -241,6 +242,7 @@ def _execute_source_ingestion_runtime(
         try:
             result = run_high_cash_source_ingestion_batch(
                 runtime.plan.command,
+                accepted_at_utc=get_trusted_clock().now_utc(),
                 core_source=runtime.core_source,
                 repository=repository,
             )
