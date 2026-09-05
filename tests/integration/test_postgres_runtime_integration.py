@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 from typing import Any, cast
 
 import psycopg
@@ -13,7 +14,7 @@ from psycopg.rows import dict_row
 from app.application.source_ingestion import (
     HighCashSourceIngestionDecision,
     IngestHighCashSourceSignalCommand,
-    ingest_high_cash_signal_from_core,
+    ingest_high_cash_signal_from_core as _ingest_high_cash_signal_from_core,
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
@@ -62,6 +63,11 @@ from tests.support.postgres_conversion_outcome_runtime import (
 )
 from tests.support.postgres_downstream_action_evidence_runtime import (
     assert_postgres_downstream_action_evidence_runtime_proof,
+)
+
+ingest_high_cash_signal_from_core = partial(
+    _ingest_high_cash_signal_from_core,
+    accepted_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
 )
 
 

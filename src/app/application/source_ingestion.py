@@ -149,6 +149,7 @@ class HighCashSourceIngestionBatchResult:
 def ingest_high_cash_signal_from_core(
     command: IngestHighCashSourceSignalCommand,
     *,
+    accepted_at_utc: datetime,
     core_source: CoreOpportunitySourcePort,
     repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
@@ -176,6 +177,7 @@ def ingest_high_cash_signal_from_core(
             ),
             idempotency_key=idempotency_key,
             actor_subject=command.actor_subject,
+            accepted_at_utc=accepted_at_utc,
         ),
         core_source=core_source,
         repository=repository,
@@ -191,6 +193,7 @@ def ingest_high_cash_signal_from_core(
 def run_high_cash_source_ingestion_batch(
     command: RunHighCashSourceIngestionBatchCommand,
     *,
+    accepted_at_utc: datetime,
     core_source: CoreOpportunitySourcePort,
     repository: CandidateEvaluationRepository,
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
@@ -207,6 +210,7 @@ def run_high_cash_source_ingestion_batch(
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
             ),
+            accepted_at_utc=accepted_at_utc,
             core_source=core_source,
             repository=repository,
             policy=policy,

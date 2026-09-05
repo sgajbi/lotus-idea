@@ -219,6 +219,7 @@ def _persistence_command(
         ).to_command(),
         idempotency_key=idempotency_key,
         actor_subject="signal-ingestion-worker",
+        accepted_at_utc=_EVALUATED_AT,
     )
 
 

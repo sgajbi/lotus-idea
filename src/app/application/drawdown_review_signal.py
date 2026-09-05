@@ -18,6 +18,7 @@ from app.domain import (
     evaluate_drawdown_review_signal,
 )
 from app.application.access_scope import portfolio_only_scope
+from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.domain.access_scope import ReviewAccessScope
 from app.application.risk_runtime_evidence import build_risk_candidate_idempotency_payload
 from app.ports.idea_repository import CandidatePersistenceRepository
@@ -56,6 +57,7 @@ class EvaluateAndPersistDrawdownReviewFromRiskCommand:
     evaluation: EvaluateDrawdownReviewFromRiskCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
 
 
 @dataclass(frozen=True)
@@ -121,7 +123,10 @@ def evaluate_and_persist_drawdown_review_signal_from_risk(
         risk_source=risk_source,
         policy=policy,
     )
-    evaluation = source_evaluation.evaluation
+    evaluation = accept_candidate_evaluation(
+        source_evaluation.evaluation,
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if evaluation.candidate is None:
         return DrawdownReviewSignalPersistenceResult(
             evaluation=evaluation,
@@ -142,7 +147,7 @@ def evaluate_and_persist_drawdown_review_signal_from_risk(
             evaluation=evaluation,
         ),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
     )
     return DrawdownReviewSignalPersistenceResult(
         evaluation=evaluation,

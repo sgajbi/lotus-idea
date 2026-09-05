@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 
 from app.application.source_ingestion import (
     HighCashSourceIngestionBatchResult,
@@ -13,8 +14,8 @@ from app.application.source_ingestion import (
     RunHighCashSourceIngestionBatchCommand,
     SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
     default_high_cash_source_ingestion_key,
-    ingest_high_cash_signal_from_core,
-    run_high_cash_source_ingestion_batch,
+    ingest_high_cash_signal_from_core as _ingest_high_cash_signal_from_core,
+    run_high_cash_source_ingestion_batch as _run_high_cash_source_ingestion_batch,
 )
 from app.domain import (
     CandidatePersistenceDecision,
@@ -37,6 +38,15 @@ from app.ports.core_sources import (
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+ingest_high_cash_signal_from_core = partial(
+    _ingest_high_cash_signal_from_core,
+    accepted_at_utc=EVALUATED_AT,
+)
+run_high_cash_source_ingestion_batch = partial(
+    _run_high_cash_source_ingestion_batch,
+    accepted_at_utc=EVALUATED_AT,
+)
 
 
 @dataclass

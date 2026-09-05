@@ -57,6 +57,7 @@ def validate_risk_drawdown_runtime_execution_contract() -> list[str]:
         ),
         idempotency_key="risk-drawdown-contract-gate",
         actor_subject="contract-gate",
+        accepted_at_utc=evaluated_at,
     )
     result = evaluate_and_persist_drawdown_review_signal_from_risk(
         command,

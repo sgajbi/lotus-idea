@@ -69,6 +69,7 @@ def runtime_result(
 ) -> HighCashSourceIngestionBatchResult:
     return run_high_cash_source_ingestion_batch(
         plan.command,
+        accepted_at_utc=GENERATED_AT,
         core_source=FixedCoreHighCashSource(evidence or core_high_cash_evidence()),
         repository=repository or InMemoryIdeaRepository(),
     )

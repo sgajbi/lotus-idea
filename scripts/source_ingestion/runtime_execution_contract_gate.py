@@ -103,6 +103,7 @@ def validate_source_ingestion_runtime_execution_contract() -> list[str]:
     plan = _plan()
     result = run_high_cash_source_ingestion_batch(
         plan.command,
+        accepted_at_utc=GENERATED_AT,
         core_source=_ContractCoreSource(),
         repository=InMemoryIdeaRepository(),
     )

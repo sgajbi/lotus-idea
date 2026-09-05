@@ -40,6 +40,7 @@ def runtime_command() -> EvaluateAndPersistConcentrationRiskFromRiskCommand:
         ),
         idempotency_key="risk-concentration-runtime-evidence",
         actor_subject="runtime-evidence-test",
+        accepted_at_utc=GENERATED_AT,
     )
 
 

@@ -41,6 +41,7 @@ def runtime_command() -> EvaluateAndPersistHighVolatilityFromRiskCommand:
         ),
         idempotency_key="high-volatility-runtime-evidence",
         actor_subject="runtime-evidence-test",
+        accepted_at_utc=GENERATED_AT,
     )
 
 

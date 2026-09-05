@@ -224,6 +224,7 @@ def persist_command(
         evaluation=evaluation or command(),
         idempotency_key=idempotency_key,
         actor_subject="signal-ingestion-worker",
+        accepted_at_utc=EVALUATED_AT,
     )
 
 
@@ -282,6 +283,7 @@ def test_application_persists_risk_backed_concentration_candidate() -> None:
             evaluation=from_risk_command(),
             idempotency_key="signal-ingestion:concentration:risk:pb-001:2026-06-21",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         risk_source=source,
         repository=repository,
@@ -304,6 +306,7 @@ def test_application_does_not_persist_risk_backed_entitlement_denial() -> None:
             evaluation=from_risk_command(),
             idempotency_key="signal-ingestion:concentration:risk:denied:2026-06-21",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         risk_source=source,
         repository=repository,
@@ -324,6 +327,7 @@ def test_application_does_not_persist_risk_backed_unavailable_source() -> None:
             evaluation=from_risk_command(),
             idempotency_key="signal-ingestion:concentration:risk:unavailable:2026-06-21",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         risk_source=source,
         repository=repository,
@@ -350,6 +354,7 @@ def test_application_does_not_persist_risk_backed_below_materiality_result() -> 
             evaluation=from_risk_command(),
             idempotency_key="signal-ingestion:concentration:risk:below:2026-06-21",
             actor_subject="signal-ingestion-worker",
+            accepted_at_utc=EVALUATED_AT,
         ),
         risk_source=source,
         repository=repository,
@@ -370,6 +375,7 @@ def test_application_requires_actor_for_risk_backed_persistence() -> None:
                 evaluation=from_risk_command(),
                 idempotency_key="signal-ingestion:concentration:risk:actor:2026-06-21",
                 actor_subject=" ",
+                accepted_at_utc=EVALUATED_AT,
             ),
             risk_source=source,
             repository=InMemoryIdeaRepository(),

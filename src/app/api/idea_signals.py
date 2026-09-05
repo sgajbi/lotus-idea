@@ -29,6 +29,7 @@ from app.api.runtime_dependencies import (
     CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
     get_idea_repository,
+    get_trusted_clock,
     idea_repository_durable_storage_backed,
 )
 from app.api.runtime_dependencies import (
@@ -351,6 +352,7 @@ def _evaluate_high_cash_persistence_request(
             evaluation=request.to_command(),
             idempotency_key=idempotency_key,
             actor_subject=caller.subject,
+            accepted_at_utc=get_trusted_clock().now_utc(),
             event_lineage=context.event_lineage,
         ),
         repository=context.repository,

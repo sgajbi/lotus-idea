@@ -46,6 +46,7 @@ def runtime_command() -> EvaluateAndPersistUnderperformanceFromPerformanceComman
         ),
         idempotency_key="performance-underperformance-runtime-evidence",
         actor_subject="runtime-evidence-test",
+        accepted_at_utc=GENERATED_AT,
     )
 
 

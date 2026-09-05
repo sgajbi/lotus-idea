@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 import importlib.util
 import json
 from pathlib import Path
@@ -14,7 +15,7 @@ import pytest
 
 from app.application.source_ingestion import (
     SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
-    run_high_cash_source_ingestion_batch,
+    run_high_cash_source_ingestion_batch as _run_high_cash_source_ingestion_batch,
 )
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
@@ -35,6 +36,11 @@ ROOT = Path(__file__).resolve().parents[2]
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+run_high_cash_source_ingestion_batch = partial(
+    _run_high_cash_source_ingestion_batch,
+    accepted_at_utc=EVALUATED_AT,
+)
 
 
 @dataclass

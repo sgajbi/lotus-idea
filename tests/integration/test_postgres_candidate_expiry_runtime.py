@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 from typing import Any, cast
 
 import psycopg
@@ -15,7 +16,7 @@ from app.application.candidate_expiry import (
 )
 from app.application.source_ingestion import (
     IngestHighCashSourceSignalCommand,
-    ingest_high_cash_signal_from_core,
+    ingest_high_cash_signal_from_core as _ingest_high_cash_signal_from_core,
 )
 from app.domain import (
     EvidenceFreshness,
@@ -36,6 +37,7 @@ from app.runtime.repository_state import (
     get_idea_repository,
     reset_idea_repository_for_tests,
 )
+
 from tests.integration.postgres_runtime_support import (
     high_cash_payload,
     persistence_headers,
@@ -44,6 +46,11 @@ from tests.integration.postgres_runtime_support import (
 )
 from tests.support.http import managed_test_client
 from tests.support.opportunity_effectiveness_fixture import candidate_fixture
+
+ingest_high_cash_signal_from_core = partial(
+    _ingest_high_cash_signal_from_core,
+    accepted_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+)
 
 
 _EXPIRY_TABLES = frozenset(

@@ -24,6 +24,7 @@ from app.application.candidate_expiry import (
     ExpireCandidateCommand,
     expire_candidate,
 )
+from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.application.access_scope import tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
@@ -66,6 +67,7 @@ class EvaluateAndPersistHighCashSignalCommand:
     evaluation: EvaluateHighCashSignalCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
     event_lineage: EventLineageContext | None = None
 
 
@@ -74,6 +76,7 @@ class EvaluateAndPersistHighCashFromCoreCommand:
     evaluation: EvaluateHighCashFromCoreCommand
     idempotency_key: str
     actor_subject: str
+    accepted_at_utc: datetime
 
 
 @dataclass(frozen=True)
@@ -163,7 +166,10 @@ def evaluate_and_persist_high_cash_signal(
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
-    evaluation = evaluate_high_cash_signal_command(command.evaluation, policy=policy)
+    evaluation = accept_candidate_evaluation(
+        evaluate_high_cash_signal_command(command.evaluation, policy=policy),
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if evaluation.candidate is None:
         return HighCashSignalPersistenceResult(
             evaluation=evaluation,
@@ -173,7 +179,7 @@ def evaluate_and_persist_high_cash_signal(
                 as_of_date=command.evaluation.as_of_date,
                 access_scope=command.evaluation.access_scope,
                 actor_subject=command.actor_subject,
-                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                evaluated_at_utc=command.accepted_at_utc,
                 event_lineage=command.event_lineage,
                 repository=repository,
             ),
@@ -184,7 +190,7 @@ def evaluate_and_persist_high_cash_signal(
         idempotency_key=command.idempotency_key,
         payload=_idempotency_payload_for_high_cash(command.evaluation, policy=policy),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
         event_lineage=command.event_lineage,
     )
     return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=persistence)
@@ -246,7 +252,10 @@ def evaluate_and_persist_high_cash_signal_from_core(
             source_diagnostic_codes=(exc.code,),
         )
 
-    evaluation = _evaluate_high_cash_core_evidence(command.evaluation, evidence, policy=policy)
+    evaluation = accept_candidate_evaluation(
+        _evaluate_high_cash_core_evidence(command.evaluation, evidence, policy=policy),
+        accepted_at_utc=command.accepted_at_utc,
+    )
     source_diagnostic_codes = _core_source_diagnostic_codes(evidence)
     if evaluation.candidate is None:
         return HighCashSignalPersistenceResult(
@@ -260,7 +269,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
                     portfolio_id=command.evaluation.portfolio_id,
                 ),
                 actor_subject=command.actor_subject,
-                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                evaluated_at_utc=command.accepted_at_utc,
                 repository=repository,
             ),
             source_diagnostic_codes=source_diagnostic_codes,
@@ -271,7 +280,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
         idempotency_key=command.idempotency_key,
         payload=_idempotency_payload_for_core_high_cash(command.evaluation, evaluation, policy),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.evaluation.evaluated_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
     )
     return HighCashSignalPersistenceResult(
         evaluation=evaluation,
