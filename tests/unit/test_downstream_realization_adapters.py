@@ -414,7 +414,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
         },
         "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "as_of_date": "2026-06-21",
-        "requested_output_formats": ["json"],
+        "requested_output_formats": ["pdf"],
         "boundary": "REPORT_JOB_MATERIALIZATION",
         "grants_client_publication_authority": False,
         "producer": "lotus-idea",
@@ -1131,7 +1131,7 @@ def report_service_context() -> ReportRealizationServiceContext:
         caller_application="lotus-idea",
         tenant_id="tenant-sg",
         region="APAC",
-        requested_output_formats=("json",),
+        requested_output_formats=("pdf",),
     )
 
 
