@@ -22,13 +22,14 @@ from app.ports.downstream_realization import (
 )
 from app.runtime.downstream_realization_state import ConversionRealizationClients
 from app.runtime.downstream_realization_state import DownstreamRealizationClientsUnavailableError
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from tests.integration.test_downstream_realization_api import (
     CapturingConversionClient,
     downstream_submission_headers,
     record_conversion_intent,
     seed_approved_candidate,
 )
+from tests.support.fixed_utc_clock import FixedUtcClock
 from tests.support.http import managed_test_client
 
 
@@ -38,6 +39,7 @@ RECORDED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
 @dataclass
 class OwnerLifecycleClient:
     intent: Any = None
+    submission_calls: int = 0
     recovery_calls: int = 0
 
     def submit_proposal_intent(
@@ -50,6 +52,7 @@ class OwnerLifecycleClient:
         idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         self.intent = intent
+        self.submission_calls += 1
         return DownstreamRealizationOutcome.accepted_by_downstream(
             DownstreamOwnerReceipt(
                 owner_authority=SourceSystem.LOTUS_ADVISE,
@@ -289,6 +292,103 @@ def test_advise_reconciliation_api_recovers_lost_owner_response_without_resubmis
     assert replayed.json()["reconciliationStatus"] == "replayed"
     assert advise_client.submission_calls == 1
     assert advise_client.recovery_calls == 1
+
+
+def test_advise_recovery_api_waits_for_expired_lease_after_local_commit_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    advise_client = OwnerLifecycleClient()
+    clients = ConversionRealizationClients(
+        advise_client=advise_client,
+        manage_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-finalize-failure",
+        idempotency_prefix="advise-finalize-failure",
+    )
+    conversion_intent_id = "conversion-advise-finalize-failure-001"
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        target="advise_proposal",
+        idempotency_key=conversion_intent_id,
+    )
+    repository = get_idea_repository()
+
+    def fail_finalize(**_: object) -> None:
+        raise RuntimeError("simulated Idea commit failure after Advise acceptance")
+
+    monkeypatch.setattr(repository, "finalize_downstream_submission", fail_finalize)
+    submitted = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=downstream_submission_headers("submission-advise-finalize-failure-001"),
+    )
+    assert submitted.status_code == 202
+    payload = submitted.json()["downstreamSubmission"]
+    assert payload["submissionStatus"] == "reconciliation_required"
+    support_reference = str(payload["supportReference"])
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.status.value == "in_flight"
+    assert persisted.lease_expires_at_utc is not None
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc - timedelta(seconds=1)),
+    )
+    active = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    assert active.status_code == 409
+    assert active.json()["code"] == "advise_realization_submission_still_in_flight"
+    assert advise_client.recovery_calls == 0
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc),
+    )
+    recovered = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    replayed = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert replayed.status_code == 200
+    assert replayed.json()["reconciliationStatus"] == "replayed"
+    assert advise_client.submission_calls == 1
+    assert advise_client.recovery_calls == 1
+    final_record = repository.downstream_submission_by_support_reference(support_reference)
+    assert final_record is not None
+    assert final_record.status.value == "accepted_by_downstream"
+    assert final_record.attempt_count == 1
+    assert [entry.action.value for entry in final_record.audit_history] == [
+        "claimed",
+        "reconciled",
+    ]
 
 
 def test_advise_realization_reconciliation_api_reports_unconfigured_owner_reader(
