@@ -46,9 +46,20 @@ for inclusion and control-event ordering, preventing a backdated producer time
 accepted later from rewriting an earlier result. Exact replay returns the
 original acceptance time. Migration `024` labels ambiguous historical action rows
 `legacy_observed_time_assumed`; this is not server-time proof. See
-`docs/architecture/trusted-control-time.md`. This foundation does not close
-presentation-to-review authority issue `#1225`, source revision issue `#1227`,
-or supported-feature promotion.
+`docs/architecture/trusted-control-time.md`.
+
+Review and conversion use `idea-review-authority-v1`. A Workbench review
+requires a tenant/candidate-scoped presentation receipt and the exact candidate
+material version, evidence version, evidence packet, and content hash. The
+persisted decision is the immutable authority-grant evidence; conversion
+selects that exact approving review and rechecks it under the candidate mutation
+lock. Every evidence revision supersedes authority in v1; no non-semantic repair
+class is certified. Migration `025` marks incomplete history
+`legacy_unverified`, adds no fabricated authority, and exposes
+`idea_review_authority_migration_audit` for remediation. See
+`docs/architecture/exact-review-authority.md`. Canonical Gateway/Workbench
+consumer proof, source revision issue `#1227`, and supported-feature promotion
+remain open.
 
 Workbench read-path and action-path declarations are v2 `source_contract`
 evidence only. The bounded Gateway BFF action family forwards Idea-owned review

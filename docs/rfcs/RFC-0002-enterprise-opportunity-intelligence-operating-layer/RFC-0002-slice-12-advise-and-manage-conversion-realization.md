@@ -410,3 +410,13 @@ consumption. Cross-repository downstream realization remains planned until the
 owning services certify suitability/rebalance authority, downstream outcomes,
 Report/Render/Archive materialization, production identity, and product
 support.
+
+## Exact Review-To-Conversion Increment
+
+Conversion intent no longer relies on mutable approved posture alone. A new
+intent names the exact persisted approving review and current candidate
+material/evidence/packet/hash identity. The grant must remain active,
+evidence-ready, target-eligible, and strictly before applicability expiry at
+trusted server time; the repository repeats this check under the candidate
+mutation lock. Exact replay of a pre-expiry intent remains replayable without a
+new downstream mutation. Downstream business authority remains with its owner.

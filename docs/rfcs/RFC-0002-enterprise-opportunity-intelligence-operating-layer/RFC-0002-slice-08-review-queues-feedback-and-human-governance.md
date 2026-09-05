@@ -234,3 +234,12 @@ and partial presentation remain unjudged. Contradictory human judgments at the
 same instant fail closed. The evaluation is observational and cannot change
 scores, suppression, eligibility, lifecycle, suitability, compliance, or
 conversion authority.
+
+## Exact Review Authority Increment
+
+Every new decision now binds exact candidate material, evidence, packet, and
+content-hash identity. Workbench review additionally requires a persisted
+tenant/candidate presentation receipt; operator review cannot fabricate one.
+The persisted decision is the immutable approval-grant evidence. Migration
+`025` marks ambiguous history `legacy_unverified` and grants it no authority.
+Canonical Gateway/Workbench proof remains a later-slice dependency.
