@@ -11,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.api.signal_models import (
+    CausalInputRevisionModel,
     SourceRevisionClaimsModel,
     ReviewAccessScopeRequest,
     SignalEvaluationResponse,
@@ -97,10 +98,10 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
             restatementVersion="restatement-2",
             policyVersion="portfolio-state-v4",
             causalInputRevisions=(
-                {
-                    "productId": "lotus-core:HoldingsAsOf:v1",
-                    "sourceRevision": "holdings-31",
-                },
+                CausalInputRevisionModel(
+                    productId="lotus-core:HoldingsAsOf:v1",
+                    sourceRevision="holdings-31",
+                ),
             ),
             reconciliationPosture=SourceReconciliationPosture.COMPLETE,
         ),

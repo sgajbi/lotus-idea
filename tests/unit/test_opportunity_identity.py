@@ -107,6 +107,7 @@ def test_same_date_restatement_changes_evidence_identity_without_new_business_id
             reconciliation_posture=SourceReconciliationPosture.COMPLETE,
         ),
     )
+    assert original.revision_claims is not None
     restated = replace(
         original,
         revision_claims=replace(

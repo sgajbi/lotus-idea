@@ -10,6 +10,7 @@ from app.api.durable_write_guard import durable_repository_not_configured_proble
 from app.api.presentation_receipt_models import PresentationReceiptResponse
 from app.domain import (
     InMemoryIdeaRepository,
+    IdeaCandidate,
     OpportunityFamily,
     PresentationReceiptDecision,
     PresentationReceiptResult,
@@ -53,7 +54,7 @@ def _payload() -> dict[str, object]:
     }
 
 
-def _candidate():
+def _candidate() -> IdeaCandidate:
     return candidate_fixture(
         "candidate-presentation-001",
         family=OpportunityFamily.HIGH_CASH,

@@ -132,6 +132,8 @@ def presentation_receipt(candidate: IdeaCandidate) -> CandidatePresentationRecei
         ranking_policy_version=candidate.score.policy_version,
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=FIXTURE_TIME + timedelta(minutes=1),
     )
 
