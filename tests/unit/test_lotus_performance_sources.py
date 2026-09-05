@@ -9,7 +9,7 @@ import httpx
 import pytest
 
 import app.infrastructure.lotus_performance_sources as performance_sources
-from app.domain import EvidenceFreshness
+from app.domain import EvidenceFreshness, SourceReconciliationPosture
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_performance_sources import (
     LotusPerformanceUnderperformanceSourceAdapter,
@@ -150,6 +150,15 @@ def test_lotus_performance_adapter_fetches_declared_returns_series_source_produc
     assert evidence.performance_ref.route == "/integration/returns/series"
     assert evidence.performance_ref.content_hash == "sha256:returns-series-calculation"
     assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.performance_ref.revision_claims is not None
+    assert (
+        evidence.performance_ref.revision_claims.calculation_run_id
+        == "2f4f3e0e-6e0e-4e0e-8e0e-2f4f3e0e6e0e"
+    )
+    assert (
+        evidence.performance_ref.revision_claims.reconciliation_posture
+        is SourceReconciliationPosture.UNKNOWN
+    )
     assert evidence.performance_diagnostic == "performance_benchmark_context_ready"
     assert seen == [
         (
