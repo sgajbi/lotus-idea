@@ -218,10 +218,13 @@ def test_authority_posture_fails_closed_for_change_supportability_and_expiry() -
         grant,
         candidate_evidence=CandidateEvidenceIdentity.from_candidate(unreconciled),
     )
-    assert unreconciled_grant.effective_status(
-        unreconciled,
-        evaluated_at_utc=DECIDED_AT,
-    ) is ReviewAuthorityStatus.REVOKED
+    assert (
+        unreconciled_grant.effective_status(
+            unreconciled,
+            evaluated_at_utc=DECIDED_AT,
+        )
+        is ReviewAuthorityStatus.REVOKED
+    )
     assert (
         grant.effective_status(
             current,
