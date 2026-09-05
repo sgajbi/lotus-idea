@@ -66,6 +66,8 @@ def require_observed_time_within_policy(
 def _require_aware_utc(value: datetime, field_name: str) -> None:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
+    if value.utcoffset() != timedelta(0):
+        raise ValueError(f"{field_name} must use UTC offset +00:00")
 
 
 __all__ = [

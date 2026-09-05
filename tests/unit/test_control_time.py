@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -60,5 +60,33 @@ def test_observed_time_policy_rejects_naive_control_time() -> None:
         require_observed_time_within_policy(
             ACCEPTED_AT,
             datetime(2026, 9, 5, 10, 0),
+            REVIEW_DECISION_TIME_POLICY,
+        )
+
+
+@pytest.mark.parametrize(
+    ("observed_at", "accepted_at", "field_name"),
+    (
+        (
+            datetime(2026, 9, 5, 18, 0, tzinfo=timezone(timedelta(hours=8))),
+            ACCEPTED_AT,
+            "observed_at_utc",
+        ),
+        (
+            ACCEPTED_AT,
+            datetime(2026, 9, 5, 18, 0, tzinfo=timezone(timedelta(hours=8))),
+            "accepted_at_utc",
+        ),
+    ),
+)
+def test_observed_time_policy_requires_explicit_utc_offset(
+    observed_at: datetime,
+    accepted_at: datetime,
+    field_name: str,
+) -> None:
+    with pytest.raises(ValueError, match=rf"{field_name} must use UTC offset \+00:00"):
+        require_observed_time_within_policy(
+            observed_at,
+            accepted_at,
             REVIEW_DECISION_TIME_POLICY,
         )
