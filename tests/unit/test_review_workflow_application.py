@@ -893,6 +893,7 @@ def test_feedback_persistence_publishes_the_canonical_taxonomy() -> None:
         "feedback_reason": "relevant",
         "feedback_taxonomy_version": FEEDBACK_TAXONOMY_VERSION,
         "actor_role": "advisor",
+        "observed_at_utc": "2026-06-21T10:05:00+00:00",
     }
 
 
