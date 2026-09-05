@@ -35,8 +35,8 @@ def test_report_materialization_runtime_execution_accepts_receipt_bound_runtime_
         REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS
     )
     assert payload["ownerMainlineEvidence"] == REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE
-    assert "rendered_output_creation_missing" in payload["aggregateBlockersSatisfied"]
-    assert "archive_record_creation_missing" in payload["aggregateBlockersSatisfied"]
+    assert "rendered_output_creation_missing" in payload["remainingCertificationBlockers"]
+    assert "archive_record_creation_missing" in payload["remainingCertificationBlockers"]
     assert "client_publication_authority_blocked" in payload["remainingCertificationBlockers"]
     assert payload["nonProofClaims"]["supportedFeaturePromoted"] is False  # type: ignore[index]
     assert payload["nonProofClaims"]["clientPublicationAuthorized"] is False  # type: ignore[index]
@@ -62,6 +62,16 @@ def test_report_materialization_runtime_execution_builder_binds_runtime_checks()
     assert payload["runtimeChecks"]["archiveRecordCreationObserved"] is True
     assert payload["runtimeChecks"]["renderOwnerMainlineEvidenceConsumed"] is True
     assert payload["runtimeChecks"]["archiveOwnerMainlineEvidenceConsumed"] is True
+
+
+def test_local_asgi_proof_cannot_clear_live_render_or_archive_blockers() -> None:
+    payload = valid_report_materialization_runtime_execution()
+
+    assert payload["runtimeMode"] == "local_asgi_testclient"
+    assert "rendered_output_creation_missing" not in payload["aggregateBlockersSatisfied"]
+    assert "archive_record_creation_missing" not in payload["aggregateBlockersSatisfied"]
+    assert "rendered_output_creation_missing" in payload["remainingCertificationBlockers"]
+    assert "archive_record_creation_missing" in payload["remainingCertificationBlockers"]
 
 
 def test_report_materialization_runtime_execution_builder_requires_aware_generation_time() -> None:

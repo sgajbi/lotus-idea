@@ -156,7 +156,9 @@ def test_invalid_report_adapter_configuration_fails_closed(
     [
         (REPORT_TENANT_ID_ENV, "local-development", "tenant_id must be 'tenant-sg'"),
         (REPORT_REGION_ENV, "local", "region must be 'APAC'"),
-        (REPORT_OUTPUT_FORMATS_ENV, "pdf", "requested_output_formats must be 'json'"),
+        (REPORT_OUTPUT_FORMATS_ENV, "json", "requested_output_formats must be exactly 'pdf'"),
+        (REPORT_OUTPUT_FORMATS_ENV, "pdf,pdf", "requested_output_formats must be exactly 'pdf'"),
+        (REPORT_OUTPUT_FORMATS_ENV, "pdf,json", "requested_output_formats must be exactly 'pdf'"),
     ],
 )
 def test_report_service_context_fixture_rejects_unrecognized_owner_scope(
@@ -174,7 +176,7 @@ def test_report_service_context_fixture_rejects_unrecognized_owner_scope(
 
 def test_malformed_report_output_formats_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     configure_report_env(monkeypatch)
-    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "json, ")
+    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "pdf, ")
 
     with pytest.raises(
         DownstreamRealizationClientsUnavailableError,
@@ -461,5 +463,5 @@ def configure_report_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(REPORT_CALLER_APPLICATION_ENV, "lotus-idea")
     monkeypatch.setenv(REPORT_TENANT_ID_ENV, "tenant-sg")
     monkeypatch.setenv(REPORT_REGION_ENV, "APAC")
-    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "json")
+    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "pdf")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

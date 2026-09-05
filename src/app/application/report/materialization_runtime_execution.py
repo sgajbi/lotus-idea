@@ -32,10 +32,10 @@ REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION = (
 )
 REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED = (
     "report_evidence_pack_live_materialization_proof_missing",
-    "rendered_output_creation_missing",
-    "archive_record_creation_missing",
 )
 REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS = (
+    "rendered_output_creation_missing",
+    "archive_record_creation_missing",
     "client_publication_authority_blocked",
     "supported_feature_promotion_missing",
     "production_identity_not_certified",

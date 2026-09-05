@@ -159,7 +159,7 @@ def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
     )
     assert envelope["boundary"] == contract["boundary"]
     assert envelope["grants_client_publication_authority"] is False
-    assert envelope["requested_output_formats"] == ["json"]
+    assert envelope["requested_output_formats"] == ["pdf"]
     assert "content_hash" not in str(envelope)
     assert set(contract["receipt_response_fields"]) == {
         "report_request_id",

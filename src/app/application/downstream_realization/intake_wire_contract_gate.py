@@ -193,7 +193,7 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
         "local_test_service_context": {
             "tenant_id": "tenant-sg",
             "region": "APAC",
-            "output_formats": ["json"],
+            "output_formats": ["pdf"],
         },
         "boundary": "REPORT_JOB_MATERIALIZATION",
         "required_server_headers": {

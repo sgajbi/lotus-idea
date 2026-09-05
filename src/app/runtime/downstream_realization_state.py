@@ -71,7 +71,7 @@ _MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile
 _REPORT_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_LOCAL_TEST_FIXTURE_TENANT_ID = "tenant-sg"
 _REPORT_LOCAL_TEST_FIXTURE_REGION = "APAC"
-_REPORT_LOCAL_TEST_FIXTURE_OUTPUT_FORMATS = ("json",)
+_REPORT_LOCAL_TEST_FIXTURE_OUTPUT_FORMATS = ("pdf",)
 
 
 class DownstreamRealizationClientsUnavailableError(RuntimeError):
@@ -331,7 +331,7 @@ def _require_report_service_context_fixture_values(
         )
     if service_context.requested_output_formats != _REPORT_LOCAL_TEST_FIXTURE_OUTPUT_FORMATS:
         raise DownstreamRealizationClientsUnavailableError(
-            "Report realization local/test fixture requested_output_formats must be 'json'."
+            "Report realization local/test fixture requested_output_formats must be exactly 'pdf'."
         )
 
 

@@ -172,7 +172,7 @@ request-acceptance, downstream-record, or supportability blockers:
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report intake runtime execution | `lotus_report_live_intake_route_proof_missing` only | The proof observes bounded local/dev Report route serving and source-safe accepted/replayed/conflict/rejection receipts for `POST /reports/idea-evidence-packs` through an isolated Report intake ledger. It does not create a report job, prove materialization, create rendered output, create an Archive record, grant client-publication authority, certify production identity, or promote support. |
 | Report materialization source contract | None | The v4 artifact consumes the exact Report materialization and recovery declarations, links owner proofs `sgajbi/lotus-report#152` and `sgajbi/lotus-report#286`, and preserves client publication and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
-| Report materialization runtime execution with Render/Archive owner evidence | `report_evidence_pack_live_materialization_proof_missing`, `rendered_output_creation_missing`, `archive_record_creation_missing` | The proof observes bounded local/dev Report materialization route execution, requires source-safe receipt outcomes, and binds exact merged-main owner evidence for Render #65/PR #67 and Archive #72/PR #73. It does not grant client-publication authority, retention/legal-hold authority, production identity, Workbench/Gateway behavior, supported-feature promotion, or final support certification. |
+| Report materialization local-ASGI runtime execution | `report_evidence_pack_live_materialization_proof_missing` | The proof observes bounded Report route execution with injected Render/Archive test doubles and source-safe receipt outcomes. It cannot prove live Render output or Archive custody. Those blockers require the current-source owner-service HTTP chain under #1240. It does not grant client-publication authority, retention/legal-hold authority, production identity, Workbench/Gateway behavior, supported-feature promotion, or final support certification. |
 
 `make downstream-realization-contract-gate` blocks:
 
@@ -625,7 +625,11 @@ available.
 | `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION` | `lotus-idea` |
 | `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID` | `tenant-sg` |
 | `LOTUS_IDEA_REPORT_REALIZATION_REGION` | `APAC` |
-| `LOTUS_IDEA_REPORT_REALIZATION_OUTPUT_FORMATS` | `json` |
+| `LOTUS_IDEA_REPORT_REALIZATION_OUTPUT_FORMATS` | `pdf` |
+
+The local/test profile accepts exactly one server-configured `pdf` output. This intentionally
+selects Report's governed Render and Archive path; blank, duplicate, mixed, JSON-only, or unknown
+values fail before downstream I/O. The setting is not request or browser authority.
 
 The adapter sends these values only as `X-Actor-Id`,
 `X-Caller-Application`, `X-Tenant-Id`, and `X-Region`, in addition to

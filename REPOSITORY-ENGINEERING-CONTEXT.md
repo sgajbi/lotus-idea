@@ -2985,13 +2985,12 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
-    A closed Report materialization runtime-execution proof may clear
-    `report_evidence_pack_live_materialization_proof_missing`,
-    `rendered_output_creation_missing`, and `archive_record_creation_missing`
-    only when it is receipt-bound to the sibling Report route,
-    aggregate-current, generated or supplied through the governed `report/`
-    proof path, and bound to exact Render #65/PR #67 plus Archive #72/PR #73
-    owner-mainline evidence. Owner evidence alone clears no blocker. The proof
+    The local-ASGI Report materialization runtime-execution proof may clear only
+    `report_evidence_pack_live_materialization_proof_missing` because its Render and Archive
+    collaborators are injected test doubles. `rendered_output_creation_missing` and
+    `archive_record_creation_missing` require a rebuilt current-source HTTP chain through the
+    actual owner services under `#1240`; exact owner-mainline references alone clear no blocker.
+    Every proof
     must preserve client-publication, supported-feature promotion,
     production-identity, retention, legal-hold, and final-certification blockers
     until the owning services provide separate runtime, legal, publication, and
@@ -3002,7 +3001,7 @@ Recent issue-derived patterns to preserve:
     DTOs, or persisted evidence packs. Require all source summaries to carry
     the same valid business date and require the candidate tenant to match the
     server-configured local/test Report fixture before HTTP I/O. The fixture
-    uses only `tenant-sg` / `APAC` / `json`, never browser-supplied identity or
+    uses only `tenant-sg` / `APAC` / one server-configured `pdf` output, never browser-supplied identity or
     scope, and fails closed outside `local` and `test` until `#380` production
     identity prerequisites are available. This consumer mapping is not Report
     job, Render, Archive, publication, or supported-feature evidence.
