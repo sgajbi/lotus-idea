@@ -14,6 +14,7 @@ from app.domain.ideas import (
     OpportunityFamily,
     SourceRef,
 )
+from app.domain.source_revision import source_revision_claims_payload
 
 
 PREVIOUS_OPPORTUNITY_IDENTITY_POLICY_VERSION = "idea-opportunity-identity-v2"
@@ -208,7 +209,7 @@ def _sorted_refs(source_refs: tuple[SourceRef, ...]) -> tuple[SourceRef, ...]:
     )
 
 
-def _source_ref_identity_payload(source_ref: SourceRef) -> dict[str, str]:
+def _source_ref_identity_payload(source_ref: SourceRef) -> dict[str, object]:
     return {
         "source_system": source_ref.source_system.value,
         "product_id": source_ref.product_id,
@@ -219,6 +220,7 @@ def _source_ref_identity_payload(source_ref: SourceRef) -> dict[str, str]:
         "content_hash": source_ref.content_hash,
         "data_quality_status": source_ref.data_quality_status,
         "freshness": source_ref.freshness.value,
+        "revision_claims": source_revision_claims_payload(source_ref.revision_claims),
     }
 
 
