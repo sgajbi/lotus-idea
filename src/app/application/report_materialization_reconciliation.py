@@ -76,7 +76,10 @@ def reconcile_report_materialization_receipt(
     submission = repository.downstream_submission_by_support_reference(command.support_reference)
     if submission is None:
         return _result(ReportMaterializationReconciliationStatus.NOT_FOUND)
-    blocker = _submission_eligibility_blocker(submission)
+    blocker = _submission_eligibility_blocker(
+        submission,
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if blocker is not None:
         return _result(ReportMaterializationReconciliationStatus.NOT_ELIGIBLE, blocker=blocker)
     evidence_pack = repository.report_evidence_pack_by_id(submission.resource_id)
@@ -160,13 +163,26 @@ def reconcile_report_materialization_receipt(
     )
 
 
-def _submission_eligibility_blocker(submission: DownstreamSubmissionRecord) -> str | None:
+def _submission_eligibility_blocker(
+    submission: DownstreamSubmissionRecord,
+    *,
+    accepted_at_utc: datetime,
+) -> str | None:
     if submission.resource_type is not DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK:
         return "report_materialization_requires_evidence_pack_submission"
     if submission.target is not ConversionTarget.REPORT_EVIDENCE:
         return "report_materialization_requires_report_target"
     if submission.source_authority is not SourceSystem.LOTUS_REPORT:
         return "report_materialization_requires_report_authority"
+    if submission.status is DownstreamSubmissionPosture.IN_FLIGHT:
+        if (
+            submission.lease_expires_at_utc is None
+            or submission.lease_expires_at_utc > accepted_at_utc
+        ):
+            return "report_materialization_submission_still_in_flight"
+        if submission.owner_receipt is not None:
+            return "report_materialization_uncertain_submission_has_owner_receipt"
+        return None
     if submission.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED:
         if submission.owner_receipt is not None:
             return "report_materialization_uncertain_submission_has_owner_receipt"

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 import json
 from types import SimpleNamespace
 from typing import cast
@@ -43,6 +43,7 @@ from app.domain import (
     QueueAccessScopeFilter,
     ReviewAccessScope,
     SourceSystem,
+    create_downstream_submission_claim,
 )
 from app.domain.persistence_advise_realization import advise_realization_submission_blocker
 from app.ports.downstream_realization import (
@@ -187,6 +188,44 @@ def test_reconcile_advise_history_recovers_lost_acceptance_without_resubmission(
     assert stored.owner_receipt.owner_realization_id == "ipr_001"
     assert stored.owner_receipt.owner_work_id == "iarw_001"
     assert stored.owner_receipt.source_event_version == 1
+
+
+def test_active_advise_submission_cannot_be_reconciled_while_post_may_still_run() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=False)
+    reader = StubAdviseReader(_history(version=2))
+
+    result = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.NOT_ELIGIBLE
+    assert result.blocker == "advise_realization_submission_still_in_flight"
+    assert reader.calls == 0
+    assert reader.recovery_calls == 0
+
+
+def test_expired_advise_submission_recovers_owner_history_without_reposting() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=True)
+    reader = StubAdviseReader(_history(version=2))
+
+    result = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert result.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    assert result.appended_outcome_count == 2
+    assert reader.recovery_calls == 1
+    assert reader.calls == 0
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert persisted.owner_receipt is not None
+    assert persisted.attempt_count == 1
+    assert [entry.action.value for entry in persisted.audit_history] == ["claimed", "reconciled"]
 
 
 def test_reconcile_advise_history_recovers_lost_rejection_without_false_acceptance() -> None:
@@ -471,16 +510,16 @@ def test_advise_reconciliation_eligibility_allows_uncertain_owner_recovery() -> 
     )
 
     for malformed, expected in cases:
-        assert _submission_eligibility_blocker(malformed) == expected
+        assert _submission_eligibility_blocker(malformed, accepted_at_utc=RECORDED_AT) == expected
         assert advise_realization_submission_blocker(malformed, _history(version=2)) == expected
-    assert _submission_eligibility_blocker(submission) is None
+    assert _submission_eligibility_blocker(submission, accepted_at_utc=RECORDED_AT) is None
     uncertain = replace(
         submission,
         status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
         downstream_failure_reason="owner_outcome_uncertain",
         owner_receipt=None,
     )
-    assert _submission_eligibility_blocker(uncertain) is None
+    assert _submission_eligibility_blocker(uncertain, accepted_at_utc=RECORDED_AT) is None
 
     assert submission.owner_receipt is not None
     conflicting_receipt = replace(
@@ -586,6 +625,26 @@ def test_reconcile_command_requires_auditable_identity(field_name: str) -> None:
             ),
             actor_subject=" " if field_name == "actor_subject" else "operator-redacted",
             access_scope_filter=AUTHORIZED_SCOPE,
+            accepted_at_utc=RECORDED_AT,
+        )
+
+
+@pytest.mark.parametrize(
+    "accepted_at_utc",
+    (
+        datetime(2026, 9, 1, 10, 0),
+        datetime(2026, 9, 1, 11, 0, tzinfo=timezone(timedelta(hours=1))),
+    ),
+)
+def test_reconcile_command_requires_trusted_utc_acceptance_time(
+    accepted_at_utc: datetime,
+) -> None:
+    with pytest.raises(ValueError, match="accepted_at_utc must"):
+        ReconcileAdviseRealizationCommand(
+            support_reference="downstream-submission-000000000000000000000000",
+            actor_subject="operator-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+            accepted_at_utc=accepted_at_utc,
         )
 
 
@@ -705,6 +764,32 @@ def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]
     return repository, result.support_reference
 
 
+def _repository_with_in_flight_submission(
+    *,
+    expired: bool,
+) -> tuple[InMemoryIdeaRepository, str]:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    claimed_at = RECORDED_AT - timedelta(minutes=2) if expired else RECORDED_AT
+    lease_expires_at = (
+        RECORDED_AT - timedelta(minutes=1) if expired else RECORDED_AT + timedelta(minutes=1)
+    )
+    claim = create_downstream_submission_claim(
+        idempotency_key=f"submission-advise-in-flight-{'expired' if expired else 'active'}",
+        request_fingerprint="sha256:advise-in-flight-recovery",
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id="conversion-advise_proposal-001",
+        target=ConversionTarget.ADVISE_PROPOSAL,
+        source_authority=SourceSystem.LOTUS_ADVISE,
+        actor_subject="advisor-redacted",
+        claimed_at_utc=claimed_at,
+        lease_owner="downstream-realization",
+        lease_attempt_id="advise-in-flight-attempt-001",
+        lease_expires_at_utc=lease_expires_at,
+    )
+    repository.claim_downstream_submission(claim)
+    return repository, claim.support_reference
+
+
 def _repository_with_rejected_submission() -> tuple[InMemoryIdeaRepository, str]:
     repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
     result = submit_conversion_intent_to_downstream(
@@ -740,6 +825,7 @@ def _command(support_reference: str) -> ReconcileAdviseRealizationCommand:
         support_reference=support_reference,
         actor_subject="operator-redacted",
         access_scope_filter=AUTHORIZED_SCOPE,
+        accepted_at_utc=RECORDED_AT,
         correlation_id="corr-advise-history",
         trace_id="trace-advise-history",
     )

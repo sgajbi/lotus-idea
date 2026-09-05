@@ -285,8 +285,44 @@ def test_active_in_flight_submission_cannot_be_reconciled_while_post_may_still_r
     )
 
     assert result.status is ReportMaterializationReconciliationStatus.NOT_ELIGIBLE
-    assert result.blocker == "report_materialization_submission_not_recoverable"
+    assert result.blocker == "report_materialization_submission_still_in_flight"
     assert reader.call_count == 0
+
+
+def test_expired_in_flight_submission_recovers_owner_receipt_without_reposting() -> None:
+    repository = repository_with_report_pack()
+    evidence_pack = repository.report_evidence_pack_by_id("report-evidence-pack-001")
+    assert evidence_pack is not None
+    claim = create_downstream_submission_claim(
+        idempotency_key="expired-report-submission",
+        request_fingerprint="sha256:expired-report-submission",
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id=evidence_pack.report_evidence_pack_id,
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=SourceSystem.LOTUS_REPORT,
+        actor_subject="advisor-redacted",
+        claimed_at_utc=ACCEPTED_AT - timedelta(minutes=2),
+        lease_owner="report-worker",
+        lease_attempt_id="report-attempt-expired-001",
+        lease_expires_at_utc=ACCEPTED_AT - timedelta(minutes=1),
+    )
+    repository.claim_downstream_submission(claim)
+    reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
+
+    result = reconcile_report_materialization_receipt(
+        _command(claim.support_reference),
+        repository=repository,
+        report_reader=reader,
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.ACCEPTED
+    assert result.owner_receipt is not None
+    assert reader.call_count == 1
+    persisted = repository.downstream_submission_by_support_reference(claim.support_reference)
+    assert persisted is not None
+    assert persisted.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert persisted.attempt_count == 1
+    assert [entry.action.value for entry in persisted.audit_history] == ["claimed", "reconciled"]
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -20,6 +21,7 @@ from tests.integration.test_downstream_realization_api import (
 )
 from tests.support.http import managed_test_client
 from tests.support.report_materialization import authoritative_report_outcome
+from tests.support.fixed_utc_clock import FixedUtcClock
 
 
 @dataclass
@@ -68,6 +70,21 @@ class LostResponseReportClient:
                 candidate_id="candidate-contradiction",
             ),
         )
+
+
+class AcceptedResponseReportClient(LostResponseReportClient):
+    def submit_report_evidence_pack_request(
+        self,
+        evidence_pack: GovernedReportEvidencePack,
+        *,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> DownstreamRealizationOutcome:
+        self.evidence_pack = evidence_pack
+        self.submission_calls += 1
+        return authoritative_report_outcome(evidence_pack)
 
 
 def test_report_recovery_api_closes_lost_response_without_second_post(
@@ -120,6 +137,102 @@ def test_report_recovery_api_closes_lost_response_without_second_post(
     assert persisted is not None
     assert persisted.status.value == "accepted_by_downstream"
     assert persisted.owner_receipt is not None
+
+
+def test_report_recovery_api_waits_for_expired_lease_after_local_commit_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = AcceptedResponseReportClient()
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-finalize-failure",
+        idempotency_prefix="report-finalize-failure",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-finalize-failure-api-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-finalize-failure-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-finalize-failure-api-001",
+        report_evidence_pack_id="report-pack-finalize-failure-api-001",
+        idempotency_key="report-pack-finalize-failure-api-001",
+    )
+    repository = get_idea_repository()
+
+    def fail_finalize(**_: object) -> None:
+        raise RuntimeError("simulated Idea commit failure after Report acceptance")
+
+    monkeypatch.setattr(repository, "finalize_downstream_submission", fail_finalize)
+    submitted = client.post(
+        "/api/v1/report-evidence-packs/report-pack-finalize-failure-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-report-recovery-api-001"),
+    )
+    assert submitted.status_code == 202
+    payload = submitted.json()["downstreamSubmission"]
+    assert payload["submissionStatus"] == "reconciliation_required"
+    support_reference = str(payload["supportReference"])
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.status.value == "in_flight"
+    assert persisted.lease_expires_at_utc is not None
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc - timedelta(seconds=1)),
+    )
+    active = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+    assert active.status_code == 409
+    assert active.json()["code"] == "report_materialization_submission_still_in_flight"
+    assert report_client.recovery_calls == 0
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc),
+    )
+    recovered = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+    replayed = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert replayed.status_code == 200
+    assert replayed.json()["reconciliationStatus"] == "replayed"
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 1
+    final_record = repository.downstream_submission_by_support_reference(support_reference)
+    assert final_record is not None
+    assert final_record.status.value == "accepted_by_downstream"
+    assert final_record.attempt_count == 1
+    assert [entry.action.value for entry in final_record.audit_history] == [
+        "claimed",
+        "reconciled",
+    ]
 
 
 def test_report_recovery_api_rejects_contradictory_receipt_without_state_advance(

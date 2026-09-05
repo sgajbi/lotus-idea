@@ -172,8 +172,9 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
         "Reads the exact trusted-scope Report materialization receipt for an uncertain "
         "Idea evidence-pack submission and finalizes the existing submission only after "
         "tenant, portfolio, candidate, conversion-intent, evidence and idempotency identity "
-        "validation. It never repeats materialization POST and grants no client-publication "
-        "or supported-feature authority."
+        "validation. Active submission leases fail closed; an expired in-flight lease may be "
+        "recovered using trusted server acceptance time. It never repeats materialization POST "
+        "and grants no client-publication or supported-feature authority."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ReportMaterializationReconciliationResponse,
