@@ -219,7 +219,7 @@ def _mutation_request(
     if mutation == "review":
         return (
             f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-            suppress_review_payload(),
+            suppress_review_payload(candidate_id=candidate_id),
             review_headers(f"{mutation}-entitlement-regression-001"),
         )
     return (

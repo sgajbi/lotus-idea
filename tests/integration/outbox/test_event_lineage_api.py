@@ -59,7 +59,7 @@ def test_review_and_feedback_apis_persist_distinct_request_lineage() -> None:
     review_candidate_id = persisted_candidate_id(client, idempotency_key="lineage-review-seed-001")
     review = client.post(
         f"/api/v1/idea-candidates/{review_candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=review_candidate_id),
         headers=review_headers("lineage-review-001"),
     )
     assert review.status_code == 200
