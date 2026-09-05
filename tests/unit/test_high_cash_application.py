@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, date, datetime, timedelta, timezone
 from dataclasses import dataclass, replace
+from decimal import Decimal
 
+import pytest
+
+from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
+from app.application.candidate_expiry import CandidateExpiryDecision
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashFromCoreCommand,
     EvaluateAndPersistHighCashSignalCommand,
@@ -14,7 +18,6 @@ from app.application.high_cash_signal import (
     evaluate_high_cash_signal_from_core,
     evaluate_high_cash_signal_command,
 )
-from app.application.candidate_expiry import CandidateExpiryDecision
 from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
@@ -88,6 +91,22 @@ def test_application_evaluates_high_cash_command_with_default_policy() -> None:
     assert result.candidate is not None
     assert result.candidate.score is not None
     assert result.candidate.score.policy_version == "idle-liquidity-v2"
+
+
+@pytest.mark.parametrize(
+    "accepted_at_utc",
+    (
+        datetime(2026, 6, 21, 10, 5),
+        datetime(2026, 6, 21, 11, 5, tzinfo=timezone(timedelta(hours=1))),
+    ),
+)
+def test_candidate_acceptance_rejects_untrusted_non_utc_control_time(
+    accepted_at_utc: datetime,
+) -> None:
+    evaluation = evaluate_high_cash_signal_command(command())
+
+    with pytest.raises(ValueError, match="accepted_at_utc must"):
+        accept_candidate_evaluation(evaluation, accepted_at_utc=accepted_at_utc)
 
 
 def test_application_preserves_entitlement_denied_as_blocked_domain_posture() -> None:

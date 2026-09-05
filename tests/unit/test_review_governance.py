@@ -264,6 +264,8 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     assert identity == result.decision.mutation_identity
     assert identity != replace(identity, candidate_id="idea-review-002")
     assert identity != replace(identity, event_name=ReviewAction.REJECT.value)
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        replace(identity, reason_codes=())
     assert identity != replace(identity, actor_subject="advisor-002")
     assert identity != replace(identity, evidence_content_hash="sha256:changed")
     assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
