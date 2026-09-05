@@ -22,6 +22,7 @@ from app.domain.source_revision import (
     source_cut_posture,
     source_revision_vector_digest,
 )
+from app.domain.evidence_hashing import evidence_hash_for_source_refs
 
 
 def _claims(**changes: object) -> SourceRevisionClaims:
@@ -167,3 +168,14 @@ def test_evidence_packet_exposes_derived_revision_vector_and_cut_posture() -> No
 
     assert packet.source_cut_posture is SourceCutPosture.COHERENT
     assert packet.source_revision_vector_digest == source_revision_vector_digest((source,))
+
+
+def test_evidence_hash_changes_for_same_date_restatement() -> None:
+    source = _source("lotus-core:PortfolioStateSnapshot:v1")
+    restated = replace(
+        source,
+        revision_claims=_claims(restatement_version="restatement-3"),
+    )
+
+    assert source.as_of_date == restated.as_of_date
+    assert evidence_hash_for_source_refs((source,)) != evidence_hash_for_source_refs((restated,))

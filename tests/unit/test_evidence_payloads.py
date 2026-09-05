@@ -30,6 +30,7 @@ def test_source_ref_payload_preserves_source_authority_fields() -> None:
         "content_hash": "sha256:portfolio-state",
         "data_quality_status": "complete",
         "freshness": "current",
+        "revision_claims": {"posture": "unknown"},
     }
 
 
