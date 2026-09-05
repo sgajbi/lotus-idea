@@ -63,6 +63,7 @@ from app.domain import (
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+ACCEPTED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 CONVERSION_INTENT_ACCEPTED_AT = datetime(2026, 6, 21, 10, 16, tzinfo=UTC)
 CONVERSION_OUTCOME_ACCEPTED_AT = datetime(2026, 6, 21, 10, 21, tzinfo=UTC)
 
