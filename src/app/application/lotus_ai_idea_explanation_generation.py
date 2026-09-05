@@ -246,6 +246,10 @@ def _same_candidate_evidence_revision(
         == expected_candidate.identity.evidence_version
         and current_candidate.evidence_packet.evidence_packet_id
         == expected_candidate.evidence_packet.evidence_packet_id
+        and current_candidate.evidence_packet.source_revision_vector_digest
+        == expected_candidate.evidence_packet.source_revision_vector_digest
+        and current_candidate.evidence_packet.source_cut_posture
+        is expected_candidate.evidence_packet.source_cut_posture
     )
 
 
