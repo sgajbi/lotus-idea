@@ -301,22 +301,27 @@ def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
                 );
                 INSERT INTO idea_conversion_intent (
                     conversion_intent_id, candidate_id, target, actor_subject,
-                    intent_json, requested_at_utc
+                    intent_json, requested_at_utc, accepted_at_utc,
+                    acceptance_time_source
                 ) VALUES (
                     'legacy-outcome-intent', 'legacy-outcome-candidate', 'report_evidence',
-                    'legacy-worker', '{}'::jsonb, '2026-06-21T10:01:00Z'
+                    'legacy-worker', '{}'::jsonb, '2026-06-21T10:01:00Z',
+                    '2026-06-21T10:01:00Z', 'legacy_observed_time_assumed'
                 );
                 INSERT INTO idea_conversion_outcome (
                     conversion_outcome_id, conversion_intent_id, source_system,
-                    status, outcome_json, recorded_at_utc
+                    status, outcome_json, recorded_at_utc, accepted_at_utc,
+                    acceptance_time_source
                 ) VALUES
                     (
                         'legacy-outcome-rejected', 'legacy-outcome-intent', 'lotus-report',
-                        'rejected', '{}'::jsonb, '2026-06-21T10:02:00Z'
+                        'rejected', '{}'::jsonb, '2026-06-21T10:02:00Z',
+                        '2026-06-21T10:02:00Z', 'legacy_observed_time_assumed'
                     ),
                     (
                         'legacy-outcome-accepted', 'legacy-outcome-intent', 'lotus-report',
-                        'accepted', '{}'::jsonb, '2026-06-21T10:03:00Z'
+                        'accepted', '{}'::jsonb, '2026-06-21T10:03:00Z',
+                        '2026-06-21T10:03:00Z', 'legacy_observed_time_assumed'
                     );
                 """
             )
@@ -459,7 +464,7 @@ def _assert_advisor_queue_reload_contains_candidate(
     reset_idea_repository_for_tests(reload_from_environment=True)
     queue = client.get(
         "/api/v1/review-queues/advisor",
-        params={"evaluatedAtUtc": "2026-06-21T10:10:00Z"},
+        params={"evaluatedAtUtc": "2026-06-21T10:15:00Z"},
         headers=_review_queue_headers(),
     )
     assert queue.status_code == 200

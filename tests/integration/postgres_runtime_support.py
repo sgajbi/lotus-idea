@@ -165,10 +165,14 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             """
             INSERT INTO idea_conversion_intent (
                 conversion_intent_id, candidate_id, target, actor_subject,
-                intent_json, requested_at_utc
-            ) VALUES (%s, %s, 'advise_proposal', 'advisor-redacted', '{}'::jsonb, %s)
+                intent_json, requested_at_utc, accepted_at_utc,
+                acceptance_time_source
+            ) VALUES (
+                %s, %s, 'advise_proposal', 'advisor-redacted', '{}'::jsonb,
+                %s, %s, 'legacy_observed_time_assumed'
+            )
             """,
-            (conversion_intent_id, candidate_id, recorded_at),
+            (conversion_intent_id, candidate_id, recorded_at, recorded_at),
         )
     return candidate_id
 

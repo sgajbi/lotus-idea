@@ -720,17 +720,15 @@ def _effectiveness_measures(
         reviews = tuple(
             decision
             for decision in record.review_decisions
-            if decision.decided_at_utc <= evaluated_at_utc
+            if decision.accepted_at_utc <= evaluated_at_utc
         )
         feedback = tuple(
-            event
-            for event in record.feedback_events
-            if event.feedback.recorded_at_utc <= evaluated_at_utc
+            event for event in record.feedback_events if event.accepted_at_utc <= evaluated_at_utc
         )
         intents = tuple(
             intent
             for intent in record.conversion_intents
-            if intent.intent.requested_at_utc <= evaluated_at_utc
+            if intent.accepted_at_utc <= evaluated_at_utc
         )
         _validate_event_times(record, reviews=reviews, feedback=feedback, intents=intents)
         latest_review = _latest_review(reviews)
@@ -738,7 +736,7 @@ def _effectiveness_measures(
             reviewed_count += 1
             review_actions[latest_review.action.value] += 1
             detection_to_review.append(
-                _seconds(latest_review.decided_at_utc - record.candidate.created_at_utc)
+                _seconds(latest_review.accepted_at_utc - record.candidate.created_at_utc)
             )
             if latest_review.action is ReviewAction.SUPPRESS:
                 suppressed_count += 1
@@ -757,13 +755,13 @@ def _effectiveness_measures(
             cohort_intent_ids.update(intent.intent.conversion_intent_id for intent in intents)
             approval = _first_approval(reviews)
             if approval is not None:
-                first_intent = min(intents, key=lambda item: item.intent.requested_at_utc)
-                if first_intent.intent.requested_at_utc < approval.decided_at_utc:
+                first_intent = min(intents, key=lambda item: item.accepted_at_utc)
+                if first_intent.accepted_at_utc < approval.accepted_at_utc:
                     raise OpportunityEffectivenessDataError(
                         "conversion intent precedes its governed approval"
                     )
                 approval_to_conversion.append(
-                    _seconds(first_intent.intent.requested_at_utc - approval.decided_at_utc)
+                    _seconds(first_intent.accepted_at_utc - approval.accepted_at_utc)
                 )
         _measure_current_outcomes(
             record,
@@ -807,9 +805,9 @@ def _validate_event_times(
 ) -> None:
     created_at = record.candidate.created_at_utc
     event_times = (
-        *(decision.decided_at_utc for decision in reviews),
-        *(event.feedback.recorded_at_utc for event in feedback),
-        *(intent.intent.requested_at_utc for intent in intents),
+        *(decision.accepted_at_utc for decision in reviews),
+        *(event.accepted_at_utc for event in feedback),
+        *(intent.accepted_at_utc for intent in intents),
         *(entry.recorded_at_utc for entry in record.version_history),
     )
     if any(event_time < created_at for event_time in event_times):
@@ -831,11 +829,9 @@ def _measure_current_outcomes(
             outcome
             for outcome in record.conversion_outcomes
             if outcome.conversion_intent_id == intent_id
-            and outcome.outcome.recorded_at_utc <= evaluated_at_utc
+            and outcome.accepted_at_utc <= evaluated_at_utc
         )
-        if any(
-            outcome.outcome.recorded_at_utc < intent.intent.requested_at_utc for outcome in outcomes
-        ):
+        if any(outcome.accepted_at_utc < intent.accepted_at_utc for outcome in outcomes):
             raise OpportunityEffectivenessDataError(
                 "conversion outcome precedes its conversion intent"
             )
@@ -888,7 +884,7 @@ def _presentation_measures(
 
     for receipt in snapshot.presentation_receipts.values():
         record = records_by_candidate.get(receipt.candidate_id)
-        if record is None or receipt.presented_at_utc > evaluated_at_utc:
+        if record is None or receipt.accepted_at_utc > evaluated_at_utc:
             continue
         candidate = record.candidate
         if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
@@ -903,7 +899,7 @@ def _presentation_measures(
         if any(
             decision.action is ReviewAction.APPROVE_FOR_CONVERSION
             and decision.evidence_content_hash == evidence_hash
-            and receipt.presented_at_utc <= decision.decided_at_utc <= evaluated_at_utc
+            and receipt.accepted_at_utc <= decision.accepted_at_utc <= evaluated_at_utc
             for decision in record.review_decisions
         ):
             top_ranked_accepted_candidates.add(receipt.candidate_id)
@@ -948,7 +944,7 @@ def _latest_review(
 ) -> GovernedReviewDecision | None:
     if not reviews:
         return None
-    return max(reviews, key=lambda item: (item.decided_at_utc, item.review_id))
+    return max(reviews, key=lambda item: (item.accepted_at_utc, item.review_id))
 
 
 def _first_approval(
@@ -959,7 +955,7 @@ def _first_approval(
     )
     if not approvals:
         return None
-    return min(approvals, key=lambda item: (item.decided_at_utc, item.review_id))
+    return min(approvals, key=lambda item: (item.accepted_at_utc, item.review_id))
 
 
 def _has_stale_evidence(record: CandidatePersistenceRecord) -> bool:

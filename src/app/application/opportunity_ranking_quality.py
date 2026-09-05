@@ -59,7 +59,7 @@ def build_ranking_presentation_facts(
         key=lambda item: (item.queue_snapshot_digest, item.rank_at_presentation, item.receipt_id),
     ):
         record = records_by_candidate.get(receipt.candidate_id)
-        if record is None or receipt.presented_at_utc > evaluated_at_utc:
+        if record is None or receipt.accepted_at_utc > evaluated_at_utc:
             continue
         candidate = record.candidate
         if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
@@ -106,7 +106,7 @@ def presentation_evidence_hash(
         for entry in record.version_history
         if entry.material_version == receipt.candidate_material_version
         and entry.evidence_version == receipt.candidate_evidence_version
-        and entry.recorded_at_utc <= receipt.presented_at_utc
+        and entry.recorded_at_utc <= receipt.accepted_at_utc
     )
     if len(matching_versions) > 1:
         raise RankingQualityDataError(
@@ -118,7 +118,7 @@ def presentation_evidence_hash(
     if (
         candidate.identity.material_version == receipt.candidate_material_version
         and candidate.identity.evidence_version == receipt.candidate_evidence_version
-        and candidate.updated_at_utc <= receipt.presented_at_utc
+        and candidate.updated_at_utc <= receipt.accepted_at_utc
     ):
         return candidate.evidence_packet.lineage_ref.content_hash
     raise RankingQualityDataError(
@@ -172,8 +172,8 @@ def _ranking_relevance_grade(
         intent
         for intent in record.conversion_intents
         if intent.evidence_content_hash == evidence_hash
-        and receipt.presented_at_utc <= intent.intent.requested_at_utc <= evaluated_at_utc
-        and (valid_until is None or intent.intent.requested_at_utc < valid_until)
+        and receipt.accepted_at_utc <= intent.accepted_at_utc <= evaluated_at_utc
+        and (valid_until is None or intent.accepted_at_utc < valid_until)
     )
     matching_intent_ids = {intent.intent.conversion_intent_id for intent in matching_intents}
     for intent_id in matching_intent_ids:
@@ -181,13 +181,13 @@ def _ranking_relevance_grade(
             outcome
             for outcome in record.conversion_outcomes
             if outcome.conversion_intent_id == intent_id
-            and receipt.presented_at_utc <= outcome.outcome.recorded_at_utc <= evaluated_at_utc
+            and receipt.accepted_at_utc <= outcome.accepted_at_utc <= evaluated_at_utc
         )
         current = current_conversion_outcome(outcomes)
         if current is not None and (grade := downstream_relevance_grade(current.outcome.status)):
             relevance_facts.append(
                 RankingRelevanceFact(
-                    occurred_at_utc=current.outcome.recorded_at_utc,
+                    occurred_at_utc=current.accepted_at_utc,
                     source=RankingJudgmentSource.DOWNSTREAM_OUTCOME,
                     relevance_grade=grade,
                 )
@@ -199,7 +199,7 @@ def _ranking_relevance_grade(
         if grade is not None:
             relevance_facts.append(
                 RankingRelevanceFact(
-                    occurred_at_utc=decision.decided_at_utc,
+                    occurred_at_utc=decision.accepted_at_utc,
                     source=RankingJudgmentSource.ADVISER_REVIEW,
                     relevance_grade=grade,
                 )
@@ -208,7 +208,7 @@ def _ranking_relevance_grade(
         if event.evidence_content_hash == evidence_hash:
             relevance_facts.append(
                 RankingRelevanceFact(
-                    occurred_at_utc=event.feedback.recorded_at_utc,
+                    occurred_at_utc=event.accepted_at_utc,
                     source=RankingJudgmentSource.ADVISER_FEEDBACK,
                     relevance_grade=feedback_relevance_grade(event.feedback.outcome),
                 )
@@ -231,14 +231,14 @@ def _presentation_version_valid_until(
     next_version_times = [
         entry.recorded_at_utc
         for entry in record.version_history
-        if entry.recorded_at_utc > receipt.presented_at_utc
+        if entry.recorded_at_utc > receipt.accepted_at_utc
         and (
             entry.material_version != receipt.candidate_material_version
             or entry.evidence_version != receipt.candidate_evidence_version
         )
     ]
     candidate = record.candidate
-    if candidate.updated_at_utc > receipt.presented_at_utc and (
+    if candidate.updated_at_utc > receipt.accepted_at_utc and (
         candidate.identity.material_version != receipt.candidate_material_version
         or candidate.identity.evidence_version != receipt.candidate_evidence_version
     ):

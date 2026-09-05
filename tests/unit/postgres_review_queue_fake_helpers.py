@@ -342,11 +342,11 @@ def _latest_applicable_review(
         row
         for row in connection.rows["idea_review_decision"]
         if row["candidate_id"] == candidate_row["candidate_id"]
-        and material_started_at <= row["decided_at_utc"] <= evaluated_at_utc
+        and material_started_at <= row["accepted_at_utc"] <= evaluated_at_utc
     ]
     return max(
         applicable,
-        key=lambda row: (row["decided_at_utc"], row["review_decision_id"]),
+        key=lambda row: (row["accepted_at_utc"], row["review_decision_id"]),
         default=None,
     )
 
@@ -368,7 +368,7 @@ def _review_fingerprint_material(review: dict[str, Any] | None) -> str:
     return "|".join(
         (
             review["action"],
-            review["decided_at_utc"].isoformat(),
+            review["accepted_at_utc"].isoformat(),
             str(review["decision_json"].get("snoozed_until_utc") or ""),
             review["review_decision_id"],
         )

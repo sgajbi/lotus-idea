@@ -158,6 +158,7 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
         "ranking_policy_version": "idea-score-v2",
         "candidate_material_version": 1,
         "candidate_evidence_version": 1,
+        "accepted_at_utc": datetime(2026, 8, 30, 12, tzinfo=UTC),
     }
     values.update(overrides)
     return CandidatePresentationReceipt(**values)

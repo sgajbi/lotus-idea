@@ -77,7 +77,7 @@ def load_postgres_conversion_outcomes_for_intent(
             SELECT outcome_json
             FROM idea_conversion_outcome
             WHERE conversion_intent_id = %s
-            ORDER BY source_event_version, recorded_at_utc, conversion_outcome_id
+            ORDER BY source_event_version, accepted_at_utc, conversion_outcome_id
             """,
             (conversion_intent_id,),
         )

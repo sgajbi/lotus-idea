@@ -229,7 +229,7 @@ def _attach_review_decisions(
         table="idea_review_decision",
         columns="candidate_id, decision_json",
         candidate_id=record.candidate.candidate_id,
-        order_by="decided_at_utc, review_decision_id",
+        order_by="accepted_at_utc, review_decision_id",
         comment="candidate-detail-review-decisions",
     )
     return replace(
@@ -249,7 +249,7 @@ def _attach_feedback_events(
         table="idea_feedback_event",
         columns="candidate_id, feedback_json",
         candidate_id=record.candidate.candidate_id,
-        order_by="recorded_at_utc, feedback_event_id",
+        order_by="accepted_at_utc, feedback_event_id",
         comment="candidate-detail-feedback",
     )
     return replace(
@@ -269,7 +269,7 @@ def _attach_conversion_intents(
         table="idea_conversion_intent",
         columns="conversion_intent_id, candidate_id, intent_json",
         candidate_id=record.candidate.candidate_id,
-        order_by="requested_at_utc, conversion_intent_id",
+        order_by="accepted_at_utc, conversion_intent_id",
         comment="candidate-detail-conversion-intents",
     )
     return replace(
@@ -293,7 +293,7 @@ def _attach_conversion_outcomes(
         SELECT conversion_intent_id, outcome_json
         FROM idea_conversion_outcome
         WHERE conversion_intent_id = ANY(%s)
-        ORDER BY recorded_at_utc, conversion_outcome_id
+        ORDER BY accepted_at_utc, conversion_outcome_id
         """,
         (intent_ids,),
     )

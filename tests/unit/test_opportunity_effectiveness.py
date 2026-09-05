@@ -595,11 +595,14 @@ def test_effectiveness_snapshot_ignores_future_presentations() -> None:
         _snapshot(
             _record(candidate),
             receipts=(
-                _receipt(
-                    candidate,
-                    receipt_id="receipt-future-presentation-001",
-                    rank=1,
-                    presented_at=EVALUATED_AT + timedelta(seconds=1),
+                replace(
+                    _receipt(
+                        candidate,
+                        receipt_id="receipt-future-presentation-001",
+                        rank=1,
+                        presented_at=WINDOW_START + timedelta(hours=2),
+                    ),
+                    accepted_at_utc=EVALUATED_AT + timedelta(seconds=1),
                 ),
             ),
         ),
@@ -655,10 +658,13 @@ def test_effectiveness_snapshot_observes_only_facts_available_at_evaluation_time
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
     )
-    future_review = _review(
-        candidate.candidate_id,
-        action=ReviewAction.REJECT,
-        decided_at=EVALUATED_AT + timedelta(seconds=1),
+    future_review = replace(
+        _review(
+            candidate.candidate_id,
+            action=ReviewAction.REJECT,
+            decided_at=EVALUATED_AT + timedelta(seconds=1),
+        ),
+        decided_at_utc=WINDOW_START + timedelta(hours=2),
     )
     intent = _conversion_intent(candidate, requested_at=WINDOW_START + timedelta(hours=3))
     requested = _conversion_outcome(
@@ -672,6 +678,13 @@ def test_effectiveness_snapshot_observes_only_facts_available_at_evaluation_time
         status=ConversionOutcomeStatus.ACCEPTED,
         version=2,
         recorded_at=EVALUATED_AT + timedelta(seconds=1),
+    )
+    future_accepted = replace(
+        future_accepted,
+        outcome=replace(
+            future_accepted.outcome,
+            recorded_at_utc=WINDOW_START + timedelta(hours=5),
+        ),
     )
     record = _record(candidate, conversion=False)
     record = replace(

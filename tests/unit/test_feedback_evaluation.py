@@ -258,8 +258,9 @@ def test_offline_feedback_projection_excludes_future_and_feedback_free_records()
         feedback_event,
         feedback=replace(
             feedback_event.feedback,
-            recorded_at_utc=EVALUATED_AT + timedelta(minutes=1),
+            recorded_at_utc=EVALUATED_AT - timedelta(minutes=1),
         ),
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=1),
     )
     future_record = replace(feedback_record, feedback_events=(future_feedback_event,))
     feedback_free_record = replace(

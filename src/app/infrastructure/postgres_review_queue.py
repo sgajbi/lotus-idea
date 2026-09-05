@@ -354,7 +354,7 @@ def _review_queue_candidate_cte(predicate_sql: str) -> str:
                    candidate_json, persisted_at_utc,
                    latest_review.latest_review_action,
                    latest_review.latest_snoozed_until_utc,
-                   latest_review.latest_review_decided_at_utc,
+                   latest_review.latest_review_accepted_at_utc,
                    latest_review.latest_review_decision_id,
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
@@ -391,7 +391,7 @@ def _review_queue_count_query(predicate_sql: str) -> str:
                                 candidate_id || '|' || evidence_hash || '|' ||
                                 candidate_json::text || '|' ||
                                 COALESCE(latest_review_action, '') || '|' ||
-                                COALESCE(latest_review_decided_at_utc::text, '') || '|' ||
+                                COALESCE(latest_review_accepted_at_utc::text, '') || '|' ||
                                 COALESCE(latest_snoozed_until_utc::text, '') || '|' ||
                                 COALESCE(latest_review_decision_id, '')
                             ),
@@ -412,12 +412,12 @@ def _latest_review_lateral_join() -> str:
                 SELECT review.action AS latest_review_action,
                        (review.decision_json->>'snoozed_until_utc')::timestamptz
                            AS latest_snoozed_until_utc,
-                       review.decided_at_utc AS latest_review_decided_at_utc,
+                       review.accepted_at_utc AS latest_review_accepted_at_utc,
                        review.review_decision_id AS latest_review_decision_id
                 FROM idea_review_decision AS review
                 WHERE review.candidate_id = candidate.candidate_id
-                  AND review.decided_at_utc <= %s
-                  AND review.decided_at_utc >= COALESCE(
+                  AND review.accepted_at_utc <= %s
+                  AND review.accepted_at_utc >= COALESCE(
                       (
                           SELECT MIN(history.recorded_at_utc)
                           FROM idea_candidate_version_history AS history
@@ -426,7 +426,7 @@ def _latest_review_lateral_join() -> str:
                       ),
                       (candidate.candidate_json->>'created_at_utc')::timestamptz
                   )
-                ORDER BY review.decided_at_utc DESC, review.review_decision_id DESC
+                ORDER BY review.accepted_at_utc DESC, review.review_decision_id DESC
                 LIMIT 1
             ) AS latest_review ON TRUE
         """

@@ -774,7 +774,7 @@ class PostgresIdeaRepository(
             """
             SELECT candidate_id, decision_json
             FROM idea_review_decision
-            ORDER BY decided_at_utc, review_decision_id
+            ORDER BY accepted_at_utc, review_decision_id
             """
         )
         for row in cursor.fetchall():
@@ -797,7 +797,7 @@ class PostgresIdeaRepository(
             """
             SELECT candidate_id, feedback_json
             FROM idea_feedback_event
-            ORDER BY recorded_at_utc, feedback_event_id
+            ORDER BY accepted_at_utc, feedback_event_id
             """
         )
         for row in cursor.fetchall():
@@ -820,7 +820,7 @@ class PostgresIdeaRepository(
             """
             SELECT conversion_intent_id, candidate_id, intent_json
             FROM idea_conversion_intent
-            ORDER BY requested_at_utc, conversion_intent_id
+            ORDER BY accepted_at_utc, conversion_intent_id
             """
         )
         candidates: dict[str, str] = {}
@@ -878,7 +878,7 @@ class PostgresIdeaRepository(
             """
             SELECT conversion_intent_id, outcome_json
             FROM idea_conversion_outcome
-            ORDER BY recorded_at_utc, conversion_outcome_id
+            ORDER BY accepted_at_utc, conversion_outcome_id
             """
         )
         intent_candidates = {

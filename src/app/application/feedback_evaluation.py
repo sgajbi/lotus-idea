@@ -145,11 +145,11 @@ def build_offline_feedback_evaluation(
         for feedback_event in sorted(
             record.feedback_events,
             key=lambda item: (
-                item.feedback.recorded_at_utc,
+                item.accepted_at_utc,
                 item.feedback.feedback_id,
             ),
         ):
-            if feedback_event.feedback.recorded_at_utc > evaluated_at_utc:
+            if feedback_event.accepted_at_utc > evaluated_at_utc:
                 continue
             observations.append(
                 _cohort_key(
@@ -263,11 +263,11 @@ def _review_action_before_feedback(
     eligible = tuple(
         decision
         for decision in record.review_decisions
-        if decision.decided_at_utc <= feedback_event.feedback.recorded_at_utc
+        if decision.accepted_at_utc <= feedback_event.accepted_at_utc
     )
     if not eligible:
         return None
-    return max(eligible, key=lambda item: (item.decided_at_utc, item.review_id)).action
+    return max(eligible, key=lambda item: (item.accepted_at_utc, item.review_id)).action
 
 
 def _downstream_outcome_after_feedback(
@@ -279,16 +279,14 @@ def _downstream_outcome_after_feedback(
     eligible = tuple(
         outcome
         for outcome in record.conversion_outcomes
-        if feedback_event.feedback.recorded_at_utc
-        <= outcome.outcome.recorded_at_utc
-        <= evaluated_at_utc
+        if feedback_event.accepted_at_utc <= outcome.accepted_at_utc <= evaluated_at_utc
     )
     if not eligible:
         return None
     return max(
         eligible,
         key=lambda item: (
-            item.outcome.recorded_at_utc,
+            item.accepted_at_utc,
             item.source_event_version,
             item.outcome.conversion_outcome_id,
         ),

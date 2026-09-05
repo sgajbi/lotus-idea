@@ -54,7 +54,11 @@ refused at or after evidence applicability expiry using server time. Migration
 `024` marks historical rows whose server acceptance time cannot be proven as
 `legacy_observed_time_assumed`. See
 `docs/architecture/trusted-control-time.md` in the repository for the operation
-policy matrix and engineering details. This control does not itself establish
+policy matrix and engineering details. Historical queue and learning snapshots
+also use acceptance time for inclusion and ordering, so a backdated producer
+timestamp accepted later cannot rewrite an earlier review, feedback,
+effectiveness, or ranking result. Downstream owner event version remains the
+authority for downstream business chronology. This control does not itself establish
 the immutable presentation-to-review authority grant tracked by issue `#1225`
 or source-revision posture tracked by `#1227`.
 
