@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 
@@ -17,6 +19,8 @@ from app.application.report_materialization_reconciliation import (
     reconcile_report_materialization_receipt,
 )
 from app.domain import (
+    DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionMutationResult,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
     ConversionTarget,
@@ -42,6 +46,7 @@ from tests.unit.test_downstream_realization_application import (
 
 
 ACCEPTED_AT = datetime(2026, 9, 5, 14, 45, tzinfo=UTC)
+_USE_REPOSITORY = object()
 
 
 @dataclass
@@ -281,6 +286,184 @@ def test_active_in_flight_submission_cannot_be_reconciled_while_post_may_still_r
     assert result.status is ReportMaterializationReconciliationStatus.NOT_ELIGIBLE
     assert result.blocker == "report_materialization_submission_not_recoverable"
     assert reader.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected_blocker"),
+    (
+        (
+            {"resource_type": DownstreamSubmissionResourceType.CONVERSION_INTENT},
+            "report_materialization_requires_evidence_pack_submission",
+        ),
+        (
+            {"target": ConversionTarget.ADVISE_PROPOSAL},
+            "report_materialization_requires_report_target",
+        ),
+        (
+            {"source_authority": SourceSystem.LOTUS_ADVISE},
+            "report_materialization_requires_report_authority",
+        ),
+    ),
+)
+def test_non_report_submission_identity_is_not_eligible_for_owner_recovery(
+    changes: dict[str, object],
+    expected_blocker: str,
+) -> None:
+    repository, evidence_pack, support_reference, _ = _uncertain_submission()
+    submission = repository.downstream_submission_by_support_reference(support_reference)
+    assert submission is not None
+    submission_repository = SimpleNamespace(
+        downstream_submission_by_support_reference=lambda _support_reference: replace(
+            submission,
+            **changes,
+        )
+    )
+    reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
+
+    result = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=cast(Any, submission_repository),
+        report_reader=reader,
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.NOT_ELIGIBLE
+    assert result.blocker == expected_blocker
+    assert reader.call_count == 0
+
+
+def test_missing_submission_returns_not_found_without_owner_read() -> None:
+    reader = CapturingReportReader(cast(DownstreamOwnerReceipt, object()))
+
+    result = reconcile_report_materialization_receipt(
+        _command("downstream-submission-0123456789abcdef01234567"),
+        repository=InMemoryIdeaRepository(),
+        report_reader=reader,
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.NOT_FOUND
+    assert reader.call_count == 0
+
+
+def test_missing_local_pack_fails_closed_before_owner_read() -> None:
+    repository, evidence_pack, support_reference, _ = _uncertain_submission()
+    reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
+    incomplete_repository = _RepositoryOverride(repository, report_evidence_pack=None)
+
+    result = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=cast(Any, incomplete_repository),
+        report_reader=reader,
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.CONFLICT
+    assert result.blocker == "report_materialization_source_resource_missing"
+    assert reader.call_count == 0
+
+
+def test_missing_report_reader_retains_uncertain_posture() -> None:
+    repository, _evidence_pack, support_reference, _ = _uncertain_submission()
+
+    result = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=repository,
+        report_reader=None,
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.OWNER_UNAVAILABLE
+    assert result.blocker == "report_materialization_reader_not_configured"
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED
+
+
+def test_repository_conflict_cannot_advance_recovered_receipt() -> None:
+    repository, evidence_pack, support_reference, _ = _uncertain_submission()
+    conflicting_repository = _RepositoryOverride(repository, force_mutation_conflict=True)
+
+    result = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=cast(Any, conflicting_repository),
+        report_reader=CapturingReportReader(_authoritative_receipt(evidence_pack)),
+    )
+
+    assert result.status is ReportMaterializationReconciliationStatus.CONFLICT
+    assert result.blocker == "concurrent_report_reconciliation"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    (
+        {"support_reference": " "},
+        {"actor_subject": " "},
+        {"accepted_at_utc": datetime(2026, 9, 5, 14, 45)},
+        {
+            "accepted_at_utc": datetime(
+                2026,
+                9,
+                5,
+                15,
+                45,
+                tzinfo=timezone(timedelta(hours=1)),
+            )
+        },
+    ),
+)
+def test_reconciliation_command_rejects_incomplete_or_untrusted_time(
+    changes: dict[str, object],
+) -> None:
+    with pytest.raises(ValueError):
+        replace(_command("downstream-submission-0123456789abcdef01234567"), **changes)
+
+
+@pytest.mark.parametrize(
+    "receipt",
+    (
+        SimpleNamespace(owner_authority=SourceSystem.LOTUS_ADVISE, report_materialization=None),
+        SimpleNamespace(owner_authority=SourceSystem.LOTUS_REPORT, report_materialization=None),
+    ),
+)
+def test_report_receipt_validation_rejects_wrong_authority_or_missing_evidence(
+    receipt: object,
+) -> None:
+    repository = repository_with_report_pack()
+    evidence_pack = repository.report_evidence_pack_by_id("report-evidence-pack-001")
+    assert evidence_pack is not None
+
+    from app.application.downstream_realization.report_receipt_validation import (
+        validated_report_submission_receipt,
+    )
+
+    with pytest.raises(ValueError):
+        validated_report_submission_receipt(cast(DownstreamOwnerReceipt, receipt), evidence_pack)
+
+
+@dataclass
+class _RepositoryOverride:
+    repository: InMemoryIdeaRepository
+    report_evidence_pack: GovernedReportEvidencePack | None | object = _USE_REPOSITORY
+    force_mutation_conflict: bool = False
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.repository, name)
+
+    def report_evidence_pack_by_id(
+        self,
+        report_evidence_pack_id: str,
+    ) -> GovernedReportEvidencePack | None:
+        if self.report_evidence_pack is not _USE_REPOSITORY:
+            return cast(GovernedReportEvidencePack | None, self.report_evidence_pack)
+        return self.repository.report_evidence_pack_by_id(report_evidence_pack_id)
+
+    def reconcile_downstream_submission(self, **kwargs: Any) -> DownstreamSubmissionMutationResult:
+        if self.force_mutation_conflict:
+            return DownstreamSubmissionMutationResult(
+                decision=DownstreamSubmissionMutationDecision.INVALID_STATE,
+                record=self.repository.downstream_submission_by_support_reference(
+                    kwargs["support_reference"]
+                ),
+                blocker="concurrent_report_reconciliation",
+            )
+        return self.repository.reconcile_downstream_submission(**kwargs)
 
 
 def _uncertain_submission() -> tuple[

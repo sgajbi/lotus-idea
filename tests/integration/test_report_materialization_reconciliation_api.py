@@ -10,6 +10,7 @@ import app.api.report_materialization_reconciliation as reconciliation_api
 from app.domain import GovernedReportEvidencePack
 from app.main import app
 from app.ports.downstream_realization import DownstreamOwnerReceipt, DownstreamRealizationOutcome
+from app.runtime.downstream_realization_state import DownstreamRealizationClientsUnavailableError
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from tests.integration.test_downstream_realization_api import (
     downstream_submission_headers,
@@ -227,6 +228,96 @@ def test_report_recovery_api_denial_emits_bounded_operation_event(
     assert events == [
         ("downstream_reconciliation_resolve", "permission_denied", "permission_denied")
     ]
+
+
+def test_report_recovery_api_returns_not_found_without_changing_business_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    report_client = LostResponseReportClient()
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+
+    response = managed_test_client(app).post(
+        _recovery_path("downstream-submission-0123456789abcdef01234567"),
+        headers=_reconciliation_headers(),
+    )
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "downstream_submission_not_found"
+    assert report_client.recovery_calls == 0
+
+
+def test_report_recovery_api_reports_unconfigured_owner_without_retrying_post(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = LostResponseReportClient()
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    support_reference = _create_uncertain_report_submission(client)
+
+    def unavailable_reader() -> object:
+        raise DownstreamRealizationClientsUnavailableError("Report recovery is not configured")
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        unavailable_reader,
+    )
+
+    response = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "report_materialization_reader_not_configured"
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 0
+
+
+def test_report_recovery_api_refuses_when_durable_storage_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi.responses import JSONResponse
+
+    owner_dependency_calls = 0
+
+    def owner_dependency() -> object:
+        nonlocal owner_dependency_calls
+        owner_dependency_calls += 1
+        return LostResponseReportClient()
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "durable_write_problem",
+        lambda _repository: JSONResponse(
+            status_code=503,
+            content={"code": "durable_repository_not_configured"},
+        ),
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        owner_dependency,
+    )
+
+    response = managed_test_client(app).post(
+        _recovery_path("downstream-submission-0123456789abcdef01234567"),
+        headers=_reconciliation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "durable_repository_not_configured"
+    assert owner_dependency_calls == 0
 
 
 def _create_uncertain_report_submission(client: Any) -> str:

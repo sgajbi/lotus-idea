@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -8,6 +8,7 @@ import pytest
 from app.domain import SourceSystem
 from app.infrastructure.downstream_realization import (
     DownstreamRealizationAdapterConfig,
+    DownstreamRealizationConfigurationError,
     HttpReportEvidencePackMaterializationClient,
 )
 from app.ports.downstream_realization import (
@@ -125,4 +126,80 @@ def test_report_recovery_identity_conflict_is_distinct_from_owner_unavailability
             report_evidence_pack(),
             access_scope=report_access_scope(),
             idempotency_key="report-submission-idempotency-001",
+        )
+
+
+@pytest.mark.parametrize(
+    "recovery_path",
+    (
+        "reports/idea-evidence-packs/materializations",
+        "/reports/idea-evidence-packs/materializations?unsafe=true",
+    ),
+)
+def test_report_recovery_configuration_rejects_non_absolute_or_parameterized_path(
+    recovery_path: str,
+) -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="report_recovery_path"):
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            report_recovery_path=recovery_path,
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        )
+
+
+def test_report_recovery_requires_configured_read_path() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(lambda _request: pytest.fail("owner I/O must not occur")),
+        ),
+    )
+
+    with pytest.raises(
+        DownstreamRealizationConfigurationError,
+        match="report_recovery_path is required",
+    ):
+        adapter.recover_report_evidence_pack_receipt(
+            report_evidence_pack(),
+            access_scope=report_access_scope(),
+            idempotency_key="report-submission-idempotency-001",
+        )
+
+
+def test_report_recovery_rejects_receipt_without_persisted_idempotency_key() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            report_recovery_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(
+                lambda _request: httpx.Response(
+                    200,
+                    json=report_materialization_receipt_payload(
+                        report_evidence_pack(),
+                        idempotency_key="report-submission-idempotency-001",
+                    ),
+                )
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="requires an idempotency key"):
+        adapter.recover_report_evidence_pack_receipt(
+            report_evidence_pack(),
+            access_scope=report_access_scope(),
+            idempotency_key=cast(str, None),
         )
