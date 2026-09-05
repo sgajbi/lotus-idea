@@ -36,7 +36,7 @@ from tests.support import review_authority_api
 OperationEventCall = tuple[str, str, str, bool, str | None]
 
 
-def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
+def source_ref(product_id: str, suffix: str = "") -> dict[str, Any]:
     return {
         "productId": product_id,
         "sourceSystem": "lotus-core",
@@ -47,6 +47,11 @@ def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
         "contentHash": f"sha256:{product_id}{suffix}",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": {
+            "sourceRevision": f"revision:{product_id}{suffix}",
+            "sourceCutId": f"core-close-2026-06-21{suffix}",
+            "reconciliationPosture": "complete",
+        },
     }
 
 
