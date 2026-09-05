@@ -545,6 +545,15 @@ intake. A missing, malformed, unavailable, or mismatched owner response leaves
 the submission uncertain or returns a conflict; transport ambiguity never
 becomes business success.
 
+If the owner returned acceptance but Idea failed before finalizing its local
+claim, the durable record remains `in_flight`. Advise and Report recovery both
+reject owner reads while that claim lease is active, because the original POST
+may still be running. After the lease expires, an authorized recovery may read
+the exact owner identity and reconcile the existing claim. Trusted server
+acceptance time controls this boundary; recovery never reissues the POST, never
+increments the submission attempt, and exact replay performs no further owner
+I/O.
+
 ### Local Advise, Manage, And Report Intake Fixtures
 
 Until the platform has trusted service identity and an identity-provider claim
