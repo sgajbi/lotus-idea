@@ -45,6 +45,8 @@ from app.domain import (
     ReviewAccessScope,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
@@ -935,4 +937,8 @@ def source_ref() -> SourceRef:
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-portfolio-state-downstream-fixture-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
