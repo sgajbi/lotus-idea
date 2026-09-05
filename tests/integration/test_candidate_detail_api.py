@@ -19,6 +19,7 @@ from app.domain import (
 )
 from app.main import app
 from app.runtime.repository_state import get_idea_repository
+from tests.support import review_authority_api
 
 
 def source_ref(product_id: str) -> dict[str, str]:
@@ -192,12 +193,13 @@ def transition_candidate_to_review_ready(client: ManagedTestClient, candidate_id
         assert response.status_code == 200
 
 
-def approve_review_payload() -> dict[str, Any]:
+def approve_review_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "reviewId": "detail-review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **review_authority_api.record_workbench_presentation(candidate_id),
     }
 
 
@@ -211,12 +213,15 @@ def feedback_payload() -> dict[str, Any]:
     }
 
 
-def conversion_intent_payload() -> dict[str, Any]:
+def conversion_intent_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "conversionIntentId": "detail-conversion-report-001",
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        **review_authority_api.exact_conversion_authority_payload(
+            candidate_id, review_id="detail-review-approve-001"
+        ),
     }
 
 
@@ -247,7 +252,7 @@ def seed_full_candidate_workflow(client: ManagedTestClient, candidate_id: str) -
     assert (
         client.post(
             f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-            json=approve_review_payload(),
+            json=approve_review_payload(candidate_id),
             headers=review_headers("detail-review-approve-001"),
         ).status_code
         == 200
@@ -263,7 +268,7 @@ def seed_full_candidate_workflow(client: ManagedTestClient, candidate_id: str) -
     assert (
         client.post(
             f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-            json=conversion_intent_payload(),
+            json=conversion_intent_payload(candidate_id),
             headers=conversion_intent_headers("detail-conversion-intent-001"),
         ).status_code
         == 200
@@ -374,9 +379,23 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
         "converted_to_report",
     ]
     assert payload["reviewDecisions"][0]["grantsDownstreamAuthority"] is False
+    assert payload["reviewDecisions"][0]["authorityStatus"] == "active"
+    assert payload["reviewDecisions"][0]["reviewChannel"] == "workbench"
+    assert payload["reviewDecisions"][0]["candidateMaterialVersion"] == 1
+    assert payload["reviewDecisions"][0]["candidateEvidenceVersion"] == 1
+    assert (
+        payload["reviewDecisions"][0]["authorityPolicyVersion"]
+        == "idea-review-authority-v1"
+    )
     assert payload["feedbackEvents"][0]["outcome"] == "useful"
     assert payload["conversionIntents"][0]["targetSourceAuthority"] == "lotus-report"
     assert payload["conversionIntents"][0]["grantsDownstreamAuthority"] is False
+    assert payload["conversionIntents"][0]["reviewId"] == "detail-review-approve-001"
+    assert payload["conversionIntents"][0]["reviewChannel"] == "workbench"
+    assert (
+        payload["conversionIntents"][0]["authorityPolicyVersion"]
+        == "idea-review-authority-v1"
+    )
     assert payload["conversionOutcomes"][0]["grantsExecutionAuthority"] is False
     assert payload["conversionOutcomes"][0]["grantsClientCommunicationAuthority"] is False
     assert payload["conversionOutcomes"][0]["grantsSuitabilityAuthority"] is False

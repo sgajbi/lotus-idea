@@ -259,6 +259,14 @@ class OpportunityEffectivenessProjectionRepository(Protocol):
 
 @runtime_checkable
 class PresentationReceiptRepository(CandidateSnapshotRepository, Protocol):
+    def presentation_receipt_by_id(
+        self,
+        receipt_id: str,
+        *,
+        candidate_id: str,
+        tenant_id: str,
+    ) -> CandidatePresentationReceipt | None: ...
+
     def record_presentation_receipt(
         self,
         receipt: CandidatePresentationReceipt,
@@ -321,6 +329,14 @@ class CandidateEvidenceReplayRepository(Protocol):
 
 
 class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
+    def presentation_receipt_by_id(
+        self,
+        receipt_id: str,
+        *,
+        candidate_id: str,
+        tenant_id: str,
+    ) -> CandidatePresentationReceipt | None: ...
+
     def precheck_review_mutation(
         self,
         *,

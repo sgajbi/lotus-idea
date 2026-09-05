@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import partial
@@ -9,6 +10,7 @@ import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
+from tests.support.review_authority import approved_review_decision_for_candidate
 
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
@@ -29,12 +31,14 @@ from app.domain import (
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
+    InvalidConversionIntent,
     LineageRef,
     OpportunityFamily,
     ReasonCode,
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    CandidateEvidenceIdentity,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 
@@ -64,6 +68,29 @@ def test_request_conversion_intent_uses_candidate_projection_without_snapshot() 
     assert result.conversion_intent is not None
     assert result.persistence.decision is ConversionPersistenceDecision.ACCEPTED
     assert repository.looked_up_candidate_ids == ["idea-conversion-workflow-001"]
+
+
+def test_conversion_intent_requires_exact_persisted_approved_review() -> None:
+    candidate = approved_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:conversion-without-review:001",
+        payload={"candidate_id": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="exact approved review authority"):
+        request_conversion_intent_to_repository(
+            RequestConversionIntentToRepositoryCommand(
+                candidate_id=candidate.candidate_id,
+                conversion=conversion_command(),
+                idempotency_key="conversion-workflow-request-001",
+                access_scope_filter=authorized_scope_filter(),
+            ),
+            repository=repository,
+        )
 
 
 def test_conversion_intent_replay_returns_exact_persisted_intent() -> None:
@@ -299,7 +326,23 @@ def repository_with_approved_candidate(
         occurred_at_utc=EVALUATED_AT,
     )
     assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
-    return repository
+    assert persisted.record is not None
+    snapshot = repository.snapshot()
+    candidate_record = replace(
+        persisted.record,
+        review_decisions=(
+            approved_review_decision_for_candidate(
+                persisted.record.candidate,
+                accepted_at_utc=EVALUATED_AT,
+            ),
+        ),
+    )
+    return InMemoryIdeaRepository(
+        replace(
+            snapshot,
+            candidate_records={candidate_record.candidate.candidate_id: candidate_record},
+        )
+    )
 
 
 def approved_candidate(
@@ -359,6 +402,7 @@ def conversion_command(
     conversion_intent_id: str = "conversion-workflow-report-001",
     idempotency_key: str = "conversion-workflow-request-001",
 ) -> ConversionIntentCommand:
+    source_candidate = approved_candidate()
     return ConversionIntentCommand(
         conversion_intent_id=conversion_intent_id,
         target=ConversionTarget.REPORT_EVIDENCE,
@@ -366,6 +410,8 @@ def conversion_command(
         idempotency_key=idempotency_key,
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=REQUESTED_AT,
+        expected_review_id="review-authority-test-001",
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
     )
 
 

@@ -9,6 +9,10 @@ from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
+from tests.support.review_authority_api import (
+    exact_candidate_evidence_payload,
+    record_workbench_presentation,
+)
 
 
 def source_ref(product_id: str, freshness: str = "current") -> dict[str, str]:
@@ -150,6 +154,7 @@ def access_scope() -> dict[str, str]:
 
 def suppress_review_payload(
     *,
+    candidate_id: str = "missing-candidate",
     review_id: str = "review-suppress-001",
 ) -> dict[str, Any]:
     return {
@@ -158,15 +163,17 @@ def suppress_review_payload(
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
         "suppressionReason": "manual_suppression",
+        **record_workbench_presentation(candidate_id),
     }
 
 
-def approve_review_payload() -> dict[str, Any]:
+def approve_review_payload(candidate_id: str = "missing-candidate") -> dict[str, Any]:
     return {
         "reviewId": "review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **record_workbench_presentation(candidate_id),
     }
 
 
@@ -191,11 +198,15 @@ def conversion_intent_payload(
     conversion_intent_id: str = "conversion-report-001",
     target: str = "report_evidence",
 ) -> dict[str, Any]:
+    records = tuple(get_idea_repository().snapshot().candidate_records)
+    identity = exact_candidate_evidence_payload(records[0]) if len(records) == 1 else {}
     return {
         "conversionIntentId": conversion_intent_id,
         "target": target,
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        "expectedReviewId": "review-approve-001",
+        **identity,
     }
 
 
@@ -299,7 +310,7 @@ def approve_candidate_for_conversion(client: ManagedTestClient, candidate_id: st
     transition_candidate_to_review_ready(client, candidate_id)
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=approve_review_payload(),
+        json=approve_review_payload(candidate_id),
         headers=review_headers(f"review-approve-for-conversion-{candidate_id}"),
     )
     assert response.status_code == 200
@@ -476,7 +487,7 @@ def test_lifecycle_transition_api_enables_review_approval_without_bypassing_stat
 
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=approve_review_payload(),
+        json=approve_review_payload(candidate_id),
         headers=review_headers("review-action-api-approved-001"),
     )
 
@@ -496,7 +507,7 @@ def test_review_action_api_persists_suppression_with_audit_posture() -> None:
 
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=review_headers("review-action-api-suppress-001"),
     )
 
@@ -520,13 +531,13 @@ def test_review_action_api_replays_same_idempotency_payload() -> None:
     headers = review_headers("review-action-api-replay-001")
     first = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=headers,
     )
 
     replayed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=headers,
     )
 
@@ -544,18 +555,44 @@ def test_review_action_api_returns_conflict_for_changed_idempotency_payload() ->
     headers = review_headers("review-action-api-conflict-001")
     client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(review_id="review-suppress-001"),
+        json=suppress_review_payload(candidate_id=candidate_id, review_id="review-suppress-001"),
         headers=headers,
     )
 
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(review_id="review-suppress-002"),
+        json=suppress_review_payload(candidate_id=candidate_id, review_id="review-suppress-002"),
         headers=headers,
     )
 
     assert response.status_code == 409
     assert response.json()["code"] == "idempotency_conflict"
+
+
+def test_review_action_api_conflicts_when_exact_authority_input_changes_on_same_key() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="seed-review-authority-conflict-001",
+    )
+    headers = review_headers("review-action-api-authority-conflict-001")
+    payload = suppress_review_payload(candidate_id=candidate_id)
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=payload,
+        headers=headers,
+    )
+
+    changed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json={**payload, "expectedEvidenceContentHash": "sha256:different-evidence"},
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert changed.status_code == 409
+    assert changed.json()["code"] == "idempotency_conflict"
 
 
 def test_review_action_api_canonicalizes_action_reason_without_hiding_transport_conflicts() -> None:
@@ -565,7 +602,10 @@ def test_review_action_api_canonicalizes_action_reason_without_hiding_transport_
         client,
         idempotency_key="seed-review-canonical-reason-001",
     )
-    first_request = suppress_review_payload(review_id="review-canonical-reason-001")
+    first_request = suppress_review_payload(
+        candidate_id=candidate_id,
+        review_id="review-canonical-reason-001",
+    )
     equivalent_request = first_request | {
         "reasonCodes": ["review_suppressed", "review_required", "review_suppressed"]
     }
@@ -614,7 +654,7 @@ def test_review_action_api_returns_state_conflict_for_generated_candidate_approv
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         response = client.post(
             f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-            json=approve_review_payload(),
+            json=approve_review_payload(candidate_id),
             headers=review_headers("review-action-api-state-conflict-001"),
         )
 
@@ -699,7 +739,7 @@ def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
 
     response = client.post(
         "/api/v1/idea-candidates/missing-candidate/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id="missing-candidate"),
         headers=review_headers("review-action-api-missing-001"),
     )
 
@@ -714,14 +754,14 @@ def test_review_action_api_requires_mutating_capability_and_scope() -> None:
 
     denied_by_capability = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=review_headers("review-action-api-denied-001", capabilities="idea.signal.evaluate"),
     )
     denied_scope_headers = review_headers("review-action-api-denied-002")
     denied_scope_headers["X-Caller-Portfolio-Ids"] = "different-portfolio"
     denied_by_scope = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=denied_scope_headers,
     )
 
@@ -736,7 +776,7 @@ def test_review_action_api_validation_errors_are_product_safe() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-validation-001")
-    payload = suppress_review_payload()
+    payload = suppress_review_payload(candidate_id=candidate_id)
     payload["accessScope"] = access_scope() | {"tenantId": " "}
 
     response = client.post(
@@ -754,8 +794,8 @@ def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_r
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-invalid-001")
-    blank_review = suppress_review_payload(review_id=" ")
-    naive_time = suppress_review_payload()
+    blank_review = suppress_review_payload(candidate_id=candidate_id, review_id=" ")
+    naive_time = suppress_review_payload(candidate_id=candidate_id)
     naive_time["decidedAtUtc"] = "2026-06-21T10:05:00"
 
     blank_review_response = client.post(
@@ -770,14 +810,14 @@ def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_r
     )
     blank_idempotency_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=review_headers(" "),
     )
     ambiguous_role_headers = review_headers("review-action-api-ambiguous-role-001")
     ambiguous_role_headers["X-Caller-Roles"] = "advisor,compliance"
     ambiguous_role_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(),
+        json=suppress_review_payload(candidate_id=candidate_id),
         headers=ambiguous_role_headers,
     )
 
@@ -791,9 +831,9 @@ def test_review_action_api_rejects_legacy_body_scope_claims() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-scope-001")
-    access_scope_claim = suppress_review_payload()
+    access_scope_claim = suppress_review_payload(candidate_id=candidate_id)
     access_scope_claim["accessScope"] = access_scope()
-    authorized_scope_claim = suppress_review_payload()
+    authorized_scope_claim = suppress_review_payload(candidate_id=candidate_id)
     authorized_scope_claim["authorizedScope"] = {
         "tenantIds": ["tenant-private-bank-sg"],
         "bookIds": ["book-advisor-001"],
@@ -926,6 +966,11 @@ def test_conversion_intent_api_records_review_approved_candidate_without_downstr
     assert payload["conversionIntent"]["conversionIntentId"] == "conversion-report-001"
     assert payload["conversionIntent"]["target"] == "report_evidence"
     assert payload["conversionIntent"]["targetSourceAuthority"] == "lotus-report"
+    assert payload["conversionIntent"]["reviewId"] == "review-approve-001"
+    assert payload["conversionIntent"]["reviewChannel"] == "workbench"
+    assert payload["conversionIntent"]["presentationReceiptId"] == f"receipt-{candidate_id}"
+    assert payload["conversionIntent"]["candidateMaterialVersion"] == 1
+    assert payload["conversionIntent"]["candidateEvidenceVersion"] == 1
     assert payload["conversionIntent"]["boundary"] == "intent_only"
     assert payload["conversionIntent"]["grantsDownstreamAuthority"] is False
     assert payload["persistence"]["decision"] == "accepted"

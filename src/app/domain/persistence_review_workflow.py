@@ -109,6 +109,13 @@ class InMemoryReviewWorkflowRepositoryMixin:
                 "action": result.decision.action.value,
                 "reason_codes": ",".join(reason.value for reason in result.decision.reason_codes),
                 "resulting_posture": result.decision.resulting_posture.value,
+                "candidate_material_version": result.decision.candidate_material_version,
+                "candidate_evidence_version": result.decision.candidate_evidence_version,
+                "presentation_receipt_id": result.decision.presentation_receipt_id,
+                "review_authority_policy_version": (
+                    result.decision.review_authority_policy_version
+                ),
+                "review_authority_granted": result.authority_grant is not None,
             },
         )
         return ReviewPersistenceResult(

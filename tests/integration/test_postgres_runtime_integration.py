@@ -18,6 +18,7 @@ from app.application.source_ingestion import (
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
+    CandidateEvidenceIdentity,
     EvidenceFreshness,
     FeedbackCommand,
     FEEDBACK_TAXONOMY_VERSION,
@@ -27,6 +28,7 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     SourceRef,
@@ -34,6 +36,7 @@ from app.domain import (
     apply_review_action,
     record_feedback,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 from app.infrastructure.migrations import (
     MigrationConnection,
     MigrationDirection,
@@ -681,6 +684,14 @@ def _assert_concurrent_review_action_resource_identity(
     postgres_database_url: str,
     proof_context: _ConcurrentReviewFeedbackProofContext,
 ) -> None:
+    accepted_at = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    receipt = presentation_receipt_for_candidate(
+        proof_context.candidate,
+        accepted_at_utc=accepted_at,
+        receipt_id="receipt-postgres-concurrent-review-001",
+    )
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        PostgresIdeaRepository(cast(Any, connection)).record_presentation_receipt(receipt)
     review = apply_review_action(
         proof_context.candidate,
         ReviewDecisionCommand(
@@ -688,9 +699,15 @@ def _assert_concurrent_review_action_resource_identity(
             action=ReviewAction.APPROVE_FOR_CONVERSION,
             actor=proof_context.actor,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
-            decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            decided_at_utc=accepted_at,
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(
+                proof_context.candidate
+            ),
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id=receipt.receipt_id,
         ),
-        accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+        accepted_at_utc=accepted_at,
+        presentation_receipt=receipt,
     )
     before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 

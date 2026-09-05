@@ -28,6 +28,13 @@ from app.domain import (
 
 
 REQUESTED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+CONVERSION_AUTHORITY_FIELDS = {
+    "expectedReviewId": "review-approve-001",
+    "expectedMaterialVersion": 1,
+    "expectedEvidenceVersion": 1,
+    "expectedEvidencePacketId": "evidence-packet-001",
+    "expectedEvidenceContentHash": "sha256:evidence-001",
+}
 
 
 def test_require_non_empty_reason_codes_preserves_tuple_values() -> None:
@@ -57,6 +64,7 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
                 "target": ConversionTarget.REPORT_EVIDENCE,
                 "reasonCodes": [],
                 "requestedAtUtc": REQUESTED_AT,
+                **CONVERSION_AUTHORITY_FIELDS,
             }
         ),
         lambda: ReportEvidencePackRequest.model_validate(
@@ -91,6 +99,7 @@ def test_conversion_intent_request_preserves_opaque_identity() -> None:
             "target": ConversionTarget.ADVISE_PROPOSAL,
             "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
             "requestedAtUtc": REQUESTED_AT,
+            **CONVERSION_AUTHORITY_FIELDS,
         }
     )
 
@@ -105,6 +114,7 @@ def test_conversion_intent_request_rejects_oversized_identity() -> None:
                 "target": ConversionTarget.ADVISE_PROPOSAL,
                 "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
                 "requestedAtUtc": REQUESTED_AT,
+                **CONVERSION_AUTHORITY_FIELDS,
             }
         )
 

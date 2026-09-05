@@ -52,6 +52,7 @@ from app.domain import (
     InvalidCandidateState,
     InvalidFeedbackTaxonomyCombination,
     InvalidReviewAction,
+    ReviewAuthorityConflict,
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
 )
@@ -86,6 +87,12 @@ _REVIEW_IDENTITY_CONFLICT = conflict_metadata(
     title="Review resource identity conflict",
     detail="The review resource identifier was already used with different content.",
     description="A reviewId or feedbackId conflicts with an earlier resource.",
+)
+_REVIEW_AUTHORITY_CONFLICT = conflict_metadata(
+    code="review_authority_conflict",
+    title="Review authority conflict",
+    detail="The review no longer matches the exact candidate evidence and presentation context.",
+    description="The review was rejected because its evidence or presentation precondition is stale.",
 )
 
 __all__ = [
@@ -154,6 +161,8 @@ async def record_review_action(
         return _review_action_permission_problem(
             "The caller is not permitted to review this idea candidate."
         )
+    except ReviewAuthorityConflict:
+        return _review_authority_conflict_problem()
     except (InvalidCandidateState, InvalidReviewAction) as exc:
         return _review_action_state_problem(exc, candidate_id=candidate_id, request=request)
     except ValueError:
@@ -277,6 +286,20 @@ def _review_action_invalid_request_problem() -> JSONResponse:
         code="invalid_request",
         title="Invalid request",
         detail="Correct the review request and retry.",
+    )
+
+
+def _review_authority_conflict_problem() -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.REVIEW_ACTION,
+        OperationOutcome.INVALID_STATE,
+        "review_authority_conflict",
+    )
+    return problem_response(
+        status_code=status.HTTP_409_CONFLICT,
+        code="review_authority_conflict",
+        title="Review authority conflict",
+        detail="The review no longer matches the exact candidate evidence and presentation context.",
     )
 
 
@@ -542,6 +565,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
             description="Review mutation conflict.",
             responses=(
                 _REVIEW_ACTION_CONFLICT,
+                _REVIEW_AUTHORITY_CONFLICT,
                 _CANDIDATE_STATE_CONFLICT,
                 _REVIEW_IDEMPOTENCY_CONFLICT,
                 _REVIEW_IDENTITY_CONFLICT,

@@ -15,11 +15,16 @@ from app.domain import (
     FeedbackCommand,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
+    ReviewAction,
     ReviewActionPolicy,
+    ReviewAuthorityConflict,
+    ReviewAuthorityGrant,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
     apply_review_action,
+    authorize_review_action,
     feedback_mutation_identity_from_command,
     record_feedback,
     review_mutation_identity_from_command,
@@ -59,6 +64,7 @@ class RecordFeedbackToRepositoryCommand:
 class ReviewWorkflowResult:
     review_decision: GovernedReviewDecision | None
     persistence: ReviewPersistenceResult
+    review_authority_grant: ReviewAuthorityGrant | None = None
 
     def require_review_decision(self) -> GovernedReviewDecision:
         if self.review_decision is None:
@@ -91,12 +97,14 @@ def apply_review_action_to_repository(
     if record is None:
         return ReviewWorkflowResult(
             review_decision=None,
+            review_authority_grant=None,
             persistence=ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.NOT_FOUND,
                 record=None,
             ),
         )
 
+    authorize_review_action(record.candidate, command.review, policy=policy)
     payload = _review_payload(command)
     prechecked = repository.precheck_review_mutation(
         idempotency_key=command.idempotency_key,
@@ -106,13 +114,31 @@ def apply_review_action_to_repository(
     if prechecked is not None:
         return ReviewWorkflowResult(
             review_decision=_persisted_review_decision(command, prechecked),
+            review_authority_grant=_persisted_review_authority(command, prechecked),
             persistence=prechecked,
         )
+
+    presentation_receipt = None
+    if command.review.review_channel is ReviewChannel.WORKBENCH:
+        access_scope = record.candidate.access_scope
+        if access_scope is None:
+            raise ReviewAuthorityConflict("candidate scope is unavailable")
+        assert command.review.presentation_receipt_id is not None
+        presentation_receipt = repository.presentation_receipt_by_id(
+            command.review.presentation_receipt_id,
+            candidate_id=record.candidate.candidate_id,
+            tenant_id=access_scope.tenant_id,
+        )
+        if presentation_receipt is None:
+            raise ReviewAuthorityConflict(
+                "presentation receipt is unavailable in the candidate scope"
+            )
 
     review_result = apply_review_action(
         record.candidate,
         command.review,
         accepted_at_utc=command.accepted_at_utc,
+        presentation_receipt=presentation_receipt,
         policy=policy,
     )
     persistence = repository.record_review_action(
@@ -123,6 +149,7 @@ def apply_review_action_to_repository(
     )
     return ReviewWorkflowResult(
         review_decision=_persisted_review_decision(command, persistence),
+        review_authority_grant=_persisted_review_authority(command, persistence),
         persistence=persistence,
     )
 
@@ -215,6 +242,32 @@ def _persisted_feedback_event(
     )
 
 
+def _persisted_review_authority(
+    command: ApplyReviewActionToRepositoryCommand,
+    persistence: ReviewPersistenceResult,
+) -> ReviewAuthorityGrant | None:
+    if persistence.decision not in {
+        ReviewPersistenceDecision.ACCEPTED,
+        ReviewPersistenceDecision.REPLAYED,
+    }:
+        return None
+    if command.review.action is not ReviewAction.APPROVE_FOR_CONVERSION:
+        return None
+    record = persistence.record
+    if record is None or record.candidate.candidate_id != command.candidate_id:
+        raise PersistedActionEvidenceUnavailable(
+            "Successful review authority mutation has no matching candidate record"
+        )
+    return require_single_persisted_action(
+        decision.authority_grant
+        for decision in record.review_decisions
+        if decision.review_id == command.review.review_id
+        and decision.authority_grant is not None
+        and decision.authority_grant.candidate_evidence
+        == command.review.expected_candidate_evidence
+    )
+
+
 def _review_payload(command: ApplyReviewActionToRepositoryCommand) -> dict[str, Any]:
     review = command.review
     return {
@@ -225,6 +278,15 @@ def _review_payload(command: ApplyReviewActionToRepositoryCommand) -> dict[str, 
         "decided_at_utc": review.decided_at_utc.isoformat(),
         "reason_codes": [reason.value for reason in review.reason_codes],
         "review_id": review.review_id,
+        "review_channel": review.review_channel.value,
+        "presentation_receipt_id": review.presentation_receipt_id,
+        "expected_candidate_evidence": {
+            "candidate_id": review.expected_candidate_evidence.candidate_id,
+            "material_version": review.expected_candidate_evidence.material_version,
+            "evidence_version": review.expected_candidate_evidence.evidence_version,
+            "evidence_packet_id": review.expected_candidate_evidence.evidence_packet_id,
+            "evidence_content_hash": review.expected_candidate_evidence.evidence_content_hash,
+        },
         "snoozed_until_utc": (
             review.snoozed_until_utc.isoformat() if review.snoozed_until_utc is not None else None
         ),

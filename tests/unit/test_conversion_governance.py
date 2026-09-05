@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import copy
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import partial
@@ -9,10 +10,13 @@ import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
+from tests.support.review_authority import review_authority_grant_for_candidate
 
 from app.domain import (
+    CandidateEvidenceIdentity,
     ConversionBoundary,
     ConversionIntentCommand,
+    ConversionIntentResult,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
     ConversionTarget,
@@ -28,6 +32,7 @@ from app.domain import (
     OpportunityFamily,
     ReasonCode,
     ReviewPosture,
+    ReviewAuthorityStatus,
     SourceRef,
     SourceSystem,
     SuppressionReason,
@@ -42,10 +47,20 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 OUTCOME_AT = datetime(2026, 6, 21, 10, 20, tzinfo=UTC)
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=REQUESTED_AT,
-)
+def request_conversion_intent(
+    source_candidate: IdeaCandidate,
+    command: ConversionIntentCommand,
+) -> ConversionIntentResult:
+    return _request_conversion_intent(
+        source_candidate,
+        command,
+        accepted_at_utc=REQUESTED_AT,
+        review_authority_grant=review_authority_grant_for_candidate(
+            source_candidate,
+            accepted_at_utc=EVALUATED_AT,
+            review_id=command.expected_review_id,
+        ),
+    )
 record_conversion_outcome = partial(
     _record_conversion_outcome,
     accepted_at_utc=OUTCOME_AT,
@@ -125,6 +140,7 @@ def candidate(
 def intent_command(
     target: ConversionTarget = ConversionTarget.REPORT_EVIDENCE,
 ) -> ConversionIntentCommand:
+    source_candidate = candidate()
     return ConversionIntentCommand(
         conversion_intent_id=f"intent-{target.value}",
         target=target,
@@ -132,6 +148,8 @@ def intent_command(
         idempotency_key=f"conversion-{target.value}-request-001",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=REQUESTED_AT,
+        expected_review_id="review-authority-test-001",
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
     )
 
 
@@ -145,6 +163,10 @@ def test_review_approved_candidate_can_request_report_conversion_intent() -> Non
     assert result.conversion_intent.grants_downstream_authority is False
     assert result.conversion_intent.evidence_content_hash == "sha256:conversion-lineage"
     assert result.conversion_intent.source_signal_ids == ("signal-conversion-001",)
+    assert result.conversion_intent.review_authority_grant is not None
+    assert result.conversion_intent.review_authority_grant.review_id == (
+        "review-authority-test-001"
+    )
     assert result.audit_event.event_type == "idea.conversion.intent_requested"
     assert result.audit_event.attributes["target_source_authority"] == "lotus-report"
     assert "portfolio_id" not in result.audit_event.attributes
@@ -158,6 +180,10 @@ def test_conversion_intent_uses_server_acceptance_time_for_control_chronology() 
         candidate(),
         intent_command(),
         accepted_at_utc=accepted_at,
+        review_authority_grant=review_authority_grant_for_candidate(
+            candidate(),
+            accepted_at_utc=EVALUATED_AT,
+        ),
     )
 
     assert result.conversion_intent.intent.requested_at_utc == REQUESTED_AT
@@ -249,6 +275,57 @@ def test_conversion_intent_allows_candidate_immediately_before_server_time_expir
     assert result.conversion_intent.accepted_at_utc == REQUESTED_AT
 
 
+def test_conversion_intent_rejects_stale_candidate_evidence_identity() -> None:
+    source_candidate = candidate()
+    command = replace(
+        intent_command(),
+        expected_candidate_evidence=replace(
+            CandidateEvidenceIdentity.from_candidate(source_candidate),
+            evidence_version=2,
+        ),
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="evidence identity is stale"):
+        request_conversion_intent(source_candidate, command)
+
+
+def test_conversion_intent_rejects_different_or_inactive_review_authority() -> None:
+    source_candidate = candidate()
+    command = intent_command()
+    grant = review_authority_grant_for_candidate(
+        source_candidate,
+        accepted_at_utc=EVALUATED_AT,
+        review_id=command.expected_review_id,
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="review authority identity differs"):
+        _request_conversion_intent(
+            source_candidate,
+            command,
+            accepted_at_utc=REQUESTED_AT,
+            review_authority_grant=replace(grant, review_id="different-review"),
+        )
+
+    with pytest.raises(InvalidConversionIntent, match="review authority is revoked"):
+        _request_conversion_intent(
+            source_candidate,
+            command,
+            accepted_at_utc=REQUESTED_AT,
+            review_authority_grant=replace(grant, status=ReviewAuthorityStatus.REVOKED),
+        )
+
+    with pytest.raises(InvalidConversionIntent, match="review authority is revoked"):
+        _request_conversion_intent(
+            source_candidate,
+            command,
+            accepted_at_utc=REQUESTED_AT,
+            review_authority_grant=replace(
+                grant,
+                authority_policy_version="idea-review-authority-v0",
+            ),
+        )
+
+
 def test_conversion_command_validates_idempotency_reason_and_time() -> None:
     opaque_identity = ConversionIntentCommand(
         conversion_intent_id="legacy/intent?version=1",
@@ -257,6 +334,8 @@ def test_conversion_command_validates_idempotency_reason_and_time() -> None:
         idempotency_key="conversion-request-opaque",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=REQUESTED_AT,
+        expected_review_id="review-authority-test-001",
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
     )
     assert opaque_identity.conversion_intent_id == "legacy/intent?version=1"
 
@@ -268,6 +347,8 @@ def test_conversion_command_validates_idempotency_reason_and_time() -> None:
             idempotency_key="conversion-request-001",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         )
 
     with pytest.raises(ValueError, match="idempotency_key is required"):
@@ -278,6 +359,8 @@ def test_conversion_command_validates_idempotency_reason_and_time() -> None:
             idempotency_key=" ",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         )
 
     with pytest.raises(ValueError, match="reason_codes is required"):
@@ -288,6 +371,8 @@ def test_conversion_command_validates_idempotency_reason_and_time() -> None:
             idempotency_key="conversion-request-001",
             reason_codes=(),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         )
 
     with pytest.raises(ValueError, match="requested_at_utc must be timezone-aware"):
@@ -298,6 +383,8 @@ def test_conversion_command_validates_idempotency_reason_and_time() -> None:
             idempotency_key="conversion-request-001",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=datetime(2026, 6, 21, 10, 15),
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         )
 
 

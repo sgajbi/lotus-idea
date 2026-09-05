@@ -19,12 +19,15 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
+    CandidateEvidenceIdentity,
     ReviewPosture,
     SuppressionReason,
     UnsupportedEvidenceReason,
     apply_review_action,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_review_queue import (
     REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS,
@@ -139,9 +142,17 @@ def test_postgres_review_queue_enforces_persisted_snooze_until_exact_boundary() 
             ),
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=EVALUATED_AT + timedelta(minutes=5),
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate),
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id="receipt-review-snooze-001",
             snoozed_until_utc=snoozed_until,
         ),
         accepted_at_utc=EVALUATED_AT + timedelta(minutes=5),
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT + timedelta(minutes=5),
+            receipt_id="receipt-review-snooze-001",
+        ),
     )
     repository.record_review_action(
         review,

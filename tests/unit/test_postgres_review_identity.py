@@ -13,6 +13,7 @@ from tests.unit.test_postgres_repository import (
     high_cash_candidate,
     review_command,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 
 
 def test_postgres_repository_reads_review_identity_collision_as_replay() -> None:
@@ -32,8 +33,13 @@ def test_postgres_repository_reads_review_identity_collision_as_replay() -> None
     )
     review = apply_review_action(
         candidate,
-        review_command(review_id="review-resource-identity-replay"),
+        review_command(review_id="review-resource-identity-replay", candidate=candidate),
         accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
 
     first = repository.record_review_action(
@@ -80,13 +86,26 @@ def test_postgres_repository_reads_changed_review_identity_as_typed_conflict() -
     review_id = "review-resource-identity-conflict"
     first_review = apply_review_action(
         candidate,
-        review_command(review_id=review_id),
+        review_command(review_id=review_id, candidate=candidate),
         accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
     changed_review = apply_review_action(
         candidate,
-        replace(review_command(review_id=review_id), action=ReviewAction.REJECT),
+        replace(
+            review_command(review_id=review_id, candidate=candidate),
+            action=ReviewAction.REJECT,
+        ),
         accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
 
     first = repository.record_review_action(

@@ -6,6 +6,7 @@ from functools import partial
 
 from app.domain import (
     EvidenceReplayStatus,
+    CandidateEvidenceIdentity,
     GovernedConversionIntent,
     IdeaCandidate,
     IdeaLifecycleStatus,
@@ -45,11 +46,8 @@ from tests.unit.test_postgres_repository import (
     report_pack_command,
     review_command,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=EVALUATED_AT + timedelta(minutes=4),
-)
 record_conversion_outcome = partial(
     _record_conversion_outcome,
     accepted_at_utc=EVALUATED_AT + timedelta(minutes=5),
@@ -140,8 +138,8 @@ def _persist_mutating_workflow_seed_candidates(
     approved = replace(
         high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_approved",
-        lifecycle_status=IdeaLifecycleStatus.APPROVED,
-        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
     )
 
     repository.persist_candidate(
@@ -210,8 +208,13 @@ def _record_review_feedback_path(
 
     review_result = apply_review_action(
         lifecycle.record.candidate,
-        review_command(),
+        review_command(candidate=lifecycle.record.candidate),
         accepted_at_utc=EVALUATED_AT + timedelta(minutes=2),
+        presentation_receipt=presentation_receipt_for_candidate(
+            lifecycle.record.candidate,
+            accepted_at_utc=EVALUATED_AT + timedelta(minutes=2),
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
     review = repository.record_review_action(
         review_result,
@@ -241,9 +244,35 @@ def _record_conversion_report_path(
     repository: PostgresIdeaRepository,
     candidate: IdeaCandidate,
 ) -> MutatingWorkflowConversionReportProof:
-    conversion_result = request_conversion_intent(
+    review_result = apply_review_action(
         candidate,
+        review_command(review_id="review-conversion-path", candidate=candidate),
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=2),
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT + timedelta(minutes=2),
+            receipt_id="receipt-postgres-review-001",
+        ),
+    )
+    review = repository.record_review_action(
+        review_result,
+        idempotency_key="review:conversion-path",
+        payload={"reviewId": review_result.decision.review_id},
+    )
+    assert review.record is not None
+    approved = review.record.candidate
+    authority_grant = review_result.decision.authority_grant
+    assert authority_grant is not None
+    command = replace(
         conversion_command(),
+        expected_review_id=review_result.decision.review_id,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(approved),
+    )
+    conversion_result = _request_conversion_intent(
+        approved,
+        command,
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=4),
+        review_authority_grant=authority_grant,
     )
     conversion = repository.record_conversion_intent(
         conversion_result,
@@ -386,6 +415,7 @@ def _assert_mutating_workflow_snapshot(
     assert len(reviewed_record.review_decisions) == 1
     assert len(reviewed_record.feedback_events) == 1
     assert len(converted_record.conversion_intents) == 1
+    assert len(converted_record.review_decisions) == 1
     assert len(converted_record.conversion_outcomes) == 1
     assert len(converted_record.report_evidence_packs) == 1
     assert [event.event_type for event in recovered.outbox_events.values()] == [
@@ -394,6 +424,7 @@ def _assert_mutating_workflow_snapshot(
         "idea.lifecycle.transitioned.v1",
         "idea.review.decision_recorded.v1",
         "idea.feedback.recorded.v2",
+        "idea.review.decision_recorded.v1",
         "idea.conversion.intent_requested.v1",
         "idea.conversion.outcome_recorded.v1",
         "idea.report_evidence_pack.requested.v1",
@@ -416,10 +447,10 @@ def _assert_replacement_snapshot_round_trip(recovered: IdeaRepositorySnapshot) -
     assert replacement_connection.commits == 1
     assert replacement_connection.rollbacks == 0
     assert replaced.candidate_records.keys() == recovered.candidate_records.keys()
-    assert len(replacement_connection.rows["idea_lifecycle_history"]) == 3
-    assert len(replacement_connection.rows["idea_review_decision"]) == 1
+    assert len(replacement_connection.rows["idea_lifecycle_history"]) == 4
+    assert len(replacement_connection.rows["idea_review_decision"]) == 2
     assert len(replacement_connection.rows["idea_feedback_event"]) == 1
     assert len(replacement_connection.rows["idea_conversion_intent"]) == 1
     assert len(replacement_connection.rows["idea_conversion_outcome"]) == 1
     assert len(replacement_connection.rows["idea_report_evidence_pack_request"]) == 1
-    assert len(replacement_connection.rows["idea_outbox_event"]) == 8
+    assert len(replacement_connection.rows["idea_outbox_event"]) == 9

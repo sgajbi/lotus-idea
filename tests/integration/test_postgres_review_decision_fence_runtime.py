@@ -8,15 +8,18 @@ from psycopg.rows import dict_row
 from tests.support.http import managed_test_client
 
 from app.domain import (
+    CandidateEvidenceIdentity,
     InvalidReviewAction,
     ReasonCode,
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     apply_review_action,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -45,6 +48,13 @@ def test_postgres_fences_competing_review_decisions(
     candidate_id = _persist_review_ready_candidate()
     candidate = _load_candidate(postgres_database_url, candidate_id)
     actor = _actor_for(candidate)
+    accepted_at = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    receipt = presentation_receipt_for_candidate(
+        candidate,
+        accepted_at_utc=accepted_at,
+        receipt_id="receipt-postgres-competing-review-001",
+    )
+    _persist_presentation_receipt(postgres_database_url, receipt)
     competing_results = {
         "review:competing:approve": apply_review_action(
             candidate,
@@ -52,8 +62,11 @@ def test_postgres_fences_competing_review_decisions(
                 review_id="postgres-competing-approval-001",
                 action=ReviewAction.APPROVE_FOR_CONVERSION,
                 actor=actor,
+                candidate=candidate,
+                presentation_receipt_id=receipt.receipt_id,
             ),
-            accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            accepted_at_utc=accepted_at,
+            presentation_receipt=receipt,
         ),
         "review:competing:reject": apply_review_action(
             candidate,
@@ -61,8 +74,11 @@ def test_postgres_fences_competing_review_decisions(
                 review_id="postgres-competing-rejection-001",
                 action=ReviewAction.REJECT,
                 actor=actor,
+                candidate=candidate,
+                presentation_receipt_id=receipt.receipt_id,
             ),
-            accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            accepted_at_utc=accepted_at,
+            presentation_receipt=receipt,
         ),
     }
     before_counts = _tracked_counts(postgres_database_url)
@@ -140,6 +156,8 @@ def _review_command(
     review_id: str,
     action: ReviewAction,
     actor: ReviewActorContext,
+    candidate: Any,
+    presentation_receipt_id: str,
 ) -> ReviewDecisionCommand:
     return ReviewDecisionCommand(
         review_id=review_id,
@@ -147,7 +165,15 @@ def _review_command(
         actor=actor,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id=presentation_receipt_id,
     )
+
+
+def _persist_presentation_receipt(database_url: str, receipt: Any) -> None:
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        PostgresIdeaRepository(cast(Any, connection)).record_presentation_receipt(receipt)
 
 
 def _actor_for(candidate: Any) -> ReviewActorContext:

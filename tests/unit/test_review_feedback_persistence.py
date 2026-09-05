@@ -11,6 +11,7 @@ from tests.unit.test_idea_persistence import (
     review_decision_command,
     review_ready_high_cash_candidate,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 
 
 def test_review_action_persistence_replays_conflicts_and_returns_not_found() -> None:
@@ -28,6 +29,11 @@ def test_review_action_persistence_replays_conflicts_and_returns_not_found() -> 
         persisted.record.candidate,
         review_decision_command(),
         accepted_at_utc=ACCEPTED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            persisted.record.candidate,
+            accepted_at_utc=ACCEPTED_AT,
+            receipt_id="receipt-review-decision-001",
+        ),
     )
     payload = {"review_id": result.decision.review_id, "action": result.decision.action.value}
 
@@ -51,6 +57,11 @@ def test_review_action_persistence_replays_conflicts_and_returns_not_found() -> 
         missing_candidate,
         review_decision_command(),
         accepted_at_utc=ACCEPTED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            missing_candidate,
+            accepted_at_utc=ACCEPTED_AT,
+            receipt_id="receipt-review-decision-001",
+        ),
     )
     not_found = InMemoryIdeaRepository().record_review_action(
         missing_result,

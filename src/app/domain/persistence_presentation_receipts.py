@@ -15,6 +15,20 @@ class InMemoryPresentationReceiptRepositoryMixin:
     _candidate_records: Mapping[str, Any]
     _presentation_receipts: dict[str, CandidatePresentationReceipt]
 
+    def presentation_receipt_by_id(
+        self,
+        receipt_id: str,
+        *,
+        candidate_id: str,
+        tenant_id: str,
+    ) -> CandidatePresentationReceipt | None:
+        receipt = self._presentation_receipts.get(receipt_id)
+        if receipt is None:
+            return None
+        if receipt.candidate_id != candidate_id or receipt.tenant_id != tenant_id:
+            return None
+        return receipt
+
     def record_presentation_receipt(
         self,
         receipt: CandidatePresentationReceipt,

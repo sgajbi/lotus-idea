@@ -22,6 +22,8 @@ from app.application.review_workflow import (
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     CandidatePersistenceDecision,
+    CandidatePresentationReceipt,
+    CandidateEvidenceIdentity,
     EvidenceFreshness,
     EvidenceSupportability,
     FeedbackCommand,
@@ -38,8 +40,10 @@ from app.domain import (
     ReasonCode,
     ReviewAccessScope,
     ReviewAction,
+    ReviewActionResult,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
@@ -65,7 +69,6 @@ RecordFeedbackToRepositoryCommand = partial(
     _RecordFeedbackToRepositoryCommand,
     accepted_at_utc=DECIDED_AT,
 )
-apply_review_action = partial(_apply_review_action, accepted_at_utc=DECIDED_AT)
 record_feedback = partial(_record_feedback, accepted_at_utc=DECIDED_AT)
 
 
@@ -157,18 +160,52 @@ def alternate_scope_advisor_context() -> ReviewActorContext:
     )
 
 
+def presentation_receipt(source_candidate: IdeaCandidate) -> CandidatePresentationReceipt:
+    assert source_candidate.access_scope is not None
+    return CandidatePresentationReceipt(
+        receipt_id="receipt-review-workflow-001",
+        candidate_id=source_candidate.candidate_id,
+        tenant_id=source_candidate.access_scope.tenant_id,
+        presented_at_utc=DECIDED_AT,
+        rank_at_presentation=1,
+        visible_candidate_count=1,
+        queue_snapshot_digest="sha256:" + "a" * 64,
+        queue_policy_version="idea-review-queue-v1",
+        ranking_policy_version="idea-deterministic-ranking-v1",
+        candidate_material_version=source_candidate.identity.material_version,
+        candidate_evidence_version=source_candidate.identity.evidence_version,
+        accepted_at_utc=DECIDED_AT,
+    )
+
+
+def apply_review_action(
+    source_candidate: IdeaCandidate,
+    command: ReviewDecisionCommand,
+) -> ReviewActionResult:
+    return _apply_review_action(
+        source_candidate,
+        command,
+        accepted_at_utc=DECIDED_AT,
+        presentation_receipt=presentation_receipt(source_candidate),
+    )
+
+
 def decision_command(
     action: ReviewAction,
     *,
     review_id: str | None = None,
     suppression_reason: SuppressionReason | None = None,
 ) -> ReviewDecisionCommand:
+    source_candidate = review_candidate()
     return ReviewDecisionCommand(
         review_id=review_id or f"review-{action.value}",
         action=action,
         actor=advisor_context(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id="receipt-review-workflow-001",
         suppression_reason=suppression_reason,
     )
 
@@ -185,12 +222,16 @@ def feedback_command() -> FeedbackCommand:
 
 
 def mismatched_actor_scope_decision_command() -> ReviewDecisionCommand:
+    source_candidate = review_candidate()
     return ReviewDecisionCommand(
         review_id="review-self-asserted-scope",
         action=ReviewAction.SUPPRESS,
         actor=alternate_scope_advisor_context(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id="receipt-review-workflow-001",
         suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
     )
 
@@ -216,6 +257,10 @@ def repository_with_candidate() -> InMemoryIdeaRepository:
         occurred_at_utc=EVALUATED_AT,
     )
     assert result.decision is CandidatePersistenceDecision.ACCEPTED
+    receipt_result = repository.record_presentation_receipt(
+        presentation_receipt(review_candidate())
+    )
+    assert receipt_result.receipt is not None
     return repository
 
 
@@ -296,6 +341,22 @@ def test_apply_review_action_to_repository_replays_before_reapplying_domain_tran
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.review_decisions) == 1
+
+
+def test_review_replay_authorizes_scope_before_idempotency_lookup() -> None:
+    repository = repository_with_candidate()
+    command = ApplyReviewActionToRepositoryCommand(
+        candidate_id="idea-review-001",
+        review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        idempotency_key="review-action:scope-before-replay:001",
+    )
+    apply_review_action_to_repository(command, repository=repository)
+
+    with pytest.raises(ReviewEntitlementDenied):
+        apply_review_action_to_repository(
+            replace(command, review=mismatched_actor_scope_decision_command()),
+            repository=repository,
+        )
 
 
 def test_review_replay_retains_original_server_acceptance_time() -> None:
@@ -866,6 +927,9 @@ class ProjectionOnlyReviewWorkflowRepository:
 
     def precheck_review_mutation(self, **kwargs: Any) -> Any:
         return self._repository.precheck_review_mutation(**kwargs)
+
+    def presentation_receipt_by_id(self, *args: Any, **kwargs: Any) -> Any:
+        return self._repository.presentation_receipt_by_id(*args, **kwargs)
 
     def record_review_action(self, *args: Any, **kwargs: Any) -> Any:
         return self._repository.record_review_action(*args, **kwargs)

@@ -20,6 +20,23 @@ from app.infrastructure.postgres_slo import execute_observed_postgres_call
 class PostgresPresentationReceiptRepositoryMixin:
     _connection: PostgresConnection
 
+    def presentation_receipt_by_id(
+        self,
+        receipt_id: str,
+        *,
+        candidate_id: str,
+        tenant_id: str,
+    ) -> CandidatePresentationReceipt | None:
+        return execute_observed_postgres_call(
+            "query",
+            lambda: _load_receipt_by_scope(
+                self._connection,
+                receipt_id=receipt_id,
+                candidate_id=candidate_id,
+                tenant_id=tenant_id,
+            ),
+        )
+
     def record_presentation_receipt(
         self,
         receipt: CandidatePresentationReceipt,
@@ -150,6 +167,32 @@ def _load_receipt(
     if not rows:
         return None
     return _receipt_from_row(rows[0])
+
+
+def _load_receipt_by_scope(
+    connection: PostgresConnection,
+    *,
+    receipt_id: str,
+    candidate_id: str,
+    tenant_id: str,
+) -> CandidatePresentationReceipt | None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT receipt_id, candidate_id, tenant_id, presented_at_utc,
+                   rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
+                   queue_policy_version, ranking_policy_version, candidate_material_version,
+                   candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+                   schema_version, surface, producer
+            FROM idea_candidate_presentation_receipt
+            WHERE receipt_id = %s
+              AND candidate_id = %s
+              AND tenant_id = %s
+            """,
+            (receipt_id, candidate_id, tenant_id),
+        )
+        rows = cursor.fetchall()
+    return _receipt_from_row(rows[0]) if rows else None
 
 
 def load_presentation_receipts(

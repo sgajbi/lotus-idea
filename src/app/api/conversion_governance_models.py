@@ -14,6 +14,7 @@ from app.application.conversion_workflow import (
 )
 from app.domain import (
     AcceptanceTimeSource,
+    CandidateEvidenceIdentity,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -24,6 +25,7 @@ from app.domain import (
     GovernedConversionIntent,
     GovernedConversionOutcome,
     ReasonCode,
+    ReviewChannel,
     SourceSystem,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
@@ -39,6 +41,22 @@ class ConversionIntentRequest(CamelModel):
     target: ConversionTarget
     reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
     requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
+    expected_review_id: str = Field(..., alias="expectedReviewId")
+    expected_material_version: int = Field(..., alias="expectedMaterialVersion", gt=0)
+    expected_evidence_version: int = Field(..., alias="expectedEvidenceVersion", gt=0)
+    expected_evidence_packet_id: str = Field(..., alias="expectedEvidencePacketId")
+    expected_evidence_content_hash: str = Field(..., alias="expectedEvidenceContentHash")
+
+    @field_validator(
+        "expected_review_id",
+        "expected_evidence_packet_id",
+        "expected_evidence_content_hash",
+    )
+    @classmethod
+    def _authority_identity_must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("review authority identity fields are required")
+        return value
 
     _reason_codes_must_not_be_empty = field_validator("reason_codes")(
         require_non_empty_reason_codes
@@ -68,6 +86,14 @@ class ConversionIntentRequest(CamelModel):
                 idempotency_key=idempotency_key,
                 reason_codes=self.reason_codes,
                 requested_at_utc=self.requested_at_utc,
+                expected_review_id=self.expected_review_id,
+                expected_candidate_evidence=CandidateEvidenceIdentity(
+                    candidate_id=candidate_id,
+                    material_version=self.expected_material_version,
+                    evidence_version=self.expected_evidence_version,
+                    evidence_packet_id=self.expected_evidence_packet_id,
+                    evidence_content_hash=self.expected_evidence_content_hash,
+                ),
             ),
             idempotency_key=idempotency_key,
             accepted_at_utc=accepted_at_utc,
@@ -152,6 +178,13 @@ class ConversionIntentResponse(CamelModel):
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     evidence_content_hash: str = Field(..., alias="evidenceContentHash")
     source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
+    review_id: str | None = Field(default=None, alias="reviewId")
+    review_channel: ReviewChannel | None = Field(default=None, alias="reviewChannel")
+    review_policy_version: str | None = Field(default=None, alias="reviewPolicyVersion")
+    authority_policy_version: str | None = Field(default=None, alias="authorityPolicyVersion")
+    presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
+    candidate_material_version: int | None = Field(default=None, alias="candidateMaterialVersion")
+    candidate_evidence_version: int | None = Field(default=None, alias="candidateEvidenceVersion")
     boundary: str
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
@@ -161,6 +194,7 @@ class ConversionIntentResponse(CamelModel):
 
     @classmethod
     def from_domain(cls, intent: GovernedConversionIntent) -> "ConversionIntentResponse":
+        grant = intent.review_authority_grant
         return cls(
             conversionIntentId=intent.intent.conversion_intent_id,
             candidateId=intent.intent.candidate_id,
@@ -170,6 +204,17 @@ class ConversionIntentResponse(CamelModel):
             evidencePacketId=intent.evidence_packet_id,
             evidenceContentHash=intent.evidence_content_hash,
             sourceSignalIds=intent.source_signal_ids,
+            reviewId=grant.review_id if grant is not None else None,
+            reviewChannel=grant.review_channel if grant is not None else None,
+            reviewPolicyVersion=grant.review_policy_version if grant is not None else None,
+            authorityPolicyVersion=(grant.authority_policy_version if grant is not None else None),
+            presentationReceiptId=grant.presentation_receipt_id if grant is not None else None,
+            candidateMaterialVersion=(
+                grant.candidate_evidence.material_version if grant is not None else None
+            ),
+            candidateEvidenceVersion=(
+                grant.candidate_evidence.evidence_version if grant is not None else None
+            ),
             boundary=intent.boundary.value,
             reasonCodes=tuple(reason.value for reason in intent.reason_codes),
             requestedAtUtc=intent.intent.requested_at_utc,

@@ -20,6 +20,7 @@ from app.domain import (
     GovernedFeedbackEvent,
     GovernedReportEvidencePack,
     GovernedReviewDecision,
+    IdeaCandidate,
     LifecycleHistoryEntry,
     SourceRef,
     SourceSystem,
@@ -194,24 +195,62 @@ class LifecycleHistoryResponse(CamelModel):
 
 class ReviewDecisionSummaryResponse(CamelModel):
     review_id: str = Field(..., alias="reviewId")
+    evidence_packet_id: str = Field(..., alias="evidencePacketId")
+    evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    candidate_material_version: int = Field(..., alias="candidateMaterialVersion")
+    candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion")
+    review_channel: str = Field(..., alias="reviewChannel")
+    presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
+    queue_snapshot_digest: str | None = Field(default=None, alias="queueSnapshotDigest")
+    review_policy_version: str = Field(..., alias="reviewPolicyVersion")
+    authority_policy_version: str = Field(..., alias="authorityPolicyVersion")
     action: str
     resulting_posture: str = Field(..., alias="resultingPosture")
     actor_role: str = Field(..., alias="actorRole")
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    applicability_expires_at_utc: datetime | None = Field(
+        default=None,
+        alias="applicabilityExpiresAtUtc",
+    )
+    authority_status: str | None = Field(default=None, alias="authorityStatus")
     suppression_reason: str | None = Field(default=None, alias="suppressionReason")
     snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
 
     @classmethod
-    def from_domain(cls, decision: GovernedReviewDecision) -> "ReviewDecisionSummaryResponse":
+    def from_domain(
+        cls,
+        decision: GovernedReviewDecision,
+        *,
+        candidate: IdeaCandidate,
+        evaluated_at_utc: datetime,
+    ) -> "ReviewDecisionSummaryResponse":
+        grant = decision.authority_grant
         return cls(
             reviewId=decision.review_id,
+            evidencePacketId=decision.evidence_packet_id,
+            evidenceContentHash=decision.evidence_content_hash,
+            candidateMaterialVersion=decision.candidate_material_version,
+            candidateEvidenceVersion=decision.candidate_evidence_version,
+            reviewChannel=decision.review_channel.value,
+            presentationReceiptId=decision.presentation_receipt_id,
+            queueSnapshotDigest=decision.queue_snapshot_digest,
+            reviewPolicyVersion=decision.review_policy_version,
+            authorityPolicyVersion=decision.review_authority_policy_version,
             action=decision.action.value,
             resultingPosture=decision.resulting_posture.value,
             actorRole=decision.actor_role.value,
             reasonCodes=tuple(reason.value for reason in decision.reason_codes),
             decidedAtUtc=decision.decided_at_utc,
+            acceptedAtUtc=decision.accepted_at_utc,
+            applicabilityExpiresAtUtc=decision.applicability_expires_at_utc,
+            authorityStatus=(
+                grant.effective_status(candidate, evaluated_at_utc=evaluated_at_utc).value
+                if grant is not None
+                else None
+            ),
             suppressionReason=(
                 decision.suppression_reason.value
                 if decision.suppression_reason is not None
@@ -249,10 +288,19 @@ class ConversionIntentSummaryResponse(CamelModel):
     target_source_authority: str = Field(..., alias="targetSourceAuthority")
     boundary: str
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    review_id: str | None = Field(default=None, alias="reviewId")
+    review_channel: str | None = Field(default=None, alias="reviewChannel")
+    review_policy_version: str | None = Field(default=None, alias="reviewPolicyVersion")
+    authority_policy_version: str | None = Field(default=None, alias="authorityPolicyVersion")
+    presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
+    candidate_material_version: int | None = Field(default=None, alias="candidateMaterialVersion")
+    candidate_evidence_version: int | None = Field(default=None, alias="candidateEvidenceVersion")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
 
     @classmethod
     def from_domain(cls, intent: GovernedConversionIntent) -> "ConversionIntentSummaryResponse":
+        grant = intent.review_authority_grant
         return cls(
             conversionIntentId=intent.intent.conversion_intent_id,
             target=intent.intent.target.value,
@@ -260,6 +308,18 @@ class ConversionIntentSummaryResponse(CamelModel):
             targetSourceAuthority=intent.target_source_authority.value,
             boundary=intent.boundary.value,
             reasonCodes=tuple(reason.value for reason in intent.reason_codes),
+            acceptedAtUtc=intent.accepted_at_utc,
+            reviewId=grant.review_id if grant is not None else None,
+            reviewChannel=grant.review_channel.value if grant is not None else None,
+            reviewPolicyVersion=grant.review_policy_version if grant is not None else None,
+            authorityPolicyVersion=(grant.authority_policy_version if grant is not None else None),
+            presentationReceiptId=grant.presentation_receipt_id if grant is not None else None,
+            candidateMaterialVersion=(
+                grant.candidate_evidence.material_version if grant is not None else None
+            ),
+            candidateEvidenceVersion=(
+                grant.candidate_evidence.evidence_version if grant is not None else None
+            ),
             grantsDownstreamAuthority=intent.grants_downstream_authority,
         )
 
@@ -486,7 +546,11 @@ class CandidateDetailResponse(CamelModel):
         *,
         downstream_submissions: tuple[DownstreamSubmissionRecord, ...] = (),
         durable_storage_backed: bool = False,
+        evaluated_at_utc: datetime | None = None,
     ) -> "CandidateDetailResponse":
+        if record.review_decisions and evaluated_at_utc is None:
+            raise ValueError("evaluated_at_utc is required when projecting review authority")
+        authority_evaluated_at = evaluated_at_utc or record.candidate.updated_at_utc
         return cls(
             candidate=CandidateDetailCandidateResponse.from_record(record),
             versionHistory=tuple(
@@ -499,7 +563,11 @@ class CandidateDetailResponse(CamelModel):
                 for history_entry in record.lifecycle_history
             ),
             reviewDecisions=tuple(
-                ReviewDecisionSummaryResponse.from_domain(decision)
+                ReviewDecisionSummaryResponse.from_domain(
+                    decision,
+                    candidate=record.candidate,
+                    evaluated_at_utc=authority_evaluated_at,
+                )
                 for decision in record.review_decisions
             ),
             feedbackEvents=tuple(

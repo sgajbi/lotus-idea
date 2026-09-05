@@ -6,11 +6,10 @@ from functools import partial
 import pytest
 
 from app.domain import (
+    CandidateEvidenceIdentity,
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
     GovernedConversionIntent,
-    IdeaLifecycleStatus,
-    ReviewPosture,
     record_conversion_outcome as _record_conversion_outcome,
     request_conversion_intent as _request_conversion_intent,
 )
@@ -27,12 +26,10 @@ from tests.unit.test_postgres_repository import (
     conversion_command,
     conversion_outcome_command,
     high_cash_candidate,
+    review_command,
 )
+from tests.support.postgres_review_authority import persist_candidate_with_review_authority
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=EVALUATED_AT,
-)
 record_conversion_outcome = partial(
     _record_conversion_outcome,
     accepted_at_utc=EVALUATED_AT,
@@ -49,17 +46,24 @@ def repository_with_conversion_intent() -> tuple[
     candidate = replace(
         high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_conversion_outcome_lifecycle",
-        lifecycle_status=IdeaLifecycleStatus.APPROVED,
-        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
     )
-    repository.persist_candidate(
+    candidate, grant = persist_candidate_with_review_authority(
+        repository,
         candidate,
         idempotency_key="candidate:conversion-outcome-lifecycle",
-        payload={"candidateId": candidate.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
+        accepted_at_utc=EVALUATED_AT,
+        review_command=lambda value: review_command(candidate=value),
     )
-    intent_result = request_conversion_intent(candidate, conversion_command())
+    command = replace(
+        conversion_command(),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate),
+    )
+    intent_result = _request_conversion_intent(
+        candidate,
+        command,
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=grant,
+    )
     repository.record_conversion_intent(
         intent_result,
         idempotency_key=intent_result.conversion_intent.idempotency_key,
@@ -89,8 +93,8 @@ def test_postgres_reads_equivalent_conversion_outcome_identity_as_replay() -> No
     assert replayed.decision is ConversionPersistenceDecision.REPLAYED
     assert connection.rollbacks == 0
     assert len(record.conversion_outcomes) == 1
-    assert len(record.audit_events) == 3
-    assert len(recovered.outbox_events) == 3
+    assert len(record.audit_events) == 4
+    assert len(recovered.outbox_events) == 4
 
 
 def test_postgres_reads_changed_conversion_outcome_identity_as_conflict() -> None:
@@ -125,8 +129,8 @@ def test_postgres_reads_changed_conversion_outcome_identity_as_conflict() -> Non
     assert [outcome.outcome.status for outcome in record.conversion_outcomes] == [
         ConversionOutcomeStatus.ACCEPTED
     ]
-    assert len(record.audit_events) == 3
-    assert len(recovered.outbox_events) == 3
+    assert len(record.audit_events) == 4
+    assert len(recovered.outbox_events) == 4
 
 
 def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None:
@@ -160,8 +164,8 @@ def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None
     assert conflict.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT
     assert connection.rollbacks == 0
     assert len(record.conversion_outcomes) == 1
-    assert len(record.audit_events) == 3
-    assert len(recovered.outbox_events) == 3
+    assert len(record.audit_events) == 4
+    assert len(recovered.outbox_events) == 4
 
 
 def test_postgres_conversion_outcome_read_and_precheck_are_restart_safe() -> None:

@@ -30,6 +30,7 @@ from app.runtime.source_ingestion_state import (
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
+from tests.support import review_authority_api
 
 
 OperationEventCall = tuple[str, str, str, bool, str | None]
@@ -514,13 +515,14 @@ def lifecycle_payload(
     }
 
 
-def review_payload() -> dict[str, Any]:
+def review_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "reviewId": "operation-review-suppress-001",
         "action": "suppress",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
         "suppressionReason": "manual_suppression",
+        **review_authority_api.record_workbench_presentation(candidate_id),
     }
 
 
@@ -534,21 +536,25 @@ def feedback_payload() -> dict[str, Any]:
     }
 
 
-def approve_review_payload() -> dict[str, Any]:
+def approve_review_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "reviewId": "operation-review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **review_authority_api.record_workbench_presentation(candidate_id),
     }
 
 
-def conversion_intent_payload() -> dict[str, Any]:
+def conversion_intent_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "conversionIntentId": "operation-conversion-report-001",
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        **review_authority_api.exact_conversion_authority_payload(
+            candidate_id, review_id="operation-review-approve-001"
+        ),
     }
 
 
@@ -692,7 +698,7 @@ def approve_candidate_for_conversion(client: ManagedTestClient, candidate_id: st
         )
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=approve_review_payload(),
+        json=approve_review_payload(candidate_id),
         headers=review_headers("operation-review-approved-conversion-001"),
     )
     assert response.status_code == 200
@@ -970,7 +976,7 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     )
     review_response = client.post(
         f"/api/v1/idea-candidates/{lifecycle_candidate_id}/review-actions",
-        json=review_payload(),
+        json=review_payload(lifecycle_candidate_id),
         headers=review_headers("operation-review-accepted-001"),
     )
     feedback_response = client.post(
@@ -1170,7 +1176,7 @@ def test_conversion_and_report_workflow_emit_operation_events(
 
     intent_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-        json=conversion_intent_payload(),
+        json=conversion_intent_payload(candidate_id),
         headers=conversion_intent_headers("operation-conversion-intent-accepted-001"),
     )
     outcome_response = client.post(
