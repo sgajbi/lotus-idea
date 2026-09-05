@@ -6,10 +6,8 @@ from typing import Any
 
 import httpx
 import pytest
-from tests.support.report_materialization import (
-    duplicate_required_report_blocker,
-    report_materialization_receipt_payload,
-)
+from tests.support.report_materialization import duplicate_required_report_blocker
+from tests.support.report_materialization import report_materialization_receipt_payload
 from app.domain import (
     SourceCutPosture,
     ConversionBoundary,
