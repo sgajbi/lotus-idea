@@ -18,6 +18,13 @@ from app.domain.feedback_taxonomy import (
     FeedbackReason,
     validate_feedback_taxonomy,
 )
+from app.domain.source_revision import (
+    SourceCutPosture,
+    SourceCutTolerance,
+    SourceRevisionClaims,
+    source_cut_posture,
+    source_revision_vector_digest,
+)
 
 
 class OpportunityFamily(StrEnum):
@@ -235,6 +242,7 @@ class SourceRef:
     content_hash: str
     data_quality_status: str
     freshness: EvidenceFreshness
+    revision_claims: SourceRevisionClaims | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.product_id, "product_id")
@@ -293,6 +301,15 @@ class IdeaEvidencePacket:
     unsupported_reasons: tuple[UnsupportedEvidenceReason, ...] = ()
     created_at_utc: datetime = field(default_factory=lambda: datetime.now(UTC))
     applicability_expires_at_utc: datetime | None = None
+    source_cut_tolerance: SourceCutTolerance | None = None
+
+    @property
+    def source_revision_vector_digest(self) -> str:
+        return source_revision_vector_digest(self.source_refs)
+
+    @property
+    def source_cut_posture(self) -> SourceCutPosture:
+        return source_cut_posture(self.source_refs, tolerance=self.source_cut_tolerance)
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_packet_id, "evidence_packet_id")
@@ -315,6 +332,7 @@ class IdeaEvidencePacket:
         object.__setattr__(self, "source_refs", tuple(self.source_refs))
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "unsupported_reasons", tuple(self.unsupported_reasons))
+        source_revision_vector_digest(self.source_refs)
 
 
 @dataclass(frozen=True)
