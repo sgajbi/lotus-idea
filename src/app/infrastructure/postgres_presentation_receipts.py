@@ -28,7 +28,7 @@ class PostgresPresentationReceiptRepositoryMixin:
         tenant_id: str,
     ) -> CandidatePresentationReceipt | None:
         return execute_observed_postgres_call(
-            "query",
+            "projection_read",
             lambda: _load_receipt_by_scope(
                 self._connection,
                 receipt_id=receipt_id,
