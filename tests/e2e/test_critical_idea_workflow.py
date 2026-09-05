@@ -108,21 +108,24 @@ def _lifecycle_payload(target_status: str, *, minute: int) -> dict[str, Any]:
     }
 
 
-def _approve_review_payload() -> dict[str, Any]:
+def _approve_review_payload(authority: dict[str, Any]) -> dict[str, Any]:
     return {
         "reviewId": "critical-e2e-review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
-        "decidedAtUtc": "2026-06-21T10:05:00Z",
+        "decidedAtUtc": "2026-06-21T10:11:00Z",
+        **authority,
     }
 
 
-def _conversion_intent_payload() -> dict[str, Any]:
+def _conversion_intent_payload(authority: dict[str, Any]) -> dict[str, Any]:
     return {
         "conversionIntentId": "critical-e2e-conversion-report-001",
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        "expectedReviewId": "critical-e2e-review-approve-001",
+        **{key: value for key, value in authority.items() if key.startswith("expected")},
     }
 
 
@@ -164,7 +167,10 @@ def _persist_high_cash_candidate(client: Any) -> str:
     return candidate_id
 
 
-def _assert_advisor_queue_contains_candidate(client: Any, candidate_id: str) -> None:
+def _assert_advisor_queue_contains_candidate(
+    client: Any,
+    candidate_id: str,
+) -> dict[str, Any]:
     queue_response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=10",
         headers=_queue_headers(),
@@ -180,6 +186,51 @@ def _assert_advisor_queue_contains_candidate(client: Any, candidate_id: str) -> 
     assert queue_payload["items"][0]["rank"] == 1
     assert queue_payload["items"][0]["candidate"]["reviewPosture"] == "advisor_review_required"
     assert queue_payload["supportedFeaturePromoted"] is False
+    detail = client.get(
+        f"/api/v1/idea-candidates/{candidate_id}",
+        headers=_headers(
+            subject="advisor-001",
+            roles="advisor",
+            capabilities="idea.candidate.detail.read",
+        ),
+    )
+    assert detail.status_code == 200
+    evidence = detail.json()["evidence"]
+    candidate = queue_payload["items"][0]["candidate"]
+    receipt_id = "critical-e2e-presentation-receipt-001"
+    receipt = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/presentation-receipts",
+        json={
+            "tenantId": "tenant-private-bank-sg",
+            "presentedAtUtc": "2026-06-21T10:10:00Z",
+            "rankAtPresentation": queue_payload["items"][0]["rank"],
+            "visibleCandidateCount": len(queue_payload["items"]),
+            "queueSnapshotDigest": f"sha256:{'a' * 64}",
+            "queuePolicyVersion": queue_payload["policyVersion"],
+            "rankingPolicyVersion": queue_payload["items"][0]["policyVersion"],
+            "candidateMaterialVersion": candidate["materialVersion"],
+            "candidateEvidenceVersion": candidate["evidenceVersion"],
+        },
+        headers={
+            **_headers(
+                subject="workbench-visible-render-producer",
+                roles="advisor",
+                capabilities="idea.presentation-receipt.record",
+                idempotency_key=receipt_id,
+            ),
+            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        },
+    )
+    assert receipt.status_code == 201
+    assert receipt.json()["receipt"]["candidateId"] == candidate_id
+    return {
+        "reviewChannel": "workbench",
+        "presentationReceiptId": receipt_id,
+        "expectedMaterialVersion": candidate["materialVersion"],
+        "expectedEvidenceVersion": candidate["evidenceVersion"],
+        "expectedEvidencePacketId": candidate["evidencePacketId"],
+        "expectedEvidenceContentHash": evidence["evidenceContentHash"],
+    }
 
 
 def _transition_candidate_to_review_ready(client: Any, candidate_id: str) -> None:
@@ -203,29 +254,38 @@ def _transition_candidate_to_review_ready(client: Any, candidate_id: str) -> Non
 def _assert_review_approval_preserves_idea_boundary(
     client: Any,
     candidate_id: str,
+    authority: dict[str, Any],
 ) -> None:
     review_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=_approve_review_payload(),
+        json=_approve_review_payload(authority),
         headers=_review_headers(
             idempotency_key="critical-e2e-review-approve-001",
         ),
     )
 
-    assert review_response.status_code == 200
+    assert review_response.status_code == 200, review_response.text
     review_payload = review_response.json()
     assert review_payload["reviewDecision"]["action"] == "approve_for_conversion"
     assert review_payload["reviewDecision"]["grantsDownstreamAuthority"] is False
+    assert (
+        review_payload["reviewDecision"]["presentationReceiptId"]
+        == (authority["presentationReceiptId"])
+    )
+    assert review_payload["reviewDecision"]["authorityPolicyVersion"] == (
+        "idea-review-authority-v1"
+    )
     assert review_payload["persistence"]["reviewPosture"] == "approved_for_conversion"
 
 
 def _assert_conversion_intent_is_report_intent_only(
     client: Any,
     candidate_id: str,
+    authority: dict[str, Any],
 ) -> None:
     conversion_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-        json=_conversion_intent_payload(),
+        json=_conversion_intent_payload(authority),
         headers={
             **_headers(
                 subject="advisor-001",
@@ -241,6 +301,10 @@ def _assert_conversion_intent_is_report_intent_only(
     assert conversion_payload["conversionIntent"]["target"] == "report_evidence"
     assert conversion_payload["conversionIntent"]["targetSourceAuthority"] == "lotus-report"
     assert conversion_payload["conversionIntent"]["boundary"] == "intent_only"
+    assert (
+        conversion_payload["conversionIntent"]["reviewId"]
+        == "critical-e2e-review-approve-001"
+    )
     assert conversion_payload["conversionIntent"]["grantsDownstreamAuthority"] is False
     assert conversion_payload["persistence"]["lifecycleStatus"] == "converted_to_report"
 
@@ -330,10 +394,10 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     client = managed_test_client(app)
 
     candidate_id = _persist_high_cash_candidate(client)
-    _assert_advisor_queue_contains_candidate(client, candidate_id)
+    authority = _assert_advisor_queue_contains_candidate(client, candidate_id)
     _transition_candidate_to_review_ready(client, candidate_id)
-    _assert_review_approval_preserves_idea_boundary(client, candidate_id)
-    _assert_conversion_intent_is_report_intent_only(client, candidate_id)
+    _assert_review_approval_preserves_idea_boundary(client, candidate_id, authority)
+    _assert_conversion_intent_is_report_intent_only(client, candidate_id, authority)
     _assert_report_evidence_pack_request_has_no_report_authority(client)
     _assert_client_ready_publication_request_is_rejected_without_leak(client)
     _assert_candidate_detail_replays_non_authority_workflow(client, candidate_id)

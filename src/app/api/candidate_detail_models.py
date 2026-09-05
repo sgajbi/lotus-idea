@@ -167,7 +167,7 @@ class CandidateEvidenceResponse(CamelModel):
         evidence_packet = record.candidate.evidence_packet
         return cls(
             evidencePacketId=evidence_packet.evidence_packet_id,
-            evidenceContentHash=record.evidence_hash,
+            evidenceContentHash=evidence_packet.lineage_ref.content_hash,
             supportability=evidence_packet.supportability.value,
             lineageId=evidence_packet.lineage_ref.lineage_id,
             createdAtUtc=evidence_packet.created_at_utc,
