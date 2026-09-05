@@ -25,6 +25,7 @@ from tests.support.opportunity_effectiveness_fixture import candidate_fixture
 
 
 CHANGED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+ACCEPTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 
 
 def lifecycle_command(**overrides: object) -> ApplyCandidateLifecycleTransitionCommand:
@@ -33,6 +34,7 @@ def lifecycle_command(**overrides: object) -> ApplyCandidateLifecycleTransitionC
         "transition_id": "transition-001",
         "target_status": IdeaLifecycleStatus.READY_FOR_REVIEW,
         "changed_at_utc": CHANGED_AT,
+        "accepted_at_utc": ACCEPTED_AT,
         "reason_codes": ("review_required",),
         "actor_subject": "advisor-001",
         "idempotency_key": "lifecycle-transition-001",
@@ -68,12 +70,23 @@ def test_candidate_lifecycle_transition_command_rejects_invalid_inputs(
 
 @pytest.mark.parametrize(
     "target_status",
-    [IdeaLifecycleStatus.ACCEPTED, IdeaLifecycleStatus.EXECUTED],
+    [
+        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
+        IdeaLifecycleStatus.APPROVED,
+        IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL,
+        IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW,
+        IdeaLifecycleStatus.CONVERTED_TO_REPORT,
+        IdeaLifecycleStatus.ACCEPTED,
+        IdeaLifecycleStatus.REJECTED,
+        IdeaLifecycleStatus.EXPIRED,
+        IdeaLifecycleStatus.EXECUTED,
+        IdeaLifecycleStatus.CLOSED,
+    ],
 )
-def test_candidate_lifecycle_transition_command_rejects_downstream_authority_targets(
+def test_candidate_lifecycle_transition_command_rejects_owned_workflow_targets(
     target_status: IdeaLifecycleStatus,
 ) -> None:
-    with pytest.raises(ValueError, match="reserved for downstream source-authority outcomes"):
+    with pytest.raises(ValueError, match="reserved for its owned review, conversion, expiry"):
         lifecycle_command(target_status=target_status)
 
 
@@ -98,8 +111,26 @@ def test_lifecycle_transition_returns_same_exact_persisted_evidence_on_replay() 
     assert replayed.require_transition().transition_id == command.transition_id
     assert replayed.require_transition().lifecycle_status is IdeaLifecycleStatus.ENRICHED
     assert replayed.require_transition().changed_at_utc == command.changed_at_utc
+    assert replayed.require_transition().accepted_at_utc == command.accepted_at_utc
     assert replayed.require_transition().reason_codes == command.reason_codes
     assert repository.snapshot() == before_replay
+
+
+def test_lifecycle_replay_returns_original_acceptance_time() -> None:
+    repository = _repository_with_candidate()
+    command = lifecycle_command(target_status=IdeaLifecycleStatus.ENRICHED)
+    accepted = apply_candidate_lifecycle_transition_to_repository(command, repository=repository)
+
+    replayed = apply_candidate_lifecycle_transition_to_repository(
+        lifecycle_command(
+            target_status=IdeaLifecycleStatus.ENRICHED,
+            accepted_at_utc=ACCEPTED_AT.replace(minute=20),
+        ),
+        repository=repository,
+    )
+
+    assert replayed.persistence.decision is LifecyclePersistenceDecision.REPLAYED
+    assert replayed.require_transition() == accepted.require_transition()
 
 
 def test_unsuccessful_lifecycle_results_do_not_claim_persisted_transition_evidence() -> None:

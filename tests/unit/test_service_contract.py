@@ -188,8 +188,14 @@ def test_lifecycle_transition_openapi_excludes_downstream_authority_input_status
     target_enum = set(schema["components"]["schemas"][target_schema_name]["enum"])
 
     assert target_schema_name == "CallerSettableIdeaLifecycleStatus"
-    assert {"accepted", "executed"}.isdisjoint(target_enum)
-    assert {"approved", "converted_to_report", "closed"}.issubset(target_enum)
+    assert target_enum == {
+        "detected",
+        "generated",
+        "enriched",
+        "scored",
+        "governance_checked",
+        "ready_for_review",
+    }
     assert {"accepted", "executed"}.issubset(
         set(schema["components"]["schemas"]["IdeaLifecycleStatus"]["enum"])
     )

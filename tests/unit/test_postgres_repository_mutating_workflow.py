@@ -133,7 +133,7 @@ def _persist_mutating_workflow_seed_candidates(
     review_ready = replace(
         high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_review_ready",
-        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        lifecycle_status=IdeaLifecycleStatus.GOVERNANCE_CHECKED,
     )
     approved = replace(
         high_cash_candidate(candidate_scope=access_scope()),
@@ -193,15 +193,15 @@ def _record_review_feedback_path(
 ) -> MutatingWorkflowReviewFeedbackProof:
     lifecycle = repository.record_lifecycle_transition(
         candidate.candidate_id,
-        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
-        idempotency_key="lifecycle:reviewed",
+        IdeaLifecycleStatus.READY_FOR_REVIEW,
+        idempotency_key="lifecycle:ready-for-review",
         payload={
             "candidateId": candidate.candidate_id,
-            "target": "reviewed_by_advisor",
+            "target": "ready_for_review",
         },
         actor_subject="advisor-001",
         occurred_at_utc=EVALUATED_AT + timedelta(minutes=1),
-        transition_id="transition-review-001",
+        transition_id="transition-ready-for-review-001",
         reason_codes=("review_required",),
     )
     assert lifecycle.record is not None

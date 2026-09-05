@@ -3,12 +3,13 @@ from typing import Any, cast
 
 from app.domain import CandidatePresentationReceipt, InMemoryIdeaRepository
 from app.runtime.repository_state import get_idea_repository
+from app.runtime.trusted_clock_state import get_trusted_clock
 
 
 def record_workbench_presentation(
     candidate_id: str,
     *,
-    accepted_at_utc: datetime = datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+    accepted_at_utc: datetime | None = None,
     presented_at_utc: datetime = datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
 ) -> dict[str, Any]:
     repository = cast(InMemoryIdeaRepository, get_idea_repository())
@@ -16,6 +17,7 @@ def record_workbench_presentation(
     if record is None:
         return _missing_candidate_authority(candidate_id)
     candidate = record.candidate
+    acceptance_time = accepted_at_utc or get_trusted_clock().now_utc()
     assert candidate.access_scope is not None
     assert candidate.score is not None
     receipt_id = f"receipt-{candidate_id}"
@@ -34,7 +36,7 @@ def record_workbench_presentation(
             candidate_evidence_version=candidate.identity.evidence_version,
             source_revision_vector_digest=(candidate.evidence_packet.source_revision_vector_digest),
             source_cut_posture=candidate.evidence_packet.source_cut_posture,
-            accepted_at_utc=accepted_at_utc,
+            accepted_at_utc=acceptance_time,
         )
     )
     return {

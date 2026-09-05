@@ -260,7 +260,7 @@ def _persist_approved_candidate(
             "Idempotency-Key": "postgres-conversion-fence-approval-001",
         },
     )
-    assert approved.status_code == 200
+    assert approved.status_code == 200, approved.text
     assert approved.json()["persistence"]["lifecycleStatus"] == "approved"
     reset_idea_repository_for_tests(reload_from_environment=True)
     return candidate_id

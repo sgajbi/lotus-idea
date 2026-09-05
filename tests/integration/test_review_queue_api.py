@@ -298,11 +298,11 @@ def test_advisor_queue_versions_bind_visible_render_receipt_to_current_evidence(
         "queueSnapshotDigest": f"sha256:{'a' * 64}",
         "queuePolicyVersion": queue["policyVersion"],
         "rankingPolicyVersion": item["policyVersion"],
-            "candidateMaterialVersion": candidate["materialVersion"],
-            "candidateEvidenceVersion": candidate["evidenceVersion"],
-            "sourceRevisionVectorDigest": candidate["sourceRevisionVectorDigest"],
-            "sourceCutPosture": candidate["sourceCutPosture"],
-        }
+        "candidateMaterialVersion": candidate["materialVersion"],
+        "candidateEvidenceVersion": candidate["evidenceVersion"],
+        "sourceRevisionVectorDigest": candidate["sourceRevisionVectorDigest"],
+        "sourceCutPosture": candidate["sourceCutPosture"],
+    }
     accepted = client.post(
         f"/api/v1/idea-candidates/{first_candidate_id}/presentation-receipts",
         json=presentation_payload,
