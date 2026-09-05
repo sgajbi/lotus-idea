@@ -34,6 +34,8 @@ class ReviewQueueCandidateResponse(CamelModel):
     lifecycle_status: str = Field(..., alias="lifecycleStatus")
     review_posture: str = Field(..., alias="reviewPosture")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: str = Field(..., alias="sourceCutPosture")
     score: str
     score_policy_version: str = Field(..., alias="scorePolicyVersion")
     score_reason_codes: tuple[str, ...] = Field(..., alias="scoreReasonCodes")
@@ -57,6 +59,8 @@ class ReviewQueueCandidateResponse(CamelModel):
             lifecycleStatus=candidate.lifecycle_status.value,
             reviewPosture=candidate.review_posture.value,
             evidencePacketId=candidate.evidence_packet.evidence_packet_id,
+            sourceRevisionVectorDigest=candidate.evidence_packet.source_revision_vector_digest,
+            sourceCutPosture=candidate.evidence_packet.source_cut_posture.value,
             score=str(candidate.score.score),
             scorePolicyVersion=candidate.score.policy_version,
             scoreReasonCodes=tuple(reason.value for reason in candidate.score.reason_codes),
