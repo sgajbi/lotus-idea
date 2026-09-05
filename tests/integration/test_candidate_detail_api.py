@@ -383,19 +383,13 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     assert payload["reviewDecisions"][0]["reviewChannel"] == "workbench"
     assert payload["reviewDecisions"][0]["candidateMaterialVersion"] == 1
     assert payload["reviewDecisions"][0]["candidateEvidenceVersion"] == 1
-    assert (
-        payload["reviewDecisions"][0]["authorityPolicyVersion"]
-        == "idea-review-authority-v1"
-    )
+    assert payload["reviewDecisions"][0]["authorityPolicyVersion"] == "idea-review-authority-v1"
     assert payload["feedbackEvents"][0]["outcome"] == "useful"
     assert payload["conversionIntents"][0]["targetSourceAuthority"] == "lotus-report"
     assert payload["conversionIntents"][0]["grantsDownstreamAuthority"] is False
     assert payload["conversionIntents"][0]["reviewId"] == "detail-review-approve-001"
     assert payload["conversionIntents"][0]["reviewChannel"] == "workbench"
-    assert (
-        payload["conversionIntents"][0]["authorityPolicyVersion"]
-        == "idea-review-authority-v1"
-    )
+    assert payload["conversionIntents"][0]["authorityPolicyVersion"] == "idea-review-authority-v1"
     assert payload["conversionOutcomes"][0]["grantsExecutionAuthority"] is False
     assert payload["conversionOutcomes"][0]["grantsClientCommunicationAuthority"] is False
     assert payload["conversionOutcomes"][0]["grantsSuitabilityAuthority"] is False

@@ -81,6 +81,7 @@ from scripts.downstream_realization.manage_recovery_fixture import (  # noqa: E4
 
 DATABASE_URL_ENV = "LOTUS_IDEA_DR_SOURCE_DATABASE_URL"
 
+
 def seed_disaster_recovery_fixture(
     database_url: str,
     *,
@@ -142,7 +143,6 @@ def _seed_workflow_records(
     )
     _persist_candidate(repository, review_ready, "dr-fixture-review")
     _persist_candidate(repository, conversion_review_ready, "dr-fixture-conversion")
-
     lifecycle = repository.record_lifecycle_transition(
         review_ready.candidate_id,
         IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,

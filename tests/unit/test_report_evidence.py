@@ -44,6 +44,7 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 PACK_REQUESTED_AT = datetime(2026, 6, 21, 10, 25, tzinfo=UTC)
 
+
 def request_conversion_intent(
     source_candidate: IdeaCandidate,
     conversion_command: ConversionIntentCommand,

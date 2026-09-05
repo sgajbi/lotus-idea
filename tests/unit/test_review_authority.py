@@ -153,10 +153,13 @@ def test_authority_posture_fails_closed_for_change_supportability_and_expiry() -
     assert grant.effective_status(current, evaluated_at_utc=DECIDED_AT) is (
         ReviewAuthorityStatus.ACTIVE
     )
-    assert replace(
-        grant,
-        authority_policy_version="idea-review-authority-v0",
-    ).effective_status(current, evaluated_at_utc=DECIDED_AT) is ReviewAuthorityStatus.REVOKED
+    assert (
+        replace(
+            grant,
+            authority_policy_version="idea-review-authority-v0",
+        ).effective_status(current, evaluated_at_utc=DECIDED_AT)
+        is ReviewAuthorityStatus.REVOKED
+    )
     changed_evidence = replace(
         current,
         identity=replace(current.identity, evidence_version=2),

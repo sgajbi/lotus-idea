@@ -301,10 +301,7 @@ def _assert_conversion_intent_is_report_intent_only(
     assert conversion_payload["conversionIntent"]["target"] == "report_evidence"
     assert conversion_payload["conversionIntent"]["targetSourceAuthority"] == "lotus-report"
     assert conversion_payload["conversionIntent"]["boundary"] == "intent_only"
-    assert (
-        conversion_payload["conversionIntent"]["reviewId"]
-        == "critical-e2e-review-approve-001"
-    )
+    assert conversion_payload["conversionIntent"]["reviewId"] == "critical-e2e-review-approve-001"
     assert conversion_payload["conversionIntent"]["grantsDownstreamAuthority"] is False
     assert conversion_payload["persistence"]["lifecycleStatus"] == "converted_to_report"
 

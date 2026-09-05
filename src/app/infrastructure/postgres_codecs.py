@@ -446,9 +446,7 @@ def _conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, An
         "accepted_at_utc": intent.accepted_at_utc.isoformat(),
         "acceptance_time_source": intent.acceptance_time_source.value,
         "boundary": intent.boundary.value,
-        "review_authority_grant": _review_authority_grant_to_json(
-            intent.review_authority_grant
-        ),
+        "review_authority_grant": _review_authority_grant_to_json(intent.review_authority_grant),
     }
 
 
@@ -529,9 +527,7 @@ def _review_authority_grant_from_json(payload: Any) -> ReviewAuthorityGrant | No
         actor_subject=str(payload["actor_subject"]),
         actor_role=str(payload["actor_role"]),
         review_policy_version=str(payload["review_policy_version"]),
-        authority_policy_version=str(
-            payload.get("authority_policy_version", "legacy-unverified")
-        ),
+        authority_policy_version=str(payload.get("authority_policy_version", "legacy-unverified")),
         accepted_at_utc=_datetime(payload["accepted_at_utc"]),
         applicability_expires_at_utc=(
             _datetime(payload["applicability_expires_at_utc"])

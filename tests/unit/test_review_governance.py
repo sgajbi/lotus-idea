@@ -358,10 +358,13 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
             evidence_content_hash="sha256:changed-request-evidence",
         ),
     )
-    assert review_mutation_identity_from_command(
-        source_candidate,
-        changed_expected_evidence,
-    ).evidence_content_hash == "sha256:changed-request-evidence"
+    assert (
+        review_mutation_identity_from_command(
+            source_candidate,
+            changed_expected_evidence,
+        ).evidence_content_hash
+        == "sha256:changed-request-evidence"
+    )
 
 
 @pytest.mark.parametrize(
