@@ -73,6 +73,10 @@ vector and explicit cut posture. Only `coherent` and
 `mixed`, `partial`, and `unknown` fail closed. Source owners supply revision,
 restatement, calculation, methodology, and reconciliation claims; Idea never
 infers them from transport success, timestamps, hashes, or matching dates.
+Explicit causal revision or restatement claims are checked against the
+corresponding included owner source before cut identity or tolerance is applied;
+known contradictions are `mixed`, while unavailable comparison remains
+`partial`.
 Migration `026` retains v1 presentation receipts as unauthoritative legacy
 evidence. See `docs/architecture/source-revision-authority.md`. Canonical
 Gateway/Workbench consumer proof and supported-feature promotion remain open.

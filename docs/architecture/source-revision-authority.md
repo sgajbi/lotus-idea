@@ -34,9 +34,15 @@ methodology version, or causal-input revision changes the vector identity.
 | --- | --- | --- |
 | `coherent` | All required sources carry authoritative claims for one cut. | Yes |
 | `coherent_with_declared_tolerance` | A named, versioned tolerance admits the observed source-time skew. | Yes |
-| `mixed` | Source claims identify incompatible cuts or failed reconciliation. | No |
-| `partial` | One or more required revision claims are missing or incomplete. | No |
+| `mixed` | Source claims identify incompatible cuts, causal revisions or restatements, or failed reconciliation. | No |
+| `partial` | A required revision claim or causal comparison is missing, incomplete or ambiguous. | No |
 | `unknown` | No authoritative cut conclusion can be made. | No |
+
+A causal-input claim is compared with the corresponding included source by its
+owner-issued product identity before common cut IDs or time tolerance are
+considered. An explicit revision or restatement mismatch is `mixed`; a missing,
+ambiguous or one-sided comparison is `partial`. Neither a shared cut ID nor a
+declared tolerance can make a known contradiction authoritative.
 
 A candidate may remain visible for diagnosis when its cut is not authoritative,
 but its presentation receipt records that posture. Presentation never upgrades
@@ -67,9 +73,11 @@ When adding or changing a source adapter:
 1. map only named fields emitted by the source owner;
 2. preserve absence as unknown;
 3. prove order-independent vector hashing and revision sensitivity;
-4. prove non-authoritative cuts cannot advance review or conversion;
-5. update API examples and runtime receipts to carry the exact vector;
-6. open an owner-repository issue when a required claim is genuinely absent.
+4. prove causal revision and restatement contradictions cannot be hidden by cut
+   identity, source order or tolerance;
+5. prove non-authoritative cuts cannot advance review or conversion;
+6. update API examples and runtime receipts to carry the exact vector;
+7. open an owner-repository issue when a required claim is genuinely absent.
 
 See also [Exact Review Authority](exact-review-authority.md) and
 [Trusted Control Time](trusted-control-time.md).

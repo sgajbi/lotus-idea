@@ -10,7 +10,10 @@ ingestion, APIs, AI, or UI work.
 The evidence vocabulary includes source-owner revision claims, a canonical
 revision-vector digest, and the bounded cut postures `coherent`,
 `coherent_with_declared_tolerance`, `mixed`, `partial`, and `unknown`. Absence
-is unknown; transport success and matching dates never imply coherence.
+is unknown; transport success and matching dates never imply coherence. An
+explicit causal revision or restatement contradiction is `mixed` before shared
+cut identity or time tolerance is considered; an unresolvable comparison stays
+non-authoritative as `partial`.
 
 ## Required Work
 
