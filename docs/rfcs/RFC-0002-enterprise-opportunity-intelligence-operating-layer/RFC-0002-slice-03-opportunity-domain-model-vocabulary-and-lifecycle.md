@@ -7,6 +7,11 @@ Status: Implemented - pure domain foundation with public domain API boundary enf
 Implement the pure domain contract for idea candidates before persistence,
 ingestion, APIs, AI, or UI work.
 
+The evidence vocabulary includes source-owner revision claims, a canonical
+revision-vector digest, and the bounded cut postures `coherent`,
+`coherent_with_declared_tolerance`, `mixed`, `partial`, and `unknown`. Absence
+is unknown; transport success and matching dates never imply coherence.
+
 ## Required Work
 
 1. Implement domain models for candidate, signal, evidence packet, source ref,
