@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from functools import partial
 from typing import Any
@@ -43,6 +43,7 @@ from app.domain import (
     ReviewActionResult,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewAuthorityConflict,
     ReviewChannel,
     ReviewDecisionCommand,
     ReviewEntitlementDenied,
@@ -322,6 +323,41 @@ def test_apply_review_action_authorizes_actor_against_persisted_candidate_scope(
             ),
             repository=repository,
         )
+
+
+def test_workbench_review_fails_closed_without_persisted_receipt() -> None:
+    missing_receipt_repository = InMemoryIdeaRepository()
+    scoped_candidate = review_candidate()
+    missing_receipt_repository.persist_candidate(
+        scoped_candidate,
+        idempotency_key="signal-ingestion:review-workflow:missing-receipt",
+        payload={"candidate_id": scoped_candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    with pytest.raises(ReviewAuthorityConflict, match="presentation receipt is unavailable"):
+        apply_review_action_to_repository(
+            ApplyReviewActionToRepositoryCommand(
+                candidate_id=scoped_candidate.candidate_id,
+                review=decision_command(ReviewAction.REJECT),
+                idempotency_key="review-action:missing-receipt:001",
+            ),
+            repository=missing_receipt_repository,
+        )
+
+
+def test_review_workflow_command_requires_utc_server_acceptance_time() -> None:
+    for invalid_time in (
+        datetime(2026, 6, 21, 10, 5),
+        datetime(2026, 6, 21, 10, 5, tzinfo=timezone(timedelta(hours=1))),
+    ):
+        with pytest.raises(ValueError, match="must be (timezone-aware|UTC)"):
+            _ApplyReviewActionToRepositoryCommand(
+                candidate_id="idea-review-001",
+                review=decision_command(ReviewAction.REJECT),
+                idempotency_key="review-action:invalid-control-time",
+                accepted_at_utc=invalid_time,
+            )
 
 
 def test_apply_review_action_to_repository_replays_before_reapplying_domain_transition() -> None:

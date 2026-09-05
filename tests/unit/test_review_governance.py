@@ -39,6 +39,8 @@ from app.domain import (
     ReviewChannel,
     ReviewDecisionCommand,
     ReviewEntitlementDenied,
+    ReviewMutationIdentity,
+    ReviewMutationType,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -272,6 +274,47 @@ def test_workbench_review_refuses_missing_persisted_presentation() -> None:
         )
 
 
+def test_review_presentation_validation_keeps_operator_and_workbench_evidence_distinct() -> None:
+    command = decision_command(ReviewAction.REJECT)
+    receipt = presentation_receipt(candidate())
+    default_policy = ReviewActionPolicy()
+    assert default_policy.allowed_roles_by_action is not None
+    allowed_roles = dict(default_policy.allowed_roles_by_action)
+    allowed_roles[ReviewAction.REJECT] = frozenset(
+        {ReviewActorRole.ADVISOR, ReviewActorRole.OPERATOR}
+    )
+    operator_policy = ReviewActionPolicy(allowed_roles_by_action=allowed_roles)
+    operator_command = replace(
+        command,
+        review_channel=ReviewChannel.OPERATOR,
+        presentation_receipt_id=None,
+        actor=replace(command.actor, role=ReviewActorRole.OPERATOR),
+    )
+    operator_result = _apply_review_action(
+        candidate(),
+        operator_command,
+        accepted_at_utc=DECIDED_AT,
+        policy=operator_policy,
+    )
+    assert operator_result.decision.presentation_receipt_id is None
+    with pytest.raises(ValueError, match="operator review cannot use"):
+        _apply_review_action(
+            candidate(),
+            operator_command,
+            presentation_receipt=receipt,
+            accepted_at_utc=DECIDED_AT,
+            policy=operator_policy,
+        )
+
+    with pytest.raises(ValueError, match="identity does not match"):
+        _apply_review_action(
+            candidate(),
+            command,
+            presentation_receipt=replace(receipt, receipt_id="receipt-other"),
+            accepted_at_utc=DECIDED_AT,
+        )
+
+
 @pytest.mark.parametrize("expiry", [DECIDED_AT, DECIDED_AT - datetime.resolution])
 def test_approval_refuses_candidate_at_or_after_server_time_expiry(expiry: datetime) -> None:
     with pytest.raises(InvalidReviewAction):
@@ -365,6 +408,86 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
         ).evidence_content_hash
         == "sha256:changed-request-evidence"
     )
+
+
+def test_review_command_rejects_ambiguous_channel_and_receipt_combinations() -> None:
+    command = decision_command(ReviewAction.REJECT)
+
+    with pytest.raises(ValueError, match="required for Workbench review"):
+        replace(command, presentation_receipt_id=None)
+    with pytest.raises(ValueError, match="non-Workbench review cannot carry"):
+        replace(command, review_channel=ReviewChannel.OPERATOR)
+    with pytest.raises(ValueError, match="legacy review channel cannot admit"):
+        replace(
+            command,
+            review_channel=ReviewChannel.LEGACY_UNVERIFIED,
+            presentation_receipt_id=None,
+        )
+
+
+def test_review_mutation_identity_separates_review_and_feedback_authority() -> None:
+    source_candidate = candidate()
+    review_identity = review_mutation_identity_from_command(
+        source_candidate,
+        decision_command(ReviewAction.REJECT),
+    )
+    feedback_identity = ReviewMutationIdentity(
+        mutation_type=ReviewMutationType.FEEDBACK_EVENT,
+        resource_id="feedback-001",
+        candidate_id=source_candidate.candidate_id,
+        evidence_packet_id=source_candidate.evidence_packet.evidence_packet_id,
+        evidence_content_hash=source_candidate.evidence_packet.lineage_ref.content_hash,
+        actor_subject="advisor-001",
+        actor_role=ReviewActorRole.ADVISOR,
+        event_name=FeedbackOutcome.USEFUL.value,
+        reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+        occurred_at_utc=DECIDED_AT,
+        feedback_taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
+        feedback_reason=FeedbackReason.RELEVANT,
+    )
+
+    with pytest.raises(ValueError, match="requires taxonomy version and reason"):
+        replace(feedback_identity, feedback_reason=None)
+    with pytest.raises(ValueError, match="cannot carry review authority fields"):
+        replace(feedback_identity, candidate_material_version=1)
+    with pytest.raises(ValueError, match="cannot carry feedback taxonomy fields"):
+        replace(review_identity, feedback_taxonomy_version=FEEDBACK_TAXONOMY_VERSION)
+    with pytest.raises(ValueError, match="requires candidate evidence versions"):
+        replace(review_identity, candidate_material_version=None)
+    with pytest.raises(ValueError, match="Workbench review identity requires"):
+        replace(review_identity, presentation_receipt_id=None)
+    with pytest.raises(ValueError, match="non-Workbench review identity cannot carry"):
+        replace(review_identity, review_channel=ReviewChannel.OPERATOR)
+
+
+def test_persisted_review_decision_rejects_inconsistent_presentation_context() -> None:
+    decision = apply_review_action(
+        candidate(),
+        decision_command(ReviewAction.REJECT),
+    ).decision
+
+    with pytest.raises(ValueError, match="Workbench review decision requires"):
+        replace(decision, presentation_receipt_id=None)
+    with pytest.raises(ValueError, match="non-Workbench review decision cannot carry"):
+        replace(decision, review_channel=ReviewChannel.OPERATOR)
+
+
+def test_feedback_score_and_policy_version_must_be_recorded_together() -> None:
+    source_candidate = candidate()
+    event = record_feedback(
+        source_candidate,
+        FeedbackCommand(
+            feedback_id="feedback-score-consistency-001",
+            actor=advisor_context(),
+            outcome=FeedbackOutcome.USEFUL,
+            reason=FeedbackReason.RELEVANT,
+            taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
+            recorded_at_utc=DECIDED_AT,
+        ),
+    ).feedback_event
+
+    with pytest.raises(ValueError, match="must be provided together"):
+        replace(event, score_policy_version=None)
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from app.domain import EvidenceSupportability
 from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.review_authority import (
     REVIEW_AUTHORITY_POLICY_VERSION,
@@ -106,6 +107,26 @@ def test_workbench_presentation_must_match_exact_version_and_review_window() -> 
             review_accepted_at_utc=DECIDED_AT,
         )
 
+    conflicting_receipts = (
+        (replace(receipt, candidate_id="idea-review-other"), "candidate does not match"),
+        (replace(receipt, candidate_material_version=2), "material version does not match"),
+        (
+            replace(
+                receipt,
+                accepted_at_utc=DECIDED_AT + datetime.resolution,
+                presented_at_utc=DECIDED_AT + datetime.resolution,
+            ),
+            "accepted after the review",
+        ),
+    )
+    for conflicting_receipt, message in conflicting_receipts:
+        with pytest.raises(ReviewAuthorityConflict, match=message):
+            validate_workbench_presentation(
+                expected=expected,
+                receipt=conflicting_receipt,
+                review_accepted_at_utc=DECIDED_AT,
+            )
+
 
 def test_workbench_authority_requires_real_presentation_context() -> None:
     with pytest.raises(ValueError, match="requires presentation context"):
@@ -167,6 +188,13 @@ def test_authority_posture_fails_closed_for_change_supportability_and_expiry() -
     assert grant.effective_status(changed_evidence, evaluated_at_utc=DECIDED_AT) is (
         ReviewAuthorityStatus.SUPERSEDED
     )
+    unsupported = candidate(
+        supportability=EvidenceSupportability.BLOCKED,
+        applicability_expires_at_utc=grant.applicability_expires_at_utc,
+    )
+    assert grant.effective_status(unsupported, evaluated_at_utc=DECIDED_AT) is (
+        ReviewAuthorityStatus.REVOKED
+    )
     assert (
         grant.effective_status(
             current,
@@ -183,3 +211,13 @@ def test_authority_rejects_non_utc_and_grant_at_expiry() -> None:
         replace(grant, applicability_expires_at_utc=grant.accepted_at_utc)
     with pytest.raises(ValueError, match="must be UTC"):
         replace(grant, accepted_at_utc=datetime(2026, 6, 21, 10, 5))
+
+
+def test_authority_identity_rejects_ambiguous_values() -> None:
+    identity = evidence_identity()
+
+    for invalid_version in (0, True):
+        with pytest.raises(ValueError, match="material_version must be a positive integer"):
+            replace(identity, material_version=invalid_version)
+    with pytest.raises(ValueError, match="review_id is required"):
+        replace(authority_grant(), review_id=" ")

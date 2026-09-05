@@ -119,6 +119,37 @@ def test_conversion_intent_request_rejects_oversized_identity() -> None:
         )
 
 
+def test_human_authority_requests_reject_blank_or_ambiguous_fields() -> None:
+    conversion_payload = {
+        "conversionIntentId": "conversion-report-001",
+        "target": ConversionTarget.REPORT_EVIDENCE,
+        "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
+        "requestedAtUtc": REQUESTED_AT,
+        **CONVERSION_AUTHORITY_FIELDS,
+    }
+    conversion_payload["expectedReviewId"] = " "
+    with pytest.raises(ValidationError, match="review authority identity fields are required"):
+        ConversionIntentRequest.model_validate(conversion_payload)
+
+    review_payload = {
+        "reviewId": "review-reject-001",
+        "action": ReviewAction.REJECT,
+        "reasonCodes": [ReasonCode.REVIEW_REQUIRED],
+        "decidedAtUtc": REQUESTED_AT,
+        "reviewChannel": "workbench",
+        "expectedMaterialVersion": 1,
+        "expectedEvidenceVersion": 1,
+        "expectedEvidencePacketId": "evidence-packet-001",
+        "expectedEvidenceContentHash": "sha256:evidence-001",
+        "presentationReceiptId": "receipt-001",
+        "snoozedUntilUtc": None,
+    }
+    assert ReviewActionRequest.model_validate(review_payload).snoozed_until_utc is None
+    review_payload["expectedEvidencePacketId"] = " "
+    with pytest.raises(ValidationError, match="reviewId is required"):
+        ReviewActionRequest.model_validate(review_payload)
+
+
 def test_feedback_request_requires_the_explicit_taxonomy_contract() -> None:
     with pytest.raises(ValidationError, match="taxonomyVersion"):
         FeedbackRequest.model_validate(
