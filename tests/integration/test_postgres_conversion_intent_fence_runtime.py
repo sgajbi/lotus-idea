@@ -50,6 +50,7 @@ def test_postgres_fences_competing_conversion_intents(
                 target=ConversionTarget.ADVISE_PROPOSAL,
                 idempotency_key="conversion:competing:advise",
             ),
+            accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
         ),
         "conversion:competing:report": request_conversion_intent(
             candidate,
@@ -58,6 +59,7 @@ def test_postgres_fences_competing_conversion_intents(
                 target=ConversionTarget.REPORT_EVIDENCE,
                 idempotency_key="conversion:competing:report",
             ),
+            accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
         ),
     }
     before_counts = _tracked_counts(postgres_database_url)

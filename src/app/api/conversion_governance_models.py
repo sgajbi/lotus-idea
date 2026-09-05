@@ -13,6 +13,7 @@ from app.application.conversion_workflow import (
     RequestConversionIntentToRepositoryCommand,
 )
 from app.domain import (
+    AcceptanceTimeSource,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -55,6 +56,7 @@ class ConversionIntentRequest(CamelModel):
         caller: CallerContext,
         idempotency_key: str,
         access_scope_filter: QueueAccessScopeFilter | None,
+        accepted_at_utc: datetime,
         event_lineage: EventLineageContext,
     ) -> RequestConversionIntentToRepositoryCommand:
         return RequestConversionIntentToRepositoryCommand(
@@ -68,6 +70,7 @@ class ConversionIntentRequest(CamelModel):
                 requested_at_utc=self.requested_at_utc,
             ),
             idempotency_key=idempotency_key,
+            accepted_at_utc=accepted_at_utc,
             access_scope_filter=access_scope_filter,
             event_lineage=event_lineage,
         )
@@ -118,6 +121,7 @@ class ConversionOutcomeRequest(CamelModel):
         conversion_intent_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        accepted_at_utc: datetime,
         event_lineage: EventLineageContext,
     ) -> RecordConversionOutcomeToRepositoryCommand:
         return RecordConversionOutcomeToRepositoryCommand(
@@ -134,6 +138,7 @@ class ConversionOutcomeRequest(CamelModel):
                 correction_reason=self.correction_reason,
             ),
             idempotency_key=idempotency_key,
+            accepted_at_utc=accepted_at_utc,
             event_lineage=event_lineage,
         )
 
@@ -150,6 +155,8 @@ class ConversionIntentResponse(CamelModel):
     boundary: str
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: AcceptanceTimeSource = Field(..., alias="acceptanceTimeSource")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
 
     @classmethod
@@ -166,6 +173,8 @@ class ConversionIntentResponse(CamelModel):
             boundary=intent.boundary.value,
             reasonCodes=tuple(reason.value for reason in intent.reason_codes),
             requestedAtUtc=intent.intent.requested_at_utc,
+            acceptedAtUtc=intent.accepted_at_utc,
+            acceptanceTimeSource=intent.acceptance_time_source,
             grantsDownstreamAuthority=intent.grants_downstream_authority,
         )
 
@@ -185,6 +194,8 @@ class ConversionOutcomeResponse(CamelModel):
     correction_reason: str | None = Field(default=None, alias="correctionReason")
     boundary: str
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: AcceptanceTimeSource = Field(..., alias="acceptanceTimeSource")
     grants_execution_authority: bool = Field(False, alias="grantsExecutionAuthority")
     grants_client_communication_authority: bool = Field(
         False,
@@ -206,6 +217,8 @@ class ConversionOutcomeResponse(CamelModel):
             correctionReason=outcome.correction_reason,
             boundary=outcome.boundary.value,
             recordedAtUtc=outcome.outcome.recorded_at_utc,
+            acceptedAtUtc=outcome.accepted_at_utc,
+            acceptanceTimeSource=outcome.acceptance_time_source,
             grantsExecutionAuthority=outcome.grants_execution_authority,
             grantsClientCommunicationAuthority=outcome.grants_client_communication_authority,
             grantsSuitabilityAuthority=outcome.grants_suitability_authority,

@@ -11,6 +11,7 @@ from app.domain.candidate_state import (
     CANDIDATE_STATE_POLICY_VERSION,
     REVIEWABLE_LIFECYCLE_STATUSES,
 )
+from app.domain.control_time import AcceptanceTimeSource
 from app.domain.feedback_taxonomy import (
     FeedbackOutcome,
     FeedbackReason,
@@ -235,6 +236,8 @@ class GovernedReviewDecision:
     actor_role: ReviewActorRole
     reason_codes: tuple[ReasonCode, ...]
     decided_at_utc: datetime
+    accepted_at_utc: datetime
+    acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     suppression_reason: SuppressionReason | None = None
     snoozed_until_utc: datetime | None = None
 
@@ -253,6 +256,7 @@ class GovernedReviewDecision:
         _require_text(self.evidence_content_hash, "evidence_content_hash")
         _require_text(self.actor_subject, "actor_subject")
         _require_aware_utc(self.decided_at_utc, "decided_at_utc")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
         if self.snoozed_until_utc is not None:
@@ -305,12 +309,15 @@ class GovernedFeedbackEvent:
     evidence_supportability: EvidenceSupportability
     ranking_policy_version: str
     queue_priority_bucket: QueuePriorityBucket | None
+    accepted_at_utc: datetime
+    acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.evidence_packet_id, "evidence_packet_id")
         _require_text(self.evidence_content_hash, "evidence_content_hash")
         _require_text(self.actor_subject, "actor_subject")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
         _require_text(
             self.candidate_identity_policy_version,
             "candidate_identity_policy_version",
@@ -479,10 +486,18 @@ def apply_review_action(
     candidate: IdeaCandidate,
     command: ReviewDecisionCommand,
     *,
+    accepted_at_utc: datetime,
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> ReviewActionResult:
+    _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    if command.snoozed_until_utc is not None and command.snoozed_until_utc <= accepted_at_utc:
+        raise ValueError("snoozed_until_utc must be after accepted_at_utc")
     _ensure_allowed(candidate, command, policy)
-    updated_candidate = _candidate_after_review(candidate, command)
+    updated_candidate = _candidate_after_review(
+        candidate,
+        command,
+        accepted_at_utc=accepted_at_utc,
+    )
     decision = GovernedReviewDecision(
         review_id=command.review_id,
         candidate_id=candidate.candidate_id,
@@ -497,6 +512,7 @@ def apply_review_action(
             caller_reason_codes=command.reason_codes,
         ),
         decided_at_utc=command.decided_at_utc,
+        accepted_at_utc=accepted_at_utc,
         suppression_reason=command.suppression_reason,
         snoozed_until_utc=command.snoozed_until_utc,
     )
@@ -528,8 +544,10 @@ def record_feedback(
     candidate: IdeaCandidate,
     command: FeedbackCommand,
     *,
+    accepted_at_utc: datetime,
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> FeedbackResult:
+    _require_aware_utc(accepted_at_utc, "accepted_at_utc")
     _ensure_actor_scope(
         candidate_id=candidate.candidate_id,
         action=ReviewAction.NO_ACTION,
@@ -567,12 +585,13 @@ def record_feedback(
             and DEFAULT_REVIEW_QUEUE_POLICY.accepts_score_policy(candidate.score.policy_version)
             else None
         ),
+        accepted_at_utc=accepted_at_utc,
     )
     audit_event = AuditEvent(
         event_type="idea.feedback.recorded",
         actor_subject=command.actor.actor_subject,
         outcome="accepted",
-        occurred_at_utc=command.recorded_at_utc,
+        occurred_at_utc=accepted_at_utc,
         attributes={
             "actor_role": command.actor.role.value,
             "candidate_family": candidate.family.value,
@@ -580,6 +599,7 @@ def record_feedback(
             "feedback_outcome": command.outcome.value,
             "feedback_reason": command.reason.value,
             "feedback_taxonomy_version": command.taxonomy_version,
+            "observed_at_utc": command.recorded_at_utc.isoformat(),
         },
     )
     return FeedbackResult(feedback_event=feedback_event, audit_event=audit_event)
@@ -600,6 +620,8 @@ def _canonical_owned_reason_codes(
 def _candidate_after_review(
     candidate: IdeaCandidate,
     command: ReviewDecisionCommand,
+    *,
+    accepted_at_utc: datetime,
 ) -> IdeaCandidate:
     if command.action is ReviewAction.APPROVE_FOR_CONVERSION:
         _ensure_evidence_ready(candidate, command.action)
@@ -607,25 +629,25 @@ def _candidate_after_review(
             reviewed = transition_candidate(
                 candidate,
                 IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
-                updated_at_utc=command.decided_at_utc,
+                updated_at_utc=accepted_at_utc,
             )
             approved = transition_candidate(
                 reviewed,
                 IdeaLifecycleStatus.APPROVED,
-                updated_at_utc=command.decided_at_utc,
+                updated_at_utc=accepted_at_utc,
             )
         elif candidate.lifecycle_status is IdeaLifecycleStatus.REVIEWED_BY_ADVISOR:
             approved = transition_candidate(
                 candidate,
                 IdeaLifecycleStatus.APPROVED,
-                updated_at_utc=command.decided_at_utc,
+                updated_at_utc=accepted_at_utc,
             )
         else:
             raise _invalid_review_action(candidate, command.action)
         return replace(
             approved,
             review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
-            updated_at_utc=command.decided_at_utc,
+            updated_at_utc=accepted_at_utc,
         )
     if command.action is ReviewAction.REJECT:
         _ensure_terminal_review_allowed(candidate, command.action)
@@ -633,7 +655,7 @@ def _candidate_after_review(
             transition_candidate(
                 candidate,
                 IdeaLifecycleStatus.REJECTED,
-                updated_at_utc=command.decided_at_utc,
+                updated_at_utc=accepted_at_utc,
             ),
             review_posture=ReviewPosture.REJECTED,
         )
@@ -643,7 +665,7 @@ def _candidate_after_review(
             transition_candidate(
                 candidate,
                 IdeaLifecycleStatus.CLOSED,
-                updated_at_utc=command.decided_at_utc,
+                updated_at_utc=accepted_at_utc,
             ),
             review_posture=ReviewPosture.NO_ACTION,
         )
@@ -652,21 +674,21 @@ def _candidate_after_review(
             candidate,
             review_posture=ReviewPosture.SUPPRESSED,
             suppression_reason=command.suppression_reason,
-            updated_at_utc=command.decided_at_utc,
+            updated_at_utc=accepted_at_utc,
         )
     if command.action is ReviewAction.SNOOZE:
-        return replace(candidate, updated_at_utc=command.decided_at_utc)
+        return replace(candidate, updated_at_utc=accepted_at_utc)
     if command.action is ReviewAction.ESCALATE_TO_PM:
         return replace(
             candidate,
             review_posture=ReviewPosture.PM_REVIEW_REQUIRED,
-            updated_at_utc=command.decided_at_utc,
+            updated_at_utc=accepted_at_utc,
         )
     if command.action is ReviewAction.ESCALATE_TO_COMPLIANCE:
         return replace(
             candidate,
             review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
-            updated_at_utc=command.decided_at_utc,
+            updated_at_utc=accepted_at_utc,
         )
     raise _invalid_review_action(candidate, command.action)
 
@@ -735,7 +757,7 @@ def _review_audit_event(
         event_type="idea.review.decision_recorded",
         actor_subject=decision.actor_subject,
         outcome=outcome,
-        occurred_at_utc=decision.decided_at_utc,
+        occurred_at_utc=decision.accepted_at_utc,
         attributes={
             "actor_role": decision.actor_role.value,
             "candidate_id": candidate_before.candidate_id,
@@ -748,5 +770,6 @@ def _review_audit_event(
             "reason_codes": ",".join(reason.value for reason in decision.reason_codes),
             "review_action": decision.action.value,
             "review_posture": candidate_after.review_posture.value,
+            "observed_at_utc": decision.decided_at_utc.isoformat(),
         },
     )

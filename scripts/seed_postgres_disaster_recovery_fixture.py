@@ -154,7 +154,11 @@ def _seed_workflow_records(
     )
     if lifecycle.record is None:
         raise RuntimeError("fixture lifecycle transition was not persisted")
-    review_result = apply_review_action(lifecycle.record.candidate, review_command())
+    review_result = apply_review_action(
+        lifecycle.record.candidate,
+        review_command(),
+        accepted_at_utc=FIXTURE_TIME + timedelta(minutes=2),
+    )
     review = repository.record_review_action(
         review_result,
         idempotency_key="dr-fixture-review-action",
@@ -162,14 +166,22 @@ def _seed_workflow_records(
     )
     if review.record is None:
         raise RuntimeError("fixture review decision was not persisted")
-    feedback_result = record_feedback(review.record.candidate, feedback_command())
+    feedback_result = record_feedback(
+        review.record.candidate,
+        feedback_command(),
+        accepted_at_utc=FIXTURE_TIME + timedelta(minutes=3),
+    )
     repository.record_feedback_event(
         feedback_result,
         idempotency_key="dr-fixture-feedback",
         payload={"feedbackId": feedback_result.feedback_event.feedback.feedback_id},
     )
 
-    conversion_result = request_conversion_intent(approved, conversion_command())
+    conversion_result = request_conversion_intent(
+        approved,
+        conversion_command(),
+        accepted_at_utc=FIXTURE_TIME + timedelta(minutes=4),
+    )
     conversion = repository.record_conversion_intent(
         conversion_result,
         idempotency_key="dr-fixture-conversion-intent",
@@ -182,6 +194,7 @@ def _seed_workflow_records(
     outcome_result = record_conversion_outcome(
         conversion_result.conversion_intent,
         conversion_outcome_command(),
+        accepted_at_utc=FIXTURE_TIME + timedelta(minutes=5),
     )
     repository.record_conversion_outcome(
         outcome_result,

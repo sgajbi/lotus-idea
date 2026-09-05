@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import timedelta
+from functools import partial
 
 from app.domain import (
     EvidenceReplayStatus,
@@ -10,11 +11,12 @@ from app.domain import (
     IdeaLifecycleStatus,
     ReviewPosture,
     apply_review_action,
-    record_conversion_outcome,
+    record_conversion_outcome as _record_conversion_outcome,
     record_feedback,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
+
 from app.domain.persistence import (
     CandidatePersistenceRecord,
     ConversionPersistenceDecision,
@@ -42,6 +44,15 @@ from tests.unit.test_postgres_repository import (
     high_cash_candidate,
     report_pack_command,
     review_command,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=EVALUATED_AT + timedelta(minutes=4),
+)
+record_conversion_outcome = partial(
+    _record_conversion_outcome,
+    accepted_at_utc=EVALUATED_AT + timedelta(minutes=5),
 )
 
 
@@ -200,6 +211,7 @@ def _record_review_feedback_path(
     review_result = apply_review_action(
         lifecycle.record.candidate,
         review_command(),
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=2),
     )
     review = repository.record_review_action(
         review_result,
@@ -210,6 +222,7 @@ def _record_review_feedback_path(
     feedback_result = record_feedback(
         review.record.candidate,
         feedback_command(),
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=3),
     )
     feedback = repository.record_feedback_event(
         feedback_result,

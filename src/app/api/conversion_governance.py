@@ -41,6 +41,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
 )
 from app.api.route_metadata import RouteMetadata
+from app.api.runtime_dependencies import get_trusted_clock
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
     ConversionIntentWorkflowResult,
@@ -196,6 +197,7 @@ def _record_conversion_intent(
             caller=context.caller,
             idempotency_key=idempotency_key,
             access_scope_filter=context.access_scope_filter,
+            accepted_at_utc=get_trusted_clock().now_utc(),
             event_lineage=event_lineage_from_request(
                 http_request,
                 causation_id=causation_id,
@@ -304,6 +306,7 @@ async def record_conversion_outcome(
                     conversion_intent_id=conversion_intent_id,
                     caller=context.caller,
                     idempotency_key=idempotency_key,
+                    accepted_at_utc=get_trusted_clock().now_utc(),
                     event_lineage=event_lineage_from_request(
                         http_request,
                         causation_id=x_causation_id,

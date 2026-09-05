@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 
 import pytest
 
@@ -40,10 +41,10 @@ from app.domain import (
     SourceSystem,
     SuppressionReason,
     UnsupportedEvidenceReason,
-    apply_review_action,
+    apply_review_action as _apply_review_action,
     build_review_queue,
     feedback_mutation_identity_from_command,
-    record_feedback,
+    record_feedback as _record_feedback,
     review_mutation_identity_from_command,
 )
 
@@ -51,6 +52,9 @@ from app.domain import (
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 DECIDED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+
+apply_review_action = partial(_apply_review_action, accepted_at_utc=DECIDED_AT)
+record_feedback = partial(_record_feedback, accepted_at_utc=DECIDED_AT)
 
 
 def source_ref() -> SourceRef:
@@ -191,6 +195,37 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.audit_event.attributes["policy_version"] == "idea-candidate-state-v1"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
+
+
+def test_review_uses_server_acceptance_time_for_state_and_audit_chronology() -> None:
+    observed_at = DECIDED_AT - timedelta(days=2)
+    accepted_at = DECIDED_AT
+
+    result = _apply_review_action(
+        candidate(),
+        replace(
+            decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+            decided_at_utc=observed_at,
+        ),
+        accepted_at_utc=accepted_at,
+    )
+
+    assert result.decision.decided_at_utc == observed_at
+    assert result.decision.accepted_at_utc == accepted_at
+    assert result.candidate.updated_at_utc == accepted_at
+    assert result.audit_event.occurred_at_utc == accepted_at
+    assert result.audit_event.attributes["observed_at_utc"] == observed_at.isoformat()
+
+
+def test_snooze_cannot_use_backdated_observed_time_to_bypass_control_time() -> None:
+    command = replace(
+        valid_decision_command(ReviewAction.SNOOZE),
+        decided_at_utc=DECIDED_AT - timedelta(days=1),
+        snoozed_until_utc=DECIDED_AT - timedelta(minutes=1),
+    )
+
+    with pytest.raises(ValueError, match="snoozed_until_utc must be after accepted_at_utc"):
+        _apply_review_action(candidate(), command, accepted_at_utc=DECIDED_AT)
 
 
 def test_review_resource_identity_matches_the_persisted_decision_and_binds_business_fields() -> (
@@ -521,6 +556,7 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             actor_role=ReviewActorRole.ADVISOR,
             reason_codes=(),
             decided_at_utc=DECIDED_AT,
+            accepted_at_utc=DECIDED_AT,
         )
 
     with pytest.raises(ValueError, match="Invalid feedback outcome/reason combination"):
@@ -556,6 +592,7 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             evidence_supportability=EvidenceSupportability.READY,
             ranking_policy_version="idea-deterministic-ranking-v1",
             queue_priority_bucket=QueuePriorityBucket.HIGH,
+            accepted_at_utc=DECIDED_AT,
         )
 
 

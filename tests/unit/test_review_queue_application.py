@@ -156,6 +156,7 @@ def record_snooze(
             decided_at_utc=EVALUATED_AT,
             snoozed_until_utc=snoozed_until_utc,
         ),
+        accepted_at_utc=EVALUATED_AT,
     )
     repository.record_review_action(
         result,

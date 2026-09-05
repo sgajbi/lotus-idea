@@ -161,7 +161,11 @@ def _accepted_conversion_outcome(
         recorded_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
         actor_subject="lotus-report-worker",
     )
-    return accepted_command, record_conversion_outcome(intent, accepted_command)
+    return accepted_command, record_conversion_outcome(
+        intent,
+        accepted_command,
+        accepted_at_utc=accepted_command.recorded_at_utc,
+    )
 
 
 def _conversion_outcome_history(
@@ -210,15 +214,19 @@ def _conflicting_source_version_completions(
     intent: GovernedConversionIntent,
     history: tuple[GovernedConversionOutcome, ...],
 ) -> tuple[ConversionOutcomeResult, ConversionOutcomeResult]:
+    first_command = _completed_conversion_outcome_command("postgres-concurrent-completion-a")
+    second_command = _completed_conversion_outcome_command("postgres-concurrent-completion-b")
     return (
         record_conversion_outcome(
             intent,
-            _completed_conversion_outcome_command("postgres-concurrent-completion-a"),
+            first_command,
+            accepted_at_utc=first_command.recorded_at_utc,
             existing_outcomes=history,
         ),
         record_conversion_outcome(
             intent,
-            _completed_conversion_outcome_command("postgres-concurrent-completion-b"),
+            second_command,
+            accepted_at_utc=second_command.recorded_at_utc,
             existing_outcomes=history,
         ),
     )

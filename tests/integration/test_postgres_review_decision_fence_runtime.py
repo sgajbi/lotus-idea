@@ -53,6 +53,7 @@ def test_postgres_fences_competing_review_decisions(
                 action=ReviewAction.APPROVE_FOR_CONVERSION,
                 actor=actor,
             ),
+            accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
         ),
         "review:competing:reject": apply_review_action(
             candidate,
@@ -61,6 +62,7 @@ def test_postgres_fences_competing_review_decisions(
                 action=ReviewAction.REJECT,
                 actor=actor,
             ),
+            accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
         ),
     }
     before_counts = _tracked_counts(postgres_database_url)

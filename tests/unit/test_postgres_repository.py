@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 
 import pytest
 from psycopg.types.json import Jsonb
@@ -50,7 +51,7 @@ from app.domain import (
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_high_cash_signal,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
     apply_review_action,
 )
 from app.domain.persistence import (
@@ -72,6 +73,11 @@ from tests.unit.postgres_repository_query_assertions import assert_no_whole_stor
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=EVALUATED_AT,
+)
 
 
 def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> None:
@@ -302,10 +308,12 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
     first_review = apply_review_action(
         first_candidate,
         review_command(review_id="review-row-scoped-first"),
+        accepted_at_utc=EVALUATED_AT,
     )
     second_review = apply_review_action(
         second_candidate,
         review_command(review_id="review-row-scoped-second"),
+        accepted_at_utc=EVALUATED_AT,
     )
 
     repository.record_review_action(
@@ -347,10 +355,12 @@ def test_postgres_repository_rejects_a_stale_same_candidate_review_result() -> N
     first_review = apply_review_action(
         candidate,
         review_command(review_id="review-stale-same-candidate-first"),
+        accepted_at_utc=EVALUATED_AT,
     )
     second_review = apply_review_action(
         candidate,
         review_command(review_id="review-stale-same-candidate-second"),
+        accepted_at_utc=EVALUATED_AT,
     )
 
     repository.record_review_action(
@@ -398,6 +408,7 @@ def test_postgres_repository_reads_exact_idempotency_state_as_replay() -> None:
     review = apply_review_action(
         candidate,
         review_command(review_id="review-idempotency-collision-replay"),
+        accepted_at_utc=EVALUATED_AT,
     )
     first = repository.record_review_action(
         review,
@@ -444,6 +455,7 @@ def test_postgres_repository_reads_exact_idempotency_state_as_conflict() -> None
     review = apply_review_action(
         candidate,
         review_command(review_id="review-idempotency-collision-conflict"),
+        accepted_at_utc=EVALUATED_AT,
     )
     first = repository.record_review_action(
         review,
@@ -493,6 +505,7 @@ def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
     review = apply_review_action(
         candidate,
         review_command(review_id="review-optimistic-guard"),
+        accepted_at_utc=EVALUATED_AT,
     )
     repository.record_review_action(
         review,

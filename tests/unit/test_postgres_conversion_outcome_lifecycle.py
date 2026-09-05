@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from functools import partial
 
 import pytest
 
@@ -10,9 +11,10 @@ from app.domain import (
     GovernedConversionIntent,
     IdeaLifecycleStatus,
     ReviewPosture,
-    record_conversion_outcome,
-    request_conversion_intent,
+    record_conversion_outcome as _record_conversion_outcome,
+    request_conversion_intent as _request_conversion_intent,
 )
+
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_conversion_outcome import (
     ConcurrentConversionOutcomeMutationError,
@@ -25,6 +27,15 @@ from tests.unit.test_postgres_repository import (
     conversion_command,
     conversion_outcome_command,
     high_cash_candidate,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=EVALUATED_AT,
+)
+record_conversion_outcome = partial(
+    _record_conversion_outcome,
+    accepted_at_utc=EVALUATED_AT,
 )
 
 

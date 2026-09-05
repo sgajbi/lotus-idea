@@ -394,6 +394,7 @@ def _record(
             taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=feedback_time,
         ),
+        accepted_at_utc=feedback_time,
     ).feedback_event
     reviews = (
         (
@@ -408,6 +409,7 @@ def _record(
                 actor_role=ReviewActorRole.ADVISOR,
                 reason_codes=(ReasonCode.REVIEW_NO_ACTION,),
                 decided_at_utc=datetime(2026, 6, 21, 9, 55, tzinfo=UTC),
+                accepted_at_utc=datetime(2026, 6, 21, 9, 55, tzinfo=UTC),
             ),
         )
         if review_action is not None
@@ -439,6 +441,7 @@ def _conversion_outcome() -> GovernedConversionOutcome:
         boundary=ConversionBoundary.DOWNSTREAM_REALIZATION_REQUIRED,
         source_event_version=1,
         actor_subject="report-sensitive-subject",
+        accepted_at_utc=datetime(2026, 6, 21, 10, 30, tzinfo=UTC),
     )
 
 

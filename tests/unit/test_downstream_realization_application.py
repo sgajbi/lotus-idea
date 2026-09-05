@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
+from functools import partial
 
 import pytest
 
@@ -42,13 +43,19 @@ from app.domain import (
     SourceSystem,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
+
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
     DownstreamRealizationOutcome,
     DownstreamRealizationOutcomePosture,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
 )
 
 

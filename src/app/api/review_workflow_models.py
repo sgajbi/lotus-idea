@@ -76,6 +76,7 @@ class ReviewActionRequest(CamelModel):
         caller: CallerContext,
         role: ReviewActorRole,
         idempotency_key: str,
+        accepted_at_utc: datetime,
         event_lineage: EventLineageContext,
     ) -> ApplyReviewActionToRepositoryCommand:
         return ApplyReviewActionToRepositoryCommand(
@@ -90,6 +91,7 @@ class ReviewActionRequest(CamelModel):
                 snoozed_until_utc=self.snoozed_until_utc,
             ),
             idempotency_key=idempotency_key,
+            accepted_at_utc=accepted_at_utc,
             event_lineage=event_lineage,
         )
 
@@ -130,6 +132,7 @@ class FeedbackRequest(CamelModel):
         caller: CallerContext,
         role: ReviewActorRole,
         idempotency_key: str,
+        accepted_at_utc: datetime,
         event_lineage: EventLineageContext,
     ) -> RecordFeedbackToRepositoryCommand:
         return RecordFeedbackToRepositoryCommand(
@@ -143,6 +146,7 @@ class FeedbackRequest(CamelModel):
                 recorded_at_utc=self.recorded_at_utc,
             ),
             idempotency_key=idempotency_key,
+            accepted_at_utc=accepted_at_utc,
             event_lineage=event_lineage,
         )
 
@@ -156,6 +160,8 @@ class ReviewDecisionResponse(CamelModel):
     actor_role: ReviewActorRole = Field(..., alias="actorRole")
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: str = Field(..., alias="acceptanceTimeSource")
     suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
     snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
@@ -171,6 +177,8 @@ class ReviewDecisionResponse(CamelModel):
             actorRole=decision.actor_role,
             reasonCodes=tuple(reason.value for reason in decision.reason_codes),
             decidedAtUtc=decision.decided_at_utc,
+            acceptedAtUtc=decision.accepted_at_utc,
+            acceptanceTimeSource=decision.acceptance_time_source.value,
             suppressionReason=decision.suppression_reason,
             snoozedUntilUtc=decision.snoozed_until_utc,
             grantsDownstreamAuthority=decision.grants_downstream_authority,
@@ -186,6 +194,8 @@ class FeedbackEventResponse(CamelModel):
     reason: FeedbackReason
     actor_role: ReviewActorRole = Field(..., alias="actorRole")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: str = Field(..., alias="acceptanceTimeSource")
 
     @classmethod
     def from_domain(cls, event: GovernedFeedbackEvent) -> "FeedbackEventResponse":
@@ -198,6 +208,8 @@ class FeedbackEventResponse(CamelModel):
             reason=event.feedback.reason,
             actorRole=event.actor_role,
             recordedAtUtc=event.feedback.recorded_at_utc,
+            acceptedAtUtc=event.accepted_at_utc,
+            acceptanceTimeSource=event.acceptance_time_source.value,
         )
 
 

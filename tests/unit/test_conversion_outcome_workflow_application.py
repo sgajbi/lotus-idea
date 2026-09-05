@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
+from functools import partial
 from typing import Any
 
 import pytest
 
 from app.application.conversion_workflow import (
     ConversionOutcomeWorkflowResult,
-    RecordConversionOutcomeToRepositoryCommand,
+    RecordConversionOutcomeToRepositoryCommand as _RecordConversionOutcomeToRepositoryCommand,
     record_conversion_outcome_to_repository,
 )
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
@@ -23,14 +24,24 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
     current_conversion_outcome,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
 )
+
 from app.ports.idea_repository import ConversionOutcomeWorkflowRepository
 from tests.unit.test_conversion_governance import (
     OUTCOME_AT,
     REQUESTED_AT,
     candidate,
     intent_command,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=REQUESTED_AT,
+)
+RecordConversionOutcomeToRepositoryCommand = partial(
+    _RecordConversionOutcomeToRepositoryCommand,
+    accepted_at_utc=OUTCOME_AT,
 )
 
 

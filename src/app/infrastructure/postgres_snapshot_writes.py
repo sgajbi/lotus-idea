@@ -286,8 +286,8 @@ class PostgresSnapshotWriteRepositoryMixin:
             """
             INSERT INTO idea_review_decision (
                 review_decision_id, candidate_id, action, actor_subject,
-                decision_json, decided_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s)
+                decision_json, decided_at_utc, accepted_at_utc, acceptance_time_source
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (review_decision_id) DO NOTHING
             RETURNING review_decision_id
             """,
@@ -298,6 +298,8 @@ class PostgresSnapshotWriteRepositoryMixin:
                 decision.actor_subject,
                 Jsonb(review_decision_to_json(decision)),
                 decision.decided_at_utc,
+                decision.accepted_at_utc,
+                decision.acceptance_time_source.value,
             ),
         )
         if not cursor.fetchall():
@@ -323,8 +325,8 @@ class PostgresSnapshotWriteRepositoryMixin:
             INSERT INTO idea_feedback_event (
                 feedback_event_id, candidate_id, actor_subject,
                 feedback_taxonomy_version, feedback_outcome, feedback_reason,
-                feedback_json, recorded_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                feedback_json, recorded_at_utc, accepted_at_utc, acceptance_time_source
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (feedback_event_id) DO NOTHING
             RETURNING feedback_event_id
             """,
@@ -337,6 +339,8 @@ class PostgresSnapshotWriteRepositoryMixin:
                 feedback.feedback.reason.value,
                 Jsonb(feedback_event_to_json(feedback)),
                 feedback.feedback.recorded_at_utc,
+                feedback.accepted_at_utc,
+                feedback.acceptance_time_source.value,
             ),
         )
         if not cursor.fetchall():
@@ -361,8 +365,8 @@ class PostgresSnapshotWriteRepositoryMixin:
             """
             INSERT INTO idea_conversion_intent (
                 conversion_intent_id, candidate_id, target, actor_subject,
-                intent_json, requested_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s)
+                intent_json, requested_at_utc, accepted_at_utc, acceptance_time_source
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 intent.intent.conversion_intent_id,
@@ -371,6 +375,8 @@ class PostgresSnapshotWriteRepositoryMixin:
                 intent.actor_subject,
                 Jsonb(conversion_intent_to_json(intent)),
                 intent.intent.requested_at_utc,
+                intent.accepted_at_utc,
+                intent.acceptance_time_source.value,
             ),
         )
 
