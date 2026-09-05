@@ -191,3 +191,18 @@ def test_report_materialization_runtime_generator_keeps_rejections_isolated() ->
     assert 'headers.pop("Idempotency-Key")' in rejections_section
     assert "client_publication_denied = client.post" in rejections_section
     assert "app.dependency_overrides.clear()" in rejections_section
+
+
+def test_report_materialization_runtime_generator_uses_render_owned_archive_outcome() -> None:
+    generator_source = (
+        Path(__file__)
+        .resolve()
+        .parents[3]
+        .joinpath("scripts/report/generate_materialization_runtime_execution.py")
+        .read_text(encoding="utf-8")
+    )
+
+    assert '"archive_state": self._archive_state' in generator_source
+    assert '"archive_request_id": derive_archive_request_id(' in generator_source
+    assert "archive_client=" not in generator_source
+    assert "class _SuccessfulArchiveClient" not in generator_source

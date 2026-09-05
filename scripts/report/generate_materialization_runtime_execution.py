@@ -41,6 +41,7 @@ from app.reporting_lineage.service import get_portfolio_review_snapshot_capture_
 from app.reporting_lineage.store import ReportInputSnapshotStore
 from app.reporting_render.service import (
     PortfolioReviewRenderOrchestrationService,
+    derive_archive_request_id,
     get_portfolio_review_render_orchestration_service,
 )
 from app.routers.idea_evidence_intake import get_idea_evidence_intake_ledger
@@ -181,42 +182,42 @@ class _IdeaEvidenceCaptureService:
 
 
 class _SuccessfulRenderClient:
+    def __init__(self, *, archive_state="archived_verified"):
+        self._archive_state = archive_state
+
     async def submit_render_package(self, payload, **kwargs):
+        artifact_sha256 = "sha256:idea-evidence-rendered-pdf"
         return 201, {
             "status": "rendered",
             "render_job_id": payload["render_job_id"],
-            "artifact_sha256": "sha256:idea-evidence-rendered-pdf",
+            "template_id": payload["template_id"],
+            "template_version": payload["template_version"],
+            "artifact_sha256": artifact_sha256,
             "bounded_determinism_fingerprint": "fingerprint-idea-evidence",
             "runtime_engine": "typst",
             "runtime_engine_version": "0.14.2",
             "render_duration_ms": 420,
             "artifact_base64": "JVBERi0xLjQ=",
-        }
-
-
-class _SuccessfulArchiveClient:
-    async def archive_document(self, payload, **kwargs):
-        return 201, {"document_id": "doc_idea_evidence_pack_001"}
-
-
-class _UnavailableArchiveClient:
-    async def archive_document(self, payload, **kwargs):
-        return 503, {
-            "detail": {
-                "code": "archive_unavailable",
-                "message": "Archive is temporarily unavailable.",
-            }
+            "archive_state": self._archive_state,
+            "archive_request_id": derive_archive_request_id(
+                payload["render_context"]["document_reference"], artifact_sha256
+            ),
+            "archive_document_id": (
+                "doc_idea_evidence_pack_001"
+                if self._archive_state == "archived_verified"
+                else None
+            ),
+            "archive_detail": (
+                "archive_unreachable: Archive is temporarily unavailable."
+                if self._archive_state == "archive_failed"
+                else None
+            ),
         }
 
 
 class _UnexpectedRenderClient:
     async def submit_render_package(self, payload, **kwargs):
         raise AssertionError("JSON-only materialization must not call render")
-
-
-class _UnexpectedArchiveClient:
-    async def archive_document(self, payload, **kwargs):
-        raise AssertionError("JSON-only materialization must not call archive")
 
 
 def _receipt(response, *, forced_codes=None) -> dict[str, object]:
@@ -260,15 +261,15 @@ def _client_with_services(tmp_path, *, archive_failure=False, json_only=False):
     ledger = ReportJobLedger(Path(tmp_path) / "jobs.sqlite3")
     lineage_store = ReportInputSnapshotStore(Path(tmp_path) / "lineage.sqlite3")
     capture_service = _IdeaEvidenceCaptureService(ledger, lineage_store)
-    render_client = _UnexpectedRenderClient() if json_only else _SuccessfulRenderClient()
-    archive_client = (
-        _UnavailableArchiveClient()
-        if archive_failure
-        else (_UnexpectedArchiveClient() if json_only else _SuccessfulArchiveClient())
+    render_client = (
+        _UnexpectedRenderClient()
+        if json_only
+        else _SuccessfulRenderClient(
+            archive_state="archive_failed" if archive_failure else "archived_verified"
+        )
     )
     render_service = PortfolioReviewRenderOrchestrationService(
         render_client=render_client,
-        archive_client=archive_client,
         snapshot_store=lineage_store,
         job_ledger=ledger,
     )
