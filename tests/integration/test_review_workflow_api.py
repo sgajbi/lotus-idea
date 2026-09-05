@@ -15,7 +15,7 @@ from tests.support.review_authority_api import (
 )
 
 
-def source_ref(product_id: str, freshness: str = "current") -> dict[str, str]:
+def source_ref(product_id: str, freshness: str = "current") -> dict[str, Any]:
     return {
         "productId": product_id,
         "sourceSystem": "lotus-core",
@@ -26,6 +26,12 @@ def source_ref(product_id: str, freshness: str = "current") -> dict[str, str]:
         "contentHash": f"sha256:{product_id}",
         "dataQualityStatus": "complete",
         "freshness": freshness,
+        "revisionClaims": {
+            "sourceRevision": f"revision:{product_id}",
+            "sourceBatchId": "core-close-2026-06-21",
+            "sourceCutId": "core-close-2026-06-21",
+            "reconciliationPosture": "complete",
+        },
     }
 
 

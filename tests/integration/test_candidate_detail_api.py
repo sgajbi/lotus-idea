@@ -22,7 +22,7 @@ from app.runtime.repository_state import get_idea_repository
 from tests.support import review_authority_api
 
 
-def source_ref(product_id: str) -> dict[str, str]:
+def source_ref(product_id: str) -> dict[str, Any]:
     return {
         "productId": product_id,
         "sourceSystem": "lotus-core",
@@ -33,6 +33,11 @@ def source_ref(product_id: str) -> dict[str, str]:
         "contentHash": f"sha256:{product_id}",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": {
+            "sourceRevision": f"revision:{product_id}",
+            "sourceCutId": "core-close-2026-06-21",
+            "reconciliationPosture": "complete",
+        },
     }
 
 

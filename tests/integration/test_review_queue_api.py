@@ -24,7 +24,7 @@ def _review_queue_snapshot_time(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
+def source_ref(product_id: str, suffix: str = "") -> dict[str, Any]:
     return {
         "productId": product_id,
         "sourceSystem": "lotus-core",
@@ -35,6 +35,11 @@ def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
         "contentHash": f"sha256:{product_id}{suffix}",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": {
+            "sourceRevision": f"revision:{product_id}{suffix}",
+            "sourceCutId": f"core-close-2026-06-21{suffix}",
+            "reconciliationPosture": "complete",
+        },
     }
 
 
@@ -293,9 +298,11 @@ def test_advisor_queue_versions_bind_visible_render_receipt_to_current_evidence(
         "queueSnapshotDigest": f"sha256:{'a' * 64}",
         "queuePolicyVersion": queue["policyVersion"],
         "rankingPolicyVersion": item["policyVersion"],
-        "candidateMaterialVersion": candidate["materialVersion"],
-        "candidateEvidenceVersion": candidate["evidenceVersion"],
-    }
+            "candidateMaterialVersion": candidate["materialVersion"],
+            "candidateEvidenceVersion": candidate["evidenceVersion"],
+            "sourceRevisionVectorDigest": candidate["sourceRevisionVectorDigest"],
+            "sourceCutPosture": candidate["sourceCutPosture"],
+        }
     accepted = client.post(
         f"/api/v1/idea-candidates/{first_candidate_id}/presentation-receipts",
         json=presentation_payload,
