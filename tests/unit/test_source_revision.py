@@ -103,6 +103,9 @@ def test_cut_posture_requires_authoritative_claims() -> None:
     assert source_cut_posture(
         (replace(known, revision_claims=_claims(reconciliation_posture=SourceReconciliationPosture.FAILED)),)
     ) is SourceCutPosture.MIXED
+    assert source_cut_posture(
+        (replace(known, revision_claims=SourceRevisionClaims(methodology_version="risk.v1")),)
+    ) is SourceCutPosture.PARTIAL
 
 
 def test_shared_owner_cut_is_coherent_and_conflicting_cut_is_mixed() -> None:

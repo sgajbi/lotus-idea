@@ -86,14 +86,31 @@ class SourceRevisionClaims:
             (
                 self.snapshot_id,
                 self.source_revision,
+                self.restatement_version,
                 self.source_batch_id,
+                self.source_cut_id,
+                self.calculation_run_id,
+                self.methodology_version,
+                self.policy_version,
+                self.causal_input_revisions,
+            )
+        )
+
+    @property
+    def has_primary_revision_identity(self) -> bool:
+        return any(
+            (
+                self.snapshot_id,
+                self.source_revision,
+                self.source_batch_id,
+                self.source_cut_id,
                 self.calculation_run_id,
             )
         )
 
     @property
     def is_authoritative(self) -> bool:
-        return self.has_revision_identity and self.reconciliation_posture in {
+        return self.has_primary_revision_identity and self.reconciliation_posture in {
             SourceReconciliationPosture.COMPLETE,
             SourceReconciliationPosture.NOT_APPLICABLE,
         }
@@ -208,6 +225,10 @@ def source_cut_posture(
         return SourceCutPosture.PARTIAL
     if any(item.reconciliation_posture is SourceReconciliationPosture.FAILED for item in present_claims):
         return SourceCutPosture.MIXED
+    if any(not item.has_primary_revision_identity for item in present_claims):
+        return SourceCutPosture.PARTIAL
+    if any(item.reconciliation_posture is SourceReconciliationPosture.UNKNOWN for item in present_claims):
+        return SourceCutPosture.PARTIAL
     if any(not item.is_authoritative for item in present_claims):
         return SourceCutPosture.UNKNOWN
     if len(source_refs) == 1:
