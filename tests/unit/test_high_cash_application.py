@@ -277,6 +277,28 @@ def test_application_replays_same_high_cash_idempotency_payload() -> None:
     assert replayed.persistence.record == first.persistence.record
 
 
+def test_candidate_persistence_replay_retains_original_acceptance_time() -> None:
+    repository = InMemoryIdeaRepository()
+    first_accepted_at = EVALUATED_AT + datetime.resolution
+    first = evaluate_and_persist_high_cash_signal(
+        persist_command(accepted_at_utc=first_accepted_at),
+        repository=repository,
+    )
+
+    replayed = evaluate_and_persist_high_cash_signal(
+        persist_command(accepted_at_utc=first_accepted_at + datetime.resolution),
+        repository=repository,
+    )
+
+    assert first.persistence is not None
+    assert first.persistence.record is not None
+    assert replayed.persistence is not None
+    assert replayed.persistence.decision is CandidatePersistenceDecision.REPLAYED
+    assert replayed.persistence.record == first.persistence.record
+    assert replayed.persistence.record is not None
+    assert replayed.persistence.record.persisted_at_utc == first_accepted_at
+
+
 def test_application_detects_high_cash_idempotency_payload_conflict() -> None:
     repository = InMemoryIdeaRepository()
     evaluate_and_persist_high_cash_signal(
