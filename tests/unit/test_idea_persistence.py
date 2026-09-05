@@ -56,6 +56,8 @@ from app.domain import (
     CandidateEvidenceIdentity,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     UnscopedCandidatePersistenceError,
     build_ai_explanation_request,
@@ -119,6 +121,10 @@ def source_ref(
         content_hash=content_hash or f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=freshness,
+        revision_claims=SourceRevisionClaims(
+            source_cut_id="core-cut-idea-persistence-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
