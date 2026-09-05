@@ -197,16 +197,23 @@ Partially satisfied:
 7. The local-ASGI Report materialization proof clears only
    `report_evidence_pack_live_materialization_proof_missing`. Its injected Render
    and Archive test doubles cannot clear `rendered_output_creation_missing` or
-   `archive_record_creation_missing`; those require a rebuilt current-source HTTP
-   chain through the actual owner services under `#1240` and Render `#282`.
+   `archive_record_creation_missing`. The separate rebuilt current-source HTTP
+   chain through Report, Render, and Archive is complete under `#1240`, Idea PR
+   `#1241`, and Render `#282`; retention/legal and publication authority remain
+   outside that proof.
 8. An uncertain Report materialization submission can recover its exact
    Report-owned receipt through the existing downstream-submission aggregate.
    Idea authorizes complete scope before the owner read, binds the stored
    idempotency key to the exact pack, intent, candidate, evidence, and portfolio
    identity, and never repeats the materialization request. Matching receipts
    persist with trusted local acceptance time; unavailable or contradictory
-   owner evidence cannot advance posture, and exact replay performs no owner
-   read.
+    owner evidence cannot advance posture, and exact replay performs no owner
+    read.
+9. A Report acceptance followed by Idea-local finalization failure retains the
+   original `in_flight` claim. Reconciliation refuses owner I/O while that lease
+   is active, then uses trusted server acceptance time to admit one read-only
+   recovery after expiry. PostgreSQL restart proof retains one attempt, appends
+   `claimed` then `reconciled`, and exact replay performs no owner GET or POST.
 
 Not yet satisfied:
 
@@ -218,11 +225,10 @@ Not yet satisfied:
    trust telemetry, client-publication proof, or supported-feature promotion
    exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
-5. The configured local/test `pdf` request can exercise the owner chain, but
-   current-source HTTP evidence has not yet established a Render artifact and
-   Archive record through the Idea-owned submission path. It also does not
-   certify client publication, production identity, legal approval, or
-   retention/legal-hold posture.
+5. The configured local/test `pdf` request has exercised a current-source HTTP
+   owner chain through Report, Render, and Archive under #1240 / PR #1241. That
+   chain does not certify client publication, production identity, legal
+   approval, or retention/legal-hold posture.
 
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,
@@ -240,10 +246,10 @@ contracts clear no blocker.
 With a valid aggregate-current Report materialization runtime proof, the
 runtime target advances to the Report materialization route and clears only its
 execution blocker. The injected Render and Archive collaborators do not prove
-owner-service execution. A separate rebuilt current-source HTTP chain must
-establish Render artifact and Archive custody identities while keeping those
-authorities outside `lotus-idea`; the capability remains `not_certified` until
-client publication,
+owner-service execution. The separate rebuilt current-source HTTP chain under
+`#1240` / PR `#1241` establishes Report, Render artifact, and Archive custody
+identities while keeping those authorities outside `lotus-idea`; the capability
+remains `not_certified` until client publication,
 Gateway/Workbench product proof, data-mesh certification, production identity,
 legal/retention posture, and supported-feature promotion are implemented and
 validated.
@@ -252,20 +258,20 @@ The downstream outcome certification aggregate in
 `src/app/application/downstream_outcome_certification.py` and
 `make downstream-outcome-certification-proof-gate` now consumes the Report
 materialization runtime proof alongside Advise/Manage intake receipts and Idea
-durable reconciliation evidence for #379. It is supporting evidence only: it
-keeps #379 open in `open_blocked` until production/certification evidence,
-trusted IdP caller context, retention/legal proof, and Archive production
-conformance exist. It does not convert Report, Render, or Archive evidence into
+durable reconciliation evidence for #379. It is supporting evidence only. #379
+remains open for the remaining canonical and failure-window work; trusted
+production identity is deferred for local/development execution, while
+retention/legal proof and Archive production conformance remain independently
+blocked. The aggregate does not convert Report, Render, or Archive evidence into
 client-publication, production-identity, supported-feature, legal/privacy
 approval, or final-certification claims.
 
 ## Boundary Decision
 
-This slice intentionally starts with `lotus-idea` source-owned request truth and
-a source-safe adapter foundation. Report, Render, and Archive remain the
+This slice preserves `lotus-idea` source-owned request truth and a source-safe
+adapter foundation. Report, Render, and Archive remain the
 authorities for package intake, deterministic rendering, archive records,
-retention, legal hold, retrieval, and access audit. The next Slice 13 increment
-should decide whether client-publication authority, rendered-output equivalence,
-retrieval/legal-hold audit evidence, or product-surface proof belongs in this
-RFC slice or in later publication/demo certification slices. It must not move
-downstream authority into `lotus-idea`.
+retention, legal hold, retrieval, and access audit. Remaining Slice 13 work must
+close retrieval/legal-hold, client-publication authority, or product-surface
+proof only in the owning repository. Later publication or demo certification
+must not move downstream authority into `lotus-idea`.

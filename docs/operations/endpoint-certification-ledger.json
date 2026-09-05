@@ -1440,7 +1440,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Read and persist the authoritative append-only Advise realization history for a receipt-bound Idea proposal submission without transferring downstream business authority.",
-      "when_to_use": "Use when an internal caller has idea.downstream-realization.reconcile capability, complete tenant/book/portfolio/client entitlement scope, and an accepted or rejected Advise submission carrying a durable owner receipt that must be reconciled with the source-owned outcome history.",
+      "when_to_use": "Use when an internal caller has idea.downstream-realization.reconcile capability, complete tenant/book/portfolio/client entitlement scope, and either an accepted/rejected Advise submission carrying a durable owner receipt or an uncertain/expired in-flight submission requiring exact read-only owner recovery.",
       "when_not_to_use": "Do not use to infer proposal acceptance from transport success, create suitability or execution authority, overwrite owner history, define a Gateway contract, claim Workbench product proof, authorize client-ready publication, or claim supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/advise-realization-reconciliation with X-Caller-Capabilities: idea.downstream-realization.reconcile and complete entitlement scope"
@@ -1451,13 +1451,15 @@
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.reconcile capability, complete entitlement scope, or access to the receipt-bound submission.",
         "404 returns downstream_submission_not_found for an unknown opaque support reference.",
-        "409 returns a stable blocker when the submission is ineligible or the Advise history has identity drift, version gaps, chronology defects, or unsupported authority claims.",
+        "409 returns a stable blocker when the submission lease remains active, the submission is otherwise ineligible, or the Advise history has identity drift, version gaps, chronology defects, or unsupported authority claims.",
         "503 returns advise_realization_owner_unavailable, durable_repository_not_configured, or durable_repository_unavailable without changing persisted evidence."
       ],
       "test_evidence": [
         "tests/integration/test_advise_realization_reconciliation_api.py::test_advise_realization_reconciliation_api_persists_exact_owner_history",
         "tests/integration/test_advise_realization_reconciliation_api.py::test_advise_realization_reconciliation_api_denial_emits_operation_event",
         "tests/unit/test_advise_realization_reconciliation.py::test_reconcile_advise_history_fails_closed_on_owner_identity_drift",
+        "tests/unit/test_advise_realization_reconciliation.py::test_active_advise_submission_cannot_be_reconciled_while_post_may_still_run",
+        "tests/unit/test_advise_realization_reconciliation.py::test_expired_advise_submission_recovers_owner_history_without_reposting",
         "tests/unit/test_advise_realization_reconciliation.py::test_reconcile_terminal_rejection_persists_owner_history",
         "tests/unit/test_postgres_advise_realization.py::test_postgres_advise_history_survives_restart_and_appends_monotonically"
       ],
@@ -1499,7 +1501,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Recover and durably bind the exact Report-owned receipt for an uncertain evidence-pack materialization without repeating the materialization request or transferring downstream authority.",
-      "when_to_use": "Use after a Report evidence-pack submission has durable reconciliation_required posture, when an internal caller has idea.downstream-realization.reconcile capability and complete tenant/book/portfolio/client entitlement scope.",
+      "when_to_use": "Use after a Report evidence-pack submission has durable reconciliation_required posture, or after an in-flight lease expires following Idea-local finalization failure, when an internal caller has idea.downstream-realization.reconcile capability and complete tenant/book/portfolio/client entitlement scope.",
       "when_not_to_use": "Do not use as a retry endpoint, to create another Report job, to bypass exact idempotency and evidence identity, to infer rendering or archive completion beyond the owner receipt, define a Gateway contract, claim Workbench product proof, grant client-publication authority, or claim supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/report-materialization-reconciliation with X-Caller-Capabilities: idea.downstream-realization.reconcile and complete entitlement scope"
@@ -1510,16 +1512,18 @@
       "error_examples": [
         "403 returns product-safe Problem Details before the owner read when capability or complete entitlement scope is missing.",
         "404 returns downstream_submission_not_found for an unknown opaque support reference.",
-        "409 preserves uncertain posture when the submission is ineligible or the recovered receipt contradicts exact candidate, conversion-intent, evidence-pack, evidence fingerprint, portfolio, tenant or idempotency identity.",
+        "409 preserves uncertain posture when the submission lease remains active, the submission is otherwise ineligible, or the recovered receipt contradicts exact candidate, conversion-intent, evidence-pack, evidence fingerprint, portfolio, tenant or idempotency identity.",
         "503 returns report_materialization_owner_unavailable, durable_repository_not_configured, or durable_repository_unavailable without changing persisted evidence."
       ],
       "test_evidence": [
         "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_closes_lost_response_without_second_post",
+        "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_waits_for_expired_lease_after_local_commit_failure",
         "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_rejects_contradictory_receipt_without_state_advance",
         "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_denies_scope_before_owner_read",
         "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_denial_emits_bounded_operation_event",
         "tests/unit/test_report_materialization_reconciliation.py::test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_owner_read",
         "tests/integration/test_postgres_report_materialization_reconciliation.py::test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays",
+        "tests/integration/test_postgres_report_materialization_reconciliation.py::test_postgres_recovers_owner_acceptance_after_local_finalize_failure_and_restart",
         "tests/unit/test_report_materialization_recovery_adapter.py::test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, named response modes, exact owner-receipt shape and bounded authority claims; the integration contract test verifies all published modes."

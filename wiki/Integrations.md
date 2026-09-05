@@ -359,6 +359,12 @@ replay returns that receipt without another owner read. Missing, unavailable,
 malformed, or contradictory evidence cannot advance local posture, and the
 materialization `POST` is never retried.
 
+An owner acceptance followed by Idea-local finalization failure leaves the
+durable claim `in_flight`. Advise and Report reconciliation refuse that claim
+until its lease expires, preventing recovery from racing the original POST.
+After expiry, trusted server time admits one exact read-only owner recovery;
+the submission retains one attempt and exact replay performs no owner I/O.
+
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.
 The Manage adapter may use a server-side development fixture only in `local`

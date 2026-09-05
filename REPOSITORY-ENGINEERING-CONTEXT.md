@@ -1535,6 +1535,13 @@ reconciliation-required. The receipt is owner evidence, not an Idea assertion
 of Report completion, Render or Archive authority, client publication, or
 supported-feature promotion.
 
+Advise and Report owner recovery must also fence the original submission
+lease. An `in_flight` claim is not recoverable while its lease is active because
+the mutating POST may still be running. Once the lease expires, trusted server
+acceptance time may admit one exact, read-only owner recovery. The recovery
+reconciles the existing claim without another POST or attempt increment; exact
+replay performs no additional owner I/O.
+
 Outbox broker:
 
 1. `LOTUS_IDEA_OUTBOX_BROKER_URL`,

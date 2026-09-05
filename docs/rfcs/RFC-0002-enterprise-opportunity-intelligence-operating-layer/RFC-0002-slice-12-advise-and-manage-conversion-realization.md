@@ -328,6 +328,12 @@ Implemented in this slice:
     uses the recovered intake identity. Missing, malformed, unavailable, or
     mismatched owner evidence cannot become acceptance. Advise still owns the
     realization and all advisory business state.
+38. Owner recovery fences the original submission lease. Advise and Report
+    reject reconciliation while an `in_flight` lease remains active because the
+    mutating owner request may still be running. After expiry, trusted server
+    acceptance time admits one exact read-only recovery of an owner-accepted
+    request whose Idea finalization failed. Recovery retains one submission
+    attempt, does not repeat the POST, and exact replay performs no owner I/O.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
