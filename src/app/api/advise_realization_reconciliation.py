@@ -24,6 +24,7 @@ from app.api.runtime_dependencies import (
     DownstreamRealizationClientsUnavailableError,
     get_conversion_realization_clients,
     get_idea_repository,
+    get_trusted_clock,
     idea_repository_durable_storage_backed,
 )
 from app.application.advise_realization_reconciliation import (
@@ -161,6 +162,7 @@ async def post_advise_realization_reconciliation(
                 support_reference=support_reference,
                 actor_subject=caller.subject,
                 access_scope_filter=access_scope_filter,
+                accepted_at_utc=get_trusted_clock().now_utc(),
                 correlation_id=request_context_id(request, "correlation_id"),
                 trace_id=request_context_id(request, "trace_id"),
             ),
@@ -241,7 +243,9 @@ ADVISE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
         "Idea submission and persists only an append-only, identity-consistent owner history. "
         "HTTP transport acceptance is not treated as proposal, suitability, execution, "
         "settlement, or client-publication evidence. Missing receipts, scope drift, identity "
-        "drift, version gaps, chronology defects, and unsupported authority claims fail closed."
+        "drift, version gaps, chronology defects, active submission leases, and unsupported "
+        "authority claims fail closed. An expired in-flight lease may be recovered read-only "
+        "using trusted server acceptance time; the mutating owner request is never repeated."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AdviseRealizationReconciliationResponse,

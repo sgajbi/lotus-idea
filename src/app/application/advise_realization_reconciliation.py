@@ -40,12 +40,14 @@ class ReconcileAdviseRealizationCommand:
     support_reference: str
     actor_subject: str
     access_scope_filter: QueueAccessScopeFilter
+    accepted_at_utc: datetime
     correlation_id: str | None = None
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.support_reference, "support_reference")
         _require_text(self.actor_subject, "actor_subject")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -72,7 +74,10 @@ def reconcile_advise_realization_history(
     submission = repository.downstream_submission_by_support_reference(command.support_reference)
     if submission is None:
         return _result(AdviseRealizationReconciliationStatus.NOT_FOUND)
-    blocker = _submission_eligibility_blocker(submission)
+    blocker = _submission_eligibility_blocker(
+        submission,
+        accepted_at_utc=command.accepted_at_utc,
+    )
     if blocker is not None:
         return _result(AdviseRealizationReconciliationStatus.NOT_ELIGIBLE, blocker=blocker)
     candidate_record = repository.candidate_record_for_conversion_intent(submission.resource_id)
@@ -124,6 +129,7 @@ def reconcile_advise_realization_history(
             submission=submission,
             history=history,
             actor_subject=command.actor_subject,
+            accepted_at_utc=command.accepted_at_utc,
         )
         if recovery_blocker is not None:
             return _result(
@@ -153,17 +159,27 @@ def reconcile_advise_realization_history(
     )
 
 
-def _submission_eligibility_blocker(submission: DownstreamSubmissionRecord) -> str | None:
+def _submission_eligibility_blocker(
+    submission: DownstreamSubmissionRecord,
+    *,
+    accepted_at_utc: datetime,
+) -> str | None:
     if submission.resource_type is not DownstreamSubmissionResourceType.CONVERSION_INTENT:
         return "advise_realization_requires_conversion_intent_submission"
     if submission.target is not ConversionTarget.ADVISE_PROPOSAL:
         return "advise_realization_requires_advise_target"
     if submission.source_authority is not SourceSystem.LOTUS_ADVISE:
         return "advise_realization_requires_advise_authority"
-    if submission.status in {
-        DownstreamSubmissionPosture.IN_FLIGHT,
-        DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
-    }:
+    if submission.status is DownstreamSubmissionPosture.IN_FLIGHT:
+        if (
+            submission.lease_expires_at_utc is None
+            or submission.lease_expires_at_utc > accepted_at_utc
+        ):
+            return "advise_realization_submission_still_in_flight"
+        if submission.owner_receipt is not None:
+            return "advise_realization_uncertain_submission_has_owner_receipt"
+        return None
+    if submission.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED:
         if submission.owner_receipt is not None:
             return "advise_realization_uncertain_submission_has_owner_receipt"
         return None
@@ -207,6 +223,7 @@ def _recover_submission_receipt(
     submission: DownstreamSubmissionRecord,
     history: AdviseProposalRealizationHistory,
     actor_subject: str,
+    accepted_at_utc: datetime,
 ) -> str | None:
     initial_outcome = history.outcomes[0]
     accepted = initial_outcome.status is AdviseProposalRealizationStatus.ACCEPTED_FOR_REVIEW
@@ -231,7 +248,7 @@ def _recover_submission_receipt(
         actor_subject=actor_subject,
         reason="authoritative_advise_owner_history_recovered",
         change_reference=(f"advise-owner-recovery-v{history.current_source_event_version}"),
-        reconciled_at_utc=datetime.now(UTC),
+        reconciled_at_utc=accepted_at_utc,
         owner_receipt=receipt,
     )
     if mutation.decision in {
@@ -285,3 +302,10 @@ def _result(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_aware_utc(value: datetime, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+    if value.utcoffset() != UTC.utcoffset(value):
+        raise ValueError(f"{field_name} must be UTC")
