@@ -89,6 +89,7 @@ def test_missing_benchmark_source_api_fetches_core_evidence_without_persistence(
         "generatedAtUtc": "2026-06-21T10:00:00Z",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": None,
     }
     assert source.seen_request == CoreBenchmarkAssignmentEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,

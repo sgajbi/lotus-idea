@@ -11,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.api.signal_models import (
+    SourceRevisionClaimsModel,
     ReviewAccessScopeRequest,
     SignalEvaluationResponse,
     SourceRefRequest,
@@ -30,10 +31,12 @@ from app.api.missing_risk_profile_signals import EvaluateMissingRiskProfileFromS
 from app.api.missing_suitability_signals import EvaluateMissingSuitabilityFromSourceRequest
 from app.api.underperformance_signals import EvaluateUnderperformanceFromSourceRequest
 from app.domain import (
+    CausalInputRevision,
     EvidenceFreshness,
     HighCashSignalInput,
     HighCashSignalPolicy,
     SourceRef,
+    SourceReconciliationPosture,
     SourceSystem,
     evaluate_high_cash_signal,
 )
@@ -88,6 +91,19 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
         contentHash="sha256:portfolio-state-snapshot-demo",
         dataQualityStatus="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revisionClaims=SourceRevisionClaimsModel(
+            snapshotId="snapshot-101",
+            sourceRevision="portfolio-state-7",
+            restatementVersion="restatement-2",
+            policyVersion="portfolio-state-v4",
+            causalInputRevisions=(
+                {
+                    "productId": "lotus-core:HoldingsAsOf:v1",
+                    "sourceRevision": "holdings-31",
+                },
+            ),
+            reconciliationPosture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
     source_ref = request.to_domain()
@@ -99,6 +115,14 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
     assert source_ref.content_hash == "sha256:portfolio-state-snapshot-demo"
     assert source_ref.data_quality_status == "complete"
     assert source_ref.freshness is EvidenceFreshness.CURRENT
+    assert source_ref.revision_claims is not None
+    assert source_ref.revision_claims.snapshot_id == "snapshot-101"
+    assert source_ref.revision_claims.causal_input_revisions == (
+        CausalInputRevision(
+            product_id="lotus-core:HoldingsAsOf:v1",
+            source_revision="holdings-31",
+        ),
+    )
 
 
 def test_signal_evaluation_response_maps_domain_result_source_safely() -> None:

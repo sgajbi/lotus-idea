@@ -9,13 +9,89 @@ from app.api.access_scope_models import ReviewAccessScopeRequest as ReviewAccess
 from app.api.base_model import CamelModel
 from app.api.score_models import ScoreContributionResponse
 from app.domain import (
+    CausalInputRevision,
     CandidateIdentity,
     EvidenceFreshness,
     IdeaCandidate,
     SignalEvaluationResult,
+    SourceReconciliationPosture,
     SourceRef,
+    SourceRevisionClaims,
     SourceSystem,
 )
+
+
+class CausalInputRevisionModel(CamelModel):
+    product_id: str = Field(..., alias="productId")
+    source_revision: str = Field(..., alias="sourceRevision")
+    restatement_version: str | None = Field(default=None, alias="restatementVersion")
+
+    def to_domain(self) -> CausalInputRevision:
+        return CausalInputRevision(
+            product_id=self.product_id,
+            source_revision=self.source_revision,
+            restatement_version=self.restatement_version,
+        )
+
+    @classmethod
+    def from_domain(cls, revision: CausalInputRevision) -> Self:
+        return cls(
+            productId=revision.product_id,
+            sourceRevision=revision.source_revision,
+            restatementVersion=revision.restatement_version,
+        )
+
+
+class SourceRevisionClaimsModel(CamelModel):
+    snapshot_id: str | None = Field(default=None, alias="snapshotId")
+    source_revision: str | None = Field(default=None, alias="sourceRevision")
+    restatement_version: str | None = Field(default=None, alias="restatementVersion")
+    source_batch_id: str | None = Field(default=None, alias="sourceBatchId")
+    source_cut_id: str | None = Field(default=None, alias="sourceCutId")
+    calculation_run_id: str | None = Field(default=None, alias="calculationRunId")
+    methodology_version: str | None = Field(default=None, alias="methodologyVersion")
+    policy_version: str | None = Field(default=None, alias="policyVersion")
+    causal_input_revisions: tuple[CausalInputRevisionModel, ...] = Field(
+        default=(), alias="causalInputRevisions"
+    )
+    reconciliation_posture: SourceReconciliationPosture = Field(
+        SourceReconciliationPosture.UNKNOWN,
+        alias="reconciliationPosture",
+    )
+
+    def to_domain(self) -> SourceRevisionClaims:
+        return SourceRevisionClaims(
+            snapshot_id=self.snapshot_id,
+            source_revision=self.source_revision,
+            restatement_version=self.restatement_version,
+            source_batch_id=self.source_batch_id,
+            source_cut_id=self.source_cut_id,
+            calculation_run_id=self.calculation_run_id,
+            methodology_version=self.methodology_version,
+            policy_version=self.policy_version,
+            causal_input_revisions=tuple(
+                revision.to_domain() for revision in self.causal_input_revisions
+            ),
+            reconciliation_posture=self.reconciliation_posture,
+        )
+
+    @classmethod
+    def from_domain(cls, claims: SourceRevisionClaims) -> Self:
+        return cls(
+            snapshotId=claims.snapshot_id,
+            sourceRevision=claims.source_revision,
+            restatementVersion=claims.restatement_version,
+            sourceBatchId=claims.source_batch_id,
+            sourceCutId=claims.source_cut_id,
+            calculationRunId=claims.calculation_run_id,
+            methodologyVersion=claims.methodology_version,
+            policyVersion=claims.policy_version,
+            causalInputRevisions=tuple(
+                CausalInputRevisionModel.from_domain(revision)
+                for revision in claims.causal_input_revisions
+            ),
+            reconciliationPosture=claims.reconciliation_posture,
+        )
 
 
 class SourceRefRequest(CamelModel):
@@ -69,6 +145,14 @@ class SourceRefRequest(CamelModel):
     freshness: EvidenceFreshness = Field(
         ..., description="Freshness posture reported for the source evidence."
     )
+    revision_claims: SourceRevisionClaimsModel | None = Field(
+        default=None,
+        alias="revisionClaims",
+        description=(
+            "Source-owner-issued revision, restatement, calculation, methodology and "
+            "reconciliation identity. Absence is retained as unknown, never inferred."
+        ),
+    )
 
     def to_domain(self) -> SourceRef:
         return SourceRef(
@@ -81,6 +165,9 @@ class SourceRefRequest(CamelModel):
             content_hash=self.content_hash,
             data_quality_status=self.data_quality_status,
             freshness=self.freshness,
+            revision_claims=(
+                self.revision_claims.to_domain() if self.revision_claims is not None else None
+            ),
         )
 
 
@@ -92,6 +179,10 @@ class SourceRefResponse(CamelModel):
     generated_at_utc: datetime = Field(..., alias="generatedAtUtc")
     data_quality_status: str = Field(..., alias="dataQualityStatus")
     freshness: EvidenceFreshness
+    revision_claims: SourceRevisionClaimsModel | None = Field(
+        default=None,
+        alias="revisionClaims",
+    )
 
     @classmethod
     def from_domain(cls, source_ref: SourceRef) -> "SourceRefResponse":
@@ -103,6 +194,11 @@ class SourceRefResponse(CamelModel):
             generatedAtUtc=source_ref.generated_at_utc,
             dataQualityStatus=source_ref.data_quality_status,
             freshness=source_ref.freshness,
+            revisionClaims=(
+                SourceRevisionClaimsModel.from_domain(source_ref.revision_claims)
+                if source_ref.revision_claims is not None
+                else None
+            ),
         )
 
 
