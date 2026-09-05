@@ -328,6 +328,66 @@ def test_conversion_intent_rejects_different_or_inactive_review_authority() -> N
             ),
         )
 
+    with pytest.raises(InvalidConversionIntent, match="review authority evidence differs"):
+        _request_conversion_intent(
+            source_candidate,
+            command,
+            accepted_at_utc=REQUESTED_AT,
+            review_authority_grant=replace(
+                grant,
+                candidate_evidence=replace(
+                    grant.candidate_evidence,
+                    evidence_version=grant.candidate_evidence.evidence_version + 1,
+                ),
+            ),
+        )
+
+
+def test_persisted_conversion_intent_rejects_inconsistent_review_authority() -> None:
+    governed = request_conversion_intent(candidate(), intent_command()).conversion_intent
+    assert governed.review_authority_grant is not None
+    grant = governed.review_authority_grant
+
+    conflicting_grants = (
+        (
+            replace(
+                grant,
+                candidate_evidence=replace(
+                    grant.candidate_evidence,
+                    candidate_id="idea-conversion-other",
+                ),
+            ),
+            "candidate must match",
+        ),
+        (
+            replace(
+                grant,
+                candidate_evidence=replace(
+                    grant.candidate_evidence,
+                    evidence_packet_id="evidence-other",
+                ),
+            ),
+            "evidence packet must match",
+        ),
+        (
+            replace(
+                grant,
+                candidate_evidence=replace(
+                    grant.candidate_evidence,
+                    evidence_content_hash="sha256:evidence-other",
+                ),
+            ),
+            "evidence hash must match",
+        ),
+        (
+            replace(grant, accepted_at_utc=governed.accepted_at_utc + datetime.resolution),
+            "cannot postdate",
+        ),
+    )
+    for conflicting_grant, message in conflicting_grants:
+        with pytest.raises(ValueError, match=message):
+            replace(governed, review_authority_grant=conflicting_grant)
+
 
 def test_conversion_command_validates_idempotency_reason_and_time() -> None:
     opaque_identity = ConversionIntentCommand(

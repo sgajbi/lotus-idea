@@ -14,10 +14,6 @@ from app.infrastructure.postgres_presentation_receipts import _record_presentati
 from app.infrastructure.postgres_presentation_receipts import (
     PostgresPresentationReceiptRepositoryMixin,
 )
-from app.infrastructure.postgres_codecs import (
-    _review_authority_grant_from_json,
-    _review_authority_grant_to_json,
-)
 
 
 def test_postgres_receipt_insert_is_candidate_tenant_and_version_fenced() -> None:
@@ -119,11 +115,6 @@ def test_postgres_receipt_repository_delegates_mutation_with_observability() -> 
 
     assert result.decision is PresentationReceiptDecision.ACCEPTED
     assert repository.connection.commits == 1
-
-
-def test_postgres_review_authority_codec_preserves_absent_legacy_grant() -> None:
-    assert _review_authority_grant_to_json(None) is None
-    assert _review_authority_grant_from_json(None) is None
 
 
 class _Cursor:

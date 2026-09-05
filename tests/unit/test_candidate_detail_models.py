@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 
+import pytest
+
 from app.api.candidate_detail_models import CandidateDetailResponse
 from app.domain import CandidatePersistenceRecord
 from app.domain import DownstreamSubmissionPosture
@@ -152,6 +154,23 @@ def test_candidate_detail_recomputes_review_authority_against_current_evidence()
 
     assert current["reviewDecisions"][0]["authorityStatus"] == "active"
     assert superseded["reviewDecisions"][0]["authorityStatus"] == "superseded"
+
+
+def test_candidate_detail_requires_control_time_for_review_authority_projection() -> None:
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    decision = approved_review_decision_for_candidate(
+        candidate,
+        accepted_at_utc=candidate.updated_at_utc,
+    )
+    record = CandidatePersistenceRecord(
+        candidate=candidate,
+        evidence_hash="sha256:candidate-detail-authority-required-time",
+        persisted_at_utc=candidate.created_at_utc,
+        review_decisions=(decision,),
+    )
+
+    with pytest.raises(ValueError, match="evaluated_at_utc is required"):
+        CandidateDetailResponse.from_record(record)
 
 
 def test_openapi_exposes_reconstructable_candidate_score_contract() -> None:
