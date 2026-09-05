@@ -198,7 +198,7 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
 
 
 def test_review_uses_server_acceptance_time_for_state_and_audit_chronology() -> None:
-    observed_at = DECIDED_AT - timedelta(days=2)
+    observed_at = DECIDED_AT - timedelta(hours=2)
     accepted_at = DECIDED_AT
 
     result = _apply_review_action(

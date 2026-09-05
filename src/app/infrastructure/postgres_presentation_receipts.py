@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from app.domain.control_time import (
+    PRESENTATION_TIME_POLICY,
+    AcceptanceTimeSource,
+    ObservedTimeSkewError,
+    require_observed_time_within_policy,
+)
 from app.domain.presentation_receipts import (
     CandidatePresentationReceipt,
     PresentationReceiptCandidateStateError,
@@ -30,6 +36,22 @@ def _record_presentation_receipt(
 ) -> PresentationReceiptResult:
     try:
         with connection.cursor() as cursor:
+            try:
+                require_observed_time_within_policy(
+                    receipt.presented_at_utc,
+                    receipt.accepted_at_utc,
+                    PRESENTATION_TIME_POLICY,
+                )
+            except ObservedTimeSkewError:
+                existing = _load_receipt(cursor, receipt)
+                if existing is not None and existing.has_same_producer_claim(receipt):
+                    result = PresentationReceiptResult(
+                        decision=PresentationReceiptDecision.REPLAYED,
+                        receipt=existing,
+                    )
+                    connection.commit()
+                    return result
+                raise
             inserted = _insert_receipt(cursor, receipt)
             if inserted:
                 result = PresentationReceiptResult(
@@ -45,7 +67,7 @@ def _record_presentation_receipt(
                 result = PresentationReceiptResult(
                     decision=(
                         PresentationReceiptDecision.REPLAYED
-                        if existing == receipt
+                        if existing.has_same_producer_claim(receipt)
                         else PresentationReceiptDecision.CONFLICT
                     ),
                     receipt=existing,
@@ -67,9 +89,10 @@ def _insert_receipt(
             receipt_id, candidate_id, tenant_id, presented_at_utc,
             rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
             queue_policy_version, ranking_policy_version, candidate_material_version,
-            candidate_evidence_version, schema_version, surface, producer
+            candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+            schema_version, surface, producer
         )
-        SELECT %s, candidate_id, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        SELECT %s, candidate_id, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         FROM idea_candidate_record
         WHERE candidate_id = %s
           AND candidate_json->'access_scope'->>'tenant_id' = %s
@@ -90,6 +113,8 @@ def _insert_receipt(
             receipt.ranking_policy_version,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
+            receipt.accepted_at_utc,
+            receipt.acceptance_time_source.value,
             receipt.schema_version,
             receipt.surface,
             receipt.producer,
@@ -97,7 +122,7 @@ def _insert_receipt(
             receipt.tenant_id,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
-            receipt.presented_at_utc,
+            receipt.accepted_at_utc,
         ),
     )
     return bool(cursor.fetchall())
@@ -112,7 +137,8 @@ def _load_receipt(
         SELECT receipt_id, candidate_id, tenant_id, presented_at_utc,
                rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
                queue_policy_version, ranking_policy_version, candidate_material_version,
-               candidate_evidence_version, schema_version, surface, producer
+               candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+               schema_version, surface, producer
         FROM idea_candidate_presentation_receipt
         WHERE receipt_id = %s
           AND candidate_id = %s
@@ -136,6 +162,7 @@ def load_presentation_receipts(
                receipt.visible_candidate_count, receipt.queue_snapshot_digest,
                receipt.queue_policy_version, receipt.ranking_policy_version,
                receipt.candidate_material_version, receipt.candidate_evidence_version,
+               receipt.accepted_at_utc, receipt.acceptance_time_source,
                receipt.schema_version, receipt.surface, receipt.producer
         FROM idea_candidate_presentation_receipt AS receipt
         LEFT JOIN idea_data_lifecycle_control AS lifecycle
@@ -162,9 +189,10 @@ def insert_presentation_receipt_snapshot(
             receipt_id, candidate_id, tenant_id, presented_at_utc,
             rank_at_presentation, visible_candidate_count, queue_snapshot_digest,
             queue_policy_version, ranking_policy_version, candidate_material_version,
-            candidate_evidence_version, schema_version, surface, producer
+            candidate_evidence_version, accepted_at_utc, acceptance_time_source,
+            schema_version, surface, producer
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             receipt.receipt_id,
@@ -178,6 +206,8 @@ def insert_presentation_receipt_snapshot(
             receipt.ranking_policy_version,
             receipt.candidate_material_version,
             receipt.candidate_evidence_version,
+            receipt.accepted_at_utc,
+            receipt.acceptance_time_source.value,
             receipt.schema_version,
             receipt.surface,
             receipt.producer,
@@ -198,6 +228,8 @@ def _receipt_from_row(row: object) -> CandidatePresentationReceipt:
         ranking_policy_version=str(read_row_value(row, "ranking_policy_version")),
         candidate_material_version=int(read_row_value(row, "candidate_material_version")),
         candidate_evidence_version=int(read_row_value(row, "candidate_evidence_version")),
+        accepted_at_utc=read_row_value(row, "accepted_at_utc"),
+        acceptance_time_source=AcceptanceTimeSource(read_row_value(row, "acceptance_time_source")),
         schema_version=str(read_row_value(row, "schema_version")),
         surface=str(read_row_value(row, "surface")),
         producer=str(read_row_value(row, "producer")),

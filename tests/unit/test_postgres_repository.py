@@ -265,6 +265,7 @@ def test_postgres_repository_snapshot_round_trip_preserves_presentation_receipts
         ranking_policy_version="idea-score-v2",
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        accepted_at_utc=EVALUATED_AT,
     )
     snapshot = replace(
         source.snapshot(),

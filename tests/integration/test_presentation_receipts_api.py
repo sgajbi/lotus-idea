@@ -24,6 +24,14 @@ from tests.support.opportunity_effectiveness_fixture import (
 )
 
 
+class FixedClock:
+    def __init__(self, instant: datetime) -> None:
+        self._instant = instant
+
+    def now_utc(self) -> datetime:
+        return self._instant
+
+
 def _path() -> str:
     return "/api/v1/idea-candidates/candidate-presentation-001/presentation-receipts"
 
@@ -58,7 +66,13 @@ def _headers(
 
 
 @pytest.fixture(autouse=True)
-def reset_repository() -> None:
+def reset_repository(monkeypatch: pytest.MonkeyPatch) -> None:
+    accepted_at = datetime(2026, 8, 30, 12, 0, 1, tzinfo=UTC)
+    monkeypatch.setattr(
+        presentation_receipts_api,
+        "get_trusted_clock",
+        lambda: FixedClock(accepted_at),
+    )
     candidate = candidate_fixture(
         "candidate-presentation-001",
         family=OpportunityFamily.HIGH_CASH,
@@ -93,6 +107,8 @@ def test_presentation_receipt_api_accepts_and_replays_exact_visible_render_evide
         "candidateId": "candidate-presentation-001",
         "tenantId": "tenant-a",
         "presentedAtUtc": "2026-08-30T12:00:00Z",
+        "acceptedAtUtc": "2026-08-30T12:00:01Z",
+        "acceptanceTimeSource": "server_accepted",
         "rankAtPresentation": 2,
         "visibleCandidateCount": 7,
         "queueSnapshotDigest": f"sha256:{'a' * 64}",
@@ -175,7 +191,6 @@ def test_presentation_receipt_api_does_not_disclose_candidate_outside_entitled_s
     (
         {**_payload(), "candidateMaterialVersion": 2},
         {**_payload(), "candidateEvidenceVersion": 2},
-        {**_payload(), "presentedAtUtc": "2026-08-30T10:59:59Z"},
     ),
 )
 def test_presentation_receipt_api_fails_closed_on_candidate_state_mismatch(
@@ -192,6 +207,27 @@ def test_presentation_receipt_api_fails_closed_on_candidate_state_mismatch(
         "invalid_request",
         "presentation_receipt_candidate_state_conflict",
     }
+
+
+def test_presentation_receipt_observed_time_cannot_backdate_server_acceptance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    accepted_at = datetime(2026, 8, 30, 11, 0, 1, tzinfo=UTC)
+    monkeypatch.setattr(
+        presentation_receipts_api,
+        "get_trusted_clock",
+        lambda: FixedClock(accepted_at),
+    )
+    response = managed_test_client(app).post(
+        _path(),
+        json={**_payload(), "presentedAtUtc": "2026-08-30T10:59:59Z"},
+        headers=_headers(),
+    )
+
+    assert response.status_code == 201
+    receipt = response.json()["receipt"]
+    assert receipt["presentedAtUtc"] == "2026-08-30T10:59:59Z"
+    assert receipt["acceptedAtUtc"] == "2026-08-30T11:00:01Z"
 
 
 def test_presentation_receipt_api_preserves_global_rank_independently_of_visible_count() -> None:

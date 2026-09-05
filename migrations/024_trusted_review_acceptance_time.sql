@@ -1,4 +1,4 @@
--- Preserve producer-observed review/feedback time while making Idea server admission time explicit.
+-- Preserve producer-observed action time while making Idea server admission time explicit.
 -- Historical rows cannot prove a distinct server instant, so their posture is marked as assumed.
 
 ALTER TABLE idea_review_decision
@@ -104,3 +104,20 @@ CREATE INDEX idx_idea_conversion_intent_candidate_accepted_time
 
 CREATE INDEX idx_idea_conversion_outcome_intent_accepted_time
     ON idea_conversion_outcome (conversion_intent_id, accepted_at_utc, conversion_outcome_id);
+
+ALTER TABLE idea_candidate_presentation_receipt
+    ADD COLUMN accepted_at_utc TIMESTAMPTZ,
+    ADD COLUMN acceptance_time_source TEXT;
+
+UPDATE idea_candidate_presentation_receipt
+SET accepted_at_utc = recorded_at_utc,
+    acceptance_time_source = 'legacy_observed_time_assumed';
+
+ALTER TABLE idea_candidate_presentation_receipt
+    ALTER COLUMN accepted_at_utc SET NOT NULL,
+    ALTER COLUMN acceptance_time_source SET NOT NULL,
+    ADD CONSTRAINT ck_idea_presentation_receipt_acceptance_time_source
+        CHECK (acceptance_time_source IN ('server_accepted', 'legacy_observed_time_assumed'));
+
+CREATE INDEX idx_idea_presentation_receipt_candidate_accepted_time
+    ON idea_candidate_presentation_receipt (candidate_id, accepted_at_utc, receipt_id);

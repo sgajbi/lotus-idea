@@ -31,7 +31,7 @@ class InMemoryPresentationReceiptRepositoryMixin:
             return PresentationReceiptResult(
                 decision=(
                     PresentationReceiptDecision.REPLAYED
-                    if existing == receipt
+                    if existing.has_same_producer_claim(receipt)
                     else PresentationReceiptDecision.CONFLICT
                 ),
                 receipt=existing,

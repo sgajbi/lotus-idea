@@ -5,7 +5,12 @@ from datetime import datetime
 from enum import StrEnum
 
 from app.domain.audit import AuditEvent
-from app.domain.control_time import AcceptanceTimeSource
+from app.domain.control_time import (
+    CONVERSION_INTENT_TIME_POLICY,
+    DOWNSTREAM_OUTCOME_TIME_POLICY,
+    AcceptanceTimeSource,
+    require_observed_time_within_policy,
+)
 from app.domain.conversion_outcome_policy import (
     CONVERSION_OUTCOME_POLICY_VERSION,
     ConversionOutcomeIdentity,
@@ -219,6 +224,11 @@ def request_conversion_intent(
     accepted_at_utc: datetime,
 ) -> ConversionIntentResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    require_observed_time_within_policy(
+        command.requested_at_utc,
+        accepted_at_utc,
+        CONVERSION_INTENT_TIME_POLICY,
+    )
     _ensure_candidate_ready_for_conversion(candidate)
     intent = IdeaConversionIntent(
         conversion_intent_id=command.conversion_intent_id,
@@ -273,6 +283,11 @@ def record_conversion_outcome(
     existing_outcomes: tuple[GovernedConversionOutcome, ...] = (),
 ) -> ConversionOutcomeResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    require_observed_time_within_policy(
+        command.recorded_at_utc,
+        accepted_at_utc,
+        DOWNSTREAM_OUTCOME_TIME_POLICY,
+    )
     expected_source = TARGET_SOURCE_AUTHORITIES[governed_intent.intent.target]
     if command.source_system is not expected_source:
         raise InvalidConversionOutcome(

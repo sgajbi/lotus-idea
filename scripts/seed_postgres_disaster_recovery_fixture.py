@@ -233,6 +233,7 @@ def _seed_presentation_receipt(
             ranking_policy_version="idea-score-v2",
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
+            accepted_at_utc=FIXTURE_TIME + timedelta(minutes=15),
         )
     )
     if result.decision is not PresentationReceiptDecision.ACCEPTED:

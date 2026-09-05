@@ -11,7 +11,12 @@ from app.domain.candidate_state import (
     CANDIDATE_STATE_POLICY_VERSION,
     REVIEWABLE_LIFECYCLE_STATUSES,
 )
-from app.domain.control_time import AcceptanceTimeSource
+from app.domain.control_time import (
+    FEEDBACK_TIME_POLICY,
+    REVIEW_DECISION_TIME_POLICY,
+    AcceptanceTimeSource,
+    require_observed_time_within_policy,
+)
 from app.domain.feedback_taxonomy import (
     FeedbackOutcome,
     FeedbackReason,
@@ -490,6 +495,11 @@ def apply_review_action(
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> ReviewActionResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    require_observed_time_within_policy(
+        command.decided_at_utc,
+        accepted_at_utc,
+        REVIEW_DECISION_TIME_POLICY,
+    )
     if command.snoozed_until_utc is not None and command.snoozed_until_utc <= accepted_at_utc:
         raise ValueError("snoozed_until_utc must be after accepted_at_utc")
     _ensure_allowed(candidate, command, policy)
@@ -548,6 +558,11 @@ def record_feedback(
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> FeedbackResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
+    require_observed_time_within_policy(
+        command.recorded_at_utc,
+        accepted_at_utc,
+        FEEDBACK_TIME_POLICY,
+    )
     _ensure_actor_scope(
         candidate_id=candidate.candidate_id,
         action=ReviewAction.NO_ACTION,

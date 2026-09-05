@@ -60,6 +60,12 @@ def test_candidate_presentation_receipt_keeps_global_rank_separate_from_visible_
             datetime(2026, 8, 30, tzinfo=timezone(timedelta(hours=1))),
             "must be UTC",
         ),
+        ("accepted_at_utc", datetime(2026, 8, 30), "timezone-aware"),
+        (
+            "accepted_at_utc",
+            datetime(2026, 8, 30, tzinfo=timezone(timedelta(hours=1))),
+            "must be UTC",
+        ),
         ("rank_at_presentation", 0, "must be a positive integer"),
         ("rank_at_presentation", True, "must be a positive integer"),
         ("visible_candidate_count", 0, "must be between"),
@@ -89,6 +95,18 @@ def test_in_memory_repository_records_and_replays_exact_receipt() -> None:
 
     assert accepted.decision is PresentationReceiptDecision.ACCEPTED
     assert accepted.receipt == receipt
+    assert replayed.decision is PresentationReceiptDecision.REPLAYED
+    assert replayed.receipt == receipt
+
+
+def test_presentation_replay_retains_original_server_acceptance_time() -> None:
+    repository = _repository()
+    receipt = _receipt()
+    retry = _receipt(accepted_at_utc=receipt.accepted_at_utc + timedelta(microseconds=1))
+
+    repository.record_presentation_receipt(receipt)
+    replayed = repository.record_presentation_receipt(retry)
+
     assert replayed.decision is PresentationReceiptDecision.REPLAYED
     assert replayed.receipt == receipt
 
@@ -136,7 +154,7 @@ def test_in_memory_repository_does_not_disclose_receipt_across_candidate_scope()
         {"tenant_id": "tenant-other"},
         {"candidate_material_version": 2},
         {"candidate_evidence_version": 2},
-        {"presented_at_utc": datetime(2026, 8, 30, 11, 59, 59, tzinfo=UTC)},
+        {"accepted_at_utc": datetime(2026, 8, 30, 11, 59, 59, tzinfo=UTC)},
     ),
 )
 def test_in_memory_repository_rejects_receipt_that_does_not_match_candidate(
@@ -175,6 +193,7 @@ def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
         "ranking_policy_version": "idea-score-v2",
         "candidate_material_version": 1,
         "candidate_evidence_version": 1,
+        "accepted_at_utc": datetime(2026, 8, 30, 12, 0, 1, tzinfo=UTC),
     }
     values.update(overrides)
     return CandidatePresentationReceipt(**values)
