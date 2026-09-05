@@ -7,6 +7,7 @@ from urllib.parse import quote
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_revision_claims import build_source_revision_claims
 from app.ports.advise_sources import (
     ADVISE_POLICY_EVALUATION_PRODUCT_ID,
     ADVISE_POLICY_EVALUATION_PRODUCT_VERSION,
@@ -113,6 +114,10 @@ def _source_ref(runtime: AdvisePolicyEvaluationRuntimeEvidence) -> SourceRef | N
         content_hash=runtime.content_hash,
         data_quality_status=runtime.data_quality_status,
         freshness=freshness,
+        revision_claims=build_source_revision_claims(
+            calculation_run_id=runtime.evaluation_id,
+            policy_version=runtime.policy_version,
+        ),
     )
 
 
