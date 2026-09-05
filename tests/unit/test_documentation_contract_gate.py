@@ -549,6 +549,35 @@ def test_documentation_contract_gate_blocks_missing_required_diagram(
     assert errors == ["wiki/Architecture.md: has 0 Mermaid diagrams; minimum is 1"]
 
 
+def test_documentation_contract_gate_blocks_excess_diagrams(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "# Product\n\n"
+        "```mermaid\nflowchart LR\nA --> B\n```\n\n"
+        "```mermaid\nflowchart LR\nB --> C\n```\n",
+        encoding="utf-8",
+    )
+    surface = module.PolishedDocumentationSurface(
+        "README.md",
+        (),
+        0,
+        0,
+        1,
+        1,
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(),
+        polished_surfaces=(surface,),
+    )
+
+    assert errors == ["README.md: has 2 Mermaid diagrams; maximum is 1"]
+
+
 def test_documentation_contract_gate_blocks_same_wiki_markdown_suffix_links(
     tmp_path: Path,
 ) -> None:

@@ -251,7 +251,8 @@ POLISHED_SURFACES = (
         ),
         1,
         4,
-        2,
+        1,
+        1,
     ),
     PolishedDocumentationSurface(
         "docs/operations/observability.md",
@@ -462,6 +463,11 @@ def validate_documentation_contract(
             errors.append(
                 f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
                 f"minimum is {surface.min_mermaid_fences}"
+            )
+        if surface.max_mermaid_fences is not None and mermaid_count > surface.max_mermaid_fences:
+            errors.append(
+                f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
+                f"maximum is {surface.max_mermaid_fences}"
             )
     errors.extend(same_wiki_page_link_errors(root=root))
     errors.extend(evidence_inventory.evidence_classification_inventory_errors(root=root))
