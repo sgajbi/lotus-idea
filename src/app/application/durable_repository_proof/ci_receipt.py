@@ -29,7 +29,7 @@ _GOVERNED_POSTGRES_TESTS = (
     ),
     (
         "tests.integration.test_postgres_review_queue_runtime",
-        "test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token",
+        "test_postgres_review_queue_preserves_historical_snapshot_across_later_accepted_insert",
     ),
 )
 
