@@ -250,8 +250,6 @@ def source_cut_posture(
         for item in present_claims
     ):
         return SourceCutPosture.PARTIAL
-    if any(not item.is_authoritative for item in present_claims):
-        return SourceCutPosture.UNKNOWN
     if len(source_refs) == 1:
         return SourceCutPosture.COHERENT
     if len({source_ref.as_of_date for source_ref in source_refs}) != 1:

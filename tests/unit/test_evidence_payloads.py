@@ -7,6 +7,7 @@ import pytest
 from app.domain import (
     CausalInputRevision,
     EvidenceFreshness,
+    SourceCutTolerance,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -15,6 +16,8 @@ from app.domain import (
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.evidence_payloads import (
     access_scope_payload,
+    source_cut_tolerance_from_payload,
+    source_cut_tolerance_payload,
     source_ref_payload,
     source_revision_claims_from_payload,
 )
@@ -100,3 +103,49 @@ def test_unknown_revision_claim_payload_fails_closed_when_claims_are_smuggled() 
         source_revision_claims_from_payload(
             {"claim_posture": "unknown", "snapshot_id": "caller-invented"}
         )
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    (
+        ({"claim_posture": "caller_claimed"}, "claim_posture is invalid"),
+        (
+            {
+                "claim_posture": "owner_claimed",
+                "source_revision": "revision-1",
+                "causal_input_revisions": "not-an-array",
+            },
+            "must be an array",
+        ),
+        (
+            {
+                "claim_posture": "owner_claimed",
+                "source_revision": "revision-1",
+                "causal_input_revisions": ("not-an-object",),
+            },
+            "must be an object",
+        ),
+    ),
+)
+def test_source_revision_claim_payload_rejects_invalid_shapes(
+    payload: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        source_revision_claims_from_payload(payload)
+
+
+def test_source_cut_tolerance_payload_round_trips_and_preserves_none() -> None:
+    tolerance = SourceCutTolerance(
+        policy_version="source-cut-tolerance-v1",
+        maximum_generated_time_skew_seconds=60,
+    )
+
+    assert source_cut_tolerance_payload(None) is None
+    payload = source_cut_tolerance_payload(tolerance)
+    assert payload == {
+        "policy_version": "source-cut-tolerance-v1",
+        "maximum_generated_time_skew_seconds": 60,
+    }
+    assert source_cut_tolerance_from_payload(payload) == tolerance
+    assert source_cut_tolerance_from_payload(None) is None

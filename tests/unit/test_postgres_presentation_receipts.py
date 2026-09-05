@@ -56,6 +56,18 @@ def test_postgres_receipt_exact_replay_survives_repository_restart() -> None:
     assert connection.commits == 1
 
 
+def test_postgres_receipt_exact_replay_survives_observed_time_skew() -> None:
+    receipt = _receipt(presented_at_utc=datetime(2000, 1, 1, tzinfo=UTC))
+    connection = _Connection([[_row(receipt)]])
+
+    result = _record_presentation_receipt(connection, receipt)
+
+    assert result.decision is PresentationReceiptDecision.REPLAYED
+    assert result.receipt == receipt
+    assert connection.commits == 1
+    assert connection.rollbacks == 0
+
+
 def test_postgres_receipt_identity_conflict_returns_existing_immutable_receipt() -> None:
     existing = _receipt()
     connection = _Connection([[], [_row(existing)]])
