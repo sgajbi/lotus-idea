@@ -1486,7 +1486,8 @@ Downstream realization:
    supported-feature evidence,
 9. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
 10. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
-11. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+11. `LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH`,
+12. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
    `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
    `LOTUS_IDEA_REPORT_REALIZATION_REGION`. The owner-authorized synthetic
@@ -1495,13 +1496,13 @@ Downstream realization:
    `lotus-report:idea-evidence-retention:v1` reference maps to the
    Report-owned `generated-report-standard` selector. Do not persist that
    selector in Idea or treat it as trusted production identity,
-12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
-13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
-16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
-17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
-18. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+18. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+19. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
 
 The Advise, Manage, and Report fixtures are server-side local/test development aids
 only. They never trust browser-supplied identity headers and fail closed in
@@ -2973,9 +2974,10 @@ Recent issue-derived patterns to preserve:
 45. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the
-    capability-owned `report/` application, script, and test packages. The v3
-    artifact may add a source-safe evidence reference and must link the closed
-    Report owner proof `sgajbi/lotus-report#152`, but it clears no blocker and
+    capability-owned `report/` application, script, and test packages. The v4
+    artifact consumes both the materialization declaration and its exact
+    read-only recovery contract, and links Report owner proofs
+    `sgajbi/lotus-report#152` and `sgajbi/lotus-report#286`. It clears no blocker and
     must preserve materialization execution, rendered-output creation,
     archive-record creation, retention/legal-hold, client-publication,
     certification, and promotion posture. Its validator rejects additional
@@ -3004,6 +3006,16 @@ Recent issue-derived patterns to preserve:
     scope, and fails closed outside `local` and `test` until `#380` production
     identity prerequisites are available. This consumer mapping is not Report
     job, Render, Archive, publication, or supported-feature evidence.
+    Receipt recovery extends the existing downstream-submission aggregate; it
+    must not create another registry or repeat an uncertain materialization
+    `POST`. Authorize complete tenant/book/portfolio/client scope before the
+    owner read. Query Report with the persisted idempotency key plus exact pack,
+    conversion-intent, candidate, evidence packet, evidence fingerprint, and
+    portfolio identity. Validate the typed receipt before persisting it with
+    trusted local acceptance time. Missing, unavailable, malformed, or
+    contradictory owner evidence leaves local posture uncertain; exact
+    persisted replay performs no owner read. Report/Render/Archive remain
+    authoritative for materialization, rendering, archive, and publication.
 47. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
     `data_mesh/` application, script, and test packages. Bind each authoritative

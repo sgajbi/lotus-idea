@@ -69,11 +69,11 @@ Implemented in the first Slice 13 foundation:
    The merged `lotus-report` materialization declaration can also be validated through
    `scripts/report/generate_materialization_source_contract.py` and
    `make report-materialization-source-contract-proof-gate`. Issue `#438`
-   classifies the resulting artifact as `source_contract` evidence. The v3
-   artifact now records `reportOwnerMaterializationContractConsumed=true` and
-   `reportOwnerProofRef=sgajbi/lotus-report#152`, linking the closed
-   Report-owned materialization contract proof without moving Report authority
-   into `lotus-idea`. It clears no blocker and cannot infer report-job
+   classifies the resulting artifact as `source_contract` evidence. The v4
+   artifact consumes both the materialization and exact read-only recovery
+   declarations and links Report owner proofs `sgajbi/lotus-report#152` and
+   `sgajbi/lotus-report#286` without moving Report authority into `lotus-idea`.
+   It clears no blocker and cannot infer report-job
    execution, rendered-output creation, archive-record creation, retention/legal-hold posture,
    client-publication authority, production certification, or supported-feature
    promotion from sibling declarations.
@@ -198,6 +198,14 @@ Partially satisfied:
    accepted archived receipt and owner evidence both validate, Idea readiness
    clears `report_evidence_pack_live_materialization_proof_missing`,
    `rendered_output_creation_missing`, and `archive_record_creation_missing`.
+8. An uncertain Report materialization submission can recover its exact
+   Report-owned receipt through the existing downstream-submission aggregate.
+   Idea authorizes complete scope before the owner read, binds the stored
+   idempotency key to the exact pack, intent, candidate, evidence, and portfolio
+   identity, and never repeats the materialization request. Matching receipts
+   persist with trusted local acceptance time; unavailable or contradictory
+   owner evidence cannot advance posture, and exact replay performs no owner
+   read.
 
 Not yet satisfied:
 
@@ -224,9 +232,11 @@ aggregate-current Report intake runtime proof, the live-intake blocker is
 cleared while materialization, rendered output, Archive record,
 client-publication, production identity, and supported-feature blockers remain.
 With a valid report-materialization source contract, they can cite
-`POST /reports/idea-evidence-packs/materializations` only as a declared
-report-owned route and can expose the closed Report owner proof ref
-`sgajbi/lotus-report#152` as provenance. Source contracts clear no blocker.
+`POST /reports/idea-evidence-packs/materializations` and its exact read-only
+`GET /reports/idea-evidence-packs/materializations` recovery contract only as
+declared Report-owned routes, and can expose Report owner proof refs
+`sgajbi/lotus-report#152` and `sgajbi/lotus-report#286` as provenance. Source
+contracts clear no blocker.
 With a valid aggregate-current Report materialization runtime proof, the
 runtime target advances to the Report materialization route and the materialized
 Report/Render/Archive creation blockers are cleared only because the proof

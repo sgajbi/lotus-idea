@@ -299,6 +299,7 @@ def validate_compose_runtime_contract(compose: str) -> list[str]:
         "      LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES:": "Manage realization capabilities",
         "      LOTUS_IDEA_REPORT_REALIZATION_BASE_URL:": "Report realization base URL",
         "      LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH:": "Report realization submit path",
+        "      LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH:": ("Report realization recovery path"),
     }
     errors.extend(
         f"docker-compose.yml must configure governed {label}"

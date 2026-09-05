@@ -28,6 +28,9 @@ from app.application.report.materialization_source_contract import (  # noqa: E4
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     REPORT_MATERIALIZATION_OWNER_PROOF_REF,
+    REPORT_MATERIALIZATION_RECOVERY_OWNER_PROOF_REF,
+    REPORT_MATERIALIZATION_RECOVERY_QUERY_FIELDS,
+    REPORT_MATERIALIZATION_RECOVERY_ROUTE,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
     build_report_materialization_source_contract_payload,
@@ -94,6 +97,12 @@ def validate_report_materialization_source_contract() -> list[str]:
         errors.append(
             "report materialization source contract must consume the Report owner contract"
         )
+    if artifact.get("reportOwnerRecoveryContractConsumed") is not True:
+        errors.append("report materialization source contract must consume owner recovery")
+    if REPORT_MATERIALIZATION_RECOVERY_OWNER_PROOF_REF not in tuple(
+        artifact.get("evidenceRefs") or ()
+    ):
+        errors.append("report materialization source contract must link recovery owner proof")
     if tuple(artifact.get("aggregateBlockersCleared") or ()) != (
         REPORT_MATERIALIZATION_BLOCKERS_CLEARED
     ):
@@ -114,12 +123,15 @@ def _write_report_fixture(temp_root: Path) -> Path:
         report_root / "contracts/idea-evidence-materialization/"
         "lotus-report-idea-evidence-pack-materialization.v1.json",
         report_root / "src/app/idea_evidence_intake/models.py",
+        report_root / "src/app/idea_evidence_intake/materialization_contract.py",
+        report_root / "src/app/idea_evidence_intake/recovery.py",
         report_root / "src/app/idea_evidence_intake/service.py",
         report_root / "src/app/routers/idea_evidence_intake.py",
         report_root / "src/app/reporting_lineage/capture_service.py",
         report_root / "src/app/reporting_render/package_builder.py",
         report_root / "tests/unit/test_idea_evidence_materialization_contract.py",
         report_root / "tests/unit/test_idea_evidence_intake_service.py",
+        report_root / "tests/unit/test_idea_evidence_recovery.py",
         report_root / "tests/integration/test_idea_evidence_intake_api.py",
     ]
     for path in required_files:
@@ -146,10 +158,23 @@ def _report_contract_payload() -> dict[str, object]:
         "client_publication_authority_granted": False,
         "supported_feature_promoted": False,
         "target_route": "POST /reports/idea-evidence-packs/materializations",
+        "recovery": {
+            "target_route": REPORT_MATERIALIZATION_RECOVERY_ROUTE,
+            "lookup_key": "idempotencyKey",
+            "required_query_fields": list(REPORT_MATERIALIZATION_RECOVERY_QUERY_FIELDS),
+            "required_caller_application": "lotus-idea",
+            "required_capability": "report.idea-materialization.recover",
+            "tenant_scoped": True,
+            "repository_query_limit": 2,
+            "retries_materialization": False,
+            "not_found_status": 404,
+            "identity_conflict_status": 409,
+        },
         "non_proof_boundaries": [
             "Proves report-owned materialization, rendered output creation, and archive record creation through the governed report job pipeline.",
             "Does not grant suitability, advisory proposal approval, mandate approval, order, execution, settlement, distribution, or client-publication authority.",
             "Does not recompute lotus-idea evidence or upstream portfolio, holding, performance, risk, mandate, or transaction facts.",
+            "Recovery reads current Report-owned state and never retries an uncertain materialization POST.",
             "Does not promote a supported feature in lotus-report or lotus-idea.",
         ],
         "certification_blockers": [
