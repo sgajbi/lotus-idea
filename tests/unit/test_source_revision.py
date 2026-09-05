@@ -76,12 +76,14 @@ def test_revision_vector_digest_is_independent_of_input_order() -> None:
         _claims(source_revision="revision-8"),
         _claims(restatement_version="restatement-3"),
         _claims(methodology_version="methodology-5"),
-        _claims(causal_input_revisions=(
-            CausalInputRevision(
-                product_id="lotus-core:HoldingsAsOf:v1",
-                source_revision="holdings-32",
-            ),
-        )),
+        _claims(
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id="lotus-core:HoldingsAsOf:v1",
+                    source_revision="holdings-32",
+                ),
+            )
+        ),
     ],
 )
 def test_revision_vector_digest_changes_with_owner_revision_identity(
@@ -100,12 +102,25 @@ def test_cut_posture_requires_authoritative_claims() -> None:
 
     assert source_cut_posture((replace(known, revision_claims=None),)) is SourceCutPosture.UNKNOWN
     assert source_cut_posture((known, unknown)) is SourceCutPosture.PARTIAL
-    assert source_cut_posture(
-        (replace(known, revision_claims=_claims(reconciliation_posture=SourceReconciliationPosture.FAILED)),)
-    ) is SourceCutPosture.MIXED
-    assert source_cut_posture(
-        (replace(known, revision_claims=SourceRevisionClaims(methodology_version="risk.v1")),)
-    ) is SourceCutPosture.PARTIAL
+    assert (
+        source_cut_posture(
+            (
+                replace(
+                    known,
+                    revision_claims=_claims(
+                        reconciliation_posture=SourceReconciliationPosture.FAILED
+                    ),
+                ),
+            )
+        )
+        is SourceCutPosture.MIXED
+    )
+    assert (
+        source_cut_posture(
+            (replace(known, revision_claims=SourceRevisionClaims(methodology_version="risk.v1")),)
+        )
+        is SourceCutPosture.PARTIAL
+    )
 
 
 def test_shared_owner_cut_is_coherent_and_conflicting_cut_is_mixed() -> None:
@@ -113,9 +128,12 @@ def test_shared_owner_cut_is_coherent_and_conflicting_cut_is_mixed() -> None:
     second = _source("lotus-core:HoldingsAsOf:v1")
 
     assert source_cut_posture((first, second)) is SourceCutPosture.COHERENT
-    assert source_cut_posture(
-        (first, replace(second, revision_claims=_claims(source_cut_id="different-cut")))
-    ) is SourceCutPosture.MIXED
+    assert (
+        source_cut_posture(
+            (first, replace(second, revision_claims=_claims(source_cut_id="different-cut")))
+        )
+        is SourceCutPosture.MIXED
+    )
 
 
 def test_declared_tolerance_is_explicit_and_versioned() -> None:
@@ -131,13 +149,16 @@ def test_declared_tolerance_is_explicit_and_versioned() -> None:
     )
 
     assert source_cut_posture((first, second)) is SourceCutPosture.UNKNOWN
-    assert source_cut_posture(
-        (first, second),
-        tolerance=SourceCutTolerance(
-            policy_version="source-cut-tolerance-v1",
-            maximum_generated_time_skew_seconds=60,
-        ),
-    ) is SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE
+    assert (
+        source_cut_posture(
+            (first, second),
+            tolerance=SourceCutTolerance(
+                policy_version="source-cut-tolerance-v1",
+                maximum_generated_time_skew_seconds=60,
+            ),
+        )
+        is SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE
+    )
 
 
 def test_revision_claims_reject_duplicate_causal_input_products() -> None:

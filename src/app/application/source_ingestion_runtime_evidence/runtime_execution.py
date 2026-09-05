@@ -572,8 +572,7 @@ def _source_ref_receipts_are_valid(
         product_ids.append(str(ref["productId"]))
     cut_ids = {str(ref["revisionClaims"]["source_cut_id"]) for ref in refs}
     return (
-        tuple(product_ids) == tuple(sorted(CORE_HIGH_CASH_SOURCE_PRODUCT_IDS))
-        and len(cut_ids) == 1
+        tuple(product_ids) == tuple(sorted(CORE_HIGH_CASH_SOURCE_PRODUCT_IDS)) and len(cut_ids) == 1
     )
 
 

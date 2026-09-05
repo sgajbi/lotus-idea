@@ -309,9 +309,7 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
             ranking_policy_version="idea-score-v2",
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
-            source_revision_vector_digest=(
-                candidate.evidence_packet.source_revision_vector_digest
-            ),
+            source_revision_vector_digest=(candidate.evidence_packet.source_revision_vector_digest),
             source_cut_posture=candidate.evidence_packet.source_cut_posture,
             accepted_at_utc=presented_at,
         )
@@ -330,9 +328,7 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
             ranking_policy_version="idea-score-v2",
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
-            source_revision_vector_digest=(
-                candidate.evidence_packet.source_revision_vector_digest
-            ),
+            source_revision_vector_digest=(candidate.evidence_packet.source_revision_vector_digest),
             source_cut_posture=candidate.evidence_packet.source_cut_posture,
             accepted_at_utc=presented_at + timedelta(minutes=15),
         )

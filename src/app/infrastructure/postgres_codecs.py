@@ -515,9 +515,7 @@ def _review_authority_grant_to_json(
             "evidence_content_hash": evidence.evidence_content_hash,
             "source_revision_vector_digest": evidence.source_revision_vector_digest,
             "source_cut_posture": evidence.source_cut_posture.value,
-            "source_cut_authority_policy_version": (
-                evidence.source_cut_authority_policy_version
-            ),
+            "source_cut_authority_policy_version": (evidence.source_cut_authority_policy_version),
         },
         "review_channel": grant.review_channel.value,
         "actor_subject": grant.actor_subject,
@@ -738,9 +736,7 @@ def _ai_explanation_lineage_from_json(
         source_revision_vector_digest=str(
             payload.get("source_revision_vector_digest", "legacy:unknown")
         ),
-        source_cut_posture=str(
-            payload.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)
-        ),
+        source_cut_posture=str(payload.get("source_cut_posture", SourceCutPosture.UNKNOWN.value)),
         workflow_pack_id=str(payload["workflow_pack_id"]),
         workflow_pack_version=str(payload["workflow_pack_version"]),
         purpose=str(payload["purpose"]),

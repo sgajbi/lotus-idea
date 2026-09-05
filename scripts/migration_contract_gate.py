@@ -320,9 +320,7 @@ REQUIRED_MIGRATIONS = (
     MigrationContract(
         version="026",
         forward_path=MIGRATIONS_DIR / "026_presentation_source_revision_binding.sql",
-        rollback_path=(
-            MIGRATIONS_DIR / "026_presentation_source_revision_binding.rollback.sql"
-        ),
+        rollback_path=(MIGRATIONS_DIR / "026_presentation_source_revision_binding.rollback.sql"),
         required_tables=(),
         required_indexes=(),
         required_forward_fragments=(

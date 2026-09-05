@@ -183,7 +183,10 @@ def validate_presentation_receipt_candidate(
         raise PresentationReceiptCandidateStateError("candidate material version does not match")
     if receipt.candidate_evidence_version != candidate.identity.evidence_version:
         raise PresentationReceiptCandidateStateError("candidate evidence version does not match")
-    if receipt.source_revision_vector_digest != candidate.evidence_packet.source_revision_vector_digest:
+    if (
+        receipt.source_revision_vector_digest
+        != candidate.evidence_packet.source_revision_vector_digest
+    ):
         raise PresentationReceiptCandidateStateError(
             "candidate source revision vector does not match receipt"
         )

@@ -898,12 +898,12 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
         GovernedReviewDecision(
             review_id="review-no-decision-reason",
             candidate_id="idea-review-001",
-                evidence_packet_id="iep_review_test",
-                evidence_content_hash="sha256:review-lineage",
-                source_revision_vector_digest=(
-                    candidate().evidence_packet.source_revision_vector_digest
-                ),
-                source_cut_posture=candidate().evidence_packet.source_cut_posture,
+            evidence_packet_id="iep_review_test",
+            evidence_content_hash="sha256:review-lineage",
+            source_revision_vector_digest=(
+                candidate().evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate().evidence_packet.source_cut_posture,
             candidate_material_version=1,
             candidate_evidence_version=1,
             review_channel=ReviewChannel.WORKBENCH,
