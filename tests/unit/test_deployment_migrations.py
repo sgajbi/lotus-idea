@@ -61,8 +61,8 @@ def test_deployment_contract_pins_current_bundle_and_legacy_schema() -> None:
     contract = load_deployment_migration_contract(MIGRATION_CONTRACT_PATH)
 
     assert contract.migration_bundle_sha256 == MIGRATION_BUNDLE_SHA256
-    assert contract.migration_count == 24
-    assert contract.current_migration_version == "024"
+    assert contract.migration_count == 25
+    assert contract.current_migration_version == "025"
     assert contract.schema_fingerprint_sha256.startswith("sha256:")
 
 
