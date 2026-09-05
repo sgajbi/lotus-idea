@@ -133,7 +133,7 @@ def _seed_workflow_records(
     review_ready = replace(
         base,
         candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_review",
-        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        lifecycle_status=IdeaLifecycleStatus.GOVERNANCE_CHECKED,
     )
     conversion_review_ready = replace(
         conversion_base,
@@ -145,10 +145,10 @@ def _seed_workflow_records(
     _persist_candidate(repository, conversion_review_ready, "dr-fixture-conversion")
     lifecycle = repository.record_lifecycle_transition(
         review_ready.candidate_id,
-        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
+        IdeaLifecycleStatus.READY_FOR_REVIEW,
         idempotency_key="dr-fixture-lifecycle",
-        payload={"candidateId": review_ready.candidate_id, "target": "reviewed_by_advisor"},
-        actor_subject="dr-fixture-advisor",
+        payload={"candidateId": review_ready.candidate_id, "target": "ready_for_review"},
+        actor_subject="dr-fixture-lifecycle-worker",
         occurred_at_utc=FIXTURE_TIME + timedelta(minutes=1),
         transition_id="dr-fixture-transition-001",
         reason_codes=("review_required",),
