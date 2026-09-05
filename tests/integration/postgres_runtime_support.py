@@ -207,6 +207,12 @@ def _source_ref(product_id: str) -> dict[str, str]:
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
         "contentHash": f"sha256:{product_id}",
+        "revisionClaims": {
+            "sourceRevision": f"revision:{product_id}",
+            "sourceBatchId": "core-close-2026-06-21",
+            "sourceCutId": "core-close-2026-06-21",
+            "reconciliationPosture": "complete",
+        },
         "dataQualityStatus": "complete",
         "freshness": "current",
     }

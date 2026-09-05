@@ -15,6 +15,8 @@ from app.domain import (
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
+    IdeaLifecycleStatus,
+    LifecyclePersistenceDecision,
     ReviewAccessScope,
     SourceRef,
     SourceSystem,
@@ -73,6 +75,68 @@ def test_postgres_runtime_serializes_candidate_identity_and_idempotency_races(
     }
     assert _table_count(postgres_database_url, "idea_candidate_record") == 2
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 3
+    assert _table_count(postgres_database_url, "idea_audit_event") == 2
+    assert _table_count(postgres_database_url, "idea_outbox_event") == 2
+
+
+def test_postgres_runtime_serializes_exact_concurrent_lifecycle_replay(
+    postgres_database_url: str,
+) -> None:
+    candidate = _high_cash_candidate("postgres-concurrent-lifecycle")
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        persisted = repository.persist_candidate(
+            candidate,
+            idempotency_key="candidate:postgres-concurrent-lifecycle",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+    assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+
+    lifecycle_results = run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, key: repository.record_lifecycle_transition(
+            candidate.candidate_id,
+            IdeaLifecycleStatus.ENRICHED,
+            idempotency_key=key,
+            payload={
+                "candidateId": candidate.candidate_id,
+                "targetStatus": "enriched",
+                "observedAtUtc": "2026-06-21T10:01:00+00:00",
+            },
+            actor_subject="idea-lifecycle-worker",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            observed_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+            transition_id="postgres-concurrent-lifecycle-enriched",
+            reason_codes=("review_required",),
+        ),
+        ("lifecycle:postgres-concurrent",) * 2,
+    )
+
+    assert {result.decision for result in lifecycle_results} == {
+        LifecyclePersistenceDecision.ACCEPTED,
+        LifecyclePersistenceDecision.REPLAYED,
+    }
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        snapshot = PostgresIdeaRepository(cast(PostgresConnection, connection)).snapshot()
+    record = snapshot.candidate_records[candidate.candidate_id]
+    assert record.candidate.lifecycle_status is IdeaLifecycleStatus.ENRICHED
+    assert len(record.lifecycle_history) == 1
+    assert record.lifecycle_history[0].changed_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    lifecycle_audit = next(
+        event for event in record.audit_events if event.event_type == "idea.lifecycle.transitioned"
+    )
+    assert lifecycle_audit.occurred_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    assert lifecycle_audit.attributes["observed_at_utc"] == "2026-06-21T10:01:00+00:00"
+    lifecycle_outbox = next(
+        event
+        for event in snapshot.outbox_events.values()
+        if event.event_type == "idea.lifecycle.transitioned.v1"
+    )
+    assert lifecycle_outbox.occurred_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    assert lifecycle_outbox.payload["observed_at_utc"] == "2026-06-21T10:01:00+00:00"
+    assert _table_count(postgres_database_url, "idea_lifecycle_history") == 1
     assert _table_count(postgres_database_url, "idea_audit_event") == 2
     assert _table_count(postgres_database_url, "idea_outbox_event") == 2
 
@@ -307,6 +371,7 @@ def _table_count(database_url: str, table_name: str) -> int:
     allowed_tables = {
         "idea_candidate_record",
         "idea_candidate_version_history",
+        "idea_lifecycle_history",
         "idea_idempotency_record",
         "idea_audit_event",
         "idea_outbox_event",

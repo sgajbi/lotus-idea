@@ -601,6 +601,7 @@ def test_lifecycle_transition_records_idempotent_audit_history() -> None:
     ]
     lifecycle_event = tuple(repository.snapshot().outbox_events.values())[-1]
     assert lifecycle_event.payload == {
+        "observed_at_utc": "2026-06-21T10:01:00+00:00",
         "source_status": "generated",
         "target_status": "enriched",
     }
