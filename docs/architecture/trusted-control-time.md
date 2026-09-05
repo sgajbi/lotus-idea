@@ -53,6 +53,15 @@ explicit UTC offset.
   evidence.
 - Downstream `recordedAtUtc` and `sourceEventVersion` remain owner facts. Idea
   records a separate receipt acceptance time.
+- Historical review queues and learning projections use acceptance time for
+  snapshot inclusion and control-event ordering. A producer timestamp that is
+  backdated before a historical cutoff cannot rewrite the queue, feedback
+  evaluation, opportunity-effectiveness, or ranking-quality result after the
+  event is accepted.
+- Candidate-version history continues to use its server-recorded persistence
+  time. Downstream owner history continues to order first by the authoritative
+  source event version, with Idea acceptance time only as the receipt-order
+  tie-breaker.
 
 The current observed-time policies are:
 

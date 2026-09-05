@@ -4,6 +4,9 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from typing import Any, cast
 
+import pytest
+
+from tests.support.fixed_utc_clock import FixedUtcClock
 from tests.support.http import managed_test_client
 
 from app.domain import (
@@ -20,6 +23,16 @@ from app.domain import (
 from app.main import app
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.runtime.repository_state import get_idea_repository
+from app.runtime import trusted_clock_state
+
+
+@pytest.fixture(autouse=True)
+def _review_queue_control_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 10, tzinfo=UTC)),
+    )
 
 
 def test_postgres_review_queue_and_readiness_enforce_applicability_expiry_boundary(
@@ -214,8 +227,9 @@ def test_postgres_review_queue_honors_persisted_snooze_until_exact_boundary(
     assert [item["candidate"]["candidateId"] for item in awakened.json()["items"]] == [candidate_id]
 
 
-def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token(
+def test_postgres_review_queue_preserves_historical_snapshot_across_later_accepted_insert(
     postgres_database_url: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     del postgres_database_url
     client = managed_test_client(app)
@@ -237,6 +251,11 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
     assert first_page.status_code == 200
     snapshot_token = str(first_page.json()["page"]["snapshotToken"])
 
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 11, tzinfo=UTC)),
+    )
     future = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=_high_cash_payload(
@@ -270,7 +289,7 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
         headers=_persistence_headers("postgres-review-queue-snapshot-backdated"),
     )
     assert backdated.status_code == 200
-    stale_page = client.get(
+    historical_page = client.get(
         "/api/v1/review-queues/advisor",
         params={
             "evaluatedAtUtc": "2026-06-21T10:10:00Z",
@@ -280,8 +299,9 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
         },
         headers=_review_queue_headers(),
     )
-    assert stale_page.status_code == 409
-    assert stale_page.json()["code"] == "review_queue_snapshot_conflict"
+    assert historical_page.status_code == 200
+    assert historical_page.json()["page"]["snapshotToken"] == snapshot_token
+    assert historical_page.json()["page"]["totalReviewableItemCount"] == 2
 
 
 def _bond_maturity_input(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> BondMaturitySignalInput:

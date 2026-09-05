@@ -137,6 +137,8 @@ def record_snooze(
     *,
     snoozed_until_utc: datetime,
     review_id: str = "review-snooze-001",
+    decided_at_utc: datetime = EVALUATED_AT,
+    accepted_at_utc: datetime = EVALUATED_AT,
 ) -> None:
     candidate = repository.snapshot().candidate_records[candidate_id].candidate
     assert candidate.access_scope is not None
@@ -154,16 +156,43 @@ def record_snooze(
                 client_ids=frozenset({candidate.access_scope.client_id}),
             ),
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
-            decided_at_utc=EVALUATED_AT,
+            decided_at_utc=decided_at_utc,
             snoozed_until_utc=snoozed_until_utc,
         ),
-        accepted_at_utc=EVALUATED_AT,
+        accepted_at_utc=accepted_at_utc,
     )
     repository.record_review_action(
         result,
         idempotency_key=f"review-action:snooze:{review_id}",
         payload={"reviewId": result.decision.review_id},
     )
+
+
+def test_review_queue_applies_snooze_from_trusted_acceptance_time() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_id = persist_high_cash_candidate(repository)
+    historical_cut = EVALUATED_AT + timedelta(minutes=5)
+    accepted_at = EVALUATED_AT + timedelta(minutes=10)
+    record_snooze(
+        repository,
+        candidate_id,
+        snoozed_until_utc=EVALUATED_AT + timedelta(hours=1),
+        decided_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        accepted_at_utc=accepted_at,
+    )
+
+    historical = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=historical_cut),
+        repository=repository,
+    )
+    current = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=accepted_at),
+        repository=repository,
+    )
+
+    assert [item.candidate.candidate_id for item in historical.items] == [candidate_id]
+    assert current.items == ()
+    assert current.exclusions[0].reason is QueueExclusionReason.SNOOZED
 
 
 def test_build_review_queue_from_repository_projects_persisted_candidates() -> None:

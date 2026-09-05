@@ -395,13 +395,13 @@ def _active_snoozes(
         applicable = tuple(
             decision
             for decision in record.review_decisions
-            if material_started_at <= decision.decided_at_utc <= evaluated_at_utc
+            if material_started_at <= decision.accepted_at_utc <= evaluated_at_utc
         )
         if not applicable:
             continue
         latest = max(
             applicable,
-            key=lambda decision: (decision.decided_at_utc, decision.review_id),
+            key=lambda decision: (decision.accepted_at_utc, decision.review_id),
         )
         if (
             latest.action is ReviewAction.SNOOZE

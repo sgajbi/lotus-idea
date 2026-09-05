@@ -153,7 +153,8 @@ def _insert_legacy_feedback(connection: psycopg.Connection[dict[str, object]]) -
             );
             INSERT INTO idea_feedback_event (
                 feedback_event_id, candidate_id, actor_subject,
-                feedback_json, recorded_at_utc
+                feedback_json, recorded_at_utc, accepted_at_utc,
+                acceptance_time_source
             ) VALUES (
                 'legacy-feedback-001', 'legacy-feedback-candidate', 'advisor-legacy',
                 jsonb_build_object(
@@ -172,7 +173,8 @@ def _insert_legacy_feedback(connection: psycopg.Connection[dict[str, object]]) -
                     'actor_subject', 'advisor-legacy',
                     'actor_role', 'advisor'
                 ),
-                '2026-06-21T10:05:00Z'
+                '2026-06-21T10:05:00Z', '2026-06-21T10:05:00Z',
+                'legacy_observed_time_assumed'
             );
             INSERT INTO idea_outbox_event (
                 outbox_event_id, event_type, aggregate_type, aggregate_id,
@@ -220,7 +222,8 @@ def _insert_governed_feedback(connection: psycopg.Connection[dict[str, object]])
             INSERT INTO idea_feedback_event (
                 feedback_event_id, candidate_id, actor_subject,
                 feedback_json, recorded_at_utc,
-                feedback_taxonomy_version, feedback_outcome, feedback_reason
+                feedback_taxonomy_version, feedback_outcome, feedback_reason,
+                accepted_at_utc, acceptance_time_source
             ) VALUES (
                 'governed-feedback-001', 'governed-feedback-candidate', 'advisor-governed',
                 jsonb_build_object(
@@ -238,7 +241,8 @@ def _insert_governed_feedback(connection: psycopg.Connection[dict[str, object]])
                     'actor_role', 'advisor'
                 ),
                 '2026-06-21T11:05:00Z',
-                'idea-feedback-taxonomy-v1', 'useful', 'relevant'
+                'idea-feedback-taxonomy-v1', 'useful', 'relevant',
+                '2026-06-21T11:05:00Z', 'legacy_observed_time_assumed'
             );
             """
         )

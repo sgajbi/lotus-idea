@@ -244,20 +244,20 @@ latest_reviews AS (
         review.candidate_id,
         review.action,
         review.decision_json->>'suppression_reason' AS suppression_reason,
-        review.decided_at_utc
+        review.accepted_at_utc
     FROM idea_review_decision AS review
     JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE review.decided_at_utc <= parameters.evaluated_at_utc
-    ORDER BY review.candidate_id, review.decided_at_utc DESC, review.review_decision_id DESC
+    WHERE review.accepted_at_utc <= parameters.evaluated_at_utc
+    ORDER BY review.candidate_id, review.accepted_at_utc DESC, review.review_decision_id DESC
 ),
 first_approvals AS (
-    SELECT review.candidate_id, MIN(review.decided_at_utc) AS decided_at_utc
+    SELECT review.candidate_id, MIN(review.accepted_at_utc) AS accepted_at_utc
     FROM idea_review_decision AS review
     JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
     WHERE review.action = 'approve_for_conversion'
-      AND review.decided_at_utc <= parameters.evaluated_at_utc
+      AND review.accepted_at_utc <= parameters.evaluated_at_utc
     GROUP BY review.candidate_id
 ),
 feedback AS (
@@ -265,17 +265,17 @@ feedback AS (
     FROM idea_feedback_event AS event
     JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE event.recorded_at_utc <= parameters.evaluated_at_utc
+    WHERE event.accepted_at_utc <= parameters.evaluated_at_utc
 ),
 intents AS (
     SELECT intent.*
     FROM idea_conversion_intent AS intent
     JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE intent.requested_at_utc <= parameters.evaluated_at_utc
+    WHERE intent.accepted_at_utc <= parameters.evaluated_at_utc
 ),
 first_intents AS (
-    SELECT candidate_id, MIN(requested_at_utc) AS requested_at_utc
+    SELECT candidate_id, MIN(accepted_at_utc) AS accepted_at_utc
     FROM intents
     GROUP BY candidate_id
 ),
@@ -290,7 +290,7 @@ current_outcomes AS (
         SELECT outcome.status
         FROM idea_conversion_outcome AS outcome
         WHERE outcome.conversion_intent_id = intent.conversion_intent_id
-          AND outcome.recorded_at_utc <= parameters.evaluated_at_utc
+          AND outcome.accepted_at_utc <= parameters.evaluated_at_utc
         ORDER BY outcome.source_event_version DESC, outcome.conversion_outcome_id DESC
         LIMIT 1
     ) AS current_outcome ON TRUE
@@ -318,6 +318,7 @@ presentation_receipts AS (
         receipt.candidate_id,
         receipt.tenant_id,
         receipt.presented_at_utc,
+        receipt.accepted_at_utc,
         receipt.rank_at_presentation,
         receipt.visible_candidate_count,
         receipt.queue_snapshot_digest,
@@ -336,14 +337,14 @@ presentation_receipts AS (
                 SELECT later_history.recorded_at_utc AS changed_at_utc
                 FROM idea_candidate_version_history AS later_history
                 WHERE later_history.candidate_id = receipt.candidate_id
-                  AND later_history.recorded_at_utc > receipt.presented_at_utc
+                  AND later_history.recorded_at_utc > receipt.accepted_at_utc
                   AND (
                       later_history.material_version <> receipt.candidate_material_version
                       OR later_history.evidence_version <> receipt.candidate_evidence_version
                   )
                 UNION ALL
                 SELECT cohort.updated_at_utc
-                WHERE cohort.updated_at_utc > receipt.presented_at_utc
+                WHERE cohort.updated_at_utc > receipt.accepted_at_utc
                   AND (
                       cohort.material_version <> receipt.candidate_material_version
                       OR cohort.evidence_version <> receipt.candidate_evidence_version
@@ -356,10 +357,10 @@ presentation_receipts AS (
       ON history.candidate_id = receipt.candidate_id
      AND history.material_version = receipt.candidate_material_version
      AND history.evidence_version = receipt.candidate_evidence_version
-     AND history.recorded_at_utc <= receipt.presented_at_utc
+     AND history.recorded_at_utc <= receipt.accepted_at_utc
     CROSS JOIN parameters
     WHERE receipt.tenant_id = parameters.tenant_id
-      AND receipt.presented_at_utc <= parameters.evaluated_at_utc
+      AND receipt.accepted_at_utc <= parameters.evaluated_at_utc
     ORDER BY receipt.presented_at_utc, receipt.queue_snapshot_digest,
              receipt.rank_at_presentation, receipt.receipt_id
     LIMIT (SELECT ranking_fact_limit FROM parameters)
@@ -367,7 +368,7 @@ presentation_receipts AS (
 ranking_human_judgments AS (
     SELECT
         receipt.receipt_id,
-        review.decided_at_utc AS occurred_at_utc,
+        review.accepted_at_utc AS occurred_at_utc,
         CASE review.action
             WHEN 'approve_for_conversion' THEN 2
             WHEN 'reject' THEN 0
@@ -378,13 +379,13 @@ ranking_human_judgments AS (
     CROSS JOIN parameters
     WHERE review.action IN ('approve_for_conversion', 'reject', 'suppress')
       AND review.decision_json->>'evidence_content_hash' = receipt.evidence_hash
-      AND review.decided_at_utc >= receipt.presented_at_utc
-      AND review.decided_at_utc <= parameters.evaluated_at_utc
-      AND (receipt.valid_until_utc IS NULL OR review.decided_at_utc < receipt.valid_until_utc)
+      AND review.accepted_at_utc >= receipt.accepted_at_utc
+      AND review.accepted_at_utc <= parameters.evaluated_at_utc
+      AND (receipt.valid_until_utc IS NULL OR review.accepted_at_utc < receipt.valid_until_utc)
     UNION ALL
     SELECT
         receipt.receipt_id,
-        feedback.recorded_at_utc,
+        feedback.accepted_at_utc,
         CASE feedback.feedback_outcome
             WHEN 'useful' THEN 1
             WHEN 'not_useful' THEN 0
@@ -393,9 +394,9 @@ ranking_human_judgments AS (
     JOIN idea_feedback_event AS feedback USING (candidate_id)
     CROSS JOIN parameters
     WHERE feedback.feedback_json->>'evidence_content_hash' = receipt.evidence_hash
-      AND feedback.recorded_at_utc >= receipt.presented_at_utc
-      AND feedback.recorded_at_utc <= parameters.evaluated_at_utc
-      AND (receipt.valid_until_utc IS NULL OR feedback.recorded_at_utc < receipt.valid_until_utc)
+      AND feedback.accepted_at_utc >= receipt.accepted_at_utc
+      AND feedback.accepted_at_utc <= parameters.evaluated_at_utc
+      AND (receipt.valid_until_utc IS NULL OR feedback.accepted_at_utc < receipt.valid_until_utc)
 ),
 ranking_latest_human_time AS (
     SELECT receipt_id, MAX(occurred_at_utc) AS occurred_at_utc
@@ -420,7 +421,7 @@ invalid_presentation_facts AS (
     FROM idea_candidate_presentation_receipt AS receipt
     JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE receipt.presented_at_utc <= parameters.evaluated_at_utc
+    WHERE receipt.accepted_at_utc <= parameters.evaluated_at_utc
       AND (
           receipt.tenant_id <> parameters.tenant_id
           OR receipt.presented_at_utc < cohort.generated_at_utc
@@ -431,12 +432,12 @@ invalid_presentation_facts AS (
                   WHERE history.candidate_id = receipt.candidate_id
                     AND history.material_version = receipt.candidate_material_version
                     AND history.evidence_version = receipt.candidate_evidence_version
-                    AND history.recorded_at_utc <= receipt.presented_at_utc
+                    AND history.recorded_at_utc <= receipt.accepted_at_utc
               )
               AND NOT (
                   cohort.material_version = receipt.candidate_material_version
                   AND cohort.evidence_version = receipt.candidate_evidence_version
-                  AND cohort.updated_at_utc <= receipt.presented_at_utc
+                  AND cohort.updated_at_utc <= receipt.accepted_at_utc
               )
           )
       )
@@ -445,18 +446,18 @@ invalid_temporal_facts AS (
     SELECT review.review_decision_id AS fact_id
     FROM idea_review_decision AS review JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE review.decided_at_utc <= parameters.evaluated_at_utc
-      AND review.decided_at_utc < cohort.generated_at_utc
+    WHERE review.accepted_at_utc <= parameters.evaluated_at_utc
+      AND review.accepted_at_utc < cohort.generated_at_utc
     UNION ALL
     SELECT event.feedback_event_id
     FROM idea_feedback_event AS event JOIN cohort USING (candidate_id)
     CROSS JOIN parameters
-    WHERE event.recorded_at_utc <= parameters.evaluated_at_utc
-      AND event.recorded_at_utc < cohort.generated_at_utc
+    WHERE event.accepted_at_utc <= parameters.evaluated_at_utc
+      AND event.accepted_at_utc < cohort.generated_at_utc
     UNION ALL
     SELECT intent.conversion_intent_id
     FROM intents AS intent JOIN cohort USING (candidate_id)
-    WHERE intent.requested_at_utc < cohort.generated_at_utc
+    WHERE intent.accepted_at_utc < cohort.generated_at_utc
     UNION ALL
     SELECT history.candidate_version_history_id
     FROM idea_candidate_version_history AS history JOIN cohort USING (candidate_id)
@@ -468,8 +469,8 @@ invalid_temporal_facts AS (
     FROM idea_conversion_outcome AS outcome
     JOIN intents AS intent USING (conversion_intent_id)
     CROSS JOIN parameters
-    WHERE outcome.recorded_at_utc <= parameters.evaluated_at_utc
-      AND outcome.recorded_at_utc < intent.requested_at_utc
+    WHERE outcome.accepted_at_utc <= parameters.evaluated_at_utc
+      AND outcome.accepted_at_utc < intent.accepted_at_utc
 ),
 family_effectiveness AS (
     SELECT
@@ -617,8 +618,8 @@ SELECT
            WHERE review.candidate_id = receipt.candidate_id
              AND review.action = 'approve_for_conversion'
              AND review.decision_json->>'evidence_content_hash' = receipt.evidence_hash
-             AND review.decided_at_utc >= receipt.presented_at_utc
-             AND review.decided_at_utc <= parameters.evaluated_at_utc
+             AND review.accepted_at_utc >= receipt.accepted_at_utc
+             AND review.accepted_at_utc <= parameters.evaluated_at_utc
        )) AS top_ranked_accepted_opportunity_count,
     (SELECT COUNT(*)::INTEGER FROM submissions AS submission CROSS JOIN parameters
      WHERE EXISTS (
@@ -642,15 +643,15 @@ SELECT
     COALESCE((SELECT jsonb_object_agg(value, count) FROM submission_counts), '{}'::JSONB)
         AS downstream_submission_posture_counts,
     COALESCE((SELECT array_agg(
-        EXTRACT(EPOCH FROM (latest_reviews.decided_at_utc - cohort.generated_at_utc))::NUMERIC
-        ORDER BY latest_reviews.decided_at_utc - cohort.generated_at_utc
+        EXTRACT(EPOCH FROM (latest_reviews.accepted_at_utc - cohort.generated_at_utc))::NUMERIC
+        ORDER BY latest_reviews.accepted_at_utc - cohort.generated_at_utc
     ) FROM latest_reviews JOIN cohort USING (candidate_id)), ARRAY[]::NUMERIC[])
         AS detection_to_review_seconds,
     COALESCE((SELECT array_agg(
-        EXTRACT(EPOCH FROM (first_intents.requested_at_utc - first_approvals.decided_at_utc))::NUMERIC
-        ORDER BY first_intents.requested_at_utc - first_approvals.decided_at_utc
+        EXTRACT(EPOCH FROM (first_intents.accepted_at_utc - first_approvals.accepted_at_utc))::NUMERIC
+        ORDER BY first_intents.accepted_at_utc - first_approvals.accepted_at_utc
     ) FROM first_approvals JOIN first_intents USING (candidate_id)
-      WHERE first_intents.requested_at_utc >= first_approvals.decided_at_utc), ARRAY[]::NUMERIC[])
+      WHERE first_intents.accepted_at_utc >= first_approvals.accepted_at_utc), ARRAY[]::NUMERIC[])
         AS approval_to_conversion_seconds,
     COALESCE((
         SELECT jsonb_agg(
@@ -672,11 +673,11 @@ SELECT
                         JOIN current_outcomes AS outcome USING (conversion_intent_id)
                         WHERE intent.candidate_id = receipt.candidate_id
                           AND intent.intent_json->>'evidence_content_hash' = receipt.evidence_hash
-                          AND intent.requested_at_utc >= receipt.presented_at_utc
-                          AND intent.requested_at_utc <= parameters.evaluated_at_utc
+                          AND intent.accepted_at_utc >= receipt.accepted_at_utc
+                          AND intent.accepted_at_utc <= parameters.evaluated_at_utc
                           AND (
                               receipt.valid_until_utc IS NULL
-                              OR intent.requested_at_utc < receipt.valid_until_utc
+                              OR intent.accepted_at_utc < receipt.valid_until_utc
                           )
                           AND outcome.status IN ('accepted', 'completed')
                     ) THEN 3
