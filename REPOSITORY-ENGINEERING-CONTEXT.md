@@ -1541,6 +1541,10 @@ the mutating POST may still be running. Once the lease expires, trusted server
 acceptance time may admit one exact, read-only owner recovery. The recovery
 reconciles the existing claim without another POST or attempt increment; exact
 replay performs no additional owner I/O.
+Manage lost-acceptance recovery remains dependent on
+`sgajbi/lotus-manage#665`: Idea must not invent the missing intake identity or
+retry the owner POST until Manage exposes an exact, scoped conversion-intent
+lookup.
 
 Outbox broker:
 

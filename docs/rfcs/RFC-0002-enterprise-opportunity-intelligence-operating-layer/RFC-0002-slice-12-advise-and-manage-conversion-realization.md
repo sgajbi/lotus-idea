@@ -334,6 +334,9 @@ Implemented in this slice:
     acceptance time admits one exact read-only recovery of an owner-accepted
     request whose Idea finalization failed. Recovery retains one submission
     attempt, does not repeat the POST, and exact replay performs no owner I/O.
+    Manage recovery for this window remains dependent on the exact scoped
+    conversion-intent lookup tracked by `sgajbi/lotus-manage#665`; Idea does
+    not invent the missing intake identity or retry the owner POST.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
@@ -366,10 +369,12 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. cross-repository exact-main/runtime acceptance of the Idea Advise and
-   Manage history consumers under the remaining timeout-before-owner-commit,
-   restart, owner
-   correction, and concurrent owner-version advancement failure windows,
+5. the Manage exact conversion-intent owner lookup in
+   `sgajbi/lotus-manage#665`, followed by Idea restart recovery without a
+   repeated POST; plus cross-repository exact-main/runtime acceptance of the
+   Advise and Manage history consumers under the remaining
+   timeout-before-owner-commit, owner-correction, and concurrent-version
+   windows,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
