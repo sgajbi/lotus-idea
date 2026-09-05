@@ -18,7 +18,7 @@ def test_review_action_api_governs_resource_identity_across_transport_keys() -> 
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-identity-001")
     resource_id = "review-resource-identity-api-001"
-    request = suppress_review_payload(review_id=resource_id)
+    request = suppress_review_payload(candidate_id=candidate_id, review_id=resource_id)
     route = f"/api/v1/idea-candidates/{candidate_id}/review-actions"
 
     first = client.post(
