@@ -23,6 +23,7 @@ from app.application.source_ingestion_worker import (
 )
 from app.domain import CandidatePersistenceDecision, EvidenceFreshness, SourceRef, SourceSystem
 from app.domain.evidence_hashing import evidence_hash_for_source_refs
+from app.domain.source_revision import source_revision_claims_payload
 from app.domain.proof_evidence import (
     EvidenceClass,
     evidence_class_can_clear,
@@ -94,6 +95,8 @@ _RECEIPT_KEYS = frozenset(
         "scopeFingerprint",
         "sourceRefs",
         "sourceEvidenceHash",
+        "sourceRevisionVectorDigest",
+        "sourceCutPosture",
         "persistedAtUtc",
         "persistenceReceiptSha256",
     }
@@ -108,6 +111,7 @@ _SOURCE_REF_KEYS = frozenset(
         "contentHash",
         "dataQualityStatus",
         "freshness",
+        "revisionClaims",
     }
 )
 _NON_PROOF_CLAIM_KEYS = frozenset(
@@ -368,6 +372,8 @@ def _runtime_receipt(
             _source_ref_receipt(ref) for ref in sorted(source_refs, key=lambda ref: ref.product_id)
         ],
         "sourceEvidenceHash": record.evidence_hash,
+        "sourceRevisionVectorDigest": candidate.evidence_packet.source_revision_vector_digest,
+        "sourceCutPosture": candidate.evidence_packet.source_cut_posture.value,
         "persistedAtUtc": _format_utc(record.persisted_at_utc),
     }
     receipt["persistenceReceiptSha256"] = _sha256_json(receipt)
@@ -496,6 +502,10 @@ def _receipt_is_valid(
     source_evidence_hash = value.get("sourceEvidenceHash")
     if source_evidence_hash != _source_ref_receipt_hash(refs):
         return False
+    if value.get("sourceRevisionVectorDigest") != _source_revision_vector_digest(refs):
+        return False
+    if value.get("sourceCutPosture") != "coherent":
+        return False
     persisted_at_utc = parse_timezone_aware_datetime(value.get("persistedAtUtc"))
     if persisted_at_utc is None or persisted_at_utc > generated_at_utc:
         return False
@@ -525,6 +535,7 @@ def _source_ref_receipt(source_ref: SourceRef) -> dict[str, Any]:
         "contentHash": source_ref.content_hash,
         "dataQualityStatus": source_ref.data_quality_status,
         "freshness": source_ref.freshness.value,
+        "revisionClaims": source_revision_claims_payload(source_ref.revision_claims),
     }
 
 
@@ -549,23 +560,55 @@ def _source_ref_receipts_are_valid(
         source_generated_at = parse_timezone_aware_datetime(ref.get("generatedAtUtc"))
         if source_generated_at is None or source_generated_at > evaluated_at_utc:
             return False
+        claims = ref.get("revisionClaims")
+        if (
+            not isinstance(claims, Mapping)
+            or claims.get("claim_posture") != "owner_claimed"
+            or not isinstance(claims.get("source_cut_id"), str)
+            or not str(claims["source_cut_id"]).strip()
+            or claims.get("reconciliation_posture") != "complete"
+        ):
+            return False
         product_ids.append(str(ref["productId"]))
-    return tuple(product_ids) == tuple(sorted(CORE_HIGH_CASH_SOURCE_PRODUCT_IDS))
+    cut_ids = {str(ref["revisionClaims"]["source_cut_id"]) for ref in refs}
+    return (
+        tuple(product_ids) == tuple(sorted(CORE_HIGH_CASH_SOURCE_PRODUCT_IDS))
+        and len(cut_ids) == 1
+    )
 
 
 def _source_ref_receipt_hash(refs: Sequence[Mapping[str, Any]]) -> str:
-    canonical_refs = [
+    return _sha256_json(
         {
-            "content_hash": ref["contentHash"],
-            "data_quality_status": ref["dataQualityStatus"],
-            "freshness": ref["freshness"],
-            "product_id": ref["productId"],
-            "product_version": ref["productVersion"],
-            "source_system": ref["sourceSystem"],
+            "source_posture": [
+                {
+                    "data_quality_status": ref["dataQualityStatus"],
+                    "freshness": ref["freshness"],
+                    "product_id": ref["productId"],
+                    "product_version": ref["productVersion"],
+                    "source_system": ref["sourceSystem"],
+                }
+                for ref in refs
+            ],
+            "source_revision_vector_digest": _source_revision_vector_digest(refs),
         }
-        for ref in refs
-    ]
-    return _sha256_json(canonical_refs)
+    )
+
+
+def _source_revision_vector_digest(refs: Sequence[Mapping[str, Any]]) -> str:
+    return _sha256_json(
+        [
+            {
+                "as_of_date": ref["asOfDate"],
+                "claims": ref["revisionClaims"],
+                "content_hash": ref["contentHash"],
+                "product_id": ref["productId"],
+                "product_version": ref["productVersion"],
+                "source_system": ref["sourceSystem"],
+            }
+            for ref in refs
+        ]
+    )
 
 
 def _scope_fingerprint(

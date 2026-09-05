@@ -24,7 +24,14 @@ from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.core_sources import (
     CASHFLOW_PROJECTION_PRODUCT_ID,
     CASH_MOVEMENT_PRODUCT_ID,
@@ -170,6 +177,10 @@ def _source_ref(product_id: str) -> SourceRef:
         content_hash=f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            source_cut_id="core-high-cash-contract-gate-cut-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
