@@ -30,6 +30,8 @@ from app.domain import (
     ReportEvidenceSourceSummary,
     ReviewPosture,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     UnsupportedEvidenceReason,
     request_conversion_intent as _request_conversion_intent,
@@ -72,6 +74,10 @@ def source_ref() -> SourceRef:
         content_hash="sha256:portfolio-state",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="core-report-evidence-fixture-001",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )
 
 
