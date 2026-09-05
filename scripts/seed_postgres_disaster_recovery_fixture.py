@@ -21,9 +21,8 @@ if str(ROOT) not in sys.path:
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.proof_worktree_import_guard import ensure_worktree_imports
+from scripts.migration_table_inventory import migration_owned_tables
 
 ensure_worktree_imports(__file__)
 
@@ -110,10 +109,11 @@ def _assert_empty_migrated_database(connection: PostgresConnection) -> None:
     with connection.cursor() as cursor:
         database_cursor = cast(Any, cursor)
         database_cursor.execute(
-            """SELECT COUNT(*) AS table_count FROM pg_catalog.pg_tables
-               WHERE schemaname = 'public' AND tablename LIKE 'idea\\_%' ESCAPE '\\'"""
+            """SELECT tablename FROM pg_catalog.pg_tables
+               WHERE schemaname = 'public' AND tablename LIKE 'idea\\_%' ESCAPE '\\' ORDER BY tablename"""
         )
-        if int(database_cursor.fetchone()["table_count"]) != 20:
+        observed_tables = {str(row["tablename"]) for row in database_cursor.fetchall()}
+        if observed_tables != migration_owned_tables(ROOT):
             raise ValueError("all current Lotus Idea migrations must be applied before seeding")
         database_cursor.execute(
             """SELECT
