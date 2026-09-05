@@ -382,7 +382,7 @@
       "required_trust_metadata": [
         "product_name",
         "product_version",
-        "tenant_id",
+        "tenant_admission",
         "generated_at",
         "as_of_date",
         "reconciliation_status",
