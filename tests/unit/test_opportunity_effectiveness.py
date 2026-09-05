@@ -1132,6 +1132,7 @@ def _receipt(
         ranking_policy_version="idea-rank-v1",
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        accepted_at_utc=presented_at,
     )
 
 

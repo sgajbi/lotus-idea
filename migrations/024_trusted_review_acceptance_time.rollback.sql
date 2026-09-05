@@ -1,7 +1,13 @@
+DROP INDEX IF EXISTS idx_idea_presentation_receipt_candidate_accepted_time;
 DROP INDEX IF EXISTS idx_idea_conversion_outcome_intent_accepted_time;
 DROP INDEX IF EXISTS idx_idea_conversion_intent_candidate_accepted_time;
 DROP INDEX IF EXISTS idx_idea_feedback_event_candidate_accepted_time;
 DROP INDEX IF EXISTS idx_idea_review_decision_candidate_accepted_time;
+
+ALTER TABLE IF EXISTS idea_candidate_presentation_receipt
+    DROP CONSTRAINT IF EXISTS ck_idea_presentation_receipt_acceptance_time_source,
+    DROP COLUMN IF EXISTS acceptance_time_source,
+    DROP COLUMN IF EXISTS accepted_at_utc;
 
 UPDATE idea_conversion_outcome
 SET outcome_json = outcome_json - 'accepted_at_utc' - 'acceptance_time_source';

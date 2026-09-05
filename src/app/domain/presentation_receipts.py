@@ -6,6 +6,11 @@ from enum import StrEnum
 import re
 from typing import Any
 
+from app.domain.control_time import (
+    PRESENTATION_TIME_POLICY,
+    AcceptanceTimeSource,
+    require_observed_time_within_policy,
+)
 from app.domain.ideas import IdeaCandidate
 
 
@@ -36,6 +41,8 @@ class CandidatePresentationReceipt:
     ranking_policy_version: str
     candidate_material_version: int
     candidate_evidence_version: int
+    accepted_at_utc: datetime
+    acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     schema_version: str = PRESENTATION_RECEIPT_SCHEMA_VERSION
     surface: str = PRESENTATION_SURFACE
     producer: str = PRESENTATION_PRODUCER
@@ -65,6 +72,12 @@ class CandidatePresentationReceipt:
             raise ValueError("presented_at_utc must be timezone-aware")
         if self.presented_at_utc.utcoffset() != UTC.utcoffset(self.presented_at_utc):
             raise ValueError("presented_at_utc must be UTC")
+        if not isinstance(self.accepted_at_utc, datetime):
+            raise ValueError("accepted_at_utc must be a datetime")
+        if self.accepted_at_utc.tzinfo is None or self.accepted_at_utc.utcoffset() is None:
+            raise ValueError("accepted_at_utc must be timezone-aware")
+        if self.accepted_at_utc.utcoffset() != UTC.utcoffset(self.accepted_at_utc):
+            raise ValueError("accepted_at_utc must be UTC")
         if not _is_integer(self.visible_candidate_count) or not (
             1 <= self.visible_candidate_count <= MAX_PRESENTED_CANDIDATE_COUNT
         ):
@@ -82,6 +95,41 @@ class CandidatePresentationReceipt:
             if not _is_integer(value) or value <= 0:
                 raise ValueError(f"{field_name} must be a positive integer")
 
+    def has_same_producer_claim(self, other: CandidatePresentationReceipt) -> bool:
+        """Compare immutable producer evidence without server admission metadata."""
+
+        return (
+            self.receipt_id,
+            self.candidate_id,
+            self.tenant_id,
+            self.presented_at_utc,
+            self.rank_at_presentation,
+            self.visible_candidate_count,
+            self.queue_snapshot_digest,
+            self.queue_policy_version,
+            self.ranking_policy_version,
+            self.candidate_material_version,
+            self.candidate_evidence_version,
+            self.schema_version,
+            self.surface,
+            self.producer,
+        ) == (
+            other.receipt_id,
+            other.candidate_id,
+            other.tenant_id,
+            other.presented_at_utc,
+            other.rank_at_presentation,
+            other.visible_candidate_count,
+            other.queue_snapshot_digest,
+            other.queue_policy_version,
+            other.ranking_policy_version,
+            other.candidate_material_version,
+            other.candidate_evidence_version,
+            other.schema_version,
+            other.surface,
+            other.producer,
+        )
+
 
 @dataclass(frozen=True)
 class PresentationReceiptResult:
@@ -97,6 +145,11 @@ def validate_presentation_receipt_candidate(
     receipt: CandidatePresentationReceipt,
     candidate: IdeaCandidate,
 ) -> None:
+    require_observed_time_within_policy(
+        receipt.presented_at_utc,
+        receipt.accepted_at_utc,
+        PRESENTATION_TIME_POLICY,
+    )
     if receipt.candidate_id != candidate.candidate_id:
         raise PresentationReceiptCandidateStateError("candidate identity does not match receipt")
     if candidate.access_scope is None or receipt.tenant_id != candidate.access_scope.tenant_id:
@@ -105,9 +158,9 @@ def validate_presentation_receipt_candidate(
         raise PresentationReceiptCandidateStateError("candidate material version does not match")
     if receipt.candidate_evidence_version != candidate.identity.evidence_version:
         raise PresentationReceiptCandidateStateError("candidate evidence version does not match")
-    if receipt.presented_at_utc < candidate.updated_at_utc:
+    if receipt.accepted_at_utc < candidate.updated_at_utc:
         raise PresentationReceiptCandidateStateError(
-            "presentation predates the referenced candidate version"
+            "presentation acceptance predates the referenced candidate version"
         )
 
 

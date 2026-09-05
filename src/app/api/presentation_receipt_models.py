@@ -7,6 +7,7 @@ from pydantic import Field, field_validator
 from app.api.base_model import CamelModel
 from app.api.temporal_validation import require_utc_datetime
 from app.domain import (
+    AcceptanceTimeSource,
     MAX_PRESENTED_CANDIDATE_COUNT,
     CandidatePresentationReceipt,
     PresentationReceiptResult,
@@ -62,6 +63,7 @@ class PresentationReceiptRequest(CamelModel):
         *,
         candidate_id: str,
         receipt_id: str,
+        accepted_at_utc: datetime,
     ) -> CandidatePresentationReceipt:
         return CandidatePresentationReceipt(
             receipt_id=receipt_id,
@@ -75,6 +77,7 @@ class PresentationReceiptRequest(CamelModel):
             ranking_policy_version=self.ranking_policy_version,
             candidate_material_version=self.candidate_material_version,
             candidate_evidence_version=self.candidate_evidence_version,
+            accepted_at_utc=accepted_at_utc,
         )
 
 
@@ -83,6 +86,8 @@ class PresentationReceiptEvidenceResponse(CamelModel):
     candidate_id: str = Field(..., alias="candidateId")
     tenant_id: str = Field(..., alias="tenantId")
     presented_at_utc: datetime = Field(..., alias="presentedAtUtc")
+    accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: AcceptanceTimeSource = Field(..., alias="acceptanceTimeSource")
     rank_at_presentation: int = Field(..., alias="rankAtPresentation")
     visible_candidate_count: int = Field(..., alias="visibleCandidateCount")
     queue_snapshot_digest: str = Field(..., alias="queueSnapshotDigest")

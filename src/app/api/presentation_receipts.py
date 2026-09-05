@@ -24,6 +24,7 @@ from app.api.problem_details import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
+    get_trusted_clock,
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
@@ -94,7 +95,11 @@ async def record_candidate_presentation_receipt(
             return _not_found_response()
 
         result = repository.record_presentation_receipt(
-            request.to_domain(candidate_id=candidate_id, receipt_id=idempotency_key)
+            request.to_domain(
+                candidate_id=candidate_id,
+                receipt_id=idempotency_key,
+                accepted_at_utc=get_trusted_clock().now_utc(),
+            )
         )
     except PermissionDeniedError:
         _emit_presentation_receipt_event(OperationOutcome.PERMISSION_DENIED)
@@ -238,6 +243,8 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
                             "candidateId": "candidate-presentation-001",
                             "tenantId": "tenant-private-bank-sg",
                             "presentedAtUtc": "2026-08-30T12:00:00Z",
+                            "acceptedAtUtc": "2026-08-30T12:00:01Z",
+                            "acceptanceTimeSource": "server_accepted",
                             "rankAtPresentation": 25,
                             "visibleCandidateCount": 1,
                             "queueSnapshotDigest": f"sha256:{'a' * 64}",

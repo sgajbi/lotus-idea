@@ -70,6 +70,8 @@ def _candidate_presentation_receipt_row(values: Sequence[Any]) -> dict[str, Any]
             "ranking_policy_version",
             "candidate_material_version",
             "candidate_evidence_version",
+            "accepted_at_utc",
+            "acceptance_time_source",
             "schema_version",
             "surface",
             "producer",
