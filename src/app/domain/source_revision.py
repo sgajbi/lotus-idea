@@ -234,13 +234,21 @@ def source_cut_posture(
         return SourceCutPosture.UNKNOWN
     if len(present_claims) != len(source_refs):
         return SourceCutPosture.PARTIAL
-    if any(item.reconciliation_posture is SourceReconciliationPosture.PARTIAL for item in present_claims):
+    if any(
+        item.reconciliation_posture is SourceReconciliationPosture.PARTIAL
+        for item in present_claims
+    ):
         return SourceCutPosture.PARTIAL
-    if any(item.reconciliation_posture is SourceReconciliationPosture.FAILED for item in present_claims):
+    if any(
+        item.reconciliation_posture is SourceReconciliationPosture.FAILED for item in present_claims
+    ):
         return SourceCutPosture.MIXED
     if any(not item.has_primary_revision_identity for item in present_claims):
         return SourceCutPosture.PARTIAL
-    if any(item.reconciliation_posture is SourceReconciliationPosture.UNKNOWN for item in present_claims):
+    if any(
+        item.reconciliation_posture is SourceReconciliationPosture.UNKNOWN
+        for item in present_claims
+    ):
         return SourceCutPosture.PARTIAL
     if any(not item.is_authoritative for item in present_claims):
         return SourceCutPosture.UNKNOWN
@@ -251,11 +259,7 @@ def source_cut_posture(
 
     cut_ids = tuple(item.source_cut_id for item in present_claims)
     if all(cut_ids):
-        return (
-            SourceCutPosture.COHERENT
-            if len(set(cut_ids)) == 1
-            else SourceCutPosture.MIXED
-        )
+        return SourceCutPosture.COHERENT if len(set(cut_ids)) == 1 else SourceCutPosture.MIXED
     if any(cut_ids):
         return SourceCutPosture.PARTIAL
     if tolerance is None:

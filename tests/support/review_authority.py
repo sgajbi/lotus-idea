@@ -88,9 +88,7 @@ def approved_review_decision_for_candidate(
         candidate_id=candidate.candidate_id,
         evidence_packet_id=grant.candidate_evidence.evidence_packet_id,
         evidence_content_hash=grant.candidate_evidence.evidence_content_hash,
-        source_revision_vector_digest=(
-            grant.candidate_evidence.source_revision_vector_digest
-        ),
+        source_revision_vector_digest=(grant.candidate_evidence.source_revision_vector_digest),
         source_cut_posture=grant.candidate_evidence.source_cut_posture,
         candidate_material_version=grant.candidate_evidence.material_version,
         candidate_evidence_version=grant.candidate_evidence.evidence_version,

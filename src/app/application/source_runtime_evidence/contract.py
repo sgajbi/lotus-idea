@@ -58,8 +58,7 @@ def runtime_execution_receipts_are_valid(
         return False
     assert isinstance(source, Mapping) and isinstance(persistence, Mapping)
     source_hash_matches = persistence.get("sourceEvidenceHash") == source_evidence_hash(source)
-    revision_vector_matches = (
-        persistence.get("sourceRevisionVectorDigest")
-        == source_revision_vector_digest_from_receipt(source)
-    )
+    revision_vector_matches = persistence.get(
+        "sourceRevisionVectorDigest"
+    ) == source_revision_vector_digest_from_receipt(source)
     return source_hash_matches and revision_vector_matches

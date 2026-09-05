@@ -1125,6 +1125,8 @@ def advise_service_context() -> AdviseRealizationServiceContext:
             "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
         ),
     )
+
+
 def report_service_context() -> ReportRealizationServiceContext:
     return ReportRealizationServiceContext(
         actor_id="lotus-idea-local-development",

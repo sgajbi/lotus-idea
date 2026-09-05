@@ -173,13 +173,13 @@ def source_evidence_hash(source_receipt: Mapping[str, Any]) -> str:
     return sha256_json(
         {
             "source_posture": [
-            {
-                "data_quality_status": source_receipt["dataQualityStatus"],
-                "freshness": source_receipt["freshness"],
-                "product_id": source_receipt["productId"],
-                "product_version": source_receipt["productVersion"],
-                "source_system": source_receipt["sourceSystem"],
-            }
+                {
+                    "data_quality_status": source_receipt["dataQualityStatus"],
+                    "freshness": source_receipt["freshness"],
+                    "product_id": source_receipt["productId"],
+                    "product_version": source_receipt["productVersion"],
+                    "source_system": source_receipt["sourceSystem"],
+                }
             ],
             "source_revision_vector_digest": source_revision_vector_digest_from_receipt(
                 source_receipt

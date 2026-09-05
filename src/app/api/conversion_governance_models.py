@@ -103,9 +103,7 @@ class ConversionIntentRequest(CamelModel):
                     evidence_version=self.expected_evidence_version,
                     evidence_packet_id=self.expected_evidence_packet_id,
                     evidence_content_hash=self.expected_evidence_content_hash,
-                    source_revision_vector_digest=(
-                        self.expected_source_revision_vector_digest
-                    ),
+                    source_revision_vector_digest=(self.expected_source_revision_vector_digest),
                     source_cut_posture=self.expected_source_cut_posture,
                 ),
             ),
