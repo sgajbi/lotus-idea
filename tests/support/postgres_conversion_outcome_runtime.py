@@ -24,6 +24,10 @@ from tests.integration.postgres_runtime_support import (
     persistence_headers,
     run_concurrent_repository_mutations,
 )
+from tests.support.review_authority_api import (
+    exact_conversion_authority_payload,
+    record_workbench_presentation,
+)
 
 
 _CONVERSION_OUTCOME_PROOF_TABLES = frozenset(
@@ -70,13 +74,16 @@ def _persist_review_approved_conversion_intent(
     _transition_candidate_to_review_ready(client, candidate_id)
     approved = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=_approve_review_payload(),
+        json=_approve_review_payload(candidate_id),
         headers=_review_headers("postgres-conversion-lifecycle-review"),
     )
     assert approved.status_code == 200
     intent_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-        json={**_conversion_intent_payload(), "conversionIntentId": intent_id},
+        json={
+            **_conversion_intent_payload(candidate_id),
+            "conversionIntentId": intent_id,
+        },
         headers=_conversion_intent_headers("postgres-conversion-lifecycle-intent"),
     )
     assert intent_response.status_code == 200
@@ -309,19 +316,24 @@ def _lifecycle_payload(
     }
 
 
-def _approve_review_payload() -> dict[str, Any]:
+def _approve_review_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "reviewId": "review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **record_workbench_presentation(candidate_id),
     }
 
 
-def _conversion_intent_payload() -> dict[str, Any]:
+def _conversion_intent_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "conversionIntentId": "conversion-report-001",
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        **exact_conversion_authority_payload(
+            candidate_id,
+            review_id="review-approve-001",
+        ),
     }

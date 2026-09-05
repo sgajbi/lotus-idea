@@ -5,7 +5,12 @@ from app.domain import CandidatePresentationReceipt, InMemoryIdeaRepository
 from app.runtime.repository_state import get_idea_repository
 
 
-def record_workbench_presentation(candidate_id: str) -> dict[str, Any]:
+def record_workbench_presentation(
+    candidate_id: str,
+    *,
+    accepted_at_utc: datetime = datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+    presented_at_utc: datetime = datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+) -> dict[str, Any]:
     repository = cast(InMemoryIdeaRepository, get_idea_repository())
     record = repository.candidate_record_by_id(candidate_id)
     if record is None:
@@ -19,7 +24,7 @@ def record_workbench_presentation(candidate_id: str) -> dict[str, Any]:
             receipt_id=receipt_id,
             candidate_id=candidate_id,
             tenant_id=candidate.access_scope.tenant_id,
-            presented_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+            presented_at_utc=presented_at_utc,
             rank_at_presentation=1,
             visible_candidate_count=1,
             queue_snapshot_digest="sha256:" + "a" * 64,
@@ -27,7 +32,7 @@ def record_workbench_presentation(candidate_id: str) -> dict[str, Any]:
             ranking_policy_version=candidate.score.policy_version,
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
-            accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+            accepted_at_utc=accepted_at_utc,
         )
     )
     return {

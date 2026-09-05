@@ -75,10 +75,11 @@ def review_command(
     review_id: str = "dr-fixture-review-001",
 ) -> ReviewDecisionCommand:
     source_candidate = candidate or high_cash_candidate()
+    assert source_candidate.access_scope is not None
     return ReviewDecisionCommand(
         review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
-        actor=_actor(),
+        actor=_actor(portfolio_id=source_candidate.access_scope.portfolio_id),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=FIXTURE_TIME + timedelta(minutes=2),
         expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
@@ -191,12 +192,12 @@ def _access_scope(portfolio_id: str) -> ReviewAccessScope:
     )
 
 
-def _actor() -> ReviewActorContext:
+def _actor(*, portfolio_id: str = "portfolio-dr-fixture") -> ReviewActorContext:
     return ReviewActorContext(
         actor_subject="dr-fixture-advisor",
         role=ReviewActorRole.ADVISOR,
         tenant_ids=frozenset({"tenant-dr-fixture"}),
         book_ids=frozenset({"book-dr-fixture"}),
-        portfolio_ids=frozenset({"portfolio-dr-fixture"}),
+        portfolio_ids=frozenset({portfolio_id}),
         client_ids=frozenset({"client-dr-fixture"}),
     )

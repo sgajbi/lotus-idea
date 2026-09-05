@@ -67,6 +67,10 @@ from tests.support.postgres_conversion_outcome_runtime import (
 from tests.support.postgres_downstream_action_evidence_runtime import (
     assert_postgres_downstream_action_evidence_runtime_proof,
 )
+from tests.support.review_authority_api import (
+    exact_conversion_authority_payload,
+    record_workbench_presentation,
+)
 
 ingest_high_cash_signal_from_core = partial(
     _ingest_high_cash_signal_from_core,
@@ -480,7 +484,7 @@ def _assert_review_action_persists_and_replays(
     client: ManagedTestClient, candidate_id: str
 ) -> None:
     review_headers = _review_headers("postgres-runtime-proof-review-approve-001")
-    review_payload = _approve_review_payload()
+    review_payload = _approve_review_payload(candidate_id)
     review = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
         json=review_payload,
@@ -520,7 +524,7 @@ def _assert_conversion_intent_persists_and_replays(
 ) -> None:
     reset_idea_repository_for_tests(reload_from_environment=True)
     conversion_headers = _conversion_intent_headers("postgres-runtime-proof-conversion-intent-001")
-    conversion_payload = _conversion_intent_payload()
+    conversion_payload = _conversion_intent_payload(candidate_id)
     conversion = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
         json=conversion_payload,
@@ -1099,12 +1103,13 @@ def _lifecycle_payload(
     }
 
 
-def _approve_review_payload() -> dict[str, Any]:
+def _approve_review_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "reviewId": "review-approve-001",
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **record_workbench_presentation(candidate_id),
     }
 
 
@@ -1118,12 +1123,16 @@ def _feedback_payload() -> dict[str, Any]:
     }
 
 
-def _conversion_intent_payload() -> dict[str, Any]:
+def _conversion_intent_payload(candidate_id: str) -> dict[str, Any]:
     return {
         "conversionIntentId": "conversion-report-001",
         "target": "report_evidence",
         "reasonCodes": ["review_approved_for_conversion"],
         "requestedAtUtc": "2026-06-21T10:15:00Z",
+        **exact_conversion_authority_payload(
+            candidate_id,
+            review_id="review-approve-001",
+        ),
     }
 
 
