@@ -3,7 +3,12 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.domain import EvidenceSupportability, SourceCutPosture
+from app.domain import (
+    EvidenceSupportability,
+    SourceCutPosture,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
+)
 from app.domain.presentation_receipts import CandidatePresentationReceipt
 from app.domain.review_authority import (
     REVIEW_AUTHORITY_POLICY_VERSION,
@@ -16,7 +21,11 @@ from app.domain.review_authority import (
     validate_expected_candidate_evidence,
     validate_workbench_presentation,
 )
-from tests.unit.test_review_governance import DECIDED_AT, candidate
+from tests.unit.test_review_governance import (
+    DECIDED_AT,
+    candidate,
+    candidate_with_revision_claims,
+)
 
 
 QUEUE_DIGEST = "sha256:" + "a" * 64
@@ -199,6 +208,20 @@ def test_authority_posture_fails_closed_for_change_supportability_and_expiry() -
     assert grant.effective_status(unsupported, evaluated_at_utc=DECIDED_AT) is (
         ReviewAuthorityStatus.REVOKED
     )
+    unreconciled = candidate_with_revision_claims(
+        SourceRevisionClaims(
+            snapshot_id="core-snapshot-review-001",
+            reconciliation_posture=SourceReconciliationPosture.FAILED,
+        )
+    )
+    unreconciled_grant = replace(
+        grant,
+        candidate_evidence=CandidateEvidenceIdentity.from_candidate(unreconciled),
+    )
+    assert unreconciled_grant.effective_status(
+        unreconciled,
+        evaluated_at_utc=DECIDED_AT,
+    ) is ReviewAuthorityStatus.REVOKED
     assert (
         grant.effective_status(
             current,
