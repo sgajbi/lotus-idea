@@ -38,6 +38,8 @@ from app.domain import (
     ReviewChannel,
     ReviewDecisionCommand,
     SourceRef,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
     SourceSystem,
     evaluate_high_cash_signal,
 )
@@ -180,6 +182,12 @@ def _source_refs() -> tuple[SourceRef, ...]:
             content_hash=f"sha256:dr-fixture-source-{index}",
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,
+            revision_claims=SourceRevisionClaims(
+                source_revision=f"revision:{product}",
+                source_batch_id="core-close-2026-07-11",
+                source_cut_id="core-close-2026-07-11",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         )
         for index, product in enumerate(products, start=1)
     )
