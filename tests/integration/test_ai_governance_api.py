@@ -1111,3 +1111,65 @@ def test_ai_generation_api_rejects_evaluate_only_purpose() -> None:
 
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
+
+
+def test_ai_generation_api_blocks_before_execution_without_durable_repository(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    try:
+        reset_idea_repository_for_tests()
+        client = managed_test_client(app)
+        candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-006")
+        monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+        monkeypatch.setenv("LOTUS_IDEA_DATABASE_URL", "postgresql://configured")
+        monkeypatch.setenv("LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN", "trusted-ingress")
+        headers = {
+            **generation_headers(idempotency_key="ai-generation-api-006"),
+            "X-Lotus-Trusted-Caller-Context": "trusted-ingress",
+        }
+
+        response = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+            json=generation_payload(request_id="ai-generation-006"),
+            headers=headers,
+        )
+
+        assert response.status_code == 503
+        assert "durable" in response.json()["code"]
+    finally:
+        reset_idea_repository_for_tests()
+
+
+def test_ai_generation_api_conflicts_reused_idempotency_key_with_changed_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.ports.lotus_ai_runtime import LotusAIWorkflowRuntimeUnavailable
+
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-007")
+    transition_candidate_to_review_ready(client, candidate_id)
+    runtime = _FakeGenerationRuntime(
+        error=LotusAIWorkflowRuntimeUnavailable("lotus-ai workflow runtime is unavailable")
+    )
+    monkeypatch.setattr(
+        ai_explanation_generation_api,
+        "get_lotus_ai_workflow_runtime",
+        lambda: runtime,
+    )
+    headers = generation_headers(idempotency_key="ai-generation-api-007")
+
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(request_id="ai-generation-007"),
+        headers=headers,
+    )
+    conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(request_id="ai-generation-007-changed"),
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
