@@ -6,6 +6,16 @@ Status: Partially Implemented - bounded operation events plus evidence replay, s
 
 Harden the service for production-grade operation, support, and secure use.
 
+## Trusted Control Time
+
+The runtime exposes one small trusted UTC clock seam for server acceptance.
+Review, feedback, presentation, conversion, downstream outcome, and durable
+signal-evaluation mutations use acceptance time for control and audit while
+retaining producer/source timestamps as evidence. Operation-specific skew
+policies fail closed without clamping producer time. Migration `024` labels
+historical ambiguous rows `legacy_observed_time_assumed`; live data audit
+evidence remains tracked by `#1226`.
+
 ## Issue 346 License And IP Compliance
 
 The service now has a versioned, fail-closed license and IP control for the

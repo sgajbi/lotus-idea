@@ -6,6 +6,15 @@ Status: Implemented on `main`; supported-feature promotion remains pending
 
 Implement human review, feedback, and governance over opportunity queues.
 
+## Trusted-Time Hardening
+
+Review and feedback now retain caller-observed time and separately persist Idea
+server acceptance time. Accepted time controls candidate/audit chronology,
+snooze validation, and the approval-time applicability boundary. Approval at or
+after expiry is refused; exact replay returns the original persisted acceptance
+time. This does not close the exact presentation-bound authority work in
+`#1225` or promote a supported feature.
+
 ## Current Implementation Evidence
 
 Implemented in this slice:
