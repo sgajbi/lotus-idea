@@ -48,6 +48,13 @@ original acceptance time. Migration `024` labels ambiguous historical action row
 `legacy_observed_time_assumed`; this is not server-time proof. See
 `docs/architecture/trusted-control-time.md`.
 
+The generic lifecycle API is limited to pre-review processing through
+`ready_for_review`. Review, rejection, expiry, conversion, and downstream
+outcome states require their owned commands and evidence. Generic lifecycle,
+owned review, and conversion persistence use trusted acceptance time for
+candidate, lifecycle-history, audit, and outbox chronology while retaining the
+producer-observed instant separately.
+
 Review and conversion use `idea-review-authority-v1`. A Workbench review
 requires a tenant/candidate-scoped presentation receipt and the exact candidate
 material version, evidence version, evidence packet, and content hash. The

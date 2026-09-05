@@ -24,6 +24,9 @@ settlement, performance, risk, report-rendering, or archive authority.
    assert downstream acceptance or execution.
 6. PostgreSQL review queue and readiness queries derive compatibility from the
    domain policy and classify contradictory legacy records as `invalid_state`.
+7. The generic lifecycle route may set only pre-review processing states from
+   `detected` through `ready_for_review`. Review, rejection, expiry, conversion,
+   and downstream outcome states require their owned commands and evidence.
 
 ## Golden Matrix
 
@@ -91,6 +94,10 @@ Operations should reconcile quarantine entries in this order:
    contradictions are reconciled.
 
 Do not delete quarantine evidence merely to make validation pass.
+
+The compatibility matrix describes valid persisted state; it is not an API
+mutation grant. A generic lifecycle capability cannot create review or
+conversion posture merely because a lifecycle/posture pair is valid.
 
 ## API And Operability
 

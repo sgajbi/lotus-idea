@@ -59,8 +59,15 @@ also use acceptance time for inclusion and ordering, so a backdated producer
 timestamp accepted later cannot rewrite an earlier review, feedback,
 effectiveness, or ranking result. Downstream owner event version remains the
 authority for downstream business chronology. Exact presentation-to-review
-authority is now enforced by `idea-review-authority-v1`; source-revision
-posture tracked by `#1227` remains separate.
+authority is enforced by `idea-review-authority-v1`; review and conversion also
+bind the exact source revision vector and require an authoritative source cut.
+
+The generic lifecycle route ends at `ready_for_review`; it cannot assert
+adviser review, approval, rejection, expiry, conversion, or downstream outcome
+posture. Its producer `changedAtUtc` is retained as observed evidence, while
+trusted acceptance controls candidate updates, lifecycle history, audit, and
+outbox ordering. Owned review and conversion mutations follow the same local
+chronology rule.
 
 ## Exact Presentation-To-Conversion Authority
 
