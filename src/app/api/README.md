@@ -32,10 +32,10 @@ must advertise `Idempotency-Key` as a required header with no default value.
 Workflow routes must not expose storage-only or downstream-authority lifecycle
 statuses as caller-settable input. `candidate_lifecycle.py` uses
 `CallerSettableIdeaLifecycleStatus` for lifecycle transition requests so
-`accepted` and `executed` remain readable legacy/downstream posture values in
-the full domain enum, but cannot be persisted through generic idea lifecycle
-transitions. Downstream acceptance posture belongs to conversion outcome and
-downstream submission contracts.
+the generic route ends at `ready_for_review`. Adviser review, rejection,
+expiry, conversion, acceptance, and execution remain readable domain posture
+but require their owned commands and evidence. A lifecycle capability alone
+must never create business posture.
 
 ## DTO Base Models
 

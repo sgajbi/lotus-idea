@@ -40,8 +40,13 @@ explicit UTC offset.
 
 ## Implemented Mutation Rules
 
-- Review, feedback, presentation receipt, conversion intent, and downstream
-  outcome APIs acquire `acceptedAtUtc` from the runtime trusted clock.
+- Generic pre-review lifecycle, review, feedback, presentation receipt,
+  conversion intent, and downstream outcome APIs acquire `acceptedAtUtc` from
+  the runtime trusted clock.
+- Generic lifecycle `changedAtUtc` is producer-observed evidence subject to a
+  24-hour past / 5-minute future skew policy. Candidate update, lifecycle
+  history, audit, and outbox chronology use the accepted instant; audit and
+  outbox evidence retain the observed instant separately.
 - Candidate applicability is checked at Idea acceptance time when an adviser
   approves a candidate and when a new conversion intent is admitted. At the
   expiry instant, the action is refused.
@@ -72,6 +77,7 @@ The current observed-time policies are:
 | Adviser feedback | 24 hours | 5 minutes |
 | Conversion intent | 24 hours | 5 minutes |
 | Downstream owner outcome | 30 days | 5 minutes |
+| Generic pre-review lifecycle transition | 24 hours | 5 minutes |
 
 Signal evaluation time is not treated as user-action chronology. It can be a
 historical deterministic evaluation instant and remains available for source
@@ -110,16 +116,23 @@ investigating chronology. A current environment audit must also look for:
 - non-monotonic downstream source event versions;
 - action audit time that differs from the persisted acceptance time.
 
+Lifecycle history is local control chronology. New generic, review, and
+conversion entries use trusted acceptance time; their producer-observed time
+remains in the owned decision or intent and audit or outbox evidence.
+Historical lifecycle entries predate this correction and must not be treated
+as proven server acceptance without independent deployment evidence.
+
 No production database was available during the implementation workspace run,
 so repository tests and migration contracts prove the mechanism while live
 data reconciliation remains environment-owned evidence on issue `#1226`.
 
 ## Scope Boundary
 
-Trusted time does not by itself prove that the adviser reviewed the exact
-candidate evidence later converted. Immutable presentation-to-review authority
-binding remains issue `#1225`. Restatement-safe source revision vectors and
-coherent-cut posture remain issue `#1227`.
+Trusted time does not by itself prove downstream business completion. Exact
+Workbench presentation-to-review authority is enforced by
+`idea-review-authority-v1`, and review/conversion bind the candidate's
+restatement-safe source revision vector and coherent-cut posture. Advise,
+Manage, and Report remain authoritative for their resulting business state.
 
 The change introduces no authentication, authorization, workflow-engine, or
 new deployable-service claim and does not promote a supported feature.

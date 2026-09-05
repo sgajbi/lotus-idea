@@ -12,8 +12,13 @@ Review and feedback now retain caller-observed time and separately persist Idea
 server acceptance time. Accepted time controls candidate/audit chronology,
 snooze validation, and the approval-time applicability boundary. Approval at or
 after expiry is refused; exact replay returns the original persisted acceptance
-time. This does not close the exact presentation-bound authority work in
-`#1225` or promote a supported feature.
+time. Exact Workbench presentation-to-review authority is enforced by
+`idea-review-authority-v1`; supported-feature promotion remains pending.
+
+The generic lifecycle route cannot create review, approval, rejection, expiry,
+or conversion posture. Those states are admitted only by their owned workflows.
+Lifecycle history and outbox chronology use trusted acceptance time; the owned
+decision or intent and event evidence retain producer-observed time separately.
 
 ## Current Implementation Evidence
 
