@@ -285,7 +285,7 @@ def _receipt_from_row(row: object) -> CandidatePresentationReceipt:
         ranking_policy_version=str(read_row_value(row, "ranking_policy_version")),
         candidate_material_version=int(read_row_value(row, "candidate_material_version")),
         candidate_evidence_version=int(read_row_value(row, "candidate_evidence_version")),
-        source_revision_vector_digest=str(
+        source_revision_vector_digest=_optional_text(
             read_row_value(row, "source_revision_vector_digest")
         ),
         source_cut_posture=SourceCutPosture(read_row_value(row, "source_cut_posture")),
@@ -295,6 +295,10 @@ def _receipt_from_row(row: object) -> CandidatePresentationReceipt:
         surface=str(read_row_value(row, "surface")),
         producer=str(read_row_value(row, "producer")),
     )
+
+
+def _optional_text(value: object) -> str | None:
+    return str(value) if value is not None else None
 
 
 __all__ = [

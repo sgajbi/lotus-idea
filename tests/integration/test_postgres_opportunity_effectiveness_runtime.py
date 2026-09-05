@@ -210,6 +210,8 @@ def test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_vers
         ranking_policy_version="idea-score-v2",
         candidate_material_version=candidate.identity.material_version,
         candidate_evidence_version=candidate.identity.evidence_version,
+        source_revision_vector_digest=candidate.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate.evidence_packet.source_cut_posture,
         accepted_at_utc=FIXTURE_WINDOW_START + timedelta(hours=2),
     )
     persisted = replace(
@@ -307,6 +309,10 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
             ranking_policy_version="idea-score-v2",
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
+            source_revision_vector_digest=(
+                candidate.evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate.evidence_packet.source_cut_posture,
             accepted_at_utc=presented_at,
         )
         for rank, candidate in enumerate(candidates, start=1)
@@ -324,6 +330,10 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
             ranking_policy_version="idea-score-v2",
             candidate_material_version=candidate.identity.material_version,
             candidate_evidence_version=candidate.identity.evidence_version,
+            source_revision_vector_digest=(
+                candidate.evidence_packet.source_revision_vector_digest
+            ),
+            source_cut_posture=candidate.evidence_packet.source_cut_posture,
             accepted_at_utc=presented_at + timedelta(minutes=15),
         )
         for rank, candidate in enumerate(reversed(candidates), start=1)

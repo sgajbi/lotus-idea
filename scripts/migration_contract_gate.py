@@ -317,6 +317,28 @@ REQUIRED_MIGRATIONS = (
             "decision_json - 'review_channel' - 'review_policy_version'",
         ),
     ),
+    MigrationContract(
+        version="026",
+        forward_path=MIGRATIONS_DIR / "026_presentation_source_revision_binding.sql",
+        rollback_path=(
+            MIGRATIONS_DIR / "026_presentation_source_revision_binding.rollback.sql"
+        ),
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "source_revision_vector_digest",
+            "source_cut_posture",
+            "lotus-idea.candidate-presentation-receipt.v2",
+            "ck_idea_candidate_presentation_receipt_values_v3",
+            "VALIDATE CONSTRAINT ck_idea_candidate_presentation_receipt_values_v3",
+        ),
+        required_rollback_fragments=(
+            "lotus-idea.candidate-presentation-receipt.v1",
+            "ck_idea_candidate_presentation_receipt_values_v2",
+            "DROP COLUMN source_revision_vector_digest",
+            "DROP COLUMN source_cut_posture",
+        ),
+    ),
 )
 
 
