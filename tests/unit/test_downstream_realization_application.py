@@ -911,7 +911,7 @@ def candidate(candidate_id: str = "idea-downstream-001") -> IdeaCandidate:
         ),
         source_signal_ids=(f"signal-{candidate_id}",),
         score=score_fixture(
-            policy_version="idea-deterministic-ranking-v1",
+            policy_version="idle-liquidity-v2",
             score=Decimal("88"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         ),
