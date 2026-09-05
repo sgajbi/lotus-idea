@@ -543,6 +543,7 @@ def _source_ref_receipts_are_valid(
     refs: Sequence[object], *, as_of_date: date, evaluated_at_utc: datetime
 ) -> bool:
     product_ids: list[str] = []
+    cut_ids: set[str] = set()
     for ref in refs:
         if not isinstance(ref, Mapping) or set(ref) != _SOURCE_REF_KEYS:
             return False
@@ -570,7 +571,7 @@ def _source_ref_receipts_are_valid(
         ):
             return False
         product_ids.append(str(ref["productId"]))
-    cut_ids = {str(ref["revisionClaims"]["source_cut_id"]) for ref in refs}
+        cut_ids.add(str(claims["source_cut_id"]))
     return (
         tuple(product_ids) == tuple(sorted(CORE_HIGH_CASH_SOURCE_PRODUCT_IDS)) and len(cut_ids) == 1
     )
