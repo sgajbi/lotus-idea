@@ -144,8 +144,9 @@ class RevisionSourceRef(Protocol):
 
 def source_revision_claims_payload(claims: SourceRevisionClaims | None) -> dict[str, object]:
     if claims is None:
-        return {"posture": SourceCutPosture.UNKNOWN.value}
+        return {"claim_posture": SourceCutPosture.UNKNOWN.value}
     return {
+        "claim_posture": "owner_claimed",
         "calculation_run_id": claims.calculation_run_id,
         "causal_input_revisions": [
             {
