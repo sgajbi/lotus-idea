@@ -608,9 +608,10 @@ Persistence adapter validation:
     certification, and promotion claims.
 16. `tests/unit/report/test_materialization_source_contract.py` and
     `make report-materialization-source-contract-proof-gate` validate the
-    source-safe `lotus-report` materialization source contract. The v3 artifact
-    records `reportOwnerMaterializationContractConsumed=true` and links
-    `sgajbi/lotus-report#152` as the closed owner proof. Downstream and
+    source-safe `lotus-report` materialization source contract. The v4 artifact
+    records both materialization and exact read-only recovery consumption and
+    links `sgajbi/lotus-report#152` plus `sgajbi/lotus-report#286` as owner
+    proofs. Downstream and
     aggregate readiness may cite the artifact but clear no blocker. Tests keep
     `report_evidence_pack_live_materialization_proof_missing`,
     `rendered_output_creation_missing`, `archive_record_creation_missing`,

@@ -106,8 +106,11 @@
       "evidence_refs": [
         "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+        "POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
         "lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
+        "lotus-report/contracts/idea-evidence-materialization/lotus-report-idea-evidence-pack-materialization.v1.json",
+        "sgajbi/lotus-report#286",
         "lotus-render",
         "lotus-render#65 exact-main c608fe4c5b22fa22e51e242894a76a8532839e9f main-releasability 29966168422",
         "lotus-archive",
@@ -130,7 +133,8 @@
           "sgajbi/lotus-idea#690",
           "sgajbi/lotus-idea#691",
           "sgajbi/lotus-idea#379",
-          "sgajbi/lotus-report#152"
+          "sgajbi/lotus-report#152",
+          "sgajbi/lotus-report#286"
         ],
         "rendered_output_creation_missing": [
           "sgajbi/lotus-idea#690",

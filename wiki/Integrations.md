@@ -322,6 +322,9 @@ adapter foundations when the corresponding adapter configuration is present:
 4. `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation`
    to reconcile the Manage-owned action outcome history
    (`lotus-manage.idea-action-outcome-history.v1`) from its persisted receipt.
+5. `POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation`
+   to recover an exact Report-owned materialization receipt for an uncertain
+   evidence-pack submission without repeating the materialization request.
 
 Those submission routes require `idea.downstream-realization.submit` and
 `Idempotency-Key`, precheck a local idempotency ledger, propagate
@@ -346,6 +349,15 @@ legal-entity, and portfolio scope. It reconstructs the original intake receipt
 only after candidate, intent, evidence, and scope match. The mutating intake is
 not retried; unavailable or conflicting owner evidence leaves the handoff
 uncertain or conflicted.
+
+When a response is lost after Report commits, retain the existing support
+reference. The Report reconciliation route authorizes complete scope before
+calling `GET /reports/idea-evidence-packs/materializations` with the persisted
+idempotency key and exact pack, intent, candidate, evidence, and portfolio
+identity. A matching owner receipt finalizes the existing submission; a local
+replay returns that receipt without another owner read. Missing, unavailable,
+malformed, or contradictory evidence cannot advance local posture, and the
+materialization `POST` is never retried.
 
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.
@@ -399,8 +411,9 @@ and local idempotency conflicts are not retried. Computed backoff delays use a
 fixed central 20% downward jitter window; valid upstream `Retry-After` values
 remain capped but are not jittered.
 Valid Report intake and materialization source contracts add source-safe
-declaration refs for `POST /reports/idea-evidence-packs` and
-`POST /reports/idea-evidence-packs/materializations`. Source contracts do not
+declaration refs for `POST /reports/idea-evidence-packs`,
+`POST /reports/idea-evidence-packs/materializations`, and the read-only
+`GET /reports/idea-evidence-packs/materializations` recovery contract. Source contracts do not
 clear blockers. A valid aggregate-current Report intake runtime proof may clear
 only `lotus_report_live_intake_route_proof_missing`; it does not prove
 materialization, rendered output, Archive record creation, client publication,

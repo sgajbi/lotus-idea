@@ -13,6 +13,9 @@ from app.application.report.materialization_source_contract import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     REPORT_MATERIALIZATION_OWNER_PROOF_REF,
+    REPORT_MATERIALIZATION_RECOVERY_OWNER_PROOF_REF,
+    REPORT_MATERIALIZATION_RECOVERY_QUERY_FIELDS,
+    REPORT_MATERIALIZATION_RECOVERY_ROUTE,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REPORT_MATERIALIZATION_ROUTE,
@@ -32,17 +35,20 @@ def test_builds_source_safe_report_materialization_source_contract(tmp_path: Pat
     assert artifact["schemaVersion"] == REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION
     assert artifact["repository"] == "lotus-idea"
     assert artifact["proofType"] == "lotus_report_idea_evidence_materialization_source_contract"
-    assert artifact["proofScope"] == "report_materialization_declaration_and_contract_compatibility"
+    assert artifact["proofScope"] == "report_materialization_and_recovery_contract_compatibility"
     assert artifact["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
     assert artifact["sourceContractValid"] is True
     assert artifact["targetRoute"] == REPORT_MATERIALIZATION_ROUTE
+    assert artifact["recoveryTargetRoute"] == REPORT_MATERIALIZATION_RECOVERY_ROUTE
     assert tuple(artifact["aggregateBlockersCleared"]) == REPORT_MATERIALIZATION_BLOCKERS_CLEARED
     assert tuple(artifact["evidenceRefs"]) == REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS
     assert REPORT_MATERIALIZATION_OWNER_PROOF_REF in artifact["evidenceRefs"]
+    assert REPORT_MATERIALIZATION_RECOVERY_OWNER_PROOF_REF in artifact["evidenceRefs"]
     assert tuple(artifact["remainingCertificationBlockers"]) == (
         REMAINING_REPORT_MATERIALIZATION_BLOCKERS
     )
     assert artifact["reportOwnerMaterializationContractConsumed"] is True
+    assert artifact["reportOwnerRecoveryContractConsumed"] is True
     assert artifact["reportOwnerProofRef"] == REPORT_MATERIALIZATION_OWNER_PROOF_REF
     assert artifact["reportMaterializationProven"] is False
     assert artifact["renderedOutputCreated"] is False
@@ -90,6 +96,47 @@ def test_does_not_infer_runtime_execution_from_report_contract_declarations(
     assert tuple(artifact["aggregateBlockersCleared"]) == ()
 
 
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("target_route", "POST /reports/idea-evidence-packs/materializations"),
+        ("lookup_key", "reportEvidencePackId"),
+        ("required_query_fields", ["idempotencyKey"]),
+        ("required_caller_application", "lotus-gateway"),
+        ("required_capability", "report.idea-materialization.submit"),
+        ("tenant_scoped", False),
+        ("repository_query_limit", 3),
+        ("retries_materialization", True),
+        ("not_found_status", 200),
+        ("identity_conflict_status", 404),
+    ],
+)
+def test_rejects_inexact_report_recovery_contract(
+    field_name: str,
+    bad_value: object,
+    tmp_path: Path,
+) -> None:
+    report_root = _write_report_fixture(tmp_path)
+    contract_path = (
+        report_root
+        / "contracts/idea-evidence-materialization/lotus-report-idea-evidence-pack-materialization.v1.json"
+    )
+    contract = cast(dict[str, Any], json.loads(contract_path.read_text(encoding="utf-8")))
+    recovery = cast(dict[str, Any], contract["recovery"])
+    recovery[field_name] = bad_value
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    artifact = build_report_materialization_source_contract_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        report_root=report_root,
+    )
+
+    assert artifact["contractChecks"]["reportContractDeclaresExactRecovery"] is False
+    assert artifact["sourceContractValid"] is False
+    assert report_materialization_source_contract_is_valid(artifact) is False
+
+
 def test_rejects_source_contract_when_report_contract_evidence_is_missing(
     tmp_path: Path,
 ) -> None:
@@ -113,7 +160,9 @@ def test_rejects_source_contract_when_report_contract_evidence_is_missing(
         ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
         ("sourceContractValid", False),
         ("targetRoute", "planned:lotus-report-idea-evidence-pack-materialization"),
+        ("recoveryTargetRoute", "POST /reports/idea-evidence-packs/materializations"),
         ("reportOwnerMaterializationContractConsumed", False),
+        ("reportOwnerRecoveryContractConsumed", False),
         ("reportOwnerProofRef", "sgajbi/lotus-report#999999"),
         ("reportMaterializationProven", True),
         ("renderedOutputCreated", True),
@@ -162,8 +211,10 @@ def test_rejects_source_contract_with_invalid_collections(
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
         "reportContractDeclaresMaterialization",
+        "reportContractDeclaresExactRecovery",
         "reportContractPreservesNonProofBoundaries",
         "reportOwnerProofRefLinked",
+        "reportRecoveryOwnerProofRefLinked",
     ],
 )
 def test_rejects_source_contract_with_invalid_contract_checks(
@@ -280,12 +331,15 @@ def _write_report_fixture(tmp_path: Path) -> Path:
         report_root / "contracts/idea-evidence-materialization/"
         "lotus-report-idea-evidence-pack-materialization.v1.json",
         report_root / "src/app/idea_evidence_intake/models.py",
+        report_root / "src/app/idea_evidence_intake/materialization_contract.py",
+        report_root / "src/app/idea_evidence_intake/recovery.py",
         report_root / "src/app/idea_evidence_intake/service.py",
         report_root / "src/app/routers/idea_evidence_intake.py",
         report_root / "src/app/reporting_lineage/capture_service.py",
         report_root / "src/app/reporting_render/package_builder.py",
         report_root / "tests/unit/test_idea_evidence_materialization_contract.py",
         report_root / "tests/unit/test_idea_evidence_intake_service.py",
+        report_root / "tests/unit/test_idea_evidence_recovery.py",
         report_root / "tests/integration/test_idea_evidence_intake_api.py",
     ]
     for path in required_files:
@@ -312,10 +366,23 @@ def _report_contract_payload() -> dict[str, object]:
         "client_publication_authority_granted": False,
         "supported_feature_promoted": False,
         "target_route": "POST /reports/idea-evidence-packs/materializations",
+        "recovery": {
+            "target_route": REPORT_MATERIALIZATION_RECOVERY_ROUTE,
+            "lookup_key": "idempotencyKey",
+            "required_query_fields": list(REPORT_MATERIALIZATION_RECOVERY_QUERY_FIELDS),
+            "required_caller_application": "lotus-idea",
+            "required_capability": "report.idea-materialization.recover",
+            "tenant_scoped": True,
+            "repository_query_limit": 2,
+            "retries_materialization": False,
+            "not_found_status": 404,
+            "identity_conflict_status": 409,
+        },
         "non_proof_boundaries": [
             "Proves report-owned materialization, rendered output creation, and archive record creation through the governed report job pipeline.",
             "Does not grant suitability, advisory proposal approval, mandate approval, order, execution, settlement, distribution, or client-publication authority.",
             "Does not recompute lotus-idea evidence or upstream portfolio, holding, performance, risk, mandate, or transaction facts.",
+            "Recovery reads current Report-owned state and never retries an uncertain materialization POST.",
             "Does not promote a supported feature in lotus-report or lotus-idea.",
         ],
         "certification_blockers": [

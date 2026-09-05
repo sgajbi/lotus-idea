@@ -515,6 +515,7 @@ The internal downstream submission routes are available for callers with
 | --- | --- | --- |
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters. | Submission posture only; no outcome recording, suitability, execution, Gateway/Workbench proof, or supported-feature promotion. |
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request and durably retain the validated Report-owned materialization receipt. | The receipt exposes exact report-job and current render/archive creation posture only; it grants no client publication, production support, or supported-feature promotion. |
+| `POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation` | Recover a lost Report receipt by exact read-only owner lookup. | Requires reconciliation capability and complete scope; never repeats materialization or grants publication authority. |
 
 Missing adapter configuration returns `503 downstream_realization_not_configured`
 instead of producing a false support claim. The submission routes persist
@@ -590,6 +591,15 @@ restart. Treat missing, malformed, identity-drifting, or authority-expanding
 receipts as reconciliation-required; never infer Report completion, rendering,
 archive creation, or publication from transport success. Issue `#380` tracks
 the production identity path.
+
+For an uncertain Report submission, call the Idea Report reconciliation route
+with the opaque support reference and the same operator reconciliation
+capability and complete entitlement scope used by the Advise/Manage owner-read
+flows. Idea looks up current Report state by the stored idempotency key and
+exact source identity, then persists only a fully matching receipt. `404`,
+owner unavailability, malformed data, or identity conflict changes no local
+evidence. Exact replay is satisfied from PostgreSQL and makes no further Report
+request.
 
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`

@@ -1494,6 +1494,37 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, caller context, response shapes, bounded authority claims, and product-safe error examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Recover and durably bind the exact Report-owned receipt for an uncertain evidence-pack materialization without repeating the materialization request or transferring downstream authority.",
+      "when_to_use": "Use after a Report evidence-pack submission has durable reconciliation_required posture, when an internal caller has idea.downstream-realization.reconcile capability and complete tenant/book/portfolio/client entitlement scope.",
+      "when_not_to_use": "Do not use as a retry endpoint, to create another Report job, to bypass exact idempotency and evidence identity, to infer rendering or archive completion beyond the owner receipt, define a Gateway contract, claim Workbench product proof, grant client-publication authority, or claim supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/downstream-submissions/downstream-submission-0123456789abcdef01234567/report-materialization-reconciliation with X-Caller-Capabilities: idea.downstream-realization.reconcile and complete entitlement scope"
+      ],
+      "response_examples": [
+        "{\"reconciliationStatus\":\"accepted\",\"ownerReceipt\":{\"ownerAuthority\":\"lotus-report\",\"ownerRequestId\":\"report-request-001\",\"ownerRealizationId\":\"report-job-001\",\"ownerWorkId\":null,\"sourceEventVersion\":null,\"sourceEvidenceFingerprint\":\"sha256:idea-evidence-content\",\"reportMaterialization\":{\"status\":\"archived\",\"materializationStatus\":\"archived\",\"statusUrl\":\"/reports/jobs/report-job-001\",\"reportEvidencePackId\":\"irep_001\",\"conversionIntentId\":\"icnv_001\",\"candidateId\":\"icand_001\",\"evidencePacketId\":\"ievp_001\",\"createsReportJob\":true,\"createsRenderedOutput\":true,\"createsArchiveRecord\":true,\"renderJobId\":\"render-job-001\",\"archiveDocumentId\":\"archive-document-001\",\"supportabilityStatus\":\"not_certified\",\"remainingBlockers\":[\"client_publication_authority_blocked\",\"supported_feature_promotion_missing\"]}},\"durableStorageBacked\":true,\"grantsClientPublicationAuthority\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details before the owner read when capability or complete entitlement scope is missing.",
+        "404 returns downstream_submission_not_found for an unknown opaque support reference.",
+        "409 preserves uncertain posture when the submission is ineligible or the recovered receipt contradicts exact candidate, conversion-intent, evidence-pack, evidence fingerprint, portfolio, tenant or idempotency identity.",
+        "503 returns report_materialization_owner_unavailable, durable_repository_not_configured, or durable_repository_unavailable without changing persisted evidence."
+      ],
+      "test_evidence": [
+        "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_closes_lost_response_without_second_post",
+        "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_rejects_contradictory_receipt_without_state_advance",
+        "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_denies_scope_before_owner_read",
+        "tests/integration/test_report_materialization_reconciliation_api.py::test_report_recovery_api_denial_emits_bounded_operation_event",
+        "tests/unit/test_report_materialization_reconciliation.py::test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_owner_read",
+        "tests/integration/test_postgres_report_materialization_reconciliation.py::test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays",
+        "tests/unit/test_report_materialization_recovery_adapter.py::test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, named response modes, exact owner-receipt shape and bounded authority claims; the integration contract test verifies all published modes."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/downstream-submissions/reconciliation",
       "certification_status": "certified",

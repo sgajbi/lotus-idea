@@ -74,6 +74,7 @@ The submission routes are:
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request and return bounded submission posture plus the exact validated Report-owned materialization receipt. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation` | Read the exact Advise-owned realization history for a receipt-bearing Advise submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 | `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation` | Read the exact Manage-owned action outcome history for a receipt-bearing Manage submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
+| `POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation` | Recover the exact Report-owned receipt for an uncertain evidence-pack submission without repeating materialization. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 
 These routes are API-certified internal foundations. They propagate
 correlation, trace, and idempotency headers to configured adapters after a
@@ -101,6 +102,15 @@ persisting it. Exact retries return the persisted receipt without another owner
 call. Receipt validation failure is uncertain delivery requiring reconciliation;
 it is never converted into Report completion or publication truth.
 
+For an uncertain Report handoff, the Report reconciliation route authorizes
+complete caller scope before owner I/O and performs one read-only lookup using
+the persisted idempotency key plus exact evidence-pack, conversion-intent,
+candidate, evidence fingerprint, and portfolio identity. Only an exact typed
+receipt advances the existing submission. A stored receipt replays locally
+without another owner read; unavailable or contradictory owner evidence leaves
+the uncertain record unchanged. The route never repeats the materialization
+`POST` and does not create a second submission registry.
+
 The Advise reconciliation route authorizes complete caller scope before owner
 I/O, reads the owner history through the typed port, validates source and
 realization authority, scope, evidence fingerprint, exact event versions,
@@ -117,7 +127,8 @@ race, returns zero rather than overstating new owner progress.
 
 The diagnostic is deliberately not downstream execution authority. It does not:
 
-1. call downstream Lotus services,
+1. call downstream Lotus services except through the explicitly configured
+   submission and read-only reconciliation adapters described above,
 2. create Advise proposals or suitability records,
 3. create Manage action-register, model, rebalance, or execution records,
 4. create Report packages from within `lotus-idea`,
@@ -160,7 +171,7 @@ request-acceptance, downstream-record, or supportability blockers:
 | Manage action-intake runtime execution | `manage_live_contract_proof_missing` only | The proof observes bounded local/dev route serving, trusted-header authorization, tenant-scoped idempotency, durable pending-review action creation, accepted/replayed/rejected receipts, idempotency conflict, and authorization denial from `lotus-manage`. It does not grant rebalance or execution authority, create orders, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report intake runtime execution | `lotus_report_live_intake_route_proof_missing` only | The proof observes bounded local/dev Report route serving and source-safe accepted/replayed/conflict/rejection receipts for `POST /reports/idea-evidence-packs` through an isolated Report intake ledger. It does not create a report job, prove materialization, create rendered output, create an Archive record, grant client-publication authority, certify production identity, or promote support. |
-| Report materialization source contract | None | The v3 artifact links the closed Report owner proof `sgajbi/lotus-report#152` as provenance while preserving materialization execution, rendered output creation, archive record creation, client publication, and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
+| Report materialization source contract | None | The v4 artifact consumes the exact Report materialization and recovery declarations, links owner proofs `sgajbi/lotus-report#152` and `sgajbi/lotus-report#286`, and preserves client publication and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 | Report materialization runtime execution with Render/Archive owner evidence | `report_evidence_pack_live_materialization_proof_missing`, `rendered_output_creation_missing`, `archive_record_creation_missing` | The proof observes bounded local/dev Report materialization route execution, requires source-safe receipt outcomes, and binds exact merged-main owner evidence for Render #65/PR #67 and Archive #72/PR #73. It does not grant client-publication authority, retention/legal-hold authority, production identity, Workbench/Gateway behavior, supported-feature promotion, or final support certification. |
 
 `make downstream-realization-contract-gate` blocks:
@@ -503,7 +514,7 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 | --- | --- | --- |
 | Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH` |
 | Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
-| Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
+| Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH` |
 
 Local Compose configures all three realization pairs to the canonical Advise,
 Manage, and Report owner routes. These variables are distinct from source-read

@@ -1513,15 +1513,16 @@ artifact from `LOTUS_REPORT_ROOT` under
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` and passes it
 into aggregate readiness when
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` is not set. A valid
-v3 artifact clears no blocker. It records
-`reportOwnerMaterializationContractConsumed=true` and
-`reportOwnerProofRef=sgajbi/lotus-report#152`, then adds a source-safe evidence reference while
+v4 artifact clears no blocker. It records materialization and exact read-only
+recovery contract consumption, links `sgajbi/lotus-report#152` and
+`sgajbi/lotus-report#286`, then adds source-safe evidence references while
 preserving runtime materialization, rendered-output, archive-record,
 client-publication, certification, and supported-feature blockers. Missing
 sibling evidence writes an invalid source-contract artifact and keeps those
 blockers. It cites the
 merged `lotus-report` materialization contract for
-`POST /reports/idea-evidence-packs/materializations`, report-owned
+`POST /reports/idea-evidence-packs/materializations`, its exact read-only
+`GET /reports/idea-evidence-packs/materializations` recovery route, report-owned
 materialization/render/archive modules and tests, the `lotus-idea` downstream
 contract, and the readiness endpoints. Sibling declarations do not prove that
 a job ran, output was rendered, an archive record was created, or a retention
