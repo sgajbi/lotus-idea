@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 import pytest
 
-from app.domain import EvidenceFreshness
+from app.domain import EvidenceFreshness, SourceReconciliationPosture
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import (
@@ -355,6 +355,14 @@ def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
     assert evidence.latest_evidence_at_utc == datetime(2026, 6, 21, 9, 59, tzinfo=UTC)
     assert evidence.source_evidence_current is True
     assert evidence.policy_version == "tenant-policy-v1"
+    assert evidence.portfolio_state_ref.revision_claims is not None
+    assert evidence.portfolio_state_ref.revision_claims.snapshot_id == "pss_test_snapshot"
+    assert evidence.portfolio_state_ref.revision_claims.restatement_version == "restatement-v1"
+    assert evidence.portfolio_state_ref.revision_claims.source_batch_id == "sha256:" + "a" * 64
+    assert (
+        evidence.portfolio_state_ref.revision_claims.reconciliation_posture
+        is SourceReconciliationPosture.COMPLETE
+    )
     assert evidence.source_correlation_id == "corr-core"
     assert evidence.applied_sections == ("portfolio_state", "portfolio_totals")
     assert evidence.dropped_sections == ()

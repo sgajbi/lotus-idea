@@ -8,7 +8,9 @@ from urllib.parse import quote
 
 from app.domain import (
     EvidenceFreshness,
+    SourceReconciliationPosture,
     SourceRef,
+    SourceRevisionClaims,
     SourceSystem,
     benchmark_assignment_diagnostic,
 )
@@ -501,7 +503,54 @@ def _source_ref(payload: dict[str, Any], *, product_id: str, route: str) -> Sour
         content_hash=content_hash,
         data_quality_status=data_quality_status,
         freshness=_freshness(payload, generated_at=generated_at),
+        revision_claims=_source_revision_claims(payload),
     )
+
+
+def _source_revision_claims(payload: dict[str, Any]) -> SourceRevisionClaims | None:
+    snapshot_id = _text_field(payload, "snapshot_id", "snapshotId")
+    source_revision = _text_field(payload, "source_revision", "sourceRevision")
+    source_batch_id = _text_field(
+        payload,
+        "source_batch_fingerprint",
+        "sourceBatchFingerprint",
+    )
+    calculation_run_id = _text_field(payload, "calculation_id", "calculationId", "run_id", "runId")
+    if not any((snapshot_id, source_revision, source_batch_id, calculation_run_id)):
+        return None
+    return SourceRevisionClaims(
+        snapshot_id=snapshot_id,
+        source_revision=source_revision,
+        restatement_version=_text_field(
+            payload,
+            "restatement_version",
+            "restatementVersion",
+        ),
+        source_batch_id=source_batch_id,
+        source_cut_id=_text_field(payload, "source_cut_id", "sourceCutId"),
+        calculation_run_id=calculation_run_id,
+        methodology_version=_text_field(
+            payload,
+            "methodology_version",
+            "methodologyVersion",
+        ),
+        policy_version=_text_field(payload, "policy_version", "policyVersion"),
+        reconciliation_posture=_source_reconciliation_posture(
+            _text_field(payload, "reconciliation_status", "reconciliationStatus")
+        ),
+    )
+
+
+def _source_reconciliation_posture(value: str | None) -> SourceReconciliationPosture:
+    normalized = value.strip().lower() if value is not None else "unknown"
+    aliases = {
+        "complete": SourceReconciliationPosture.COMPLETE,
+        "partial": SourceReconciliationPosture.PARTIAL,
+        "failed": SourceReconciliationPosture.FAILED,
+        "unreconciled": SourceReconciliationPosture.FAILED,
+        "not_applicable": SourceReconciliationPosture.NOT_APPLICABLE,
+    }
+    return aliases.get(normalized, SourceReconciliationPosture.UNKNOWN)
 
 
 def _datetime_field(payload: dict[str, Any], *keys: str) -> datetime:
