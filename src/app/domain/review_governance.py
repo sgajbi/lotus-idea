@@ -639,7 +639,11 @@ def _candidate_after_review(
     accepted_at_utc: datetime,
 ) -> IdeaCandidate:
     if command.action is ReviewAction.APPROVE_FOR_CONVERSION:
-        _ensure_evidence_ready(candidate, command.action)
+        _ensure_evidence_ready(
+            candidate,
+            command.action,
+            accepted_at_utc=accepted_at_utc,
+        )
         if candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW:
             reviewed = transition_candidate(
                 candidate,
@@ -740,8 +744,16 @@ def _ensure_actor_scope(
         raise ReviewEntitlementDenied(candidate_id)
 
 
-def _ensure_evidence_ready(candidate: IdeaCandidate, action: ReviewAction) -> None:
+def _ensure_evidence_ready(
+    candidate: IdeaCandidate,
+    action: ReviewAction,
+    *,
+    accepted_at_utc: datetime,
+) -> None:
     if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
+        raise _invalid_review_action(candidate, action)
+    applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
+    if applicability_expiry is not None and accepted_at_utc >= applicability_expiry:
         raise _invalid_review_action(candidate, action)
 
 

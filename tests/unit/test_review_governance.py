@@ -74,6 +74,7 @@ def source_ref() -> SourceRef:
 def evidence_packet(
     *,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaEvidencePacket:
     source = source_ref()
     lineage = LineageRef(
@@ -93,6 +94,7 @@ def evidence_packet(
             else ()
         ),
         created_at_utc=EVALUATED_AT,
+        applicability_expires_at_utc=applicability_expires_at_utc,
     )
 
 
@@ -102,6 +104,7 @@ def candidate(
     lifecycle_status: IdeaLifecycleStatus = IdeaLifecycleStatus.READY_FOR_REVIEW,
     review_posture: ReviewPosture = ReviewPosture.ADVISOR_REVIEW_REQUIRED,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=candidate_id,
@@ -109,7 +112,10 @@ def candidate(
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,
-        evidence_packet=evidence_packet(supportability=supportability),
+        evidence_packet=evidence_packet(
+            supportability=supportability,
+            applicability_expires_at_utc=applicability_expires_at_utc,
+        ),
         source_signal_ids=("signal-review-001",),
         score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
@@ -188,6 +194,24 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.audit_event.attributes["candidate_id"] == "idea-review-001"
     assert result.audit_event.attributes["prior_lifecycle_status"] == "ready_for_review"
     assert result.audit_event.attributes["prior_review_posture"] == "advisor_review_required"
+
+
+@pytest.mark.parametrize("expiry", [DECIDED_AT, DECIDED_AT - datetime.resolution])
+def test_approval_refuses_candidate_at_or_after_server_time_expiry(expiry: datetime) -> None:
+    with pytest.raises(InvalidReviewAction):
+        apply_review_action(
+            candidate(applicability_expires_at_utc=expiry),
+            decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        )
+
+
+def test_approval_allows_candidate_immediately_before_server_time_expiry() -> None:
+    result = apply_review_action(
+        candidate(applicability_expires_at_utc=DECIDED_AT + datetime.resolution),
+        decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+    )
+
+    assert result.candidate.lifecycle_status is IdeaLifecycleStatus.APPROVED
     assert result.audit_event.attributes["requested_action"] == "approve_for_conversion"
     assert result.audit_event.attributes["reason_codes"] == (
         "review_approved_for_conversion,review_required"

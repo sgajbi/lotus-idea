@@ -229,7 +229,7 @@ def request_conversion_intent(
         accepted_at_utc,
         CONVERSION_INTENT_TIME_POLICY,
     )
-    _ensure_candidate_ready_for_conversion(candidate)
+    _ensure_candidate_ready_for_conversion(candidate, accepted_at_utc=accepted_at_utc)
     intent = IdeaConversionIntent(
         conversion_intent_id=command.conversion_intent_id,
         candidate_id=candidate.candidate_id,
@@ -382,10 +382,17 @@ def current_conversion_outcome(
     return next(outcome for outcome in outcomes if outcome.identity == current)
 
 
-def _ensure_candidate_ready_for_conversion(candidate: IdeaCandidate) -> None:
+def _ensure_candidate_ready_for_conversion(
+    candidate: IdeaCandidate,
+    *,
+    accepted_at_utc: datetime,
+) -> None:
     if candidate.lifecycle_status is not IdeaLifecycleStatus.APPROVED:
         raise InvalidConversionIntent(candidate.candidate_id, "candidate lifecycle is not approved")
     if candidate.review_posture is not ReviewPosture.APPROVED_FOR_CONVERSION:
         raise InvalidConversionIntent(candidate.candidate_id, "review posture is not approved")
     if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
         raise InvalidConversionIntent(candidate.candidate_id, "evidence is not ready")
+    applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
+    if applicability_expiry is not None and accepted_at_utc >= applicability_expiry:
+        raise InvalidConversionIntent(candidate.candidate_id, "candidate applicability has expired")
