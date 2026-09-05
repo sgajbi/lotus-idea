@@ -1,8 +1,8 @@
 {
   "input_fingerprint": {
     "rule_digest": "7ac722a440e92064c348b878ae630578e6badfdc91971683691c31c134a14a82",
-    "source_file_count": 540,
-    "source_import_digest": "60d23098fa087c1091dd304db1fa8889644c203047a4d69193360a5e5e033aeb",
+    "source_file_count": 543,
+    "source_import_digest": "7c5e731e5db516fa93cac26d4a30c352a00ac4ad58b80366a4b7f1e22c883fe9",
     "source_root": "src/app"
   },
   "mode": "report-only",
