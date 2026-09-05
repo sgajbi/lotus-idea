@@ -8,7 +8,7 @@ from typing import Any, cast
 import httpx
 import pytest
 
-from app.domain import EvidenceFreshness
+from app.domain import EvidenceFreshness, SourceReconciliationPosture
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_risk_sources import (
     LotusRiskConcentrationSourceAdapter,
@@ -43,6 +43,7 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "portfolio_id": "PB_SG_GLOBAL_BAL_001",
             "generated_at": "2026-06-21T10:00:00Z",
             "request_fingerprint": "risk-concentration-fingerprint",
+            "methodology_version": "risk.v1",
             "calculation_supportability": {
                 "state": "ready",
                 "reason": "calculation_complete",
@@ -178,6 +179,12 @@ def test_lotus_risk_adapter_fetches_declared_concentration_source_product() -> N
     assert evidence.concentration_ref.route == "/analytics/risk/concentration"
     assert evidence.concentration_ref.content_hash == "sha256:risk-concentration-fingerprint"
     assert evidence.concentration_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.concentration_ref.revision_claims is not None
+    assert evidence.concentration_ref.revision_claims.methodology_version == "risk.v1"
+    assert (
+        evidence.concentration_ref.revision_claims.reconciliation_posture
+        is SourceReconciliationPosture.UNKNOWN
+    )
     assert evidence.concentration_diagnostic == "risk_issuer_coverage_complete"
     assert seen == [
         (
