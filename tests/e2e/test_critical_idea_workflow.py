@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
+
+import pytest
 
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.support.http import managed_test_client
+from tests.support.source_revision import coherent_lotus_core_revision_claims
 
 
 PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 
 
-def _source_ref(product_id: str) -> dict[str, str]:
+def _source_ref(product_id: str) -> dict[str, Any]:
     return {
         "productId": product_id,
         "sourceSystem": "lotus-core",
@@ -21,7 +25,25 @@ def _source_ref(product_id: str) -> dict[str, str]:
         "contentHash": f"sha256:{product_id}:critical-e2e",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": coherent_lotus_core_revision_claims(product_id),
     }
+
+
+class _FixedClock:
+    def now_utc(self) -> datetime:
+        return datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+
+
+def _freeze_acceptance_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = _FixedClock()
+    for module in (
+        "app.api.idea_signals",
+        "app.api.candidate_lifecycle",
+        "app.api.presentation_receipts",
+        "app.api.review_workflow",
+        "app.api.conversion_governance",
+    ):
+        monkeypatch.setattr(f"{module}.get_trusted_clock", lambda: clock)
 
 
 def _access_scope() -> dict[str, str]:
@@ -210,6 +232,8 @@ def _assert_advisor_queue_contains_candidate(
             "rankingPolicyVersion": queue_payload["items"][0]["policyVersion"],
             "candidateMaterialVersion": candidate["materialVersion"],
             "candidateEvidenceVersion": candidate["evidenceVersion"],
+            "sourceRevisionVectorDigest": evidence["sourceRevisionVectorDigest"],
+            "sourceCutPosture": evidence["sourceCutPosture"],
         },
         headers={
             **_headers(
@@ -222,7 +246,10 @@ def _assert_advisor_queue_contains_candidate(
         },
     )
     assert receipt.status_code == 201
-    assert receipt.json()["receipt"]["candidateId"] == candidate_id
+    receipt_payload = receipt.json()["receipt"]
+    assert receipt_payload["candidateId"] == candidate_id
+    assert receipt_payload["sourceRevisionVectorDigest"] == evidence["sourceRevisionVectorDigest"]
+    assert receipt_payload["sourceCutPosture"] == evidence["sourceCutPosture"]
     return {
         "reviewChannel": "workbench",
         "presentationReceiptId": receipt_id,
@@ -388,7 +415,10 @@ def _assert_candidate_detail_replays_non_authority_workflow(
     assert detail_payload["supportedFeaturePromoted"] is False
 
 
-def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
+def test_critical_idea_workflow_preserves_authority_boundaries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _freeze_acceptance_time(monkeypatch)
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
 
