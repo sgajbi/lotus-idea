@@ -145,6 +145,12 @@ def _remove_execution_result(response: dict[str, object]) -> None:
     execution.pop("result")
 
 
+def _blank_workflow_pack_run_id(response: dict[str, object]) -> None:
+    workflow_pack_run = response["workflow_pack_run"]
+    assert isinstance(workflow_pack_run, dict)
+    workflow_pack_run["run_id"] = " "
+
+
 def _repository_with_candidate() -> InMemoryIdeaRepository:
     repository = InMemoryIdeaRepository()
     persisted = repository.persist_candidate(
@@ -256,6 +262,7 @@ async def test_generation_degrades_to_deterministic_fallback_when_runtime_unavai
     [
         _remove_execution,
         _remove_execution_result,
+        _blank_workflow_pack_run_id,
     ],
 )
 @pytest.mark.asyncio
