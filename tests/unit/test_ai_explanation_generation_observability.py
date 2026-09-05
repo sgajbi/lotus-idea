@@ -1,4 +1,5 @@
 from prometheus_client import CollectorRegistry
+import pytest
 
 from app.application.lotus_ai_idea_explanation_generation import (
     AIExplanationGenerationStatus,
@@ -42,3 +43,16 @@ def test_generation_metrics_distinguish_request_served_and_unavailable_by_purpos
         )
         == 1
     )
+
+
+def test_generation_metrics_reject_ungoverned_outcome_labels() -> None:
+    metrics = AIExplanationGenerationMetrics(CollectorRegistry())
+
+    with pytest.raises(
+        ValueError,
+        match="AI explanation generation metric outcome is not governed",
+    ):
+        metrics._observe(
+            purpose=AIWorkflowPurpose.ADVISOR_RATIONALE_DRAFT,
+            outcome="candidate-specific-unbounded-label",
+        )
