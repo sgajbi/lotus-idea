@@ -4,6 +4,7 @@ from typing import Any
 
 from app.domain import SourceRef
 from app.domain.access_scope import ReviewAccessScope
+from app.domain.source_revision import source_revision_claims_payload
 
 
 def source_ref_payload(source_ref: SourceRef) -> dict[str, Any]:
@@ -17,6 +18,7 @@ def source_ref_payload(source_ref: SourceRef) -> dict[str, Any]:
         "content_hash": source_ref.content_hash,
         "data_quality_status": source_ref.data_quality_status,
         "freshness": source_ref.freshness.value,
+        "revision_claims": source_revision_claims_payload(source_ref.revision_claims),
     }
 
 
