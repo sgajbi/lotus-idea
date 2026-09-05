@@ -23,7 +23,7 @@ CANDIDATE_EVIDENCE_REPLAY_OPERATION = (
     "/api/v1/idea-candidates/{candidateId}/evidence-replay",
 )
 CANDIDATE_LIFECYCLE_BEHAVIOR_TEST = (
-    "tests/integration/test_review_workflow_api.py::"
+    "tests/integration/test_candidate_lifecycle_authority_api.py::"
     "test_lifecycle_transition_api_records_idempotent_transition"
 )
 CANDIDATE_EVIDENCE_REPLAY_MATCHED_TEST = (
