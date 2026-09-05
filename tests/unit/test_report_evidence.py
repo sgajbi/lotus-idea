@@ -4,15 +4,16 @@ from copy import copy
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import partial
 
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
+from tests.support.review_authority import review_authority_grant_for_candidate
 
 from app.domain import (
     ConversionTarget,
+    CandidateEvidenceIdentity,
     ConversionIntentResult,
     EvidenceFreshness,
     EvidenceSupportability,
@@ -43,10 +44,20 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 PACK_REQUESTED_AT = datetime(2026, 6, 21, 10, 25, tzinfo=UTC)
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=REQUESTED_AT,
-)
+def request_conversion_intent(
+    source_candidate: IdeaCandidate,
+    conversion_command: ConversionIntentCommand,
+) -> ConversionIntentResult:
+    return _request_conversion_intent(
+        source_candidate,
+        conversion_command,
+        accepted_at_utc=REQUESTED_AT,
+        review_authority_grant=review_authority_grant_for_candidate(
+            source_candidate,
+            accepted_at_utc=EVALUATED_AT,
+            review_id=conversion_command.expected_review_id,
+        ),
+    )
 
 
 def source_ref() -> SourceRef:
@@ -104,6 +115,8 @@ def report_conversion_intent(candidate_: IdeaCandidate) -> ConversionIntentResul
             idempotency_key="conversion-report-evidence-request-001",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate_),
         ),
     )
 
@@ -168,6 +181,8 @@ def test_report_evidence_pack_blocks_client_ready_publication_and_non_report_tar
             idempotency_key="conversion-advise-evidence-request-001",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         ),
     )
     with pytest.raises(InvalidReportEvidencePack, match="conversion target is not report evidence"):
@@ -229,9 +244,11 @@ def test_report_evidence_pack_rejects_mismatched_or_unready_conversion_state() -
             command(),
         )
 
-    mismatched_intent = replace(
-        conversion.conversion_intent,
-        evidence_content_hash="sha256:different-evidence",
+    mismatched_intent = copy(conversion.conversion_intent)
+    object.__setattr__(
+        mismatched_intent,
+        "evidence_content_hash",
+        "sha256:different-evidence",
     )
     with pytest.raises(InvalidReportEvidencePack, match="evidence hash"):
         request_report_evidence_pack(

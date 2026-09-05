@@ -30,7 +30,9 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
+    CandidateEvidenceIdentity,
     ReviewQueueSnapshotConflictError,
     ReviewQueuePolicy,
     ReviewQueueAudience,
@@ -42,6 +44,7 @@ from app.domain import (
     apply_review_action,
     visible_review_queue_candidate_records,
 )
+from tests.support.review_authority import presentation_receipt_for_candidate
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.ports.idea_repository import (
     ReviewQueueReadinessRepositorySummary,
@@ -157,9 +160,17 @@ def record_snooze(
             ),
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=decided_at_utc,
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate),
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id="receipt-review-queue-snooze-001",
             snoozed_until_utc=snoozed_until_utc,
         ),
         accepted_at_utc=accepted_at_utc,
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=accepted_at_utc,
+            receipt_id="receipt-review-queue-snooze-001",
+        ),
     )
     repository.record_review_action(
         result,

@@ -6,6 +6,10 @@ from decimal import Decimal
 from functools import partial
 
 import pytest
+from tests.support.review_authority import (
+    approved_review_decision_for_candidate,
+    review_authority_grant_for_candidate,
+)
 
 from app.domain import (
     AIFallbackReason,
@@ -20,6 +24,7 @@ from app.domain import (
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
+    ConversionIntentResult,
     ConversionTarget,
     EvidencePackPersistenceDecision,
     EvidenceFreshness,
@@ -46,7 +51,9 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
+    CandidateEvidenceIdentity,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -67,10 +74,20 @@ ACCEPTED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 CONVERSION_INTENT_ACCEPTED_AT = datetime(2026, 6, 21, 10, 16, tzinfo=UTC)
 CONVERSION_OUTCOME_ACCEPTED_AT = datetime(2026, 6, 21, 10, 21, tzinfo=UTC)
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=CONVERSION_INTENT_ACCEPTED_AT,
-)
+def request_conversion_intent(
+    source_candidate: IdeaCandidate,
+    command: ConversionIntentCommand,
+) -> ConversionIntentResult:
+    return _request_conversion_intent(
+        source_candidate,
+        command,
+        accepted_at_utc=CONVERSION_INTENT_ACCEPTED_AT,
+        review_authority_grant=review_authority_grant_for_candidate(
+            source_candidate,
+            accepted_at_utc=ACCEPTED_AT,
+            review_id=command.expected_review_id,
+        ),
+    )
 record_conversion_outcome = partial(
     _record_conversion_outcome,
     accepted_at_utc=CONVERSION_OUTCOME_ACCEPTED_AT,
@@ -194,12 +211,16 @@ def review_decision_command(
     review_id: str = "review-decision-001",
     decided_at_utc: datetime = datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
 ) -> ReviewDecisionCommand:
+    source_candidate, _ = review_ready_high_cash_candidate()
     return ReviewDecisionCommand(
         review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=advisor_actor_context(),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=decided_at_utc,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id="receipt-review-decision-001",
     )
 
 
@@ -222,6 +243,7 @@ def conversion_intent_command(
     *,
     target: ConversionTarget = ConversionTarget.REPORT_EVIDENCE,
 ) -> ConversionIntentCommand:
+    source_candidate, _ = approved_high_cash_candidate()
     return ConversionIntentCommand(
         conversion_intent_id=f"conversion-{target.value}-001",
         target=target,
@@ -229,6 +251,34 @@ def conversion_intent_command(
         idempotency_key=f"conversion-{target.value}-key-001",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+        expected_review_id="review-authority-test-001",
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+    )
+
+
+def with_persisted_review_authority(
+    repository: InMemoryIdeaRepository,
+    candidate: IdeaCandidate,
+) -> InMemoryIdeaRepository:
+    snapshot = repository.snapshot()
+    record = snapshot.candidate_records[candidate.candidate_id]
+    reviewed_record = replace(
+        record,
+        review_decisions=(
+            approved_review_decision_for_candidate(
+                candidate,
+                accepted_at_utc=ACCEPTED_AT,
+            ),
+        ),
+    )
+    return InMemoryIdeaRepository(
+        replace(
+            snapshot,
+            candidate_records={
+                **snapshot.candidate_records,
+                candidate.candidate_id: reviewed_record,
+            },
+        )
     )
 
 
@@ -754,6 +804,7 @@ def test_conversion_intent_persistence_records_lifecycle_audit_and_idempotency()
         occurred_at_utc=EVALUATED_AT,
     )
     assert persisted.record is not None
+    repository = with_persisted_review_authority(repository, candidate)
     command = conversion_intent_command()
     result = request_conversion_intent(candidate, command)
     payload = {"candidate_id": candidate.candidate_id, "target": command.target.value}
@@ -877,13 +928,15 @@ def test_conversion_outcome_persistence_records_source_reported_result_and_snaps
 ):
     candidate, refs = approved_high_cash_candidate()
     repository = InMemoryIdeaRepository()
-    repository.persist_candidate(
+    persisted = repository.persist_candidate(
         candidate,
         idempotency_key="signal-ingestion:conversion-outcome:001",
         payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
+    assert persisted.record is not None
+    repository = with_persisted_review_authority(repository, candidate)
     command = conversion_intent_command()
     intent_result = request_conversion_intent(candidate, command)
     repository.record_conversion_intent(
@@ -963,13 +1016,15 @@ def test_conversion_intent_lookup_handles_stale_snapshot_index() -> None:
 def test_conversion_outcome_persistence_handles_conflict_and_missing_intent_mapping() -> None:
     candidate, refs = approved_high_cash_candidate()
     repository = InMemoryIdeaRepository()
-    repository.persist_candidate(
+    persisted = repository.persist_candidate(
         candidate,
         idempotency_key="signal-ingestion:conversion-outcome-conflict:001",
         payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
+    assert persisted.record is not None
+    repository = with_persisted_review_authority(repository, candidate)
     command = conversion_intent_command()
     intent_result = request_conversion_intent(candidate, command)
     repository.record_conversion_intent(
@@ -1027,13 +1082,15 @@ def test_conversion_outcome_persistence_handles_conflict_and_missing_intent_mapp
 def test_report_evidence_pack_persistence_records_idempotent_request() -> None:
     candidate, refs = approved_high_cash_candidate()
     repository = InMemoryIdeaRepository()
-    repository.persist_candidate(
+    persisted = repository.persist_candidate(
         candidate,
         idempotency_key="signal-ingestion:report-evidence-pack:001",
         payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
+    assert persisted.record is not None
+    repository = with_persisted_review_authority(repository, candidate)
     conversion_command = conversion_intent_command()
     conversion_result = request_conversion_intent(candidate, conversion_command)
     repository.record_conversion_intent(

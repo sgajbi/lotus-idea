@@ -31,6 +31,11 @@ from app.domain.ideas import (
     SourceSystem,
     transition_candidate,
 )
+from app.domain.review_authority import (
+    CandidateEvidenceIdentity,
+    ReviewAuthorityGrant,
+    ReviewAuthorityStatus,
+)
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -83,6 +88,8 @@ class ConversionIntentCommand:
     idempotency_key: str
     reason_codes: tuple[ReasonCode, ...]
     requested_at_utc: datetime
+    expected_review_id: str
+    expected_candidate_evidence: CandidateEvidenceIdentity
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
@@ -90,6 +97,7 @@ class ConversionIntentCommand:
             raise ValueError("conversion_intent_id must be at most 160 characters")
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
+        _require_text(self.expected_review_id, "expected_review_id")
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
@@ -107,6 +115,7 @@ class GovernedConversionIntent:
     reason_codes: tuple[ReasonCode, ...]
     target_source_authority: SourceSystem
     accepted_at_utc: datetime
+    review_authority_grant: ReviewAuthorityGrant | None = None
     acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     boundary: ConversionBoundary = ConversionBoundary.INTENT_ONLY
 
@@ -124,6 +133,16 @@ class GovernedConversionIntent:
             raise ValueError("source_signal_ids is required")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
+        if self.review_authority_grant is not None:
+            grant = self.review_authority_grant
+            if grant.candidate_evidence.candidate_id != self.intent.candidate_id:
+                raise ValueError("review authority candidate must match conversion intent")
+            if grant.candidate_evidence.evidence_packet_id != self.evidence_packet_id:
+                raise ValueError("review authority evidence packet must match conversion intent")
+            if grant.candidate_evidence.evidence_content_hash != self.evidence_content_hash:
+                raise ValueError("review authority evidence hash must match conversion intent")
+            if grant.accepted_at_utc > self.accepted_at_utc:
+                raise ValueError("review authority cannot postdate conversion acceptance")
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
 
@@ -222,6 +241,7 @@ def request_conversion_intent(
     command: ConversionIntentCommand,
     *,
     accepted_at_utc: datetime,
+    review_authority_grant: ReviewAuthorityGrant,
 ) -> ConversionIntentResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
     require_observed_time_within_policy(
@@ -230,6 +250,12 @@ def request_conversion_intent(
         CONVERSION_INTENT_TIME_POLICY,
     )
     _ensure_candidate_ready_for_conversion(candidate, accepted_at_utc=accepted_at_utc)
+    _ensure_exact_review_authority(
+        candidate,
+        command,
+        review_authority_grant,
+        accepted_at_utc=accepted_at_utc,
+    )
     intent = IdeaConversionIntent(
         conversion_intent_id=command.conversion_intent_id,
         candidate_id=candidate.candidate_id,
@@ -247,6 +273,7 @@ def request_conversion_intent(
         reason_codes=command.reason_codes,
         target_source_authority=TARGET_SOURCE_AUTHORITIES[command.target],
         accepted_at_utc=accepted_at_utc,
+        review_authority_grant=review_authority_grant,
     )
     transitioned_candidate = transition_candidate(
         candidate,
@@ -264,6 +291,11 @@ def request_conversion_intent(
             "conversion_target": command.target.value,
             "evidence_packet_id": candidate.evidence_packet.evidence_packet_id,
             "target_source_authority": governed_intent.target_source_authority.value,
+            "review_id": review_authority_grant.review_id,
+            "review_policy_version": review_authority_grant.review_policy_version,
+            "review_authority_policy_version": (
+                review_authority_grant.authority_policy_version
+            ),
             "observed_at_utc": command.requested_at_utc.isoformat(),
         },
     )
@@ -396,3 +428,28 @@ def _ensure_candidate_ready_for_conversion(
     applicability_expiry = candidate.evidence_packet.applicability_expires_at_utc
     if applicability_expiry is not None and accepted_at_utc >= applicability_expiry:
         raise InvalidConversionIntent(candidate.candidate_id, "candidate applicability has expired")
+
+
+def _ensure_exact_review_authority(
+    candidate: IdeaCandidate,
+    command: ConversionIntentCommand,
+    grant: ReviewAuthorityGrant,
+    *,
+    accepted_at_utc: datetime,
+) -> None:
+    current_identity = CandidateEvidenceIdentity.from_candidate(candidate)
+    if command.expected_candidate_evidence != current_identity:
+        raise InvalidConversionIntent(
+            candidate.candidate_id,
+            "expected candidate evidence identity is stale",
+        )
+    if grant.review_id != command.expected_review_id:
+        raise InvalidConversionIntent(candidate.candidate_id, "review authority identity differs")
+    if grant.candidate_evidence != command.expected_candidate_evidence:
+        raise InvalidConversionIntent(candidate.candidate_id, "review authority evidence differs")
+    status = grant.effective_status(candidate, evaluated_at_utc=accepted_at_utc)
+    if status is not ReviewAuthorityStatus.ACTIVE:
+        raise InvalidConversionIntent(
+            candidate.candidate_id,
+            f"review authority is {status.value}",
+        )

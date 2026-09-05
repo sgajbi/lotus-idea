@@ -54,7 +54,7 @@ def authority_grant() -> ReviewAuthorityGrant:
         review_channel=ReviewChannel.WORKBENCH,
         actor_subject="advisor-001",
         actor_role="advisor",
-        review_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
+        review_policy_version="idea-human-review-v1",
         accepted_at_utc=DECIDED_AT,
         applicability_expires_at_utc=DECIDED_AT + timedelta(minutes=20),
         presentation_receipt_id=receipt.receipt_id,
@@ -115,7 +115,7 @@ def test_workbench_authority_requires_real_presentation_context() -> None:
             review_channel=ReviewChannel.WORKBENCH,
             actor_subject="advisor-001",
             actor_role="advisor",
-            review_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
+            review_policy_version="idea-human-review-v1",
             accepted_at_utc=DECIDED_AT,
             applicability_expires_at_utc=None,
         )
@@ -128,7 +128,7 @@ def test_operator_authority_never_fabricates_workbench_receipt() -> None:
         review_channel=ReviewChannel.OPERATOR,
         actor_subject="operator-001",
         actor_role="operator",
-        review_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
+        review_policy_version="idea-human-review-v1",
         accepted_at_utc=DECIDED_AT,
         applicability_expires_at_utc=None,
     )
@@ -146,11 +146,17 @@ def test_operator_authority_never_fabricates_workbench_receipt() -> None:
 
 def test_authority_posture_fails_closed_for_change_supportability_and_expiry() -> None:
     grant = authority_grant()
+    assert grant.applicability_expires_at_utc is not None
+    assert grant.authority_policy_version == REVIEW_AUTHORITY_POLICY_VERSION
     current = candidate(applicability_expires_at_utc=grant.applicability_expires_at_utc)
 
     assert grant.effective_status(current, evaluated_at_utc=DECIDED_AT) is (
         ReviewAuthorityStatus.ACTIVE
     )
+    assert replace(
+        grant,
+        authority_policy_version="idea-review-authority-v0",
+    ).effective_status(current, evaluated_at_utc=DECIDED_AT) is ReviewAuthorityStatus.REVOKED
     changed_evidence = replace(
         current,
         identity=replace(current.identity, evidence_version=2),

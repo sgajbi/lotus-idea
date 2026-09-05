@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from functools import partial
 
 from app.domain import (
     DownstreamSubmissionPosture,
@@ -20,14 +19,10 @@ from tests.unit.test_postgres_repository import (
     access_scope,
     conversion_command,
     high_cash_candidate,
+    review_command,
     report_pack_command,
 )
-
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=EVALUATED_AT,
-)
-
+from tests.support.postgres_review_authority import persist_candidate_with_review_authority
 
 def approved_candidate() -> IdeaCandidate:
     return replace(
@@ -41,14 +36,19 @@ def test_postgres_conversion_intent_lookup_uses_direct_table_query() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = approved_candidate()
-    repository.persist_candidate(
+    candidate, grant = persist_candidate_with_review_authority(
+        repository,
         candidate,
         idempotency_key="signal-ingestion:downstream-lookup",
-        payload={"candidateId": candidate.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
+        accepted_at_utc=EVALUATED_AT,
+        review_command=lambda value: review_command(candidate=value),
     )
-    conversion_result = request_conversion_intent(candidate, conversion_command())
+    conversion_result = _request_conversion_intent(
+        candidate,
+        conversion_command(),
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=grant,
+    )
     repository.record_conversion_intent(
         conversion_result,
         idempotency_key=conversion_result.conversion_intent.idempotency_key,
@@ -73,14 +73,19 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = approved_candidate()
-    repository.persist_candidate(
+    candidate, grant = persist_candidate_with_review_authority(
+        repository,
         candidate,
         idempotency_key="signal-ingestion:report-pack-lookup",
-        payload={"candidateId": candidate.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
+        accepted_at_utc=EVALUATED_AT,
+        review_command=lambda value: review_command(candidate=value),
     )
-    conversion_result = request_conversion_intent(candidate, conversion_command())
+    conversion_result = _request_conversion_intent(
+        candidate,
+        conversion_command(),
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=grant,
+    )
     conversion_persistence = repository.record_conversion_intent(
         conversion_result,
         idempotency_key=conversion_result.conversion_intent.idempotency_key,
@@ -116,14 +121,19 @@ def test_postgres_report_pack_candidate_lookup_uses_bounded_record_query() -> No
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = approved_candidate()
-    repository.persist_candidate(
+    candidate, grant = persist_candidate_with_review_authority(
+        repository,
         candidate,
         idempotency_key="signal-ingestion:report-pack-candidate-lookup",
-        payload={"candidateId": candidate.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
+        accepted_at_utc=EVALUATED_AT,
+        review_command=lambda value: review_command(candidate=value),
     )
-    conversion_result = request_conversion_intent(candidate, conversion_command())
+    conversion_result = _request_conversion_intent(
+        candidate,
+        conversion_command(),
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=grant,
+    )
     conversion_persistence = repository.record_conversion_intent(
         conversion_result,
         idempotency_key=conversion_result.conversion_intent.idempotency_key,
@@ -204,14 +214,19 @@ def test_postgres_downstream_lookups_hide_erased_candidate_resources() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = approved_candidate()
-    repository.persist_candidate(
+    candidate, grant = persist_candidate_with_review_authority(
+        repository,
         candidate,
         idempotency_key="signal-ingestion:hidden-erased-resource",
-        payload={"candidateId": candidate.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
+        accepted_at_utc=EVALUATED_AT,
+        review_command=lambda value: review_command(candidate=value),
     )
-    conversion_result = request_conversion_intent(candidate, conversion_command())
+    conversion_result = _request_conversion_intent(
+        candidate,
+        conversion_command(),
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=grant,
+    )
     repository.record_conversion_intent(
         conversion_result,
         idempotency_key=conversion_result.conversion_intent.idempotency_key,

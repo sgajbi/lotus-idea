@@ -31,9 +31,12 @@ from app.domain import (
     ReasonCode,
     ReviewAccessScope,
     ReviewAction,
+    ReviewActionResult,
     ReviewActionPolicy,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewAuthorityConflict,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewEntitlementDenied,
     ReviewPosture,
@@ -47,13 +50,14 @@ from app.domain import (
     record_feedback as _record_feedback,
     review_mutation_identity_from_command,
 )
+from app.domain.presentation_receipts import CandidatePresentationReceipt
+from app.domain.review_authority import CandidateEvidenceIdentity
 
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 DECIDED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 
-apply_review_action = partial(_apply_review_action, accepted_at_utc=DECIDED_AT)
 record_feedback = partial(_record_feedback, accepted_at_utc=DECIDED_AT)
 
 
@@ -148,6 +152,40 @@ def advisor_context() -> ReviewActorContext:
     )
 
 
+def presentation_receipt(source_candidate: IdeaCandidate) -> CandidatePresentationReceipt:
+    assert source_candidate.access_scope is not None
+    return CandidatePresentationReceipt(
+        receipt_id="receipt-review-001",
+        candidate_id=source_candidate.candidate_id,
+        tenant_id=source_candidate.access_scope.tenant_id,
+        presented_at_utc=DECIDED_AT - timedelta(minutes=1),
+        rank_at_presentation=1,
+        visible_candidate_count=1,
+        queue_snapshot_digest="sha256:" + "a" * 64,
+        queue_policy_version="idea-review-queue-v1",
+        ranking_policy_version="idea-deterministic-ranking-v1",
+        candidate_material_version=source_candidate.identity.material_version,
+        candidate_evidence_version=source_candidate.identity.evidence_version,
+        accepted_at_utc=DECIDED_AT - timedelta(minutes=1),
+    )
+
+
+def apply_review_action(
+    source_candidate: IdeaCandidate,
+    command: ReviewDecisionCommand,
+) -> ReviewActionResult:
+    command = replace(
+        command,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+    )
+    return _apply_review_action(
+        source_candidate,
+        command,
+        accepted_at_utc=DECIDED_AT,
+        presentation_receipt=presentation_receipt(source_candidate),
+    )
+
+
 def decision_command(
     action: ReviewAction,
     *,
@@ -155,12 +193,16 @@ def decision_command(
     suppression_reason: SuppressionReason | None = None,
     snoozed_until_utc: datetime | None = None,
 ) -> ReviewDecisionCommand:
+    source_candidate = candidate()
     return ReviewDecisionCommand(
         review_id=f"review-{action.value}",
         action=action,
         actor=actor or advisor_context(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id="receipt-review-001",
         suppression_reason=suppression_reason,
         snoozed_until_utc=snoozed_until_utc,
     )
@@ -189,11 +231,45 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.candidate.lifecycle_status is IdeaLifecycleStatus.APPROVED
     assert result.candidate.review_posture is ReviewPosture.APPROVED_FOR_CONVERSION
     assert result.decision.grants_downstream_authority is False
+    assert result.authority_grant is not None
+    assert result.authority_grant.review_id == result.decision.review_id
+    assert result.authority_grant.candidate_evidence == CandidateEvidenceIdentity.from_candidate(
+        candidate()
+    )
+    assert result.authority_grant.presentation_receipt_id == "receipt-review-001"
     assert result.decision.reason_codes[0] is ReasonCode.REVIEW_APPROVED_FOR_CONVERSION
     assert result.audit_event.event_type == "idea.review.decision_recorded"
     assert result.audit_event.attributes["candidate_id"] == "idea-review-001"
     assert result.audit_event.attributes["prior_lifecycle_status"] == "ready_for_review"
     assert result.audit_event.attributes["prior_review_posture"] == "advisor_review_required"
+
+
+def test_review_refuses_stale_expected_evidence_before_candidate_mutation() -> None:
+    source_candidate = candidate()
+    command = replace(
+        decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        expected_candidate_evidence=replace(
+            CandidateEvidenceIdentity.from_candidate(source_candidate),
+            evidence_version=2,
+        ),
+    )
+
+    with pytest.raises(ReviewAuthorityConflict, match="evidence identity is stale"):
+        _apply_review_action(
+            source_candidate,
+            command,
+            accepted_at_utc=DECIDED_AT,
+            presentation_receipt=presentation_receipt(source_candidate),
+        )
+
+
+def test_workbench_review_refuses_missing_persisted_presentation() -> None:
+    with pytest.raises(ValueError, match="requires a persisted presentation receipt"):
+        _apply_review_action(
+            candidate(),
+            decision_command(ReviewAction.REJECT),
+            accepted_at_utc=DECIDED_AT,
+        )
 
 
 @pytest.mark.parametrize("expiry", [DECIDED_AT, DECIDED_AT - datetime.resolution])
@@ -232,6 +308,7 @@ def test_review_uses_server_acceptance_time_for_state_and_audit_chronology() -> 
             decided_at_utc=observed_at,
         ),
         accepted_at_utc=accepted_at,
+        presentation_receipt=presentation_receipt(candidate()),
     )
 
     assert result.decision.decided_at_utc == observed_at
@@ -249,7 +326,12 @@ def test_snooze_cannot_use_backdated_observed_time_to_bypass_control_time() -> N
     )
 
     with pytest.raises(ValueError, match="snoozed_until_utc must be after accepted_at_utc"):
-        _apply_review_action(candidate(), command, accepted_at_utc=DECIDED_AT)
+        _apply_review_action(
+            candidate(),
+            command,
+            accepted_at_utc=DECIDED_AT,
+            presentation_receipt=presentation_receipt(candidate()),
+        )
 
 
 def test_review_resource_identity_matches_the_persisted_decision_and_binds_business_fields() -> (
@@ -269,6 +351,17 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     assert identity != replace(identity, actor_subject="advisor-002")
     assert identity != replace(identity, evidence_content_hash="sha256:changed")
     assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
+    changed_expected_evidence = replace(
+        command,
+        expected_candidate_evidence=replace(
+            command.expected_candidate_evidence,
+            evidence_content_hash="sha256:changed-request-evidence",
+        ),
+    )
+    assert review_mutation_identity_from_command(
+        source_candidate,
+        changed_expected_evidence,
+    ).evidence_content_hash == "sha256:changed-request-evidence"
 
 
 @pytest.mark.parametrize(
@@ -595,6 +688,9 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             actor=advisor_context(),
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=datetime(2026, 6, 21, 10, 0),
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id="receipt-review-001",
         )
 
     with pytest.raises(ValueError, match="reason_codes is required"):
@@ -604,6 +700,9 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             actor=advisor_context(),
             reason_codes=(),
             decided_at_utc=DECIDED_AT,
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id="receipt-review-001",
         )
 
     with pytest.raises(ValueError, match="reason_codes is required"):
@@ -612,6 +711,12 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             candidate_id="idea-review-001",
             evidence_packet_id="iep_review_test",
             evidence_content_hash="sha256:review-lineage",
+            candidate_material_version=1,
+            candidate_evidence_version=1,
+            review_channel=ReviewChannel.WORKBENCH,
+            presentation_receipt_id="receipt-review-001",
+            queue_snapshot_digest="sha256:" + "a" * 64,
+            review_policy_version="idea-human-review-v1",
             action=ReviewAction.REJECT,
             resulting_posture=ReviewPosture.REJECTED,
             actor_subject="advisor-001",

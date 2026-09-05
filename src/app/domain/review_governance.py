@@ -39,6 +39,15 @@ from app.domain.review_queue import (
     QueueSnooze,
     priority_bucket_for_score,
 )
+from app.domain.review_authority import (
+    REVIEW_AUTHORITY_POLICY_VERSION,
+    CandidateEvidenceIdentity,
+    ReviewAuthorityGrant,
+    ReviewChannel,
+    validate_expected_candidate_evidence,
+    validate_workbench_presentation,
+)
+from app.domain.presentation_receipts import CandidatePresentationReceipt
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -111,6 +120,11 @@ class ReviewMutationIdentity:
     event_name: str
     reason_codes: tuple[ReasonCode, ...]
     occurred_at_utc: datetime
+    candidate_material_version: int | None = None
+    candidate_evidence_version: int | None = None
+    review_channel: ReviewChannel | None = None
+    presentation_receipt_id: str | None = None
+    review_authority_policy_version: str | None = None
     resulting_posture: ReviewPosture | None = None
     suppression_reason: SuppressionReason | None = None
     snoozed_until_utc: datetime | None = None
@@ -139,8 +153,39 @@ class ReviewMutationIdentity:
         if self.mutation_type is ReviewMutationType.FEEDBACK_EVENT:
             if any(value is None for value in feedback_fields):
                 raise ValueError("feedback mutation identity requires taxonomy version and reason")
+            if any(
+                value is not None
+                for value in (
+                    self.candidate_material_version,
+                    self.candidate_evidence_version,
+                    self.review_channel,
+                    self.presentation_receipt_id,
+                    self.review_authority_policy_version,
+                )
+            ):
+                raise ValueError("feedback mutation identity cannot carry review authority fields")
         elif any(value is not None for value in feedback_fields):
             raise ValueError("review decision identity cannot carry feedback taxonomy fields")
+        elif (
+            self.candidate_material_version is None
+            or self.candidate_evidence_version is None
+            or self.review_channel is None
+            or self.review_authority_policy_version is None
+        ):
+            raise ValueError(
+                "review decision identity requires candidate evidence versions, channel, "
+                "and authority policy"
+            )
+        elif (
+            self.review_channel is ReviewChannel.WORKBENCH
+            and self.presentation_receipt_id is None
+        ):
+            raise ValueError("Workbench review identity requires presentation receipt")
+        elif (
+            self.review_channel is not ReviewChannel.WORKBENCH
+            and self.presentation_receipt_id is not None
+        ):
+            raise ValueError("non-Workbench review identity cannot carry presentation receipt")
 
 
 @dataclass(frozen=True)
@@ -210,6 +255,9 @@ class ReviewDecisionCommand:
     actor: ReviewActorContext
     reason_codes: tuple[ReasonCode, ...]
     decided_at_utc: datetime
+    expected_candidate_evidence: CandidateEvidenceIdentity
+    review_channel: ReviewChannel
+    presentation_receipt_id: str | None
     suppression_reason: SuppressionReason | None = None
     snoozed_until_utc: datetime | None = None
 
@@ -218,6 +266,15 @@ class ReviewDecisionCommand:
         _require_aware_utc(self.decided_at_utc, "decided_at_utc")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
+        if self.review_channel is ReviewChannel.WORKBENCH:
+            if self.presentation_receipt_id is None:
+                raise ValueError("presentation_receipt_id is required for Workbench review")
+            _require_text(self.presentation_receipt_id, "presentation_receipt_id")
+        elif self.review_channel is ReviewChannel.OPERATOR:
+            if self.presentation_receipt_id is not None:
+                raise ValueError("non-Workbench review cannot carry presentation_receipt_id")
+        else:
+            raise ValueError("legacy review channel cannot admit new decisions")
         if self.action is ReviewAction.SUPPRESS and self.suppression_reason is None:
             raise ValueError("suppression_reason is required for suppress action")
         if self.action is ReviewAction.SNOOZE:
@@ -235,6 +292,12 @@ class GovernedReviewDecision:
     candidate_id: str
     evidence_packet_id: str
     evidence_content_hash: str
+    candidate_material_version: int
+    candidate_evidence_version: int
+    review_channel: ReviewChannel
+    presentation_receipt_id: str | None
+    queue_snapshot_digest: str | None
+    review_policy_version: str
     action: ReviewAction
     resulting_posture: ReviewPosture
     actor_subject: str
@@ -242,6 +305,8 @@ class GovernedReviewDecision:
     reason_codes: tuple[ReasonCode, ...]
     decided_at_utc: datetime
     accepted_at_utc: datetime
+    review_authority_policy_version: str = REVIEW_AUTHORITY_POLICY_VERSION
+    applicability_expires_at_utc: datetime | None = None
     acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     suppression_reason: SuppressionReason | None = None
     snoozed_until_utc: datetime | None = None
@@ -249,6 +314,32 @@ class GovernedReviewDecision:
     @property
     def grants_downstream_authority(self) -> bool:
         return False
+
+    @property
+    def authority_grant(self) -> ReviewAuthorityGrant | None:
+        if self.action is not ReviewAction.APPROVE_FOR_CONVERSION or (
+            self.review_channel is ReviewChannel.LEGACY_UNVERIFIED
+        ):
+            return None
+        return ReviewAuthorityGrant(
+            review_id=self.review_id,
+            candidate_evidence=CandidateEvidenceIdentity(
+                candidate_id=self.candidate_id,
+                material_version=self.candidate_material_version,
+                evidence_version=self.candidate_evidence_version,
+                evidence_packet_id=self.evidence_packet_id,
+                evidence_content_hash=self.evidence_content_hash,
+            ),
+            review_channel=self.review_channel,
+            actor_subject=self.actor_subject,
+            actor_role=self.actor_role.value,
+            review_policy_version=self.review_policy_version,
+            accepted_at_utc=self.accepted_at_utc,
+            applicability_expires_at_utc=self.applicability_expires_at_utc,
+            authority_policy_version=self.review_authority_policy_version,
+            presentation_receipt_id=self.presentation_receipt_id,
+            queue_snapshot_digest=self.queue_snapshot_digest,
+        )
 
     @property
     def mutation_identity(self) -> ReviewMutationIdentity:
@@ -262,6 +353,28 @@ class GovernedReviewDecision:
         _require_text(self.actor_subject, "actor_subject")
         _require_aware_utc(self.decided_at_utc, "decided_at_utc")
         _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
+        CandidateEvidenceIdentity(
+            candidate_id=self.candidate_id,
+            material_version=self.candidate_material_version,
+            evidence_version=self.candidate_evidence_version,
+            evidence_packet_id=self.evidence_packet_id,
+            evidence_content_hash=self.evidence_content_hash,
+        )
+        _require_text(self.review_policy_version, "review_policy_version")
+        _require_text(
+            self.review_authority_policy_version,
+            "review_authority_policy_version",
+        )
+        if self.applicability_expires_at_utc is not None:
+            _require_aware_utc(
+                self.applicability_expires_at_utc,
+                "applicability_expires_at_utc",
+            )
+        if self.review_channel is ReviewChannel.WORKBENCH:
+            if self.presentation_receipt_id is None or self.queue_snapshot_digest is None:
+                raise ValueError("Workbench review decision requires presentation context")
+        elif self.presentation_receipt_id is not None or self.queue_snapshot_digest is not None:
+            raise ValueError("non-Workbench review decision cannot carry presentation context")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
         if self.snoozed_until_utc is not None:
@@ -275,6 +388,7 @@ class ReviewActionResult:
     candidate: IdeaCandidate
     decision: GovernedReviewDecision
     audit_event: AuditEvent
+    authority_grant: ReviewAuthorityGrant | None = None
     queue_snooze: QueueSnooze | None = None
 
 
@@ -410,8 +524,8 @@ def review_mutation_identity_from_command(
         mutation_type=ReviewMutationType.REVIEW_DECISION,
         resource_id=command.review_id,
         candidate_id=candidate.candidate_id,
-        evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
-        evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        evidence_packet_id=command.expected_candidate_evidence.evidence_packet_id,
+        evidence_content_hash=command.expected_candidate_evidence.evidence_content_hash,
         actor_subject=command.actor.actor_subject,
         actor_role=command.actor.role,
         event_name=command.action.value,
@@ -421,6 +535,11 @@ def review_mutation_identity_from_command(
             caller_reason_codes=command.reason_codes,
         ),
         occurred_at_utc=command.decided_at_utc,
+        candidate_material_version=command.expected_candidate_evidence.material_version,
+        candidate_evidence_version=command.expected_candidate_evidence.evidence_version,
+        review_channel=command.review_channel,
+        presentation_receipt_id=command.presentation_receipt_id,
+        review_authority_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
         suppression_reason=command.suppression_reason,
         snoozed_until_utc=command.snoozed_until_utc,
     )
@@ -441,6 +560,11 @@ def review_mutation_identity_from_decision(
         resulting_posture=decision.resulting_posture,
         reason_codes=decision.reason_codes,
         occurred_at_utc=decision.decided_at_utc,
+        candidate_material_version=decision.candidate_material_version,
+        candidate_evidence_version=decision.candidate_evidence_version,
+        review_channel=decision.review_channel,
+        presentation_receipt_id=decision.presentation_receipt_id,
+        review_authority_policy_version=decision.review_authority_policy_version,
         suppression_reason=decision.suppression_reason,
         snoozed_until_utc=decision.snoozed_until_utc,
     )
@@ -492,10 +616,17 @@ def apply_review_action(
     command: ReviewDecisionCommand,
     *,
     accepted_at_utc: datetime,
+    presentation_receipt: CandidatePresentationReceipt | None = None,
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> ReviewActionResult:
     _require_aware_utc(accepted_at_utc, "accepted_at_utc")
     _ensure_allowed(candidate, command, policy)
+    validate_expected_candidate_evidence(command.expected_candidate_evidence, candidate)
+    queue_snapshot_digest = _validate_review_presentation(
+        command,
+        presentation_receipt=presentation_receipt,
+        accepted_at_utc=accepted_at_utc,
+    )
     require_observed_time_within_policy(
         command.decided_at_utc,
         accepted_at_utc,
@@ -513,6 +644,14 @@ def apply_review_action(
         candidate_id=candidate.candidate_id,
         evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
         evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        candidate_material_version=candidate.identity.material_version,
+        candidate_evidence_version=candidate.identity.evidence_version,
+        review_channel=command.review_channel,
+        presentation_receipt_id=command.presentation_receipt_id,
+        queue_snapshot_digest=queue_snapshot_digest,
+        review_policy_version=policy.policy_version,
+        review_authority_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
+        applicability_expires_at_utc=(candidate.evidence_packet.applicability_expires_at_utc),
         action=command.action,
         resulting_posture=_REVIEW_ACTION_POSTURES[command.action],
         actor_subject=command.actor.actor_subject,
@@ -526,6 +665,7 @@ def apply_review_action(
         suppression_reason=command.suppression_reason,
         snoozed_until_utc=command.snoozed_until_utc,
     )
+    authority_grant = decision.authority_grant
     queue_snooze = (
         QueueSnooze(
             candidate_id=candidate.candidate_id,
@@ -546,8 +686,20 @@ def apply_review_action(
         candidate=updated_candidate,
         decision=decision,
         audit_event=audit_event,
+        authority_grant=authority_grant,
         queue_snooze=queue_snooze,
     )
+
+
+def authorize_review_action(
+    candidate: IdeaCandidate,
+    command: ReviewDecisionCommand,
+    *,
+    policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
+) -> None:
+    """Authorize actor scope/channel before replay or presentation lookup."""
+
+    _ensure_review_actor(candidate, command, policy)
 
 
 def record_feedback(
@@ -717,6 +869,16 @@ def _ensure_allowed(
     command: ReviewDecisionCommand,
     policy: ReviewActionPolicy,
 ) -> None:
+    _ensure_review_actor(candidate, command, policy)
+    if candidate.lifecycle_status not in _REVIEW_ACTION_LIFECYCLE_STATUSES[command.action]:
+        raise _invalid_review_action(candidate, command.action)
+
+
+def _ensure_review_actor(
+    candidate: IdeaCandidate,
+    command: ReviewDecisionCommand,
+    policy: ReviewActionPolicy,
+) -> None:
     _ensure_actor_scope(
         candidate_id=candidate.candidate_id,
         action=command.action,
@@ -724,8 +886,36 @@ def _ensure_allowed(
         access_scope=candidate.access_scope,
         policy=policy,
     )
-    if candidate.lifecycle_status not in _REVIEW_ACTION_LIFECYCLE_STATUSES[command.action]:
-        raise _invalid_review_action(candidate, command.action)
+    if (
+        command.review_channel is ReviewChannel.WORKBENCH
+        and command.actor.role is not ReviewActorRole.ADVISOR
+    ) or (
+        command.review_channel is ReviewChannel.OPERATOR
+        and command.actor.role is not ReviewActorRole.OPERATOR
+    ):
+        raise ReviewEntitlementDenied(candidate.candidate_id)
+
+
+def _validate_review_presentation(
+    command: ReviewDecisionCommand,
+    *,
+    presentation_receipt: CandidatePresentationReceipt | None,
+    accepted_at_utc: datetime,
+) -> str | None:
+    if command.review_channel is ReviewChannel.OPERATOR:
+        if presentation_receipt is not None:
+            raise ValueError("operator review cannot use a Workbench presentation receipt")
+        return None
+    if presentation_receipt is None:
+        raise ValueError("Workbench review requires a persisted presentation receipt")
+    if presentation_receipt.receipt_id != command.presentation_receipt_id:
+        raise ValueError("presentation receipt identity does not match the review command")
+    validate_workbench_presentation(
+        expected=command.expected_candidate_evidence,
+        receipt=presentation_receipt,
+        review_accepted_at_utc=accepted_at_utc,
+    )
+    return presentation_receipt.queue_snapshot_digest
 
 
 def _ensure_actor_scope(
@@ -790,6 +980,14 @@ def _review_audit_event(
             "candidate_id": candidate_before.candidate_id,
             "candidate_family": candidate_before.family.value,
             "evidence_packet_id": decision.evidence_packet_id,
+            "candidate_material_version": str(decision.candidate_material_version),
+            "candidate_evidence_version": str(decision.candidate_evidence_version),
+            "review_channel": decision.review_channel.value,
+            "presentation_receipt_id": decision.presentation_receipt_id or "none",
+            "review_action_policy_version": decision.review_policy_version,
+            "review_authority_policy_version": (
+                decision.review_authority_policy_version
+            ),
             "policy_version": CANDIDATE_STATE_POLICY_VERSION,
             "prior_lifecycle_status": candidate_before.lifecycle_status.value,
             "prior_review_posture": candidate_before.review_posture.value,

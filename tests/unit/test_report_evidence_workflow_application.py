@@ -24,6 +24,7 @@ from tests.unit.test_report_evidence import (
     command as report_evidence_command,
     report_conversion_intent,
 )
+from tests.support.review_authority import with_in_memory_review_authority
 
 
 def _repository_with_report_conversion_intent() -> tuple[InMemoryIdeaRepository, str]:
@@ -45,6 +46,11 @@ def _repository_with_report_conversion_intent() -> tuple[InMemoryIdeaRepository,
         occurred_at_utc=EVALUATED_AT,
     )
     assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+    repository = with_in_memory_review_authority(
+        repository,
+        source_candidate,
+        accepted_at_utc=EVALUATED_AT,
+    )
     conversion_result = report_conversion_intent(source_candidate)
     conversion_intent = conversion_result.conversion_intent
     repository.record_conversion_intent(

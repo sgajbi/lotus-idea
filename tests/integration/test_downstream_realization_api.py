@@ -27,6 +27,7 @@ from tests.support.report_materialization import (
     authoritative_report_outcome,
     report_owner_receipt_response,
 )
+from tests.support import review_authority_api
 
 
 def test_downstream_submission_operation_log_includes_request_correlation_id(
@@ -988,7 +989,10 @@ def seed_approved_candidate(
         assert transition_response.status_code == 200
     review_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=approve_review_payload(f"{idempotency_prefix}-review-001"),
+        json=approve_review_payload(
+            candidate_id,
+            f"{idempotency_prefix}-review-001",
+        ),
         headers=review_headers(
             f"{idempotency_prefix}-review-001",
             portfolio_id=portfolio_id,
@@ -1014,6 +1018,7 @@ def record_conversion_intent(
             "target": target,
             "reasonCodes": ["review_approved_for_conversion"],
             "requestedAtUtc": "2026-06-21T10:15:00Z",
+            **review_authority_api.exact_conversion_authority_payload(candidate_id),
         },
         headers=conversion_intent_headers(idempotency_key, portfolio_id=portfolio_id),
     )
@@ -1176,12 +1181,13 @@ def lifecycle_payload(
     }
 
 
-def approve_review_payload(review_id: str) -> dict[str, Any]:
+def approve_review_payload(candidate_id: str, review_id: str) -> dict[str, Any]:
     return {
         "reviewId": review_id,
         "action": "approve_for_conversion",
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
+        **review_authority_api.record_workbench_presentation(candidate_id),
     }
 
 

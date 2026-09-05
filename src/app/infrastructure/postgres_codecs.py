@@ -57,6 +57,11 @@ from app.domain.review_governance import (
     ReviewAction,
     ReviewActorRole,
 )
+from app.domain.review_authority import (
+    CandidateEvidenceIdentity,
+    ReviewAuthorityGrant,
+    ReviewChannel,
+)
 from app.domain.review_queue import QueuePriorityBucket
 from app.domain.scoring import CandidateScorePolicyVersion
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
@@ -259,6 +264,18 @@ def _review_decision_to_json(decision: GovernedReviewDecision) -> dict[str, Any]
         "candidate_id": decision.candidate_id,
         "evidence_packet_id": decision.evidence_packet_id,
         "evidence_content_hash": decision.evidence_content_hash,
+        "candidate_material_version": decision.candidate_material_version,
+        "candidate_evidence_version": decision.candidate_evidence_version,
+        "review_channel": decision.review_channel.value,
+        "presentation_receipt_id": decision.presentation_receipt_id,
+        "queue_snapshot_digest": decision.queue_snapshot_digest,
+        "review_policy_version": decision.review_policy_version,
+        "review_authority_policy_version": decision.review_authority_policy_version,
+        "applicability_expires_at_utc": (
+            decision.applicability_expires_at_utc.isoformat()
+            if decision.applicability_expires_at_utc is not None
+            else None
+        ),
         "action": decision.action.value,
         "resulting_posture": decision.resulting_posture.value,
         "actor_subject": decision.actor_subject,
@@ -284,6 +301,28 @@ def _review_decision_from_json(payload: Mapping[str, Any]) -> GovernedReviewDeci
         candidate_id=str(payload["candidate_id"]),
         evidence_packet_id=str(payload["evidence_packet_id"]),
         evidence_content_hash=str(payload["evidence_content_hash"]),
+        candidate_material_version=int(payload.get("candidate_material_version", 1)),
+        candidate_evidence_version=int(payload.get("candidate_evidence_version", 1)),
+        review_channel=ReviewChannel(payload.get("review_channel", "legacy_unverified")),
+        presentation_receipt_id=(
+            str(payload["presentation_receipt_id"])
+            if payload.get("presentation_receipt_id") is not None
+            else None
+        ),
+        queue_snapshot_digest=(
+            str(payload["queue_snapshot_digest"])
+            if payload.get("queue_snapshot_digest") is not None
+            else None
+        ),
+        review_policy_version=str(payload.get("review_policy_version", "legacy-unverified")),
+        review_authority_policy_version=str(
+            payload.get("review_authority_policy_version", "legacy-unverified")
+        ),
+        applicability_expires_at_utc=(
+            _datetime(payload["applicability_expires_at_utc"])
+            if payload.get("applicability_expires_at_utc") is not None
+            else None
+        ),
         action=ReviewAction(payload["action"]),
         resulting_posture=ReviewPosture(payload["resulting_posture"]),
         actor_subject=str(payload["actor_subject"]),
@@ -407,6 +446,9 @@ def _conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, An
         "accepted_at_utc": intent.accepted_at_utc.isoformat(),
         "acceptance_time_source": intent.acceptance_time_source.value,
         "boundary": intent.boundary.value,
+        "review_authority_grant": _review_authority_grant_to_json(
+            intent.review_authority_grant
+        ),
     }
 
 
@@ -428,8 +470,85 @@ def _conversion_intent_from_json(payload: Mapping[str, Any]) -> GovernedConversi
         reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
         target_source_authority=SourceSystem(payload["target_source_authority"]),
         accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        review_authority_grant=_review_authority_grant_from_json(
+            payload.get("review_authority_grant")
+        ),
         acceptance_time_source=AcceptanceTimeSource(payload["acceptance_time_source"]),
         boundary=ConversionBoundary(payload["boundary"]),
+    )
+
+
+def _review_authority_grant_to_json(
+    grant: ReviewAuthorityGrant | None,
+) -> dict[str, Any] | None:
+    if grant is None:
+        return None
+    evidence = grant.candidate_evidence
+    return {
+        "review_id": grant.review_id,
+        "candidate_evidence": {
+            "candidate_id": evidence.candidate_id,
+            "material_version": evidence.material_version,
+            "evidence_version": evidence.evidence_version,
+            "evidence_packet_id": evidence.evidence_packet_id,
+            "evidence_content_hash": evidence.evidence_content_hash,
+        },
+        "review_channel": grant.review_channel.value,
+        "actor_subject": grant.actor_subject,
+        "actor_role": grant.actor_role,
+        "review_policy_version": grant.review_policy_version,
+        "authority_policy_version": grant.authority_policy_version,
+        "accepted_at_utc": grant.accepted_at_utc.isoformat(),
+        "applicability_expires_at_utc": (
+            grant.applicability_expires_at_utc.isoformat()
+            if grant.applicability_expires_at_utc is not None
+            else None
+        ),
+        "presentation_receipt_id": grant.presentation_receipt_id,
+        "queue_snapshot_digest": grant.queue_snapshot_digest,
+        "status": grant.status.value,
+    }
+
+
+def _review_authority_grant_from_json(payload: Any) -> ReviewAuthorityGrant | None:
+    if payload is None:
+        return None
+    from app.domain.review_authority import ReviewAuthorityStatus
+
+    evidence = payload["candidate_evidence"]
+    return ReviewAuthorityGrant(
+        review_id=str(payload["review_id"]),
+        candidate_evidence=CandidateEvidenceIdentity(
+            candidate_id=str(evidence["candidate_id"]),
+            material_version=int(evidence["material_version"]),
+            evidence_version=int(evidence["evidence_version"]),
+            evidence_packet_id=str(evidence["evidence_packet_id"]),
+            evidence_content_hash=str(evidence["evidence_content_hash"]),
+        ),
+        review_channel=ReviewChannel(payload["review_channel"]),
+        actor_subject=str(payload["actor_subject"]),
+        actor_role=str(payload["actor_role"]),
+        review_policy_version=str(payload["review_policy_version"]),
+        authority_policy_version=str(
+            payload.get("authority_policy_version", "legacy-unverified")
+        ),
+        accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        applicability_expires_at_utc=(
+            _datetime(payload["applicability_expires_at_utc"])
+            if payload.get("applicability_expires_at_utc") is not None
+            else None
+        ),
+        presentation_receipt_id=(
+            str(payload["presentation_receipt_id"])
+            if payload.get("presentation_receipt_id") is not None
+            else None
+        ),
+        queue_snapshot_digest=(
+            str(payload["queue_snapshot_digest"])
+            if payload.get("queue_snapshot_digest") is not None
+            else None
+        ),
+        status=ReviewAuthorityStatus(payload["status"]),
     )
 
 

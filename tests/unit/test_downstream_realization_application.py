@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
-from functools import partial
 
 import pytest
 
 from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
 from tests.support.report_materialization import authoritative_report_outcome
+from tests.support.review_authority import (
+    approved_review_decision_for_candidate,
+    review_authority_grant_for_candidate,
+)
 
 from app.application.downstream_realization import (
     DownstreamRealizationAccessScopeDenied,
@@ -21,7 +24,9 @@ from app.application.downstream_realization import (
 )
 from app.domain import (
     CandidatePersistenceResult,
+    CandidateEvidenceIdentity,
     ConversionIntentCommand,
+    ConversionIntentResult,
     ConversionTarget,
     EvidenceFreshness,
     EvidenceSupportability,
@@ -53,12 +58,6 @@ from app.ports.downstream_realization import (
     DownstreamRealizationOutcomePosture,
 )
 
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
-)
-
-
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
@@ -69,6 +68,22 @@ AUTHORIZED_SCOPE_FILTER = QueueAccessScopeFilter(
     portfolio_id="PB_SG_GLOBAL_BAL_001",
     client_id="client-redacted",
 )
+
+
+def request_conversion_intent(
+    source_candidate: IdeaCandidate,
+    command: ConversionIntentCommand,
+) -> ConversionIntentResult:
+    return _request_conversion_intent(
+        source_candidate,
+        command,
+        accepted_at_utc=REQUESTED_AT,
+        review_authority_grant=review_authority_grant_for_candidate(
+            source_candidate,
+            accepted_at_utc=EVALUATED_AT,
+            review_id=command.expected_review_id,
+        ),
+    )
 
 
 @dataclass
@@ -481,6 +496,25 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
         occurred_at_utc=EVALUATED_AT,
     )
     assert persisted.record is not None
+    snapshot = repository.snapshot()
+    second_record = replace(
+        persisted.record,
+        review_decisions=(
+            approved_review_decision_for_candidate(
+                second_candidate,
+                accepted_at_utc=EVALUATED_AT,
+            ),
+        ),
+    )
+    repository = InMemoryIdeaRepository(
+        replace(
+            snapshot,
+            candidate_records={
+                **snapshot.candidate_records,
+                second_candidate.candidate_id: second_record,
+            },
+        )
+    )
     second = request_conversion_intent(
         second_candidate,
         ConversionIntentCommand(
@@ -490,6 +524,8 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
             idempotency_key="conversion-advise_proposal-request-002",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(second_candidate),
         ),
     )
     repository.record_conversion_intent(
@@ -786,6 +822,8 @@ def repository_with_conversion(target: ConversionTarget) -> InMemoryIdeaReposito
             idempotency_key=f"conversion-{target.value}-request-001",
             reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
             requested_at_utc=REQUESTED_AT,
+            expected_review_id="review-authority-test-001",
+            expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate()),
         ),
     )
     repository.record_conversion_intent(
@@ -830,7 +868,23 @@ def repository_with_candidate() -> InMemoryIdeaRepository:
         occurred_at_utc=EVALUATED_AT,
     )
     assert isinstance(persisted, CandidatePersistenceResult)
-    return repository
+    assert persisted.record is not None
+    snapshot = repository.snapshot()
+    candidate_record = replace(
+        persisted.record,
+        review_decisions=(
+            approved_review_decision_for_candidate(
+                persisted.record.candidate,
+                accepted_at_utc=EVALUATED_AT,
+            ),
+        ),
+    )
+    return InMemoryIdeaRepository(
+        replace(
+            snapshot,
+            candidate_records={candidate_record.candidate.candidate_id: candidate_record},
+        )
+    )
 
 
 def candidate(candidate_id: str = "idea-downstream-001") -> IdeaCandidate:

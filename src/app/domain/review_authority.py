@@ -15,6 +15,7 @@ WORKBENCH_REVIEW_WINDOW = timedelta(minutes=30)
 class ReviewChannel(StrEnum):
     WORKBENCH = "workbench"
     OPERATOR = "operator"
+    LEGACY_UNVERIFIED = "legacy_unverified"
 
 
 class ReviewAuthorityStatus(StrEnum):
@@ -73,6 +74,7 @@ class ReviewAuthorityGrant:
     review_policy_version: str
     accepted_at_utc: datetime
     applicability_expires_at_utc: datetime | None
+    authority_policy_version: str = REVIEW_AUTHORITY_POLICY_VERSION
     presentation_receipt_id: str | None = None
     queue_snapshot_digest: str | None = None
     status: ReviewAuthorityStatus = ReviewAuthorityStatus.ACTIVE
@@ -83,6 +85,7 @@ class ReviewAuthorityGrant:
             "actor_subject",
             "actor_role",
             "review_policy_version",
+            "authority_policy_version",
         ):
             _require_text(getattr(self, field_name), field_name)
         _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
@@ -113,6 +116,8 @@ class ReviewAuthorityGrant:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
         if self.status is not ReviewAuthorityStatus.ACTIVE:
             return self.status
+        if self.authority_policy_version != REVIEW_AUTHORITY_POLICY_VERSION:
+            return ReviewAuthorityStatus.REVOKED
         if self.candidate_evidence != CandidateEvidenceIdentity.from_candidate(candidate):
             return ReviewAuthorityStatus.SUPERSEDED
         if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:

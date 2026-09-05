@@ -586,6 +586,14 @@ class InMemoryIdeaRepository(
                 candidate_id,
                 "candidate state changed after conversion readiness evaluation",
             )
+        authority_grant = result.conversion_intent.review_authority_grant
+        if authority_grant is None or not any(
+            decision.authority_grant == authority_grant for decision in record.review_decisions
+        ):
+            raise InvalidConversionIntent(
+                candidate_id,
+                "approved review authority changed before conversion persistence",
+            )
 
         history = record.lifecycle_history
         if record.candidate.lifecycle_status is not result.candidate.lifecycle_status:
@@ -621,6 +629,7 @@ class InMemoryIdeaRepository(
             payload={
                 "target": result.conversion_intent.intent.target.value,
                 "target_source_authority": result.conversion_intent.target_source_authority.value,
+                "review_id": authority_grant.review_id,
             },
         )
         return ConversionPersistenceResult(

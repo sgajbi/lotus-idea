@@ -15,9 +15,12 @@ from app.domain import (
     ConversionOutcomeIdentity,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
+    CandidatePersistenceRecord,
     EventLineageContext,
     GovernedConversionIntent,
     GovernedConversionOutcome,
+    InvalidConversionIntent,
+    ReviewAuthorityGrant,
     conversion_outcome_identity_from_command,
     record_conversion_outcome,
     request_conversion_intent,
@@ -124,6 +127,7 @@ def request_conversion_intent_to_repository(
         record.candidate,
         command.conversion,
         accepted_at_utc=command.accepted_at_utc,
+        review_authority_grant=_review_authority_for_conversion(record, command),
     )
     persistence = repository.record_conversion_intent(
         conversion_result,
@@ -165,6 +169,26 @@ def _persisted_conversion_intent(
             and intent.reason_codes == requested.reason_codes
         )
     )
+
+
+def _review_authority_for_conversion(
+    record: CandidatePersistenceRecord,
+    command: RequestConversionIntentToRepositoryCommand,
+) -> ReviewAuthorityGrant:
+    matching = tuple(
+        decision.authority_grant
+        for decision in record.review_decisions
+        if decision.review_id == command.conversion.expected_review_id
+        and decision.authority_grant is not None
+    )
+    if len(matching) != 1:
+        raise InvalidConversionIntent(
+            command.candidate_id,
+            "exact approved review authority is not available",
+        )
+    grant = matching[0]
+    assert grant is not None
+    return grant
 
 
 def record_conversion_outcome_to_repository(
@@ -249,6 +273,14 @@ def _conversion_intent_payload(
         "reason_codes": [reason.value for reason in conversion.reason_codes],
         "requested_at_utc": conversion.requested_at_utc.isoformat(),
         "target": conversion.target.value,
+        "expected_review_id": conversion.expected_review_id,
+        "expected_candidate_evidence": {
+            "candidate_id": conversion.expected_candidate_evidence.candidate_id,
+            "material_version": conversion.expected_candidate_evidence.material_version,
+            "evidence_version": conversion.expected_candidate_evidence.evidence_version,
+            "evidence_packet_id": conversion.expected_candidate_evidence.evidence_packet_id,
+            "evidence_content_hash": conversion.expected_candidate_evidence.evidence_content_hash,
+        },
     }
 
 

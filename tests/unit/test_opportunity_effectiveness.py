@@ -47,6 +47,7 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -466,6 +467,12 @@ def test_effectiveness_snapshot_does_not_credit_old_rank_to_a_later_evidence_app
             decided_at=WINDOW_START + timedelta(hours=3),
         ),
         evidence_content_hash=f"sha256:{'2' * 64}",
+        candidate_material_version=1,
+        candidate_evidence_version=1,
+        review_channel=ReviewChannel.LEGACY_UNVERIFIED,
+        presentation_receipt_id=None,
+        queue_snapshot_digest=None,
+        review_policy_version="legacy-unverified",
     )
     record = replace(_record(candidate, review=approval), version_history=(old_version,))
 
@@ -989,6 +996,12 @@ def _review(
         candidate_id=candidate_id,
         evidence_packet_id=f"evidence-{candidate_id}",
         evidence_content_hash=f"sha256:{'2' * 64}",
+        candidate_material_version=1,
+        candidate_evidence_version=1,
+        review_channel=ReviewChannel.LEGACY_UNVERIFIED,
+        presentation_receipt_id=None,
+        queue_snapshot_digest=None,
+        review_policy_version="legacy-unverified",
         action=action,
         resulting_posture=resulting_posture,
         actor_subject="advisor-sensitive-subject",

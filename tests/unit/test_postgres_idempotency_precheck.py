@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from functools import partial
 
 from app.domain import (
+    CandidateEvidenceIdentity,
     IdeaLifecycleStatus,
     ReviewPosture,
     apply_review_action,
-    request_conversion_intent as _request_conversion_intent,
+    request_conversion_intent,
 )
 
 from app.domain.persistence import ConversionPersistenceDecision, ReviewPersistenceDecision
@@ -22,12 +22,7 @@ from tests.unit.test_postgres_repository import (
     high_cash_candidate,
     review_command,
 )
-
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=EVALUATED_AT,
-)
-
+from tests.support.review_authority import presentation_receipt_for_candidate
 
 def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> None:
     connection = FakePostgresConnection()
@@ -40,8 +35,8 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     approved = replace(
         high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_bounded_conversion_precheck",
-        lifecycle_status=IdeaLifecycleStatus.APPROVED,
-        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
     )
     for candidate in (review_ready, approved):
         repository.persist_candidate(
@@ -54,15 +49,49 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
 
     review_result = apply_review_action(
         review_ready,
-        review_command(review_id="review-bounded-precheck"),
+        review_command(review_id="review-bounded-precheck", candidate=review_ready),
         accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            review_ready,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
     repository.record_review_action(
         review_result,
         idempotency_key="review:bounded-precheck",
         payload={"reviewId": review_result.decision.review_id},
     )
-    conversion_result = request_conversion_intent(approved, conversion_command())
+    approved_review = apply_review_action(
+        approved,
+        review_command(review_id="review-bounded-conversion", candidate=approved),
+        accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            approved,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
+    )
+    persisted_approval = repository.record_review_action(
+        approved_review,
+        idempotency_key="review:bounded-conversion",
+        payload={"reviewId": approved_review.decision.review_id},
+    )
+    assert persisted_approval.record is not None
+    approved = persisted_approval.record.candidate
+    command = replace(
+        conversion_command(),
+        expected_review_id=approved_review.decision.review_id,
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(approved),
+    )
+    authority_grant = approved_review.decision.authority_grant
+    assert authority_grant is not None
+    conversion_result = request_conversion_intent(
+        approved,
+        command,
+        accepted_at_utc=EVALUATED_AT,
+        review_authority_grant=authority_grant,
+    )
     repository.record_conversion_intent(
         conversion_result,
         idempotency_key="conversion:intent",
@@ -139,8 +168,13 @@ def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_
     )
     review_result = apply_review_action(
         candidate,
-        review_command(review_id="review-resource-identity-precheck"),
+        review_command(review_id="review-resource-identity-precheck", candidate=candidate),
         accepted_at_utc=EVALUATED_AT,
+        presentation_receipt=presentation_receipt_for_candidate(
+            candidate,
+            accepted_at_utc=EVALUATED_AT,
+            receipt_id="receipt-postgres-review-001",
+        ),
     )
     repository.record_review_action(
         review_result,

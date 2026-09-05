@@ -15,6 +15,7 @@ from app.domain.review_governance import (
     ReviewMutationIdentity,
     ReviewMutationType,
 )
+from app.domain.review_authority import REVIEW_AUTHORITY_POLICY_VERSION, ReviewChannel
 from tests.unit.test_postgres_repository import high_cash_candidate
 
 
@@ -62,6 +63,11 @@ def test_persistence_public_prechecks_treat_missing_idempotency_as_absent() -> N
                 event_name="approve_for_conversion",
                 reason_codes=(ReasonCode.REVIEW_REQUIRED,),
                 occurred_at_utc=EVENT_TIME,
+                candidate_material_version=1,
+                candidate_evidence_version=1,
+                review_channel=ReviewChannel.WORKBENCH,
+                presentation_receipt_id="receipt-review-001",
+                review_authority_policy_version=REVIEW_AUTHORITY_POLICY_VERSION,
             ),
         )
         is None

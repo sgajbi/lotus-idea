@@ -19,11 +19,13 @@ from app.domain import (
     EventLineageContext,
     FeedbackOutcome,
     FeedbackReason,
+    CandidateEvidenceIdentity,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     ReasonCode,
     ReviewAction,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
@@ -44,10 +46,20 @@ class ReviewActionRequest(CamelModel):
         ),
     )
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
+    review_channel: ReviewChannel = Field(..., alias="reviewChannel")
+    expected_material_version: int = Field(..., alias="expectedMaterialVersion", gt=0)
+    expected_evidence_version: int = Field(..., alias="expectedEvidenceVersion", gt=0)
+    expected_evidence_packet_id: str = Field(..., alias="expectedEvidencePacketId")
+    expected_evidence_content_hash: str = Field(..., alias="expectedEvidenceContentHash")
+    presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
     suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
     snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")
 
-    @field_validator("review_id")
+    @field_validator(
+        "review_id",
+        "expected_evidence_packet_id",
+        "expected_evidence_content_hash",
+    )
     @classmethod
     def _review_id_must_not_be_blank(cls, value: str) -> str:
         if not value.strip():
@@ -87,6 +99,15 @@ class ReviewActionRequest(CamelModel):
                 actor=build_review_actor_context(caller=caller, role=role),
                 reason_codes=self.reason_codes,
                 decided_at_utc=self.decided_at_utc,
+                expected_candidate_evidence=CandidateEvidenceIdentity(
+                    candidate_id=candidate_id,
+                    material_version=self.expected_material_version,
+                    evidence_version=self.expected_evidence_version,
+                    evidence_packet_id=self.expected_evidence_packet_id,
+                    evidence_content_hash=self.expected_evidence_content_hash,
+                ),
+                review_channel=self.review_channel,
+                presentation_receipt_id=self.presentation_receipt_id,
                 suppression_reason=self.suppression_reason,
                 snoozed_until_utc=self.snoozed_until_utc,
             ),
@@ -155,6 +176,14 @@ class ReviewDecisionResponse(CamelModel):
     review_id: str = Field(..., alias="reviewId")
     candidate_id: str = Field(..., alias="candidateId")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
+    evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    candidate_material_version: int = Field(..., alias="candidateMaterialVersion")
+    candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion")
+    review_channel: ReviewChannel = Field(..., alias="reviewChannel")
+    presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
+    queue_snapshot_digest: str | None = Field(default=None, alias="queueSnapshotDigest")
+    review_policy_version: str = Field(..., alias="reviewPolicyVersion")
+    authority_policy_version: str = Field(..., alias="authorityPolicyVersion")
     action: ReviewAction
     resulting_posture: str = Field(..., alias="resultingPosture")
     actor_role: ReviewActorRole = Field(..., alias="actorRole")
@@ -172,6 +201,14 @@ class ReviewDecisionResponse(CamelModel):
             reviewId=decision.review_id,
             candidateId=decision.candidate_id,
             evidencePacketId=decision.evidence_packet_id,
+            evidenceContentHash=decision.evidence_content_hash,
+            candidateMaterialVersion=decision.candidate_material_version,
+            candidateEvidenceVersion=decision.candidate_evidence_version,
+            reviewChannel=decision.review_channel,
+            presentationReceiptId=decision.presentation_receipt_id,
+            queueSnapshotDigest=decision.queue_snapshot_digest,
+            reviewPolicyVersion=decision.review_policy_version,
+            authorityPolicyVersion=decision.review_authority_policy_version,
             action=decision.action,
             resultingPosture=decision.resulting_posture.value,
             actorRole=decision.actor_role,

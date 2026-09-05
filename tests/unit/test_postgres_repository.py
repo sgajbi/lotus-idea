@@ -43,7 +43,9 @@ from app.domain import (
     ReviewAction,
     ReviewActorContext,
     ReviewActorRole,
+    ReviewChannel,
     ReviewDecisionCommand,
+    CandidateEvidenceIdentity,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -51,8 +53,6 @@ from app.domain import (
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_high_cash_signal,
-    request_conversion_intent as _request_conversion_intent,
-    apply_review_action,
 )
 from app.domain.persistence import (
     CandidatePersistenceDecision,
@@ -69,15 +69,21 @@ from app.infrastructure.postgres_codecs import (
 )
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.postgres_repository_query_assertions import assert_no_whole_store_snapshot
+from tests.support.postgres_review_authority import (
+    conversion_with_exact_review_authority,
+    review_with_exact_presentation,
+)
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
+
 request_conversion_intent = partial(
-    _request_conversion_intent,
+    conversion_with_exact_review_authority,
     accepted_at_utc=EVALUATED_AT,
 )
+apply_review_action = review_with_exact_presentation
 
 
 def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> None:
@@ -1073,13 +1079,21 @@ def access_scope() -> ReviewAccessScope:
     )
 
 
-def review_command(review_id: str = "review-approve-001") -> ReviewDecisionCommand:
+def review_command(
+    review_id: str = "review-approve-001",
+    *,
+    candidate: IdeaCandidate | None = None,
+) -> ReviewDecisionCommand:
+    source_candidate = candidate or high_cash_candidate(candidate_scope=access_scope())
     return ReviewDecisionCommand(
         review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=actor(),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=EVALUATED_AT + timedelta(minutes=2),
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
+        review_channel=ReviewChannel.WORKBENCH,
+        presentation_receipt_id="receipt-postgres-review-001",
     )
 
 
@@ -1095,6 +1109,7 @@ def feedback_command() -> FeedbackCommand:
 
 
 def conversion_command() -> ConversionIntentCommand:
+    source_candidate = high_cash_candidate(candidate_scope=access_scope())
     return ConversionIntentCommand(
         conversion_intent_id="conversion-report-001",
         target=ConversionTarget.REPORT_EVIDENCE,
@@ -1102,6 +1117,8 @@ def conversion_command() -> ConversionIntentCommand:
         idempotency_key="conversion:intent",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=EVALUATED_AT + timedelta(minutes=4),
+        expected_review_id="review-approve-001",
+        expected_candidate_evidence=CandidateEvidenceIdentity.from_candidate(source_candidate),
     )
 
 

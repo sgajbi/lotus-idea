@@ -24,7 +24,6 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
     current_conversion_outcome,
-    request_conversion_intent as _request_conversion_intent,
 )
 
 from app.ports.idea_repository import ConversionOutcomeWorkflowRepository
@@ -34,11 +33,11 @@ from tests.unit.test_conversion_governance import (
     candidate,
     intent_command,
 )
-
-request_conversion_intent = partial(
-    _request_conversion_intent,
-    accepted_at_utc=REQUESTED_AT,
+from tests.support.review_authority import (
+    conversion_intent_result_for_candidate,
+    with_in_memory_review_authority,
 )
+
 RecordConversionOutcomeToRepositoryCommand = partial(
     _RecordConversionOutcomeToRepositoryCommand,
     accepted_at_utc=OUTCOME_AT,
@@ -64,8 +63,18 @@ def repository_with_conversion_intent() -> tuple[InMemoryIdeaRepository, str]:
         occurred_at_utc=REQUESTED_AT,
     )
     assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+    repository = with_in_memory_review_authority(
+        repository,
+        source_candidate,
+        accepted_at_utc=REQUESTED_AT - timedelta(minutes=1),
+    )
     command = intent_command()
-    intent_result = request_conversion_intent(source_candidate, command)
+    intent_result = conversion_intent_result_for_candidate(
+        source_candidate,
+        command,
+        accepted_at_utc=REQUESTED_AT,
+        review_accepted_at_utc=REQUESTED_AT - timedelta(minutes=1),
+    )
     repository.record_conversion_intent(
         intent_result,
         idempotency_key=command.idempotency_key,

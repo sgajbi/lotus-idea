@@ -31,6 +31,7 @@ from app.api.problem_details import (
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
+    get_trusted_clock,
     idea_repository_durable_storage_backed,
 )
 from app.application.candidate_detail import (
@@ -179,6 +180,7 @@ def _candidate_detail_result_response(
         result.record,
         downstream_submissions=result.downstream_submissions,
         durable_storage_backed=durable_storage_backed,
+        evaluated_at_utc=get_trusted_clock().now_utc(),
     )
 
 
