@@ -44,6 +44,8 @@ MANAGE_HISTORY_PATH_TEMPLATE_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_T
 DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE = "/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"
 REPORT_BASE_URL_ENV = "LOTUS_IDEA_REPORT_REALIZATION_BASE_URL"
 REPORT_SUBMIT_PATH_ENV = "LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH"
+REPORT_RECOVERY_PATH_ENV = "LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH"
+DEFAULT_REPORT_RECOVERY_PATH = "/reports/idea-evidence-packs/materializations"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS"
 MAX_CONNECTIONS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS"
 MAX_KEEPALIVE_CONNECTIONS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS"
@@ -260,6 +262,10 @@ def _report_adapter_config(
         return DownstreamRealizationAdapterConfig(
             base_url=_required_env(base_url_env),
             submit_path=_required_env(submit_path_env),
+            report_recovery_path=os.getenv(
+                REPORT_RECOVERY_PATH_ENV,
+                DEFAULT_REPORT_RECOVERY_PATH,
+            ).strip(),
             source_authority=source_authority,
             timeout_seconds=_timeout_seconds(),
             max_connections=_positive_int_env(

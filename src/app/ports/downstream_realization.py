@@ -25,6 +25,10 @@ class DownstreamRealizationReadError(RuntimeError):
     """Raised when authoritative downstream history cannot be read."""
 
 
+class DownstreamRealizationReadConflict(DownstreamRealizationReadError):
+    """Raised when an owner read rejects the supplied exact resource identity."""
+
+
 @dataclass(frozen=True)
 class DownstreamOwnerReceipt:
     """Source-safe identity returned by the service that accepted durable work."""
@@ -184,3 +188,16 @@ class ReportEvidencePackMaterializationClient(Protocol):
         idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         """Submit a source-safe evidence-pack request envelope to lotus-report."""
+
+
+class ReportEvidencePackMaterializationReader(Protocol):
+    def recover_report_evidence_pack_receipt(
+        self,
+        evidence_pack: GovernedReportEvidencePack,
+        *,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str,
+    ) -> DownstreamOwnerReceipt:
+        """Recover the exact Report-owned receipt without resubmitting materialization."""
