@@ -69,6 +69,7 @@ def source_ref() -> SourceRef:
 def evidence_packet(
     *,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaEvidencePacket:
     source = source_ref()
     return IdeaEvidencePacket(
@@ -87,6 +88,7 @@ def evidence_packet(
             else ()
         ),
         created_at_utc=EVALUATED_AT,
+        applicability_expires_at_utc=applicability_expires_at_utc,
     )
 
 
@@ -96,6 +98,7 @@ def candidate(
     review_posture: ReviewPosture = ReviewPosture.APPROVED_FOR_CONVERSION,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
     suppression_reason: SuppressionReason | None = None,
+    applicability_expires_at_utc: datetime | None = None,
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id="idea-conversion-001",
@@ -103,7 +106,10 @@ def candidate(
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=lifecycle_status,
         review_posture=review_posture,
-        evidence_packet=evidence_packet(supportability=supportability),
+        evidence_packet=evidence_packet(
+            supportability=supportability,
+            applicability_expires_at_utc=applicability_expires_at_utc,
+        ),
         source_signal_ids=("signal-conversion-001",),
         score=score_fixture(
             policy_version="idea-deterministic-ranking-v1",
@@ -221,6 +227,26 @@ def test_conversion_intent_requires_human_review_approved_ready_candidate() -> N
             candidate(supportability=EvidenceSupportability.BLOCKED),
             intent_command(),
         )
+
+
+@pytest.mark.parametrize("expiry", [REQUESTED_AT, REQUESTED_AT - datetime.resolution])
+def test_conversion_intent_refuses_candidate_at_or_after_server_time_expiry(
+    expiry: datetime,
+) -> None:
+    with pytest.raises(InvalidConversionIntent, match="candidate applicability has expired"):
+        request_conversion_intent(
+            candidate(applicability_expires_at_utc=expiry),
+            intent_command(),
+        )
+
+
+def test_conversion_intent_allows_candidate_immediately_before_server_time_expiry() -> None:
+    result = request_conversion_intent(
+        candidate(applicability_expires_at_utc=REQUESTED_AT + datetime.resolution),
+        intent_command(),
+    )
+
+    assert result.conversion_intent.accepted_at_utc == REQUESTED_AT
 
 
 def test_conversion_command_validates_idempotency_reason_and_time() -> None:

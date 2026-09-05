@@ -114,6 +114,35 @@ def test_conversion_intent_replay_retains_original_server_acceptance_time() -> N
     assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
 
 
+def test_conversion_intent_accepted_before_expiry_replays_after_expiry() -> None:
+    repository = repository_with_approved_candidate(
+        applicability_expires_at_utc=REQUESTED_AT + datetime.resolution,
+    )
+    command = RequestConversionIntentToRepositoryCommand(
+        candidate_id="idea-conversion-workflow-001",
+        conversion=conversion_command(),
+        idempotency_key="conversion-workflow-request-001",
+        accepted_at_utc=REQUESTED_AT,
+        access_scope_filter=authorized_scope_filter(),
+    )
+
+    accepted = request_conversion_intent_to_repository(command, repository=repository)
+    replayed = request_conversion_intent_to_repository(
+        _RequestConversionIntentToRepositoryCommand(
+            candidate_id=command.candidate_id,
+            conversion=command.conversion,
+            idempotency_key=command.idempotency_key,
+            accepted_at_utc=REQUESTED_AT + 2 * datetime.resolution,
+            access_scope_filter=command.access_scope_filter,
+        ),
+        repository=repository,
+    )
+
+    assert accepted.persistence.decision is ConversionPersistenceDecision.ACCEPTED
+    assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
+    assert replayed.require_conversion_intent() == accepted.require_conversion_intent()
+
+
 def test_conversion_intent_replay_fails_closed_when_persisted_intent_is_missing() -> None:
     repository = repository_with_approved_candidate()
     record = repository.candidate_record_by_id("idea-conversion-workflow-001")
@@ -257,10 +286,13 @@ def authorized_scope_filter() -> QueueAccessScopeFilter:
     )
 
 
-def repository_with_approved_candidate() -> InMemoryIdeaRepository:
+def repository_with_approved_candidate(
+    *,
+    applicability_expires_at_utc: datetime | None = None,
+) -> InMemoryIdeaRepository:
     repository = InMemoryIdeaRepository()
     persisted = repository.persist_candidate(
-        approved_candidate(),
+        approved_candidate(applicability_expires_at_utc=applicability_expires_at_utc),
         idempotency_key="signal-ingestion:conversion-workflow:001",
         payload={"candidate_id": "idea-conversion-workflow-001"},
         actor_subject="signal-ingestion-worker",
@@ -270,7 +302,10 @@ def repository_with_approved_candidate() -> InMemoryIdeaRepository:
     return repository
 
 
-def approved_candidate() -> IdeaCandidate:
+def approved_candidate(
+    *,
+    applicability_expires_at_utc: datetime | None = None,
+) -> IdeaCandidate:
     source = SourceRef(
         product_id="lotus-core:PortfolioStateSnapshot:v1",
         source_system=SourceSystem.LOTUS_CORE,
@@ -293,6 +328,7 @@ def approved_candidate() -> IdeaCandidate:
         ),
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         created_at_utc=EVALUATED_AT,
+        applicability_expires_at_utc=applicability_expires_at_utc,
     )
     return IdeaCandidate(
         candidate_id="idea-conversion-workflow-001",
