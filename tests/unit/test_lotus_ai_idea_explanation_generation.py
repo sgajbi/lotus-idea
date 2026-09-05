@@ -495,3 +495,58 @@ async def test_generation_skips_execution_outside_caller_tenant_scope() -> None:
         )
 
     assert runtime.requests == []
+
+
+class VanishingCandidateRepository(InMemoryIdeaRepository):
+    vanish = False
+
+    def candidate_record_by_id(
+        self,
+        candidate_id: str,
+    ) -> CandidatePersistenceRecord | None:
+        if self.vanish:
+            return None
+        return cast(
+            CandidatePersistenceRecord | None,
+            super().candidate_record_by_id(candidate_id),
+        )
+
+
+class VanishingCandidateRuntime(FakeRuntime):
+    def __init__(self, repository: VanishingCandidateRepository) -> None:
+        super().__init__(_enriched_stub_response())
+        self._repository = repository
+
+    async def execute_workflow_pack(
+        self,
+        request: Mapping[str, object],
+        *,
+        caller_app: str,
+    ) -> Mapping[str, object]:
+        response = await super().execute_workflow_pack(request, caller_app=caller_app)
+        self._repository.vanish = True
+        return response
+
+
+@pytest.mark.asyncio
+async def test_generation_fences_candidate_that_vanishes_during_execution() -> None:
+    repository = VanishingCandidateRepository()
+    persisted = repository.persist_candidate(
+        candidate(),
+        idempotency_key="signal-ingestion:generation-vanish-fence:001",
+        payload={"candidate_id": "idea-ai-001"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+
+    outcome = await generate_ai_explanation_to_repository(
+        _command(),
+        repository=repository,
+        runtime=VanishingCandidateRuntime(repository),
+        unattested_workflow_fixture_allowed=True,
+    )
+
+    assert outcome.disposition is (AIExplanationGenerationDisposition.CANDIDATE_EVIDENCE_CHANGED)
+    assert outcome.result.decision is AIExplanationEvaluationDecision.NOT_FOUND
+    assert outcome.result.explanation_result is None
