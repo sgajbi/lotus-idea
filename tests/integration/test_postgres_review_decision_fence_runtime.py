@@ -48,7 +48,7 @@ def test_postgres_fences_competing_review_decisions(
     candidate_id = _persist_review_ready_candidate()
     candidate = _load_candidate(postgres_database_url, candidate_id)
     actor = _actor_for(candidate)
-    accepted_at = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    accepted_at = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
     receipt = presentation_receipt_for_candidate(
         candidate,
         accepted_at_utc=accepted_at,

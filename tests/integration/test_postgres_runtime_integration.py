@@ -196,6 +196,7 @@ def test_postgres_lifecycle_replay_returns_exact_transition_after_repository_rel
         "candidateId": candidate_id,
         "lifecycleStatus": "enriched",
         "changedAtUtc": "2026-06-21T10:01:00Z",
+        "acceptedAtUtc": "2026-06-21T10:15:00Z",
         "reasonCodes": ["review_required"],
         "grantsDownstreamAuthority": False,
     }
@@ -688,7 +689,7 @@ def _assert_concurrent_review_action_resource_identity(
     postgres_database_url: str,
     proof_context: _ConcurrentReviewFeedbackProofContext,
 ) -> None:
-    accepted_at = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+    accepted_at = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
     receipt = presentation_receipt_for_candidate(
         proof_context.candidate,
         accepted_at_utc=accepted_at,
@@ -747,7 +748,7 @@ def _assert_concurrent_feedback_resource_identity(
             taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
         ),
-        accepted_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
+        accepted_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
     )
     before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 
