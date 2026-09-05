@@ -57,9 +57,18 @@ lock. Every evidence revision supersedes authority in v1; no non-semantic repair
 class is certified. Migration `025` marks incomplete history
 `legacy_unverified`, adds no fabricated authority, and exposes
 `idea_review_authority_migration_audit` for remediation. See
-`docs/architecture/exact-review-authority.md`. Canonical Gateway/Workbench
-consumer proof, source revision issue `#1227`, and supported-feature promotion
-remain open.
+`docs/architecture/exact-review-authority.md`.
+
+Candidate evidence, presentation receipts, review authority, conversion intent,
+runtime source receipts, and AI lineage carry the same canonical source revision
+vector and explicit cut posture. Only `coherent` and
+`coherent_with_declared_tolerance` may advance review or conversion;
+`mixed`, `partial`, and `unknown` fail closed. Source owners supply revision,
+restatement, calculation, methodology, and reconciliation claims; Idea never
+infers them from transport success, timestamps, hashes, or matching dates.
+Migration `026` retains v1 presentation receipts as unauthoritative legacy
+evidence. See `docs/architecture/source-revision-authority.md`. Canonical
+Gateway/Workbench consumer proof and supported-feature promotion remain open.
 
 Workbench read-path and action-path declarations are v2 `source_contract`
 evidence only. The bounded Gateway BFF action family forwards Idea-owned review

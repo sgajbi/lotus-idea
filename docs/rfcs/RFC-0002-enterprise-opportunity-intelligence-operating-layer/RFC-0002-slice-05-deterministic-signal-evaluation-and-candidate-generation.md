@@ -7,6 +7,11 @@ Status: Implemented on `main` - the Slice 05 outcome and acceptance gate are sat
 Implement the first source-backed opportunity signal family and candidate
 generation flow without AI dependency.
 
+Candidate evidence hashing and economic identity include the canonical source
+revision vector. A restatement, calculation run, methodology change, or causal
+input revision therefore creates different evidence even when the as-of date is
+unchanged. Runtime receipts prove the same vector and cut posture.
+
 ## Required Work
 
 1. Select the first signal family from Slice 0.

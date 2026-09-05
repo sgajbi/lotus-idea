@@ -16,6 +16,11 @@ Implementation closure:
 4. This closure does not promote an AI product, transfer AI infrastructure
    ownership into Lotus Idea, or claim RFC-0002 completion.
 
+AI explanation requests and persisted lineage are bound to the candidate's
+source revision-vector digest and cut posture. Output generated for one vector
+cannot be attached to another; unknown, partial, or mixed source authority is
+preserved rather than upgraded by the AI path.
+
 ## Outcome
 
 Add AI-assisted explanations through `lotus-ai` without weakening deterministic

@@ -32,6 +32,11 @@ candidate/evidence identity, Workbench presentation causality, operator channel
 semantics, locked conversion admission, expiry/replay behavior, and the
 fail-closed legacy migration audit.
 
+Restatement-safe evidence identity is defined in
+`docs/architecture/source-revision-authority.md`. It explains source-owner
+claims, canonical revision vectors, coherent-cut policy, presentation binding,
+and fail-closed legacy handling.
+
 Codebase cleanup and modularity evidence lives in:
 
 1. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`
