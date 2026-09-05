@@ -154,24 +154,34 @@ class ScoreContribution:
             raise ValueError("contribution must equal input_score multiplied by weight")
 
 
-DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES = frozenset(
+OWNED_WORKFLOW_LIFECYCLE_STATUSES = frozenset(
     {
+        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
+        IdeaLifecycleStatus.APPROVED,
+        IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL,
+        IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW,
+        IdeaLifecycleStatus.CONVERTED_TO_REPORT,
         IdeaLifecycleStatus.ACCEPTED,
+        IdeaLifecycleStatus.REJECTED,
+        IdeaLifecycleStatus.EXPIRED,
         IdeaLifecycleStatus.EXECUTED,
+        IdeaLifecycleStatus.CLOSED,
     }
 )
+DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES = frozenset(
+    {IdeaLifecycleStatus.ACCEPTED, IdeaLifecycleStatus.EXECUTED}
+)
 CALLER_SETTABLE_LIFECYCLE_STATUSES = frozenset(
-    status
-    for status in IdeaLifecycleStatus
-    if status not in DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES
+    status for status in IdeaLifecycleStatus if status not in OWNED_WORKFLOW_LIFECYCLE_STATUSES
 )
 
 
 def validate_caller_settable_lifecycle_status(target_status: IdeaLifecycleStatus) -> None:
-    if target_status in DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES:
+    if target_status in OWNED_WORKFLOW_LIFECYCLE_STATUSES:
         raise ValueError(
-            f"{target_status.value} is reserved for downstream source-authority outcomes "
-            "and cannot be set through idea lifecycle transitions"
+            f"{target_status.value} is reserved for its owned review, conversion, expiry, "
+            "or downstream outcome workflow and cannot be set through generic lifecycle "
+            "transitions"
         )
 
 

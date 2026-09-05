@@ -400,6 +400,7 @@ class InMemoryIdeaRepository(
         payload: Mapping[str, Any],
         actor_subject: str,
         occurred_at_utc: datetime | None = None,
+        observed_at_utc: datetime | None = None,
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
         event_lineage: EventLineageContext | None = None,
@@ -411,6 +412,8 @@ class InMemoryIdeaRepository(
             _require_text(transition_id, "transition_id")
         event_time = occurred_at_utc or datetime.now(UTC)
         _require_aware_utc(event_time, "occurred_at_utc")
+        observed_time = observed_at_utc or event_time
+        _require_aware_utc(observed_time, "observed_at_utc")
 
         existing_idempotency = self._idempotency_records.get(idempotency_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
@@ -438,6 +441,7 @@ class InMemoryIdeaRepository(
 
         attributes = {
             "idempotency_decision": idempotency_decision.value,
+            "observed_at_utc": observed_time.isoformat(),
             "reason_codes": ",".join(reason_codes),
         }
         if transition_id is not None:
@@ -458,6 +462,7 @@ class InMemoryIdeaRepository(
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload={
+                "observed_at_utc": observed_time.isoformat(),
                 "source_status": record.candidate.lifecycle_status.value,
                 "target_status": target_status.value,
             },
@@ -604,7 +609,7 @@ class InMemoryIdeaRepository(
                     source_status=record.candidate.lifecycle_status,
                     target_status=result.candidate.lifecycle_status,
                     actor_subject=result.conversion_intent.actor_subject,
-                    changed_at_utc=result.conversion_intent.intent.requested_at_utc,
+                    changed_at_utc=result.conversion_intent.accepted_at_utc,
                 ),
             )
         updated = replace(
@@ -623,13 +628,14 @@ class InMemoryIdeaRepository(
         self._append_outbox_event(
             event_type="idea.conversion.intent_requested.v1",
             aggregate_id=candidate_id,
-            occurred_at_utc=result.conversion_intent.intent.requested_at_utc,
+            occurred_at_utc=result.conversion_intent.accepted_at_utc,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload={
                 "target": result.conversion_intent.intent.target.value,
                 "target_source_authority": result.conversion_intent.target_source_authority.value,
                 "review_id": authority_grant.review_id,
+                "observed_at_utc": result.conversion_intent.intent.requested_at_utc.isoformat(),
             },
         )
         return ConversionPersistenceResult(
@@ -902,7 +908,7 @@ class InMemoryIdeaRepository(
         self._append_outbox_event(
             event_type="idea.conversion.outcome_recorded.v1",
             aggregate_id=candidate_id,
-            occurred_at_utc=result.conversion_outcome.outcome.recorded_at_utc,
+            occurred_at_utc=result.conversion_outcome.accepted_at_utc,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload=_conversion_outcome_outbox_payload(result),
@@ -1030,6 +1036,7 @@ def _conversion_outcome_outbox_payload(
         "source_system": conversion_outcome.source_system.value,
         "source_event_version": str(conversion_outcome.source_event_version),
         "status": conversion_outcome.outcome.status.value,
+        "observed_at_utc": conversion_outcome.outcome.recorded_at_utc.isoformat(),
         "supersedes_outcome": str(
             conversion_outcome.supersedes_conversion_outcome_id is not None
         ).lower(),

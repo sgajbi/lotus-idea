@@ -15,6 +15,10 @@ from app.domain import (
     LifecyclePersistenceResult,
     validate_caller_settable_lifecycle_status,
 )
+from app.domain.control_time import (
+    LIFECYCLE_TRANSITION_TIME_POLICY,
+    require_observed_time_within_policy,
+)
 from app.domain.audit import AuditEvent
 from app.ports.idea_repository import CandidateLifecycleRepository
 
@@ -28,6 +32,7 @@ class ApplyCandidateLifecycleTransitionCommand:
     transition_id: str
     target_status: IdeaLifecycleStatus
     changed_at_utc: datetime
+    accepted_at_utc: datetime
     reason_codes: tuple[str, ...]
     actor_subject: str
     idempotency_key: str
@@ -45,6 +50,11 @@ class ApplyCandidateLifecycleTransitionCommand:
         validate_caller_settable_lifecycle_status(self.target_status)
         if self.changed_at_utc.tzinfo is None or self.changed_at_utc.utcoffset() is None:
             raise ValueError("changed_at_utc must be timezone-aware")
+        require_observed_time_within_policy(
+            self.changed_at_utc,
+            self.accepted_at_utc,
+            LIFECYCLE_TRANSITION_TIME_POLICY,
+        )
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
 
 
@@ -54,6 +64,7 @@ class PersistedLifecycleTransition:
     candidate_id: str
     lifecycle_status: IdeaLifecycleStatus
     changed_at_utc: datetime
+    accepted_at_utc: datetime
     reason_codes: tuple[str, ...]
 
 
@@ -81,7 +92,8 @@ def apply_candidate_lifecycle_transition_to_repository(
         idempotency_key=command.idempotency_key,
         payload=_lifecycle_payload(command),
         actor_subject=command.actor_subject,
-        occurred_at_utc=command.changed_at_utc,
+        occurred_at_utc=command.accepted_at_utc,
+        observed_at_utc=command.changed_at_utc,
         transition_id=command.transition_id,
         reason_codes=command.reason_codes,
         event_lineage=command.event_lineage,
@@ -133,7 +145,7 @@ def _lifecycle_transition_from_audit_event(
             raise ValueError("invalid persisted reason codes")
         if (
             target_status is not command.target_status
-            or audit_event.occurred_at_utc != command.changed_at_utc
+            or audit_event.attributes.get("observed_at_utc") != command.changed_at_utc.isoformat()
             or reason_codes != command.reason_codes
         ):
             raise ValueError("persisted lifecycle transition contradicts the command")
@@ -145,7 +157,8 @@ def _lifecycle_transition_from_audit_event(
         transition_id=command.transition_id,
         candidate_id=command.candidate_id,
         lifecycle_status=target_status,
-        changed_at_utc=audit_event.occurred_at_utc,
+        changed_at_utc=command.changed_at_utc,
+        accepted_at_utc=audit_event.occurred_at_utc,
         reason_codes=reason_codes,
     )
 

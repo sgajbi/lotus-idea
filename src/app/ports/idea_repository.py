@@ -296,6 +296,7 @@ class CandidateLifecycleRepository(Protocol):
         payload: dict[str, Any],
         actor_subject: str,
         occurred_at_utc: datetime | None = None,
+        observed_at_utc: datetime | None = None,
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
         event_lineage: EventLineageContext | None = None,

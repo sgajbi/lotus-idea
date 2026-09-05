@@ -86,7 +86,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
                     source_status=record.candidate.lifecycle_status,
                     target_status=result.candidate.lifecycle_status,
                     actor_subject=result.decision.actor_subject,
-                    changed_at_utc=result.decision.decided_at_utc,
+                    changed_at_utc=result.decision.accepted_at_utc,
                 ),
             )
         updated = replace(
@@ -102,7 +102,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
         self._append_outbox_event(
             event_type="idea.review.decision_recorded.v1",
             aggregate_id=candidate_id,
-            occurred_at_utc=result.decision.decided_at_utc,
+            occurred_at_utc=result.decision.accepted_at_utc,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload={
@@ -116,6 +116,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
                     result.decision.review_authority_policy_version
                 ),
                 "review_authority_granted": result.authority_grant is not None,
+                "observed_at_utc": result.decision.decided_at_utc.isoformat(),
             },
         )
         return ReviewPersistenceResult(
@@ -208,7 +209,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
         self._append_outbox_event(
             event_type="idea.feedback.recorded.v2",
             aggregate_id=candidate_id,
-            occurred_at_utc=result.feedback_event.feedback.recorded_at_utc,
+            occurred_at_utc=result.feedback_event.accepted_at_utc,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage,
             payload={
@@ -216,6 +217,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
                 "feedback_reason": result.feedback_event.feedback.reason.value,
                 "feedback_taxonomy_version": (result.feedback_event.feedback.taxonomy_version),
                 "actor_role": result.feedback_event.actor_role.value,
+                "observed_at_utc": result.feedback_event.feedback.recorded_at_utc.isoformat(),
             },
         )
         return ReviewPersistenceResult(
