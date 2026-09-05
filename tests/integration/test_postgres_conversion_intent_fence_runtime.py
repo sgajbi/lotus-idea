@@ -125,7 +125,7 @@ def test_postgres_fences_competing_conversion_intents(
 def test_postgres_serializes_conversion_immediately_before_expiry_against_expiry(
     postgres_database_url: str,
 ) -> None:
-    expiry = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
+    expiry = datetime(2026, 6, 21, 10, 15, 0, 2, tzinfo=UTC)
     candidate_id = _persist_approved_candidate(
         database_url=postgres_database_url,
         applicability_expires_at_utc=expiry,

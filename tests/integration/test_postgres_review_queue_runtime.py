@@ -24,6 +24,7 @@ from app.main import app
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.runtime.repository_state import get_idea_repository
 from app.runtime import trusted_clock_state
+from tests.support.review_authority_api import record_workbench_presentation
 
 
 @pytest.fixture(autouse=True)
@@ -165,6 +166,10 @@ def test_postgres_review_queue_preserves_distinct_economic_candidates_with_share
             "reasonCodes": ["review_required"],
             "decidedAtUtc": "2026-06-21T10:02:00Z",
             "suppressionReason": "duplicate",
+            **record_workbench_presentation(
+                candidates[0].candidate_id,
+                accepted_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            ),
         },
         headers=_snooze_headers(
             portfolio_id="PB_SHARED_LINEAGE_0",
@@ -204,6 +209,10 @@ def test_postgres_review_queue_honors_persisted_snooze_until_exact_boundary(
             "reasonCodes": ["review_required"],
             "decidedAtUtc": "2026-06-21T10:05:00Z",
             "snoozedUntilUtc": "2026-06-21T11:00:00Z",
+            **record_workbench_presentation(
+                candidate_id,
+                accepted_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            ),
         },
         headers=_snooze_headers(),
     )
