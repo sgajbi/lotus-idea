@@ -4,6 +4,7 @@ from copy import copy
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 
 import pytest
 
@@ -30,7 +31,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     UnsupportedEvidenceReason,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
 from app.domain.conversion_governance import ConversionIntentCommand
@@ -41,6 +42,11 @@ AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 PACK_REQUESTED_AT = datetime(2026, 6, 21, 10, 25, tzinfo=UTC)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=REQUESTED_AT,
+)
 
 
 def source_ref() -> SourceRef:

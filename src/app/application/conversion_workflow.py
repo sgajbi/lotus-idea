@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from app.application.candidate_lookup import candidate_record_by_id
@@ -33,6 +34,7 @@ class RequestConversionIntentToRepositoryCommand:
     candidate_id: str
     conversion: ConversionIntentCommand
     idempotency_key: str
+    accepted_at_utc: datetime
     access_scope_filter: QueueAccessScopeFilter | None = None
     event_lineage: EventLineageContext | None = None
 
@@ -41,6 +43,7 @@ class RequestConversionIntentToRepositoryCommand:
         _require_text(self.idempotency_key, "idempotency_key")
         if self.conversion.idempotency_key != self.idempotency_key:
             raise ValueError("conversion idempotency key must match repository idempotency key")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -48,11 +51,13 @@ class RecordConversionOutcomeToRepositoryCommand:
     conversion_intent_id: str
     outcome: ConversionOutcomeCommand
     idempotency_key: str
+    accepted_at_utc: datetime
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -115,7 +120,11 @@ def request_conversion_intent_to_repository(
             persistence=prechecked,
         )
 
-    conversion_result = request_conversion_intent(record.candidate, command.conversion)
+    conversion_result = request_conversion_intent(
+        record.candidate,
+        command.conversion,
+        accepted_at_utc=command.accepted_at_utc,
+    )
     persistence = repository.record_conversion_intent(
         conversion_result,
         idempotency_key=command.idempotency_key,
@@ -190,6 +199,7 @@ def record_conversion_outcome_to_repository(
     outcome_result = record_conversion_outcome(
         conversion_intent,
         command.outcome,
+        accepted_at_utc=command.accepted_at_utc,
         existing_outcomes=existing_outcomes,
     )
     persistence = repository.record_conversion_outcome(
@@ -263,3 +273,8 @@ def _conversion_outcome_payload(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_aware_utc(value: datetime, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")

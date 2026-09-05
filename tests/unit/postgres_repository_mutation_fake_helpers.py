@@ -159,6 +159,8 @@ def _review_decision_row(values: Sequence[Any]) -> dict[str, Any]:
             "actor_subject",
             "decision_json",
             "decided_at_utc",
+            "accepted_at_utc",
+            "acceptance_time_source",
         ),
         values,
     )
@@ -175,6 +177,8 @@ def _feedback_event_row(values: Sequence[Any]) -> dict[str, Any]:
             "feedback_reason",
             "feedback_json",
             "recorded_at_utc",
+            "accepted_at_utc",
+            "acceptance_time_source",
         ),
         values,
     )
@@ -189,6 +193,8 @@ def _conversion_intent_row(values: Sequence[Any]) -> dict[str, Any]:
             "actor_subject",
             "intent_json",
             "requested_at_utc",
+            "accepted_at_utc",
+            "acceptance_time_source",
         ),
         values,
     )
@@ -207,6 +213,8 @@ def _conversion_outcome_row(values: Sequence[Any]) -> dict[str, Any]:
             "actor_subject",
             "outcome_json",
             "recorded_at_utc",
+            "accepted_at_utc",
+            "acceptance_time_source",
         ),
         values,
     )

@@ -305,6 +305,7 @@ from app.domain.report_evidence import (
     ReportEvidenceSourceSummary,
     request_report_evidence_pack,
 )
+from app.domain.control_time import AcceptanceTimeSource
 from app.domain.review_governance import (
     DEFAULT_REVIEW_ACTION_POLICY,
     FeedbackCommand,
@@ -626,6 +627,7 @@ __all__ = [
     "validate_missing_suitability_counts",
     "evaluate_underperformance_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
+    "AcceptanceTimeSource",
     "FeedbackCommand",
     "FeedbackResult",
     "GovernedFeedbackEvent",

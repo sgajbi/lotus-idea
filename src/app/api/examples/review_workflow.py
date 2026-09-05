@@ -34,6 +34,8 @@ def build_review_action_response_examples() -> dict[str, dict[str, Any]]:
                 "actorRole": "advisor",
                 "reasonCodes": ["review_suppressed", "review_required"],
                 "decidedAtUtc": "2026-06-21T10:05:00Z",
+                "acceptedAtUtc": "2026-06-21T10:05:01Z",
+                "acceptanceTimeSource": "server_accepted",
                 "suppressionReason": "manual_suppression",
                 "snoozedUntilUtc": None,
                 "grantsDownstreamAuthority": False,
@@ -67,6 +69,8 @@ def build_feedback_response_examples() -> dict[str, dict[str, Any]]:
                 "reason": "relevant",
                 "actorRole": "advisor",
                 "recordedAtUtc": "2026-06-21T10:06:00Z",
+                "acceptedAtUtc": "2026-06-21T10:06:01Z",
+                "acceptanceTimeSource": "server_accepted",
             },
             "persistence": {
                 "decision": "accepted",

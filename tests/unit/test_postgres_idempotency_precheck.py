@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from functools import partial
 
 from app.domain import (
     IdeaLifecycleStatus,
     ReviewPosture,
     apply_review_action,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
 )
+
 from app.domain.persistence import ConversionPersistenceDecision, ReviewPersistenceDecision
 from app.domain.idempotency import IdempotencyDecision, evaluate_idempotency
 from app.infrastructure.postgres_idempotency_reservation import reserve_replayed_idempotency
@@ -19,6 +21,11 @@ from tests.unit.test_postgres_repository import (
     conversion_command,
     high_cash_candidate,
     review_command,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=EVALUATED_AT,
 )
 
 
@@ -48,6 +55,7 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     review_result = apply_review_action(
         review_ready,
         review_command(review_id="review-bounded-precheck"),
+        accepted_at_utc=EVALUATED_AT,
     )
     repository.record_review_action(
         review_result,
@@ -132,6 +140,7 @@ def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_
     review_result = apply_review_action(
         candidate,
         review_command(review_id="review-resource-identity-precheck"),
+        accepted_at_utc=EVALUATED_AT,
     )
     repository.record_review_action(
         review_result,

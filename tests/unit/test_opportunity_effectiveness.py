@@ -8,6 +8,10 @@ import json
 import pytest
 
 from tests.support.score_fixture import score_fixture
+from tests.support.opportunity_effectiveness_fixture import (
+    conversion_intent_fixture as _conversion_intent,
+    conversion_outcome_fixture as _conversion_outcome,
+)
 
 from app.application.opportunity_effectiveness import (
     EffectivenessDimensionCount,
@@ -22,9 +26,7 @@ from app.domain import (
     CandidateChangeReason,
     CandidatePresentationReceipt,
     CandidateVersionHistoryEntry,
-    ConversionBoundary,
     ConversionOutcomeStatus,
-    ConversionTarget,
     DownstreamSubmissionPosture,
     EvidenceFreshness,
     EvidenceSupportability,
@@ -32,13 +34,9 @@ from app.domain import (
     FeedbackCommand,
     FeedbackOutcome,
     FeedbackReason,
-    GovernedConversionIntent,
-    GovernedConversionOutcome,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     IdeaCandidate,
-    IdeaConversionIntent,
-    IdeaConversionOutcome,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
@@ -984,6 +982,7 @@ def _review(
         actor_role=ReviewActorRole.ADVISOR,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=decided_at,
+        accepted_at_utc=decided_at,
         suppression_reason=suppression_reason,
     )
 
@@ -1018,6 +1017,7 @@ def _record(
                     taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
                     recorded_at_utc=WINDOW_START + timedelta(hours=6),
                 ),
+                accepted_at_utc=WINDOW_START + timedelta(hours=6),
             ).feedback_event,
         )
     intent = (
@@ -1071,57 +1071,6 @@ def _record(
         feedback_events=feedback,
         conversion_intents=(intent,) if intent is not None else (),
         conversion_outcomes=outcomes,
-    )
-
-
-def _conversion_intent(
-    candidate: IdeaCandidate,
-    *,
-    requested_at: datetime,
-) -> GovernedConversionIntent:
-    return GovernedConversionIntent(
-        intent=IdeaConversionIntent(
-            conversion_intent_id=f"intent-{candidate.candidate_id}",
-            candidate_id=candidate.candidate_id,
-            target=ConversionTarget.ADVISE_PROPOSAL,
-            source_status=IdeaLifecycleStatus.APPROVED,
-            requested_at_utc=requested_at,
-        ),
-        evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
-        evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
-        source_signal_ids=candidate.source_signal_ids,
-        actor_subject="advisor-sensitive-subject",
-        idempotency_key=f"intent-key-{candidate.candidate_id}",
-        reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
-        target_source_authority=SourceSystem.LOTUS_ADVISE,
-    )
-
-
-def _conversion_outcome(
-    intent: GovernedConversionIntent,
-    *,
-    status: ConversionOutcomeStatus,
-    version: int,
-    recorded_at: datetime,
-) -> GovernedConversionOutcome:
-    return GovernedConversionOutcome(
-        outcome=IdeaConversionOutcome(
-            conversion_outcome_id=f"outcome-{intent.intent.candidate_id}-{version}",
-            conversion_intent_id=intent.intent.conversion_intent_id,
-            status=status,
-            downstream_reference=(
-                "downstream-sensitive-reference"
-                if status in {ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED}
-                else None
-            ),
-            recorded_at_utc=recorded_at,
-        ),
-        conversion_intent_id=intent.intent.conversion_intent_id,
-        target=intent.intent.target,
-        source_system=SourceSystem.LOTUS_ADVISE,
-        boundary=ConversionBoundary.DOWNSTREAM_REALIZATION_REQUIRED,
-        source_event_version=version,
-        actor_subject="advise-sensitive-subject",
     )
 
 

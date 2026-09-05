@@ -1165,6 +1165,7 @@ def conversion_intent(
         idempotency_key="idempotency-redacted",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         target_source_authority=source_authority,
+        accepted_at_utc=REQUEST_TIME,
         boundary=ConversionBoundary.INTENT_ONLY,
     )
 

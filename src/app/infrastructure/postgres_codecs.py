@@ -15,6 +15,7 @@ from app.domain.conversion_governance import (
     GovernedConversionIntent,
     GovernedConversionOutcome,
 )
+from app.domain.control_time import AcceptanceTimeSource
 from app.domain.ideas import (
     CandidateChangeReason,
     CandidateIdentity,
@@ -264,6 +265,8 @@ def _review_decision_to_json(decision: GovernedReviewDecision) -> dict[str, Any]
         "actor_role": decision.actor_role.value,
         "reason_codes": [reason.value for reason in decision.reason_codes],
         "decided_at_utc": decision.decided_at_utc.isoformat(),
+        "accepted_at_utc": decision.accepted_at_utc.isoformat(),
+        "acceptance_time_source": decision.acceptance_time_source.value,
         "suppression_reason": (
             decision.suppression_reason.value if decision.suppression_reason is not None else None
         ),
@@ -287,6 +290,8 @@ def _review_decision_from_json(payload: Mapping[str, Any]) -> GovernedReviewDeci
         actor_role=ReviewActorRole(payload["actor_role"]),
         reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
         decided_at_utc=_datetime(payload["decided_at_utc"]),
+        accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        acceptance_time_source=AcceptanceTimeSource(payload["acceptance_time_source"]),
         suppression_reason=(
             SuppressionReason(payload["suppression_reason"])
             if payload.get("suppression_reason") is not None
@@ -316,6 +321,8 @@ def _feedback_event_to_json(feedback: GovernedFeedbackEvent) -> dict[str, Any]:
         "source_signal_ids": list(feedback.source_signal_ids),
         "actor_subject": feedback.actor_subject,
         "actor_role": feedback.actor_role.value,
+        "accepted_at_utc": feedback.accepted_at_utc.isoformat(),
+        "acceptance_time_source": feedback.acceptance_time_source.value,
         "evaluation_context": {
             "candidate_family": feedback.candidate_family.value,
             "candidate_identity_policy_version": (feedback.candidate_identity_policy_version),
@@ -376,6 +383,8 @@ def _feedback_event_from_json(payload: Mapping[str, Any]) -> GovernedFeedbackEve
             if evaluation_context.get("queue_priority_bucket") is not None
             else None
         ),
+        accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        acceptance_time_source=AcceptanceTimeSource(payload["acceptance_time_source"]),
     )
 
 
@@ -395,6 +404,8 @@ def _conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, An
         "idempotency_key": intent.idempotency_key,
         "reason_codes": [reason.value for reason in intent.reason_codes],
         "target_source_authority": intent.target_source_authority.value,
+        "accepted_at_utc": intent.accepted_at_utc.isoformat(),
+        "acceptance_time_source": intent.acceptance_time_source.value,
         "boundary": intent.boundary.value,
     }
 
@@ -416,6 +427,8 @@ def _conversion_intent_from_json(payload: Mapping[str, Any]) -> GovernedConversi
         idempotency_key=str(payload["idempotency_key"]),
         reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
         target_source_authority=SourceSystem(payload["target_source_authority"]),
+        accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        acceptance_time_source=AcceptanceTimeSource(payload["acceptance_time_source"]),
         boundary=ConversionBoundary(payload["boundary"]),
     )
 
@@ -435,6 +448,8 @@ def _conversion_outcome_to_json(outcome: GovernedConversionOutcome) -> dict[str,
         "boundary": outcome.boundary.value,
         "source_event_version": outcome.source_event_version,
         "actor_subject": outcome.actor_subject,
+        "accepted_at_utc": outcome.accepted_at_utc.isoformat(),
+        "acceptance_time_source": outcome.acceptance_time_source.value,
         "supersedes_conversion_outcome_id": outcome.supersedes_conversion_outcome_id,
         "correction_reason": outcome.correction_reason,
     }
@@ -456,6 +471,8 @@ def _conversion_outcome_from_json(payload: Mapping[str, Any]) -> GovernedConvers
         boundary=ConversionBoundary(payload["boundary"]),
         source_event_version=int(payload["source_event_version"]),
         actor_subject=str(payload["actor_subject"]),
+        accepted_at_utc=_datetime(payload["accepted_at_utc"]),
+        acceptance_time_source=AcceptanceTimeSource(payload["acceptance_time_source"]),
         supersedes_conversion_outcome_id=(
             str(payload["supersedes_conversion_outcome_id"])
             if payload.get("supersedes_conversion_outcome_id") is not None

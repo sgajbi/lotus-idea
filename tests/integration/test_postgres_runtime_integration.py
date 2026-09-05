@@ -679,6 +679,7 @@ def _assert_concurrent_review_action_resource_identity(
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
         ),
+        accepted_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
     )
     before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 
@@ -714,6 +715,7 @@ def _assert_concurrent_feedback_resource_identity(
             taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
             recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
         ),
+        accepted_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
     )
     before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 

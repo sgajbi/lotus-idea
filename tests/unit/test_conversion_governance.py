@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import copy
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 
 import pytest
 
@@ -31,8 +32,8 @@ from app.domain import (
     SourceSystem,
     SuppressionReason,
     UnsupportedEvidenceReason,
-    record_conversion_outcome,
-    request_conversion_intent,
+    record_conversion_outcome as _record_conversion_outcome,
+    request_conversion_intent as _request_conversion_intent,
 )
 
 
@@ -40,6 +41,15 @@ AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 OUTCOME_AT = datetime(2026, 6, 21, 10, 20, tzinfo=UTC)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=REQUESTED_AT,
+)
+record_conversion_outcome = partial(
+    _record_conversion_outcome,
+    accepted_at_utc=OUTCOME_AT,
+)
 
 
 def source_ref() -> SourceRef:
@@ -133,6 +143,22 @@ def test_review_approved_candidate_can_request_report_conversion_intent() -> Non
     assert result.audit_event.attributes["target_source_authority"] == "lotus-report"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
+
+
+def test_conversion_intent_uses_server_acceptance_time_for_control_chronology() -> None:
+    accepted_at = REQUESTED_AT + datetime.resolution
+
+    result = _request_conversion_intent(
+        candidate(),
+        intent_command(),
+        accepted_at_utc=accepted_at,
+    )
+
+    assert result.conversion_intent.intent.requested_at_utc == REQUESTED_AT
+    assert result.conversion_intent.accepted_at_utc == accepted_at
+    assert result.candidate.updated_at_utc == accepted_at
+    assert result.audit_event.occurred_at_utc == accepted_at
+    assert result.audit_event.attributes["observed_at_utc"] == REQUESTED_AT.isoformat()
 
 
 @pytest.mark.parametrize(
@@ -294,6 +320,31 @@ def test_conversion_outcome_records_downstream_status_without_granting_authority
     assert "client_id" not in result.audit_event.attributes
 
 
+def test_conversion_outcome_preserves_owner_time_and_uses_idea_acceptance_time() -> None:
+    intent = request_conversion_intent(candidate(), intent_command()).conversion_intent
+    accepted_at = OUTCOME_AT + datetime.resolution
+    command = ConversionOutcomeCommand(
+        conversion_outcome_id="outcome-report-received",
+        status=ConversionOutcomeStatus.ACCEPTED,
+        source_system=SourceSystem.LOTUS_REPORT,
+        source_event_version=1,
+        downstream_reference="report-evidence-pack-accepted",
+        recorded_at_utc=OUTCOME_AT,
+    )
+
+    result = _record_conversion_outcome(
+        intent,
+        command,
+        accepted_at_utc=accepted_at,
+    )
+
+    assert result.conversion_outcome.outcome.recorded_at_utc == OUTCOME_AT
+    assert result.conversion_outcome.accepted_at_utc == accepted_at
+    assert result.conversion_outcome.source_event_version == 1
+    assert result.audit_event.occurred_at_utc == accepted_at
+    assert result.audit_event.attributes["observed_at_utc"] == OUTCOME_AT.isoformat()
+
+
 def test_conversion_outcome_validates_optional_reference_and_time() -> None:
     with pytest.raises(ValueError, match="downstream_reference is required"):
         ConversionOutcomeCommand(
@@ -341,4 +392,5 @@ def test_governed_conversion_intent_requires_source_provenance() -> None:
             idempotency_key=intent.idempotency_key,
             reason_codes=intent.reason_codes,
             target_source_authority=intent.target_source_authority,
+            accepted_at_utc=intent.accepted_at_utc,
         )

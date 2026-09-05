@@ -39,6 +39,8 @@ def build_conversion_intent_response_examples() -> dict[str, dict[str, Any]]:
                 "boundary": "intent_only",
                 "reasonCodes": ["review_approved_for_conversion"],
                 "requestedAtUtc": "2026-06-21T10:15:00Z",
+                "acceptedAtUtc": "2026-06-21T10:15:01Z",
+                "acceptanceTimeSource": "server_accepted",
                 "grantsDownstreamAuthority": False,
             },
             "persistence": {
@@ -81,6 +83,8 @@ def build_conversion_outcome_response_examples() -> dict[str, dict[str, Any]]:
                 "correctionReason": None,
                 "boundary": "downstream_realization_required",
                 "recordedAtUtc": "2026-06-21T10:20:00Z",
+                "acceptedAtUtc": "2026-06-21T10:20:01Z",
+                "acceptanceTimeSource": "server_accepted",
                 "grantsExecutionAuthority": False,
                 "grantsClientCommunicationAuthority": False,
                 "grantsSuitabilityAuthority": False,

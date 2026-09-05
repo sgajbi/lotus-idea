@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from app.domain.audit import AuditEvent
+from app.domain.control_time import AcceptanceTimeSource
 from app.domain.conversion_outcome_policy import (
     CONVERSION_OUTCOME_POLICY_VERSION,
     ConversionOutcomeIdentity,
@@ -100,6 +101,8 @@ class GovernedConversionIntent:
     idempotency_key: str
     reason_codes: tuple[ReasonCode, ...]
     target_source_authority: SourceSystem
+    accepted_at_utc: datetime
+    acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     boundary: ConversionBoundary = ConversionBoundary.INTENT_ONLY
 
     @property
@@ -111,6 +114,7 @@ class GovernedConversionIntent:
         _require_text(self.evidence_content_hash, "evidence_content_hash")
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
         if not self.source_signal_ids:
             raise ValueError("source_signal_ids is required")
         if not self.reason_codes:
@@ -165,8 +169,13 @@ class GovernedConversionOutcome:
     boundary: ConversionBoundary
     source_event_version: int
     actor_subject: str
+    accepted_at_utc: datetime
+    acceptance_time_source: AcceptanceTimeSource = AcceptanceTimeSource.SERVER_ACCEPTED
     supersedes_conversion_outcome_id: str | None = None
     correction_reason: str | None = None
+
+    def __post_init__(self) -> None:
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
     @property
     def identity(self) -> ConversionOutcomeIdentity:
@@ -206,7 +215,10 @@ class ConversionOutcomeResult:
 def request_conversion_intent(
     candidate: IdeaCandidate,
     command: ConversionIntentCommand,
+    *,
+    accepted_at_utc: datetime,
 ) -> ConversionIntentResult:
+    _require_aware_utc(accepted_at_utc, "accepted_at_utc")
     _ensure_candidate_ready_for_conversion(candidate)
     intent = IdeaConversionIntent(
         conversion_intent_id=command.conversion_intent_id,
@@ -224,23 +236,25 @@ def request_conversion_intent(
         idempotency_key=command.idempotency_key,
         reason_codes=command.reason_codes,
         target_source_authority=TARGET_SOURCE_AUTHORITIES[command.target],
+        accepted_at_utc=accepted_at_utc,
     )
     transitioned_candidate = transition_candidate(
         candidate,
         TARGET_LIFECYCLE_STATUS[command.target],
-        updated_at_utc=command.requested_at_utc,
+        updated_at_utc=accepted_at_utc,
     )
     audit_event = AuditEvent(
         event_type="idea.conversion.intent_requested",
         actor_subject=command.actor_subject,
         outcome="accepted",
-        occurred_at_utc=command.requested_at_utc,
+        occurred_at_utc=accepted_at_utc,
         attributes={
             "boundary": governed_intent.boundary.value,
             "candidate_family": candidate.family.value,
             "conversion_target": command.target.value,
             "evidence_packet_id": candidate.evidence_packet.evidence_packet_id,
             "target_source_authority": governed_intent.target_source_authority.value,
+            "observed_at_utc": command.requested_at_utc.isoformat(),
         },
     )
     return ConversionIntentResult(
@@ -255,8 +269,10 @@ def record_conversion_outcome(
     governed_intent: GovernedConversionIntent,
     command: ConversionOutcomeCommand,
     *,
+    accepted_at_utc: datetime,
     existing_outcomes: tuple[GovernedConversionOutcome, ...] = (),
 ) -> ConversionOutcomeResult:
+    _require_aware_utc(accepted_at_utc, "accepted_at_utc")
     expected_source = TARGET_SOURCE_AUTHORITIES[governed_intent.intent.target]
     if command.source_system is not expected_source:
         raise InvalidConversionOutcome(
@@ -290,6 +306,7 @@ def record_conversion_outcome(
         boundary=ConversionBoundary.DOWNSTREAM_REALIZATION_REQUIRED,
         source_event_version=command.source_event_version,
         actor_subject=command.actor_subject,
+        accepted_at_utc=accepted_at_utc,
         supersedes_conversion_outcome_id=command.supersedes_conversion_outcome_id,
         correction_reason=command.correction_reason,
     )
@@ -307,13 +324,14 @@ def record_conversion_outcome(
         event_type="idea.conversion.outcome_recorded",
         actor_subject=command.actor_subject,
         outcome="accepted",
-        occurred_at_utc=command.recorded_at_utc,
+        occurred_at_utc=accepted_at_utc,
         attributes={
             "boundary": governed_outcome.boundary.value,
             "conversion_status": command.status.value,
             "conversion_target": governed_intent.intent.target.value,
             "source_system": command.source_system.value,
             "source_event_version": str(command.source_event_version),
+            "observed_at_utc": command.recorded_at_utc.isoformat(),
             "policy_version": CONVERSION_OUTCOME_POLICY_VERSION,
             "supersedes_outcome": str(command.supersedes_conversion_outcome_id is not None).lower(),
         },

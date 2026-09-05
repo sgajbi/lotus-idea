@@ -154,6 +154,7 @@ def review_fixture(
         actor_role=ReviewActorRole.ADVISOR,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=decided_at,
+        accepted_at_utc=decided_at,
         suppression_reason=suppression_reason,
     )
 
@@ -188,6 +189,7 @@ def record_fixture(
                     taxonomy_version=FEEDBACK_TAXONOMY_VERSION,
                     recorded_at_utc=FIXTURE_WINDOW_START + timedelta(hours=6),
                 ),
+                accepted_at_utc=FIXTURE_WINDOW_START + timedelta(hours=6),
             ).feedback_event,
         )
     intent = (
@@ -267,6 +269,7 @@ def conversion_intent_fixture(
         idempotency_key=f"intent-key-{candidate.candidate_id}",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         target_source_authority=SourceSystem.LOTUS_ADVISE,
+        accepted_at_utc=requested_at,
     )
 
 
@@ -295,6 +298,7 @@ def conversion_outcome_fixture(
         boundary=ConversionBoundary.DOWNSTREAM_REALIZATION_REQUIRED,
         source_event_version=version,
         actor_subject="advise-sensitive-subject",
+        accepted_at_utc=recorded_at,
     )
 
 

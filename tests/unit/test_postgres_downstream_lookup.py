@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from functools import partial
 
 from app.domain import (
     DownstreamSubmissionPosture,
     IdeaCandidate,
     IdeaLifecycleStatus,
     ReviewPosture,
-    request_conversion_intent,
+    request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
+
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from tests.unit.postgres_repository_fake import FakePostgresConnection
@@ -19,6 +21,11 @@ from tests.unit.test_postgres_repository import (
     conversion_command,
     high_cash_candidate,
     report_pack_command,
+)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=EVALUATED_AT,
 )
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 from typing import Any
 
 import pytest
@@ -12,7 +13,7 @@ from tests.support.score_fixture import score_fixture
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
     ConversionIntentWorkflowResult,
-    RequestConversionIntentToRepositoryCommand,
+    RequestConversionIntentToRepositoryCommand as _RequestConversionIntentToRepositoryCommand,
     request_conversion_intent_to_repository,
 )
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
@@ -40,6 +41,11 @@ from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
+
+RequestConversionIntentToRepositoryCommand = partial(
+    _RequestConversionIntentToRepositoryCommand,
+    accepted_at_utc=REQUESTED_AT,
+)
 
 
 def test_request_conversion_intent_uses_candidate_projection_without_snapshot() -> None:
@@ -78,6 +84,34 @@ def test_conversion_intent_replay_returns_exact_persisted_intent() -> None:
     assert replayed.persistence.record == accepted.persistence.record
     assert replayed.persistence.record is not None
     assert len(replayed.persistence.record.conversion_intents) == 1
+
+
+def test_conversion_intent_replay_retains_original_server_acceptance_time() -> None:
+    repository = repository_with_approved_candidate()
+    first_accepted_at = REQUESTED_AT + datetime.resolution
+    command = RequestConversionIntentToRepositoryCommand(
+        candidate_id="idea-conversion-workflow-001",
+        conversion=conversion_command(),
+        idempotency_key="conversion-workflow-request-001",
+        accepted_at_utc=first_accepted_at,
+        access_scope_filter=authorized_scope_filter(),
+    )
+
+    accepted = request_conversion_intent_to_repository(command, repository=repository)
+    replayed = request_conversion_intent_to_repository(
+        _RequestConversionIntentToRepositoryCommand(
+            candidate_id=command.candidate_id,
+            conversion=command.conversion,
+            idempotency_key=command.idempotency_key,
+            accepted_at_utc=first_accepted_at + datetime.resolution,
+            access_scope_filter=command.access_scope_filter,
+        ),
+        repository=repository,
+    )
+
+    assert accepted.require_conversion_intent().accepted_at_utc == first_accepted_at
+    assert replayed.require_conversion_intent().accepted_at_utc == first_accepted_at
+    assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
 
 
 def test_conversion_intent_replay_fails_closed_when_persisted_intent_is_missing() -> None:

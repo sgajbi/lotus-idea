@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from app.application.candidate_lookup import candidate_record_by_id
@@ -31,11 +32,13 @@ class ApplyReviewActionToRepositoryCommand:
     candidate_id: str
     review: ReviewDecisionCommand
     idempotency_key: str
+    accepted_at_utc: datetime
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -43,11 +46,13 @@ class RecordFeedbackToRepositoryCommand:
     candidate_id: str
     feedback: FeedbackCommand
     idempotency_key: str
+    accepted_at_utc: datetime
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        _require_aware_utc(self.accepted_at_utc, "accepted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -104,7 +109,12 @@ def apply_review_action_to_repository(
             persistence=prechecked,
         )
 
-    review_result = apply_review_action(record.candidate, command.review, policy=policy)
+    review_result = apply_review_action(
+        record.candidate,
+        command.review,
+        accepted_at_utc=command.accepted_at_utc,
+        policy=policy,
+    )
     persistence = repository.record_review_action(
         review_result,
         idempotency_key=command.idempotency_key,
@@ -145,7 +155,12 @@ def record_feedback_to_repository(
             persistence=prechecked,
         )
 
-    feedback_result = record_feedback(record.candidate, command.feedback, policy=policy)
+    feedback_result = record_feedback(
+        record.candidate,
+        command.feedback,
+        accepted_at_utc=command.accepted_at_utc,
+        policy=policy,
+    )
     persistence = repository.record_feedback_event(
         feedback_result,
         idempotency_key=command.idempotency_key,
@@ -236,3 +251,11 @@ def _feedback_payload(command: RecordFeedbackToRepositoryCommand) -> dict[str, A
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_aware_utc(value: datetime, field_name: str) -> None:
+    offset = value.utcoffset()
+    if value.tzinfo is None or offset is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+    if offset.total_seconds() != 0:
+        raise ValueError(f"{field_name} must be UTC")

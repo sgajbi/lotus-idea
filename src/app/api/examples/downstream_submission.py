@@ -299,6 +299,7 @@ def _conversion_intent(target: ConversionTarget) -> GovernedConversionIntent:
         idempotency_key="conversion-example",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         target_source_authority=source_authority,
+        accepted_at_utc=_SUBMITTED_AT,
     )
 
 

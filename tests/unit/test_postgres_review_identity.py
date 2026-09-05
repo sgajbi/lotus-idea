@@ -33,6 +33,7 @@ def test_postgres_repository_reads_review_identity_collision_as_replay() -> None
     review = apply_review_action(
         candidate,
         review_command(review_id="review-resource-identity-replay"),
+        accepted_at_utc=EVALUATED_AT,
     )
 
     first = repository.record_review_action(
@@ -77,10 +78,15 @@ def test_postgres_repository_reads_changed_review_identity_as_typed_conflict() -
         occurred_at_utc=EVALUATED_AT,
     )
     review_id = "review-resource-identity-conflict"
-    first_review = apply_review_action(candidate, review_command(review_id=review_id))
+    first_review = apply_review_action(
+        candidate,
+        review_command(review_id=review_id),
+        accepted_at_utc=EVALUATED_AT,
+    )
     changed_review = apply_review_action(
         candidate,
         replace(review_command(review_id=review_id), action=ReviewAction.REJECT),
+        accepted_at_utc=EVALUATED_AT,
     )
 
     first = repository.record_review_action(
@@ -125,7 +131,11 @@ def test_postgres_repository_reads_feedback_identity_collision_as_replay() -> No
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    feedback = record_feedback(candidate, feedback_command())
+    feedback = record_feedback(
+        candidate,
+        feedback_command(),
+        accepted_at_utc=EVALUATED_AT,
+    )
 
     first = repository.record_feedback_event(
         feedback,

@@ -141,6 +141,7 @@ def test_postgres_review_queue_enforces_persisted_snooze_until_exact_boundary() 
             decided_at_utc=EVALUATED_AT + timedelta(minutes=5),
             snoozed_until_utc=snoozed_until,
         ),
+        accepted_at_utc=EVALUATED_AT + timedelta(minutes=5),
     )
     repository.record_review_action(
         review,

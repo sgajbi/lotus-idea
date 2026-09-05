@@ -23,6 +23,7 @@ from app.runtime.settings import (
     RuntimeStoragePosture,
     load_runtime_settings,
 )
+from app.runtime.trusted_clock_state import get_trusted_clock
 from app.runtime.source_ingestion_state import (
     AdvisePolicyEvaluationSourceRuntime,
     AdvisePolicyEvaluationSourceRuntimeBlocker,
@@ -130,6 +131,7 @@ __all__ = [
     "close_lifecycle_authority_dependencies",
     "get_lotus_ai_attestation_dependencies",
     "get_lotus_ai_workflow_runtime",
+    "get_trusted_clock",
     "get_lifecycle_authority_dependencies",
     "ArchiveLifecycleTrustUnavailableError",
     "get_archive_lifecycle_dependencies",

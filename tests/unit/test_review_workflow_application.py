@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 from typing import Any
 
 import pytest
@@ -11,9 +12,9 @@ from tests.support.candidate_identity import initial_candidate_identity
 from tests.support.score_fixture import score_fixture
 
 from app.application.review_workflow import (
-    ApplyReviewActionToRepositoryCommand,
+    ApplyReviewActionToRepositoryCommand as _ApplyReviewActionToRepositoryCommand,
     FeedbackWorkflowResult,
-    RecordFeedbackToRepositoryCommand,
+    RecordFeedbackToRepositoryCommand as _RecordFeedbackToRepositoryCommand,
     ReviewWorkflowResult,
     apply_review_action_to_repository,
     record_feedback_to_repository,
@@ -47,14 +48,25 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     SuppressionReason,
-    apply_review_action,
-    record_feedback,
+    apply_review_action as _apply_review_action,
+    record_feedback as _record_feedback,
 )
 
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 DECIDED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+
+ApplyReviewActionToRepositoryCommand = partial(
+    _ApplyReviewActionToRepositoryCommand,
+    accepted_at_utc=DECIDED_AT,
+)
+RecordFeedbackToRepositoryCommand = partial(
+    _RecordFeedbackToRepositoryCommand,
+    accepted_at_utc=DECIDED_AT,
+)
+apply_review_action = partial(_apply_review_action, accepted_at_utc=DECIDED_AT)
+record_feedback = partial(_record_feedback, accepted_at_utc=DECIDED_AT)
 
 
 def source_ref() -> SourceRef:
@@ -284,6 +296,26 @@ def test_apply_review_action_to_repository_replays_before_reapplying_domain_tran
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.review_decisions) == 1
+
+
+def test_review_replay_retains_original_server_acceptance_time() -> None:
+    repository = repository_with_candidate()
+    command = ApplyReviewActionToRepositoryCommand(
+        candidate_id="idea-review-001",
+        review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        idempotency_key="review-action:accepted-time-replay:001",
+        accepted_at_utc=DECIDED_AT,
+    )
+    first = apply_review_action_to_repository(command, repository=repository)
+
+    replayed = apply_review_action_to_repository(
+        replace(command, accepted_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC)),
+        repository=repository,
+    )
+
+    assert first.require_review_decision().accepted_at_utc == DECIDED_AT
+    assert replayed.require_review_decision().accepted_at_utc == DECIDED_AT
+    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
 
 
 def test_stale_review_result_cannot_overwrite_a_committed_terminal_decision() -> None:

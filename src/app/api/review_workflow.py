@@ -40,6 +40,7 @@ from app.api.review_workflow_operations import (
     problem_for_review_persistence as _problem_for_review_persistence,
 )
 from app.api.route_metadata import RouteMetadata
+from app.api.runtime_dependencies import get_trusted_clock
 from app.application.review_workflow import (
     FeedbackWorkflowResult,
     ReviewWorkflowResult,
@@ -205,6 +206,7 @@ def _apply_review_action_request(
             caller=context.caller,
             role=context.role,
             idempotency_key=idempotency_key,
+            accepted_at_utc=get_trusted_clock().now_utc(),
             event_lineage=event_lineage_from_request(http_request, causation_id=causation_id),
         ),
         repository=context.repository,
@@ -409,6 +411,7 @@ def _apply_feedback_request(
             caller=context.caller,
             role=context.role,
             idempotency_key=idempotency_key,
+            accepted_at_utc=get_trusted_clock().now_utc(),
             event_lineage=event_lineage_from_request(http_request, causation_id=causation_id),
         ),
         repository=context.repository,

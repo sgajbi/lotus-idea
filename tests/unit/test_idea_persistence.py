@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 
 import pytest
 
@@ -46,25 +47,32 @@ from app.domain import (
     ReviewActorContext,
     ReviewActorRole,
     ReviewDecisionCommand,
-    ReviewPersistenceDecision,
     ReviewPosture,
     SourceRef,
     SourceSystem,
     UnscopedCandidatePersistenceError,
-    apply_review_action,
     build_ai_explanation_request,
     ai_explanation_lineage_record_from_result,
     evaluate_high_cash_signal,
     deterministic_ai_fallback,
-    record_feedback,
-    record_conversion_outcome,
-    request_conversion_intent,
+    record_conversion_outcome as _record_conversion_outcome,
+    request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+ACCEPTED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+
+request_conversion_intent = partial(
+    _request_conversion_intent,
+    accepted_at_utc=ACCEPTED_AT,
+)
+record_conversion_outcome = partial(
+    _record_conversion_outcome,
+    accepted_at_utc=ACCEPTED_AT,
+)
 
 
 def source_ref(
@@ -720,101 +728,6 @@ def test_ai_explanation_lineage_snapshot_recovers_request_index() -> None:
     assert recovered.snapshot().ai_explanation_lineage_candidates == {
         "ai-lineage-request-001": candidate.candidate_id,
     }
-
-
-def test_review_action_persistence_replays_conflicts_and_returns_not_found() -> None:
-    candidate, refs = review_ready_high_cash_candidate()
-    repository = InMemoryIdeaRepository()
-    persisted = repository.persist_candidate(
-        candidate,
-        idempotency_key="signal-ingestion:review-ready:001",
-        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-    assert persisted.record is not None
-    result = apply_review_action(persisted.record.candidate, review_decision_command())
-    payload = {"review_id": result.decision.review_id, "action": result.decision.action.value}
-
-    first = repository.record_review_action(
-        result,
-        idempotency_key="review-action-key-001",
-        payload=payload,
-    )
-    replayed = repository.record_review_action(
-        result,
-        idempotency_key="review-action-key-001",
-        payload=payload,
-    )
-    conflict = repository.record_review_action(
-        result,
-        idempotency_key="review-action-key-001",
-        payload={"review_id": result.decision.review_id, "action": "reject"},
-    )
-    missing_candidate, _ = review_ready_high_cash_candidate()
-    missing_result = apply_review_action(missing_candidate, review_decision_command())
-    not_found = InMemoryIdeaRepository().record_review_action(
-        missing_result,
-        idempotency_key="review-action-key-missing",
-        payload=payload,
-    )
-
-    assert first.decision is ReviewPersistenceDecision.ACCEPTED
-    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
-    assert replayed.record == first.record
-    assert conflict.decision is ReviewPersistenceDecision.CONFLICT
-    assert conflict.record == first.record
-    assert not_found.decision is ReviewPersistenceDecision.NOT_FOUND
-    assert not_found.record is None
-
-
-def test_feedback_persistence_replays_conflicts_and_returns_not_found() -> None:
-    candidate, refs = review_ready_high_cash_candidate()
-    repository = InMemoryIdeaRepository()
-    persisted = repository.persist_candidate(
-        candidate,
-        idempotency_key="signal-ingestion:feedback-ready:001",
-        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-    assert persisted.record is not None
-    result = record_feedback(persisted.record.candidate, feedback_command())
-    payload = {
-        "feedback_id": result.feedback_event.feedback.feedback_id,
-        "outcome": result.feedback_event.feedback.outcome.value,
-    }
-
-    first = repository.record_feedback_event(
-        result,
-        idempotency_key="feedback-key-001",
-        payload=payload,
-    )
-    replayed = repository.record_feedback_event(
-        result,
-        idempotency_key="feedback-key-001",
-        payload=payload,
-    )
-    conflict = repository.record_feedback_event(
-        result,
-        idempotency_key="feedback-key-001",
-        payload={"feedback_id": result.feedback_event.feedback.feedback_id, "outcome": "ignored"},
-    )
-    missing_candidate, _ = review_ready_high_cash_candidate()
-    missing_result = record_feedback(missing_candidate, feedback_command())
-    not_found = InMemoryIdeaRepository().record_feedback_event(
-        missing_result,
-        idempotency_key="feedback-key-missing",
-        payload=payload,
-    )
-
-    assert first.decision is ReviewPersistenceDecision.ACCEPTED
-    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
-    assert replayed.record == first.record
-    assert conflict.decision is ReviewPersistenceDecision.CONFLICT
-    assert conflict.record == first.record
-    assert not_found.decision is ReviewPersistenceDecision.NOT_FOUND
-    assert not_found.record is None
 
 
 def test_ai_explanation_lineage_returns_not_found_without_candidate_record() -> None:

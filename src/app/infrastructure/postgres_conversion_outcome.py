@@ -41,8 +41,9 @@ def insert_postgres_conversion_outcome(
         INSERT INTO idea_conversion_outcome (
             conversion_outcome_id, conversion_intent_id, source_system,
             status, source_event_version, supersedes_conversion_outcome_id,
-            correction_reason, actor_subject, outcome_json, recorded_at_utc
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            correction_reason, actor_subject, outcome_json, recorded_at_utc,
+            accepted_at_utc, acceptance_time_source
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT DO NOTHING
         RETURNING conversion_outcome_id
         """,
@@ -57,6 +58,8 @@ def insert_postgres_conversion_outcome(
             outcome.actor_subject,
             Jsonb(conversion_outcome_to_json(outcome)),
             outcome.outcome.recorded_at_utc,
+            outcome.accepted_at_utc,
+            outcome.acceptance_time_source.value,
         ),
     )
     if not cursor.fetchall():
