@@ -23,6 +23,9 @@ from app.api.advise_realization_reconciliation import (
 from app.api.manage_realization_reconciliation import (
     register_manage_realization_reconciliation_routes,
 )
+from app.api.report_materialization_reconciliation import (
+    register_report_materialization_reconciliation_routes,
+)
 from app.api.downstream_submission_reconciliation import (
     register_downstream_submission_reconciliation_routes,
 )
@@ -187,6 +190,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_downstream_realization_routes(application)
     register_advise_realization_reconciliation_routes(application)
     register_manage_realization_reconciliation_routes(application)
+    register_report_materialization_reconciliation_routes(application)
     register_downstream_submission_reconciliation_routes(application)
     register_downstream_realization_readiness_routes(application)
     register_data_mesh_readiness_routes(application)

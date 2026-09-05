@@ -29,6 +29,7 @@ from app.infrastructure.downstream_client import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationReadConflict,
     DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
 )
@@ -177,6 +178,7 @@ class DownstreamRealizationAdapterConfig:
     source_authority: SourceSystem
     history_path_template: str | None = None
     recovery_history_path: str | None = None
+    report_recovery_path: str | None = None
     timeout_seconds: float = 2.0
     max_connections: int = 20
     max_keepalive_connections: int = 10
@@ -216,6 +218,15 @@ class DownstreamRealizationAdapterConfig:
             if "?" in self.recovery_history_path or "#" in self.recovery_history_path:
                 raise DownstreamRealizationConfigurationError(
                     "recovery_history_path must not include query string or fragment."
+                )
+        if self.report_recovery_path is not None:
+            if not self.report_recovery_path.startswith("/"):
+                raise DownstreamRealizationConfigurationError(
+                    "report_recovery_path must start with '/'."
+                )
+            if "?" in self.report_recovery_path or "#" in self.report_recovery_path:
+                raise DownstreamRealizationConfigurationError(
+                    "report_recovery_path must not include query string or fragment."
                 )
         try:
             DownstreamClientConfig(
@@ -487,6 +498,56 @@ class HttpReportEvidencePackMaterializationClient:
             ),
         )
 
+    def recover_report_evidence_pack_receipt(
+        self,
+        evidence_pack: GovernedReportEvidencePack,
+        *,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str,
+    ) -> DownstreamOwnerReceipt:
+        recovery_path = self._config.report_recovery_path
+        if recovery_path is None:
+            raise DownstreamRealizationConfigurationError(
+                "report realization report_recovery_path is required."
+            )
+        _require_report_service_scope(
+            access_scope=access_scope,
+            service_context=self._report_service_context,
+        )
+        headers = self._report_service_context.request_headers()
+        headers["X-Capabilities"] = "report.idea-materialization.recover"
+        try:
+            payload = self._client.get_json(
+                recovery_path,
+                query_params={
+                    "idempotencyKey": idempotency_key,
+                    "reportEvidencePackId": evidence_pack.report_evidence_pack_id,
+                    "conversionIntentId": evidence_pack.conversion_intent_id,
+                    "candidateId": evidence_pack.candidate_id,
+                    "evidencePacketId": evidence_pack.evidence_packet_id,
+                    "evidenceContentFingerprint": evidence_pack.evidence_content_hash,
+                    "portfolioId": access_scope.portfolio_id,
+                },
+                correlation_id=correlation_id,
+                trace_id=trace_id,
+                additional_headers=headers,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code == 409:
+                raise DownstreamRealizationReadConflict(
+                    "authoritative Report materialization identity conflicts"
+                ) from exc
+            raise DownstreamRealizationReadError(
+                "authoritative Report materialization receipt is unavailable"
+            ) from exc
+        return _report_owner_receipt_from_payload(
+            payload,
+            evidence_pack=evidence_pack,
+            idempotency_key=idempotency_key,
+        )
+
     def close(self) -> None:
         self._client.close()
 
@@ -627,6 +688,21 @@ def _report_outcome_from_receipt(
     evidence_pack: GovernedReportEvidencePack,
     idempotency_key: str | None,
 ) -> DownstreamRealizationOutcome:
+    return DownstreamRealizationOutcome.accepted_by_downstream(
+        _report_owner_receipt_from_payload(
+            payload,
+            evidence_pack=evidence_pack,
+            idempotency_key=idempotency_key,
+        )
+    )
+
+
+def _report_owner_receipt_from_payload(
+    payload: Mapping[str, Any],
+    *,
+    evidence_pack: GovernedReportEvidencePack,
+    idempotency_key: str | None,
+) -> DownstreamOwnerReceipt:
     if idempotency_key is None:
         raise ValueError("Report receipt validation requires an idempotency key")
     if _required_response_text(payload, "idempotency_key") != idempotency_key:
@@ -696,16 +772,14 @@ def _report_outcome_from_receipt(
         supportability_status="not_certified",
         remaining_blockers=tuple(blockers),
     )
-    return DownstreamRealizationOutcome.accepted_by_downstream(
-        DownstreamOwnerReceipt(
-            owner_authority=SourceSystem.LOTUS_REPORT,
-            owner_request_id=_required_response_text(payload, "report_request_id"),
-            owner_realization_id=report_job_id,
-            owner_work_id=None,
-            source_event_version=None,
-            source_evidence_fingerprint=evidence_pack.evidence_content_hash,
-            report_materialization=evidence,
-        )
+    return DownstreamOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_REPORT,
+        owner_request_id=_required_response_text(payload, "report_request_id"),
+        owner_realization_id=report_job_id,
+        owner_work_id=None,
+        source_event_version=None,
+        source_evidence_fingerprint=evidence_pack.evidence_content_hash,
+        report_materialization=evidence,
     )
 
 
@@ -964,10 +1038,10 @@ def _report_evidence_pack_materialization_envelope(
     access_scope: ReviewAccessScope,
     service_context: ReportRealizationServiceContext,
 ) -> dict[str, Any]:
-    if access_scope.tenant_id != service_context.tenant_id:
-        raise DownstreamRealizationConfigurationError(
-            "Report materialization candidate tenant does not match the configured service context."
-        )
+    _require_report_service_scope(
+        access_scope=access_scope,
+        service_context=service_context,
+    )
     return {
         "idea_evidence_pack": _report_evidence_pack_envelope(evidence_pack),
         "portfolio_id": access_scope.portfolio_id,
@@ -978,6 +1052,17 @@ def _report_evidence_pack_materialization_envelope(
         "producer": "lotus-idea",
         "supportability_status": "not_certified",
     }
+
+
+def _require_report_service_scope(
+    *,
+    access_scope: ReviewAccessScope,
+    service_context: ReportRealizationServiceContext,
+) -> None:
+    if access_scope.tenant_id != service_context.tenant_id:
+        raise DownstreamRealizationConfigurationError(
+            "Report materialization candidate tenant does not match the configured service context."
+        )
 
 
 def _report_materialization_as_of_date(evidence_pack: GovernedReportEvidencePack) -> str:

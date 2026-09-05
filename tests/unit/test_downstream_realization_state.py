@@ -7,6 +7,7 @@ import pytest
 from app.infrastructure.downstream_realization import (
     HttpAdviseProposalRealizationClient,
     HttpManageActionRealizationClient,
+    HttpReportEvidencePackMaterializationClient,
 )
 from app.runtime.downstream_realization_state import (
     ADVISE_ACTOR_ID_ENV,
@@ -21,6 +22,7 @@ from app.runtime.downstream_realization_state import (
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
     DEFAULT_ADVISE_RECOVERY_HISTORY_PATH,
+    DEFAULT_REPORT_RECOVERY_PATH,
     MANAGE_BASE_URL_ENV,
     MANAGE_ACTOR_ID_ENV,
     MANAGE_CAPABILITIES_ENV,
@@ -35,6 +37,7 @@ from app.runtime.downstream_realization_state import (
     REPORT_CALLER_APPLICATION_ENV,
     REPORT_OUTPUT_FORMATS_ENV,
     REPORT_REGION_ENV,
+    REPORT_RECOVERY_PATH_ENV,
     REPORT_SUBMIT_PATH_ENV,
     REPORT_TENANT_ID_ENV,
     RETRY_INITIAL_BACKOFF_SECONDS_ENV,
@@ -81,6 +84,21 @@ def test_report_realization_client_is_built_from_environment(
     report_client = get_report_evidence_pack_realization_client()
 
     assert get_report_evidence_pack_realization_client() is report_client
+    configured_client = cast(HttpReportEvidencePackMaterializationClient, report_client)
+    assert configured_client._config.report_recovery_path == DEFAULT_REPORT_RECOVERY_PATH
+
+
+def test_invalid_report_recovery_path_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.setenv(REPORT_RECOVERY_PATH_ENV, "reports/materializations")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="report_recovery_path must start",
+    ):
+        get_report_evidence_pack_realization_client()
 
 
 @pytest.mark.parametrize(

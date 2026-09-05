@@ -177,6 +177,17 @@ PROTECTED_OPERATION_REQUIREMENTS = (
     ),
     CallerContextOpenApiRequirement(
         method="POST",
+        path=(
+            "/api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation"
+        ),
+        required_capabilities=("idea.downstream-realization.reconcile",),
+        entitlement_scope=(
+            "Complete tenant, book, portfolio, and client entitlement scope must match the "
+            "source candidate before the authoritative Report receipt is read."
+        ),
+    ),
+    CallerContextOpenApiRequirement(
+        method="POST",
         path="/api/v1/conversion-intents/{conversionIntentId}/outcomes",
         required_capabilities=("idea.conversion.outcome.record",),
     ),

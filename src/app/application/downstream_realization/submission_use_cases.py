@@ -30,6 +30,9 @@ from app.ports.downstream_realization import (
     ReportEvidencePackMaterializationClient,
 )
 from app.ports.idea_repository import DownstreamSubmissionRepository
+from app.application.downstream_realization.report_receipt_validation import (
+    validated_report_submission_receipt,
+)
 
 
 _LEASE_DURATION = timedelta(minutes=5)
@@ -375,26 +378,9 @@ def _validate_report_owner_outcome(
     if outcome.posture is not DownstreamRealizationOutcomePosture.ACCEPTED:
         return outcome
     receipt = outcome.owner_receipt
-    if receipt is None or receipt.owner_authority is not SourceSystem.LOTUS_REPORT:
+    if receipt is None:
         raise ValueError("accepted Report submission requires an authoritative owner receipt")
-    evidence = receipt.report_materialization
-    assert evidence is not None
-    expected_identity = (
-        evidence_pack.report_evidence_pack_id,
-        evidence_pack.conversion_intent_id,
-        evidence_pack.candidate_id,
-        evidence_pack.evidence_packet_id,
-        evidence_pack.evidence_content_hash,
-    )
-    actual_identity = (
-        evidence.report_evidence_pack_id,
-        evidence.conversion_intent_id,
-        evidence.candidate_id,
-        evidence.evidence_packet_id,
-        receipt.source_evidence_fingerprint,
-    )
-    if actual_identity != expected_identity:
-        raise ValueError("Report owner receipt identity does not match the evidence pack")
+    validated_report_submission_receipt(receipt, evidence_pack)
     return outcome
 
 
