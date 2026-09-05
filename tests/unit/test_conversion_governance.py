@@ -372,6 +372,15 @@ def test_conversion_outcome_preserves_owner_time_and_uses_idea_acceptance_time()
 
 
 def test_conversion_outcome_validates_optional_reference_and_time() -> None:
+    with pytest.raises(ValueError, match="source_event_version must be positive"):
+        ConversionOutcomeCommand(
+            conversion_outcome_id="outcome-invalid-version",
+            status=ConversionOutcomeStatus.REQUESTED,
+            source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=0,
+            recorded_at_utc=OUTCOME_AT,
+        )
+
     with pytest.raises(ValueError, match="downstream_reference is required"):
         ConversionOutcomeCommand(
             conversion_outcome_id="outcome-invalid",
@@ -389,6 +398,25 @@ def test_conversion_outcome_validates_optional_reference_and_time() -> None:
             source_system=SourceSystem.LOTUS_REPORT,
             source_event_version=1,
             recorded_at_utc=datetime(2026, 6, 21, 10, 20),
+        )
+
+
+def test_accepted_conversion_outcome_requires_owner_business_reference() -> None:
+    intent = request_conversion_intent(candidate(), intent_command()).conversion_intent
+
+    with pytest.raises(
+        InvalidConversionOutcome,
+        match="accepted or completed outcome requires downstream reference",
+    ):
+        record_conversion_outcome(
+            intent,
+            ConversionOutcomeCommand(
+                conversion_outcome_id="outcome-report-unreferenced",
+                status=ConversionOutcomeStatus.ACCEPTED,
+                source_system=SourceSystem.LOTUS_REPORT,
+                source_event_version=1,
+                recorded_at_utc=OUTCOME_AT,
+            ),
         )
 
 
@@ -417,6 +445,19 @@ def test_governed_conversion_intent_requires_source_provenance() -> None:
             actor_subject=intent.actor_subject,
             idempotency_key=intent.idempotency_key,
             reason_codes=intent.reason_codes,
+            target_source_authority=intent.target_source_authority,
+            accepted_at_utc=intent.accepted_at_utc,
+        )
+
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        GovernedConversionIntent(
+            intent=intent.intent,
+            evidence_packet_id=intent.evidence_packet_id,
+            evidence_content_hash=intent.evidence_content_hash,
+            source_signal_ids=intent.source_signal_ids,
+            actor_subject=intent.actor_subject,
+            idempotency_key=intent.idempotency_key,
+            reason_codes=(),
             target_source_authority=intent.target_source_authority,
             accepted_at_utc=intent.accepted_at_utc,
         )
