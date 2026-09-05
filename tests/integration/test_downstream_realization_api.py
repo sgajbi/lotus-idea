@@ -28,6 +28,7 @@ from tests.support.report_materialization import (
     report_owner_receipt_response,
 )
 from tests.support import review_authority_api
+from tests.support.source_revision import lotus_core_source_ref
 
 
 def test_downstream_submission_operation_log_includes_request_correlation_id(
@@ -1048,22 +1049,7 @@ def record_report_evidence_pack(
 
 
 def source_ref(product_id: str, suffix: str) -> dict[str, Any]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-        "revisionClaims": {
-            "sourceRevision": f"revision:{product_id}{suffix}",
-            "sourceCutId": f"core-close-2026-06-21{suffix}",
-            "reconciliationPosture": "complete",
-        },
-    }
+    return lotus_core_source_ref(product_id, suffix=suffix)
 
 
 def high_cash_payload(

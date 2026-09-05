@@ -20,6 +20,7 @@ from app.infrastructure.migrations import (
     execute_migration_plan,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.support.source_revision import lotus_core_source_ref
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -198,21 +199,5 @@ def run_concurrent_repository_mutations(
         )
 
 
-def _source_ref(product_id: str) -> dict[str, str]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
-        "revisionClaims": {
-            "sourceRevision": f"revision:{product_id}",
-            "sourceBatchId": "core-close-2026-06-21",
-            "sourceCutId": "core-close-2026-06-21",
-            "reconciliationPosture": "complete",
-        },
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-    }
+def _source_ref(product_id: str) -> dict[str, Any]:
+    return lotus_core_source_ref(product_id)
