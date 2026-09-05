@@ -53,12 +53,23 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
         "generatedAtUtc": candidate.evidence_packet.source_refs[0].generated_at_utc,
         "dataQualityStatus": "complete",
         "freshness": "current",
-        "revisionClaims": None,
+        "revisionClaims": {
+            "snapshotId": "snapshot:lotus-core:PortfolioStateSnapshot:v1",
+            "sourceRevision": None,
+            "restatementVersion": None,
+            "sourceBatchId": None,
+            "sourceCutId": "core-cut-postgres-001",
+            "calculationRunId": None,
+            "methodologyVersion": None,
+            "policyVersion": None,
+            "causalInputRevisions": (),
+            "reconciliationPosture": "complete",
+        },
     }
     assert response["evidence"]["sourceRevisionVectorDigest"] == (
         candidate.evidence_packet.source_revision_vector_digest
     )
-    assert response["evidence"]["sourceCutPosture"] == "unknown"
+    assert response["evidence"]["sourceCutPosture"] == "coherent"
     assert response["evidence"]["sourceCutTolerance"] is None
     assert "route" not in response["evidence"]["sourceRefs"][0]
     assert "contentHash" not in response["evidence"]["sourceRefs"][0]
