@@ -10,7 +10,9 @@ generation flow without AI dependency.
 Candidate evidence hashing and economic identity include the canonical source
 revision vector. A restatement, calculation run, methodology change, or causal
 input revision therefore creates different evidence even when the as-of date is
-unchanged. Runtime receipts prove the same vector and cut posture.
+unchanged. Classification also checks explicit causal revision and restatement
+claims against included owner sources before cut-ID or tolerance coherence.
+Runtime receipts prove the same vector and cut posture.
 
 ## Required Work
 

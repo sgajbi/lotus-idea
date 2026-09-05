@@ -24,9 +24,14 @@ posture. Idea preserves upstream authority; it does not create it.
 | --- | --- | --- |
 | `coherent` | One authoritative source cut | Allowed |
 | `coherent_with_declared_tolerance` | Named policy admits bounded skew | Allowed |
-| `mixed` | Incompatible cuts or failed reconciliation | Blocked |
-| `partial` | Incomplete owner claims | Blocked |
+| `mixed` | Incompatible cuts, causal revisions or restatements, or failed reconciliation | Blocked |
+| `partial` | Incomplete or uncomparable owner claims | Blocked |
 | `unknown` | Authority cannot be established | Blocked |
+
+Idea resolves each causal claim against the corresponding included owner
+product before accepting a shared cut ID or time tolerance. Explicit revision
+or restatement mismatch is `mixed`; missing or ambiguous comparison is
+`partial`. Cut identity and tolerance never override a known contradiction.
 
 Non-authoritative candidates may remain visible for diagnosis. Their
 presentation receipt records the posture and never upgrades it.
