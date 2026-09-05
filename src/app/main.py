@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.ai_governance import register_ai_governance_routes
+from app.api.ai_explanation_generation import register_ai_explanation_generation_routes
 from app.api.allocation_drift_signals import register_allocation_drift_signal_routes
 from app.api.bond_maturity_signals import register_bond_maturity_signal_routes
 from app.api.candidate_detail import register_candidate_detail_routes
@@ -178,6 +179,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_candidate_detail_routes(application)
     register_candidate_evidence_replay_routes(application)
     register_ai_governance_routes(application)
+    register_ai_explanation_generation_routes(application)
     register_review_queue_routes(application)
     register_review_workflow_routes(application)
     register_conversion_governance_routes(application)

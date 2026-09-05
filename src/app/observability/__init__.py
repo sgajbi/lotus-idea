@@ -67,8 +67,20 @@ from app.observability.service_slo_metrics import (
     observe_postgres_operation,
     observe_workflow_run,
 )
+from app.observability.ai_explanation_generation import (
+    AI_EXPLANATION_GENERATION_METRIC_LABELS,
+    AI_EXPLANATION_GENERATION_OUTCOMES,
+    AI_EXPLANATION_GENERATION_REQUESTS_METRIC,
+    AIExplanationGenerationMetrics,
+    observe_ai_explanation_generation_outcome,
+    observe_ai_explanation_generation_requested,
+)
 
 __all__ = [
+    "AI_EXPLANATION_GENERATION_METRIC_LABELS",
+    "AI_EXPLANATION_GENERATION_OUTCOMES",
+    "AI_EXPLANATION_GENERATION_REQUESTS_METRIC",
+    "AIExplanationGenerationMetrics",
     "DEPENDENCIES",
     "DEPENDENCY_DURATION_BUCKETS_SECONDS",
     "DEPENDENCY_DURATION_METRIC",
@@ -128,4 +140,6 @@ __all__ = [
     "observe_http_request",
     "observe_postgres_operation",
     "observe_workflow_run",
+    "observe_ai_explanation_generation_outcome",
+    "observe_ai_explanation_generation_requested",
 ]

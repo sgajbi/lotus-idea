@@ -3,7 +3,10 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from app.api.ai_governance_models import AIExplanationEvaluationResponse
+from app.api.ai_governance_models import (
+    AIExplanationEvaluationResponse,
+    AIExplanationGenerationResponse,
+)
 
 
 AI_EXPLANATION_SUCCESS_EXAMPLE_SUMMARIES = {
@@ -15,6 +18,12 @@ AI_EXPLANATION_SUCCESS_EXAMPLE_SUMMARIES = {
     "blockedUnsafeActionContent": "Workflow output blocked for unsafe action content",
 }
 AI_EXPLANATION_OPERATION_PATH = "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"
+AI_EXPLANATION_GENERATION_OPERATION_PATH = "/api/v1/idea-candidates/{candidateId}/ai-explanations"
+AI_EXPLANATION_GENERATION_SUCCESS_EXAMPLE_SUMMARIES = {
+    "explanationServed": "Generated output accepted for adviser review",
+    "runtimeUnavailable": "Lotus AI unavailable; deterministic fallback retained",
+    "attestationRequired": "Production-like profile requires verified owner attestation",
+}
 
 
 def build_ai_explanation_evaluation_examples() -> dict[str, dict[str, Any]]:
@@ -112,12 +121,78 @@ def build_ai_explanation_openapi_examples() -> dict[str, dict[str, Any]]:
     }
 
 
+def build_ai_explanation_generation_examples() -> dict[str, dict[str, Any]]:
+    evaluation_examples = build_ai_explanation_evaluation_examples()
+    served = deepcopy(evaluation_examples["unattestedLocalTestFixture"])
+    served["lotusAiRuntimeExecuted"] = True
+
+    runtime_unavailable = deepcopy(evaluation_examples["deterministicFallback"])
+    runtime_unavailable["requestId"] = "ai-explanation-generation-unavailable-001"
+    runtime_unavailable["workflowPack"]["purpose"] = "advisor_rationale_draft"
+
+    attestation_required = deepcopy(runtime_unavailable)
+    attestation_required.update(
+        {
+            "requestId": "ai-explanation-generation-attestation-required-001",
+            "fallbackReason": "workflow_not_approved",
+        }
+    )
+
+    return {
+        "explanationServed": _validated_generation_response(
+            {
+                "status": "EXPLANATION_SERVED",
+                "disposition": "executed",
+                "lotusAiRunId": "wpr_idea_explanation_001",
+                "lotusAiRuntimeExecutionConfirmed": True,
+                "evaluationVerdict": "accepted",
+                "explanation": served,
+            }
+        ),
+        "runtimeUnavailable": _validated_generation_response(
+            {
+                "status": "EXPLANATION_UNAVAILABLE",
+                "disposition": "runtime_unavailable",
+                "lotusAiRunId": None,
+                "lotusAiRuntimeExecutionConfirmed": False,
+                "evaluationVerdict": "accepted",
+                "explanation": runtime_unavailable,
+            }
+        ),
+        "attestationRequired": _validated_generation_response(
+            {
+                "status": "EXPLANATION_UNAVAILABLE",
+                "disposition": "attested_execution_required",
+                "lotusAiRunId": None,
+                "lotusAiRuntimeExecutionConfirmed": False,
+                "evaluationVerdict": "accepted",
+                "explanation": attestation_required,
+            }
+        ),
+    }
+
+
+def build_ai_explanation_generation_openapi_examples() -> dict[str, dict[str, Any]]:
+    examples = build_ai_explanation_generation_examples()
+    return {
+        name: {
+            "summary": AI_EXPLANATION_GENERATION_SUCCESS_EXAMPLE_SUMMARIES[name],
+            "value": value,
+        }
+        for name, value in examples.items()
+    }
+
+
 def apply_ai_explanation_openapi_examples(
     openapi_schema: dict[str, Any],
 ) -> dict[str, Any]:
     operation = openapi_schema["paths"][AI_EXPLANATION_OPERATION_PATH]["post"]
     operation["responses"]["200"]["content"]["application/json"]["examples"] = (
         build_ai_explanation_openapi_examples()
+    )
+    generation_operation = openapi_schema["paths"][AI_EXPLANATION_GENERATION_OPERATION_PATH]["post"]
+    generation_operation["responses"]["200"]["content"]["application/json"]["examples"] = (
+        build_ai_explanation_generation_openapi_examples()
     )
     return openapi_schema
 
@@ -151,6 +226,13 @@ def _blocked_example(
 
 def _validated_response(payload: dict[str, Any]) -> dict[str, Any]:
     return AIExplanationEvaluationResponse.model_validate(payload).model_dump(
+        mode="json",
+        by_alias=True,
+    )
+
+
+def _validated_generation_response(payload: dict[str, Any]) -> dict[str, Any]:
+    return AIExplanationGenerationResponse.model_validate(payload).model_dump(
         mode="json",
         by_alias=True,
     )
@@ -240,8 +322,12 @@ def _local_fixture_payload() -> dict[str, Any]:
 
 __all__ = [
     "AI_EXPLANATION_OPERATION_PATH",
+    "AI_EXPLANATION_GENERATION_OPERATION_PATH",
+    "AI_EXPLANATION_GENERATION_SUCCESS_EXAMPLE_SUMMARIES",
     "AI_EXPLANATION_SUCCESS_EXAMPLE_SUMMARIES",
     "apply_ai_explanation_openapi_examples",
     "build_ai_explanation_evaluation_examples",
+    "build_ai_explanation_generation_examples",
+    "build_ai_explanation_generation_openapi_examples",
     "build_ai_explanation_openapi_examples",
 ]

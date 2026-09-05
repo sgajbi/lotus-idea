@@ -6,8 +6,8 @@ import json
 import httpx
 import pytest
 
-from app.infrastructure.lotus_ai.workflow_runtime import (
-    HttpLotusAIWorkflowRuntime,
+from app.infrastructure.lotus_ai.workflow_runtime import HttpLotusAIWorkflowRuntime
+from app.ports.lotus_ai_runtime import (
     InvalidLotusAIWorkflowRuntimeResponse,
     LotusAIWorkflowRuntimeUnavailable,
 )
@@ -123,6 +123,23 @@ async def test_rejects_unsuccessful_or_malformed_runtime_response(
 
     with pytest.raises(InvalidLotusAIWorkflowRuntimeResponse):
         await runtime.execute_workflow_pack({}, caller_app="lotus-idea")
+    await runtime.close()
+
+
+@pytest.mark.asyncio
+async def test_unsuccessful_runtime_response_retains_only_bounded_status_code() -> None:
+    runtime = HttpLotusAIWorkflowRuntime(
+        base_url="http://lotus-ai.internal:8140",
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(409, json={"detail": "secret owner conflict detail"})
+        ),
+    )
+
+    with pytest.raises(InvalidLotusAIWorkflowRuntimeResponse) as raised:
+        await runtime.execute_workflow_pack({}, caller_app="lotus-idea")
+
+    assert raised.value.status_code == 409
+    assert "secret owner conflict detail" not in str(raised.value)
     await runtime.close()
 
 

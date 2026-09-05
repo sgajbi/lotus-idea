@@ -3,14 +3,21 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from app.api.ai_governance_models import AIExplanationEvaluationResponse
-from app.api.examples.ai_explanation import build_ai_explanation_evaluation_examples
+from app.api.ai_governance_models import (
+    AIExplanationEvaluationResponse,
+    AIExplanationGenerationResponse,
+)
+from app.api.examples.ai_explanation import (
+    build_ai_explanation_evaluation_examples,
+    build_ai_explanation_generation_examples,
+)
 from app.domain import AIExplanationPosture
 from app.main import app
 
 
 LEDGER_PATH = Path("docs/operations/endpoint-certification-ledger.json")
 OPERATION_PATH = "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"
+GENERATION_OPERATION_PATH = "/api/v1/idea-candidates/{candidateId}/ai-explanations"
 
 
 def test_ai_explanation_success_examples_match_ledger_and_openapi() -> None:
@@ -53,3 +60,29 @@ def test_ai_explanation_posture_schema_exposes_only_executable_states() -> None:
         "blocked_unsupported_claim",
         "blocked_forbidden_action",
     }
+
+
+def test_ai_explanation_generation_examples_publish_served_and_unavailable_truth() -> None:
+    expected = build_ai_explanation_generation_examples()
+    operation = app.openapi()["paths"][GENERATION_OPERATION_PATH]["post"]
+    openapi_examples = operation["responses"]["200"]["content"]["application/json"]["examples"]
+    published = {name: metadata["value"] for name, metadata in openapi_examples.items()}
+
+    assert published == expected
+    assert all(AIExplanationGenerationResponse.model_validate(value) for value in expected.values())
+    assert expected["explanationServed"]["status"] == "EXPLANATION_SERVED"
+    assert expected["explanationServed"]["lotusAiRunId"] == "wpr_idea_explanation_001"
+    assert expected["runtimeUnavailable"]["status"] == "EXPLANATION_UNAVAILABLE"
+    assert expected["runtimeUnavailable"]["explanation"]["fallbackUsed"] is True
+    assert expected["attestationRequired"]["disposition"] == "attested_execution_required"
+
+    ledger = json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
+    endpoint = next(
+        item
+        for item in ledger["endpoints"]
+        if item["method"] == "POST" and item["path"] == GENERATION_OPERATION_PATH
+    )
+    ledger_truth = " ".join(str(value) for value in endpoint["response_examples"])
+    assert "EXPLANATION_SERVED" in ledger_truth
+    assert "EXPLANATION_UNAVAILABLE" in ledger_truth
+    assert "lotusAiRunId" in ledger_truth

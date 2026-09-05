@@ -111,6 +111,12 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         required_capabilities=("idea.ai-explanation.evaluate",),
         required_roles=("advisor",),
     ),
+    CallerContextOpenApiRequirement(
+        method="POST",
+        path="/api/v1/idea-candidates/{candidateId}/ai-explanations",
+        required_capabilities=("idea.ai-explanation.generate",),
+        required_roles=("advisor",),
+    ),
     _operator_requirement(
         "GET", "/api/v1/ai-explanations/readiness", "idea.ai-explanation.readiness.read"
     ),
