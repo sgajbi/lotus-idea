@@ -9,7 +9,7 @@
   "postgresMajorVersion": 18,
   "migrationCount": 25,
   "currentMigrationVersion": "025",
-  "migrationBundleSha256": "sha256:d529fa0c988397463a5b27f39f58459078ce35061eee955b1fcb914da433b9e5",
+  "migrationBundleSha256": "sha256:db7e3c92741466aed199b8d40a149eeda1f0372c571a97b34f7b44ea81ccf6f4",
   "legacyAdoption": {
     "allowedOnlyWhenHistoryIsAbsent": true,
     "schemaFingerprintAlgorithm": "postgresql-structural-inventory-v1",
