@@ -205,6 +205,71 @@ def test_postgres_lifecycle_replay_returns_exact_transition_after_repository_rel
     } == counts_after_accept
 
 
+def test_postgres_causal_revision_contradiction_survives_reload_and_refuses_authority(
+    postgres_database_url: str,
+) -> None:
+    client = managed_test_client(app)
+    request = high_cash_payload()
+    holdings = request["sourceEvidence"]["holdingsRef"]
+    holdings["revisionClaims"]["sourceRevision"] = "holdings-revision-2"
+    request["sourceEvidence"]["portfolioStateRef"]["revisionClaims"]["causalInputRevisions"] = [
+        {
+            "productId": holdings["productId"],
+            "sourceRevision": "holdings-revision-1",
+        }
+    ]
+    headers = persistence_headers("postgres-causal-revision-conflict-001")
+
+    accepted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=request,
+        headers=headers,
+    )
+    assert accepted.status_code == 200
+    candidate_id = accepted.json()["persistence"]["candidateId"]
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=request,
+        headers={**headers, "X-Trace-Id": "trace-postgres-causal-revision-replay"},
+    )
+    assert replayed.status_code == 200
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    assert record.candidate.evidence_packet.source_cut_posture.value == "mixed"
+
+    _transition_candidate_to_review_ready(client, candidate_id)
+    counts_before_refusal = {
+        table: _table_count(postgres_database_url, table)
+        for table in (
+            "idea_review_decision",
+            "idea_conversion_intent",
+            "idea_audit_event",
+            "idea_outbox_event",
+            "idea_idempotency_record",
+        )
+    }
+    review = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=_approve_review_payload(candidate_id),
+        headers=_review_headers("postgres-causal-revision-review-001"),
+    )
+    conversion = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=_conversion_intent_payload(candidate_id),
+        headers=_conversion_intent_headers("postgres-causal-revision-conversion-001"),
+    )
+
+    assert review.status_code == 409
+    assert review.json()["code"] == "review_action_conflict"
+    assert conversion.status_code == 409
+    assert conversion.json()["code"] == "conversion_intent_conflict"
+    assert {
+        table: _table_count(postgres_database_url, table) for table in counts_before_refusal
+    } == counts_before_refusal
+
+
 def test_outbox_lineage_migration_preserves_and_sanitizes_legacy_event(
     postgres_database_url: str,
 ) -> None:
