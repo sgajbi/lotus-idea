@@ -6,8 +6,12 @@ from datetime import UTC, datetime
 import pytest
 
 from app.api.candidate_detail_models import CandidateDetailResponse
-from app.domain import CandidatePersistenceRecord
-from app.domain import DownstreamSubmissionPosture
+from app.domain import (
+    CandidatePersistenceRecord,
+    DownstreamSubmissionPosture,
+    SourceReconciliationPosture,
+    SourceRevisionClaims,
+)
 from app.main import app
 from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 from tests.unit.test_postgres_repository import access_scope, high_cash_candidate
@@ -49,7 +53,13 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
         "generatedAtUtc": candidate.evidence_packet.source_refs[0].generated_at_utc,
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": None,
     }
+    assert response["evidence"]["sourceRevisionVectorDigest"] == (
+        candidate.evidence_packet.source_revision_vector_digest
+    )
+    assert response["evidence"]["sourceCutPosture"] == "unknown"
+    assert response["evidence"]["sourceCutTolerance"] is None
     assert "route" not in response["evidence"]["sourceRefs"][0]
     assert "contentHash" not in response["evidence"]["sourceRefs"][0]
     assert response["durableStorageBacked"] is True
@@ -68,6 +78,51 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
         "contribution": "52.50",
     }
     assert response["candidate"]["scoreConflictPenaltyApplied"] == "0"
+
+
+def test_candidate_detail_exposes_source_revision_posture_without_source_content() -> None:
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    source = replace(
+        candidate.evidence_packet.source_refs[0],
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="snapshot-101",
+            source_revision="portfolio-state-7",
+            restatement_version="restatement-2",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
+    )
+    candidate = replace(
+        candidate,
+        evidence_packet=replace(
+            candidate.evidence_packet,
+            source_refs=(source,),
+            lineage_ref=replace(candidate.evidence_packet.lineage_ref, source_refs=(source,)),
+        ),
+    )
+    response = CandidateDetailResponse.from_record(
+        CandidatePersistenceRecord(
+            candidate=candidate,
+            evidence_hash="sha256:candidate-detail-revision",
+            persisted_at_utc=candidate.created_at_utc,
+        ),
+        durable_storage_backed=True,
+    ).model_dump(by_alias=True)
+
+    assert response["evidence"]["sourceCutPosture"] == "coherent"
+    assert response["evidence"]["sourceRefs"][0]["revisionClaims"] == {
+        "snapshotId": "snapshot-101",
+        "sourceRevision": "portfolio-state-7",
+        "restatementVersion": "restatement-2",
+        "sourceBatchId": None,
+        "sourceCutId": None,
+        "calculationRunId": None,
+        "methodologyVersion": None,
+        "policyVersion": None,
+        "causalInputRevisions": (),
+        "reconciliationPosture": "complete",
+    }
+    assert "route" not in response["evidence"]["sourceRefs"][0]
+    assert "contentHash" not in response["evidence"]["sourceRefs"][0]
 
 
 def test_candidate_detail_response_exposes_only_adviser_safe_submission_posture() -> None:

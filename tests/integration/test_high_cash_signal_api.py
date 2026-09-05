@@ -218,6 +218,7 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
         "generatedAtUtc": "2026-06-21T10:00:00Z",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": None,
     }
     assert source.seen_request == CoreHighCashEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,
@@ -596,6 +597,7 @@ def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
         "generatedAtUtc": "2026-06-21T10:00:00Z",
         "dataQualityStatus": "complete",
         "freshness": "current",
+        "revisionClaims": None,
     }
     assert "route" not in payload["candidate"]["sourceRefs"][0]
     assert "contentHash" not in payload["candidate"]["sourceRefs"][0]

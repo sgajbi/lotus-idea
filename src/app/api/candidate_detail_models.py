@@ -7,7 +7,7 @@ from pydantic import Field
 from app.api.base_model import CamelModel
 from app.api.downstream_owner_receipt_models import DownstreamOwnerReceiptResponse
 from app.api.score_models import ScoreContributionResponse
-from app.api.signal_models import CandidateIdentityResponse
+from app.api.signal_models import CandidateIdentityResponse, SourceRevisionClaimsModel
 from app.domain import (
     CandidatePersistenceRecord,
     CandidateVersionHistoryEntry,
@@ -22,6 +22,7 @@ from app.domain import (
     GovernedReviewDecision,
     IdeaCandidate,
     LifecycleHistoryEntry,
+    SourceCutTolerance,
     SourceRef,
     SourceSystem,
     current_conversion_outcome,
@@ -136,6 +137,10 @@ class RedactedSourceRefResponse(CamelModel):
     generated_at_utc: datetime = Field(..., alias="generatedAtUtc")
     data_quality_status: str = Field(..., alias="dataQualityStatus")
     freshness: str
+    revision_claims: SourceRevisionClaimsModel | None = Field(
+        default=None,
+        alias="revisionClaims",
+    )
 
     @classmethod
     def from_domain(cls, source_ref: SourceRef) -> "RedactedSourceRefResponse":
@@ -147,6 +152,26 @@ class RedactedSourceRefResponse(CamelModel):
             generatedAtUtc=source_ref.generated_at_utc,
             dataQualityStatus=source_ref.data_quality_status,
             freshness=source_ref.freshness.value,
+            revisionClaims=(
+                SourceRevisionClaimsModel.from_domain(source_ref.revision_claims)
+                if source_ref.revision_claims is not None
+                else None
+            ),
+        )
+
+
+class SourceCutToleranceResponse(CamelModel):
+    policy_version: str = Field(..., alias="policyVersion")
+    maximum_generated_time_skew_seconds: int = Field(
+        ...,
+        alias="maximumGeneratedTimeSkewSeconds",
+    )
+
+    @classmethod
+    def from_domain(cls, tolerance: SourceCutTolerance) -> "SourceCutToleranceResponse":
+        return cls(
+            policyVersion=tolerance.policy_version,
+            maximumGeneratedTimeSkewSeconds=tolerance.maximum_generated_time_skew_seconds,
         )
 
 
@@ -160,6 +185,12 @@ class CandidateEvidenceResponse(CamelModel):
     applicability_expires_at_utc: datetime | None = Field(
         default=None,
         alias="applicabilityExpiresAtUtc",
+    )
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: str = Field(..., alias="sourceCutPosture")
+    source_cut_tolerance: SourceCutToleranceResponse | None = Field(
+        default=None,
+        alias="sourceCutTolerance",
     )
 
     @classmethod
@@ -176,6 +207,13 @@ class CandidateEvidenceResponse(CamelModel):
                 for source_ref in evidence_packet.source_refs
             ),
             applicabilityExpiresAtUtc=evidence_packet.applicability_expires_at_utc,
+            sourceRevisionVectorDigest=evidence_packet.source_revision_vector_digest,
+            sourceCutPosture=evidence_packet.source_cut_posture.value,
+            sourceCutTolerance=(
+                SourceCutToleranceResponse.from_domain(evidence_packet.source_cut_tolerance)
+                if evidence_packet.source_cut_tolerance is not None
+                else None
+            ),
         )
 
 
@@ -629,4 +667,5 @@ __all__ = (
     "RedactedSourceRefResponse",
     "ReportEvidencePackSummaryResponse",
     "ReviewDecisionSummaryResponse",
+    "SourceCutToleranceResponse",
 )
