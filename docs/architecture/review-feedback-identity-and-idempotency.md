@@ -52,6 +52,13 @@ This ordering allows an equivalent retry of a terminal review to replay before
 terminal-state validation. Entitlement checks and candidate lookup still run
 before identity disclosure.
 
+Review and feedback retain caller-observed event time but acquire a separate
+server `acceptedAtUtc`. Candidate mutation, audit chronology, snooze lower-bound
+validation, and applicability checks use the accepted instant. Approval at or
+after evidence applicability expiry is refused; exact replay still returns the
+original persisted decision. See
+[`trusted-control-time.md`](trusted-control-time.md).
+
 For a genuinely new review resource, the domain result retains the exact
 source candidate snapshot used to evaluate the action. After the PostgreSQL
 candidate fence is acquired, persistence compares that source with the locked

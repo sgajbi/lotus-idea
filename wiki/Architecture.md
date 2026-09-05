@@ -33,6 +33,31 @@ implement production IdP/auth, or certify AI provider runtime.
 | Proof is scoped | A proof artifact clears only the named blocker it covers; it does not promote unrelated Gateway, Workbench, data-mesh, downstream, or support claims. |
 | Support posture is explicit | [Supported Features](Supported-Features) remains the support truth; current foundations are not externally supported features. |
 
+## Trusted Control Time
+
+Idea separates producer-observed time from the server acceptance instant used
+for lifecycle safety.
+
+```mermaid
+flowchart LR
+    Producer["Producer observed time"] --> Evidence["Retained evidence and source chronology"]
+    Clock["Idea trusted UTC clock"] --> Control["Expiry, mutation, audit and candidate chronology"]
+    Evidence --> Mutation["Governed domain mutation"]
+    Control --> Mutation
+    Mutation --> Store["Idempotent persisted result"]
+    Store --> Replay["Exact replay returns original acceptance time"]
+```
+
+Review, feedback, presentation, conversion, downstream outcomes, and durable
+signal evaluation now preserve this boundary. New approval and conversion are
+refused at or after evidence applicability expiry using server time. Migration
+`024` marks historical rows whose server acceptance time cannot be proven as
+`legacy_observed_time_assumed`. See
+`docs/architecture/trusted-control-time.md` in the repository for the operation
+policy matrix and engineering details. This control does not itself establish
+the immutable presentation-to-review authority grant tracked by issue `#1225`
+or source-revision posture tracked by `#1227`.
+
 `lotus-idea` is a separate domain service because opportunity intelligence spans
 portfolio facts, performance, risk, advisory, management, reporting, AI, gateway,
 and Workbench concerns.

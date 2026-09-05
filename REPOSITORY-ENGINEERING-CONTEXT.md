@@ -35,6 +35,18 @@ Security governance, and repo-native CI guardrails.
 
 No externally supported product feature is promoted yet.
 
+Lifecycle mutations use a trusted-control-time seam. Producer/source times are
+retained as observed evidence, while Idea server acceptance time controls
+candidate updates, audit admission, snooze validation, and applicability at
+review and conversion. Persisted signal evaluations preserve their source
+evaluation instant but bind candidate/evidence creation and audit chronology to
+the trusted acceptance instant. Exact replay returns the original acceptance
+time. Migration `024` labels ambiguous historical action rows
+`legacy_observed_time_assumed`; this is not server-time proof. See
+`docs/architecture/trusted-control-time.md`. This foundation does not close
+presentation-to-review authority issue `#1225`, source revision issue `#1227`,
+or supported-feature promotion.
+
 Workbench read-path and action-path declarations are v2 `source_contract`
 evidence only. The bounded Gateway BFF action family forwards Idea-owned review
 actions, feedback, and conversion intents; it must not transfer source,

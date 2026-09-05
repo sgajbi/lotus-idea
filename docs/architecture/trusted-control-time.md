@@ -1,0 +1,116 @@
+# Trusted Control Time
+
+## Purpose
+
+Lotus Idea preserves producer chronology without allowing a browser, caller, or
+downstream service to control lifecycle safety. This contract is relevant to
+engineers implementing mutations, operators investigating chronology, and risk
+or control reviewers assessing expiry and replay behavior.
+
+```mermaid
+sequenceDiagram
+    participant P as Producer / source owner
+    participant API as Idea API
+    participant Clock as Trusted UTC clock
+    participant Domain as Idea domain policy
+    participant Store as PostgreSQL aggregate
+
+    P->>API: observed event time + idempotency identity
+    API->>Clock: now_utc()
+    Clock-->>API: acceptedAtUtc
+    API->>Domain: observedAtUtc + acceptedAtUtc
+    Domain->>Domain: validate skew and expiry at acceptedAtUtc
+    Domain->>Store: mutation and audit at acceptedAtUtc
+    Store-->>API: accepted or exact replay
+    API-->>P: observed time + original acceptedAtUtc
+```
+
+## Temporal Vocabulary
+
+| Time | Authority | Permitted use |
+| --- | --- | --- |
+| Producer-observed time | Browser, caller, or source-owning service | User experience, source chronology, forensic evidence, source freshness, and deterministic evaluation context |
+| Idea acceptance time | `TrustedClock` in the Idea runtime | Expiry, mutation admission, lifecycle ordering, candidate update time, audit chronology, and stale-action policy |
+| Downstream source event time and version | Advise, Manage, or Report | Owner business chronology and monotonic owner-history reconciliation |
+
+Producer time is retained; it is never silently clamped or rewritten. Human
+action and presentation channels apply named operation-specific skew policies
+and reject impossible observations. All accepted control timestamps must use an
+explicit UTC offset.
+
+## Implemented Mutation Rules
+
+- Review, feedback, presentation receipt, conversion intent, and downstream
+  outcome APIs acquire `acceptedAtUtc` from the runtime trusted clock.
+- Candidate applicability is checked at Idea acceptance time when an adviser
+  approves a candidate and when a new conversion intent is admitted. At the
+  expiry instant, the action is refused.
+- Snooze instructions remain adviser-selected future business instructions,
+  but their lower bound is Idea acceptance time.
+- Candidate, evidence, persistence, expiry mutation, and audit timestamps for
+  persisted signal evaluations use the accepted instant. The source
+  `evaluatedAtUtc` and signal detection time remain preserved evaluation
+  evidence.
+- Downstream `recordedAtUtc` and `sourceEventVersion` remain owner facts. Idea
+  records a separate receipt acceptance time.
+
+The current observed-time policies are:
+
+| Operation | Maximum past skew | Maximum future skew |
+| --- | ---: | ---: |
+| Workbench presentation | 15 minutes | 5 minutes |
+| Adviser review decision | 24 hours | 5 minutes |
+| Adviser feedback | 24 hours | 5 minutes |
+| Conversion intent | 24 hours | 5 minutes |
+| Downstream owner outcome | 30 days | 5 minutes |
+
+Signal evaluation time is not treated as user-action chronology. It can be a
+historical deterministic evaluation instant and remains available for source
+freshness and replay. When the evaluation produces a durable candidate, its
+control-plane creation and audit use the separately supplied trusted acceptance
+instant.
+
+## Idempotency And Replay
+
+The accepted instant is not part of producer request identity. A retry of an
+already accepted command returns the original persisted resource and original
+`acceptedAtUtc`, even if the retry arrives later or after the candidate's
+applicability boundary. A changed payload under the same idempotency or resource
+identity remains a conflict.
+
+```text
+new action at or after expiry       -> refused before downstream work
+exact retry of pre-expiry intent    -> replay original accepted intent
+changed post-expiry request         -> conflict or refused; never auto-upgraded
+```
+
+## Persistence And Migration
+
+Migration `024_trusted_review_acceptance_time.sql` adds acceptance time and
+provenance to review decisions, feedback events, conversion intents,
+conversion outcomes, and presentation receipts. New rows use
+`server_accepted`. Historical rows are backfilled as
+`legacy_observed_time_assumed`; that value is an explicit evidence limitation,
+not proof that the old caller timestamp was a server timestamp.
+
+Operators should segment legacy-assumed rows from server-accepted rows when
+investigating chronology. A current environment audit must also look for:
+
+- observed times outside the operation's policy window;
+- conversion acceptance at or after evidence applicability expiry;
+- non-monotonic downstream source event versions;
+- action audit time that differs from the persisted acceptance time.
+
+No production database was available during the implementation workspace run,
+so repository tests and migration contracts prove the mechanism while live
+data reconciliation remains environment-owned evidence on issue `#1226`.
+
+## Scope Boundary
+
+Trusted time does not by itself prove that the adviser reviewed the exact
+candidate evidence later converted. Immutable presentation-to-review authority
+binding remains issue `#1225`. Restatement-safe source revision vectors and
+coherent-cut posture remain issue `#1227`.
+
+The change introduces no authentication, authorization, workflow-engine, or
+new deployable-service claim and does not promote a supported feature.

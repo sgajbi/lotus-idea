@@ -43,6 +43,17 @@ Current implemented scope:
     `portfolio_id`; it never derives portfolio identity from an opaque candidate
     or conversion-intent identifier. The Manage envelope remains unchanged
     until the Manage-owned contract explicitly accepts portfolio scope.
+12. producer `requestedAtUtc` and downstream-owner `recordedAtUtc` remain
+    observed business evidence. Idea records a distinct server-controlled
+    `acceptedAtUtc`, uses it for mutation/audit chronology, and returns the
+    original acceptance instant on exact replay.
+13. a new conversion intent is refused at or after the candidate evidence
+    applicability boundary using server acceptance time. An exact replay of an
+    intent accepted before expiry remains replayable and creates no additional
+    outbox or downstream work.
+
+The cross-operation temporal contract is documented in
+[`trusted-control-time.md`](../architecture/trusted-control-time.md).
 
 The report conversion path now has one additional internal request foundation:
 

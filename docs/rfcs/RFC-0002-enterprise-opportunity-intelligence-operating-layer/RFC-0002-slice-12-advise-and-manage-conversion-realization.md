@@ -7,6 +7,15 @@ Status: Partially implemented - internal conversion governance, source-versioned
 Convert reviewed ideas into downstream advisory and portfolio-management
 workflows without moving downstream authority into `lotus-idea`.
 
+## Trusted-Time Hardening
+
+Conversion intent and downstream outcome evidence now preserve producer/source
+time separately from Idea server acceptance time. A new conversion is refused
+at or after the evidence applicability boundary using accepted time, while an
+exact intent accepted before expiry remains replayable afterward. Downstream
+owner event time and version remain owner facts. This control does not replace
+the exact human-authority grant tracked by `#1225`.
+
 ## Current Implementation Evidence
 
 Implemented in this slice:
