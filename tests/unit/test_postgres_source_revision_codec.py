@@ -7,6 +7,7 @@ import pytest
 
 from app.domain import (
     CausalInputRevision,
+    IdeaCandidate,
     OpportunityFamily,
     SourceCutPosture,
     SourceReconciliationPosture,
@@ -16,7 +17,7 @@ from app.infrastructure.postgres_codecs import idea_candidate_from_json, idea_ca
 from tests.support.opportunity_effectiveness_fixture import candidate_fixture
 
 
-def _candidate_with_revision_claims():
+def _candidate_with_revision_claims() -> IdeaCandidate:
     candidate = candidate_fixture(
         "candidate-source-revision",
         family=OpportunityFamily.HIGH_CASH,

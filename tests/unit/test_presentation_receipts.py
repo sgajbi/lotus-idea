@@ -12,6 +12,7 @@ from app.domain import (
     PRESENTATION_RECEIPT_SCHEMA_VERSION,
     PRESENTATION_SURFACE,
     CandidatePresentationReceipt,
+    IdeaCandidate,
     InMemoryIdeaRepository,
     OpportunityFamily,
     PresentationReceiptCandidateStateError,
@@ -222,7 +223,7 @@ def _repository() -> InMemoryIdeaRepository:
     return InMemoryIdeaRepository(snapshot_fixture(record_fixture(candidate)))
 
 
-def _candidate():
+def _candidate() -> IdeaCandidate:
     return candidate_fixture(
         "candidate-0001",
         family=OpportunityFamily.HIGH_CASH,
