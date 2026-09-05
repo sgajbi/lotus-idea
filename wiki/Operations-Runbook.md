@@ -466,6 +466,20 @@ exist. The current AI lineage store proof, AI workflow-pack registration source 
 and AI model-risk operations contract are enforced and source-safe, but they
 are not `lotus-ai` runtime, provider-call, dashboard, alert, Workbench,
 client-ready, or supported-feature certification.
+The internal
+`POST /api/v1/idea-candidates/{candidateId}/ai-explanations` generation route
+requires `idea.ai-explanation.generate`, an `Idempotency-Key`, candidate
+entitlement, and a write-ready Idea repository; process-local storage remains
+allowed only in `local`/`test`. In those profiles, configure
+`LOTUS_AI_BASE_URL` to exercise the registered deterministic workflow pack.
+`EXPLANATION_UNAVAILABLE` is an expected fail-closed product posture: inspect
+its bounded `disposition` before retrying. Do not retry
+`owner_idempotency_conflict`, `candidate_evidence_changed`,
+`output_not_accepted`, or `attested_execution_required` blindly. An owner run
+id proves only that Lotus AI accepted/executed that owner operation; it does
+not prove attestation, provider use, model approval, or supported-feature
+posture. Demo/staging/production remain attestation-required and do not execute
+the current unattested generation path.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor

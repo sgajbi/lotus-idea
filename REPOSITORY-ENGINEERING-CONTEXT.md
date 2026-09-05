@@ -639,8 +639,11 @@ Current implementation includes these bounded foundations:
    evidence,
 9. AI explanation foundations with deterministic evidence, API-idempotent
    lineage storage, signed Lotus AI run-attestation verification and replay
-   protection, model-risk operations evidence, and no provider-runtime
-   certification,
+   protection, model-risk operations evidence, and a capability-owned
+   generation route that exercises the registered Lotus AI deterministic stub
+   only in `local`/`test`. The route uses owner idempotency, exact run identity,
+   candidate-evidence fencing, explicit unavailable posture, and bounded
+   telemetry; live-provider and production runtime certification remain absent,
 10. implementation-proof readiness diagnostics that aggregate blockers instead
     of promoting support.
 11. a canonical opportunity-source proof runner that composes existing source
@@ -1019,14 +1022,19 @@ that capture operation events must patch the helper emitter aliases as well as
 legacy route-local emitter names. Do not silently rely on route modules owning
 the emitter after review/conversion/outbox helper extraction.
 
-AI explanation evaluation remains inside `app.api.ai_governance` for now, but
-the route must stay as a thin API-boundary orchestrator. Keep trusted caller
+AI explanation evaluation remains inside `app.api.ai_governance`; governed
+generation is isolated in `app.api.ai_explanation_generation` and
+`app.application.lotus_ai_idea_explanation_generation`. Both routes must stay
+thin at the API boundary. Keep trusted caller
 context binding, idempotency-to-command mapping, durable-write problem mapping,
 exception-to-ProblemDetails mapping, and success/result response projection in
 named helper functions rather than re-growing `evaluate_ai_explanation(...)`.
+Generation must derive evidence server-side, forward a stable non-sensitive
+owner idempotency key, bind output to the exact candidate evidence revision,
+and distinguish runtime execution confirmation from attestation verification.
 This is internal design modularity only; it does not implement production
-authentication/authorization, Lotus AI runtime/provider certification, API
-contract changes, or a separate runtime service.
+authentication/authorization, live-provider/runtime certification, or a
+separate runtime service.
 
 When one HTTP status can return multiple stable `ProblemDetails` codes, use
 `app.api.problem_details.merged_problem_response_metadata` instead of spreading
@@ -3685,10 +3693,10 @@ and define deterministic anchors, source authority, evaluation, failure,
 fallback, human review, and operability evidence before implementation.
 
 Treat the charter's candidate capabilities as research hypotheses. They do not
-change current implementation truth, runtime ownership, or supported-feature
-status. AI workflow execution remains owned by `lotus-ai`; `lotus-idea`
-retains deterministic opportunity, evidence, lifecycle, review, feedback, and
-conversion-intent truth.
+change runtime ownership or supported-feature status. `lotus-ai` owns workflow
+execution and provider/model infrastructure; `lotus-idea` may invoke only its
+registered governed pack and retains deterministic opportunity, evidence,
+lifecycle, review, feedback, output acceptance, and conversion-intent truth.
 
 ## Service SLO And Capacity Rule
 

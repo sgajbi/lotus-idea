@@ -330,6 +330,7 @@ def _successful_ai_explanation_response(
     result: AIExplanationWorkflowResult,
     *,
     durable_storage_backed: bool,
+    runtime_execution_confirmed: bool | None = None,
 ) -> AIExplanationEvaluationResponse:
     assert result.explanation_result is not None
     assert result.lineage_persistence_result is not None
@@ -352,6 +353,7 @@ def _successful_ai_explanation_response(
             and result.lineage_persistence_result.lineage_record.provider_retention_receipt
             is not None
         ),
+        runtime_execution_confirmed=runtime_execution_confirmed,
     )
 
 

@@ -6,13 +6,10 @@ from urllib.parse import quote, urljoin, urlparse
 
 import httpx
 
-
-class LotusAIWorkflowRuntimeUnavailable(RuntimeError):
-    """Raised when the governed Lotus AI workflow runtime cannot be reached."""
-
-
-class InvalidLotusAIWorkflowRuntimeResponse(RuntimeError):
-    """Raised when Lotus AI returns a non-object or unsuccessful response."""
+from app.ports.lotus_ai_runtime import (
+    InvalidLotusAIWorkflowRuntimeResponse,
+    LotusAIWorkflowRuntimeUnavailable,
+)
 
 
 class HttpLotusAIWorkflowRuntime:
@@ -94,7 +91,8 @@ class HttpLotusAIWorkflowRuntime:
     ) -> Mapping[str, object]:
         if response.status_code != 200:
             raise InvalidLotusAIWorkflowRuntimeResponse(
-                f"lotus-ai {operation} returned HTTP {response.status_code}"
+                f"lotus-ai {operation} returned HTTP {response.status_code}",
+                status_code=response.status_code,
             )
         try:
             payload: Any = response.json()
@@ -111,6 +109,4 @@ class HttpLotusAIWorkflowRuntime:
 
 __all__ = [
     "HttpLotusAIWorkflowRuntime",
-    "InvalidLotusAIWorkflowRuntimeResponse",
-    "LotusAIWorkflowRuntimeUnavailable",
 ]

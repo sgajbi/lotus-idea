@@ -1090,6 +1090,50 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Generate a governed AI explanation for a persisted idea candidate by executing the registered lotus-ai idea explanation workflow pack in-process \u2014 the one Idea route that invokes lotus-ai runtime execution. The server builds redacted input evidence from candidate state, forwards a stable non-sensitive owner idempotency key, retains the exact Lotus AI run identity, and evaluates returned output through the same acceptance pipeline external producers face: claim grounding, forbidden-action blocking, redaction, source-safe idempotent lineage recording, and bounded requested/served/unavailable telemetry by purpose.",
+      "when_to_use": "Use when an internal caller with idea.ai-explanation.generate capability and an Idempotency-Key wants a governed explanation generated server-side for a persisted candidate, supplying only a request id, one of the three generation purposes (unsupported_claim_verification, advisor_rationale_draft, meeting_preparation_draft), and a request time. A served response is explicitly EXPLANATION_SERVED and carries lotusAiRunId plus evaluationVerdict. Runtime unavailability, owner idempotency conflict, non-accepted output, and invalid runtime responses are explicitly EXPLANATION_UNAVAILABLE and retain deterministic fallback evidence without changing candidate lifecycle.",
+      "when_not_to_use": "Do not use in demo, staging, or production expecting AI content: profiles that require attested execution provenance never execute unattested and record the deterministic fallback (workflow_not_approved) until governed live-provider enablement lands for the lotus-idea caller in lotus-ai. Do not use as lotus-ai runtime proof, autonomous advice, suitability approval, downstream authority, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion. Use the evaluate route when a producer supplies workflow output or a verified attestation bundle; missing_evidence_check stays an evaluate-only purpose.",
+      "request_examples": [
+        "POST /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7/ai-explanations with X-Caller-Capabilities: idea.ai-explanation.generate and Idempotency-Key: ai-generation-api-001",
+        "{\"requestId\":\"ai-generation-001\",\"purpose\":\"advisor_rationale_draft\",\"requestedAtUtc\":\"2026-06-21T10:12:00Z\"}",
+        "The server derives the workflow pack identity, redacted evidence, and requested outputs from candidate state; callers never supply prompts, evidence, or workflow output on this route."
+      ],
+      "response_examples": [
+        "200 EXPLANATION_SERVED returns disposition executed, the exact lotusAiRunId, lotusAiRuntimeExecutionConfirmed true, evaluationVerdict accepted, and a nested explanation whose grounded content is ready_for_advisor_review; no downstream authority is granted.",
+        "200 EXPLANATION_UNAVAILABLE returns a bounded disposition such as runtime_unavailable, invalid_runtime_response, owner_idempotency_conflict, output_not_accepted, candidate_evidence_changed, or attested_execution_required; lotusAiRunId is present only when the owner response proved one, and the nested explanation is deterministic fallback evidence rather than fabricated AI content."
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.ai-explanation.generate capability.",
+        "404 returns product-safe Problem Details when the candidate is not found.",
+        "409 returns product-safe Problem Details when rationale or meeting-preparation drafting is requested before ready evidence and review-ready lifecycle, or when Idempotency-Key or the AI request id is reused with a different fingerprint.",
+        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, or the purpose is not a generation purpose (missing_evidence_check is evaluate-only).",
+        "A missing local runtime configuration is a 200 EXPLANATION_UNAVAILABLE response with runtime_unavailable disposition; durable repository misconfiguration remains a fail-closed 503 Problem Details response."
+      ],
+      "test_evidence": [
+        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_executes_pack_and_returns_accepted_explanation",
+        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_degrades_to_fallback_when_runtime_unavailable",
+        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_requires_generation_capability",
+        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_reports_unconfigured_runtime_without_execution",
+        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_rejects_evaluate_only_purpose",
+        "tests/integration/test_ai_explanation_generation_operation_events.py::test_ai_explanation_generation_api_emits_bounded_operation_event",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_executes_pack_and_accepts_grounded_output",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_never_executes_when_attested_provenance_is_required",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_degrades_to_deterministic_fallback_when_runtime_unavailable",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_reuses_stable_owner_key_and_local_lineage_on_exact_replay",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_preserves_owner_idempotency_conflict_without_retry",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_does_not_mutate_candidate_lifecycle_or_identity",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_refuses_output_when_candidate_evidence_changes_in_flight",
+        "tests/unit/test_ai_explanation_generation_observability.py::test_generation_metrics_distinguish_request_served_and_unavailable_by_purpose",
+        "tests/unit/api_examples/test_ai_explanation.py::test_ai_explanation_generation_examples_publish_served_and_unavailable_truth",
+        "tests/unit/test_lotus_ai_idea_explanation_generation.py::test_generation_skips_execution_outside_caller_tenant_scope"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/ai-explanations/readiness",
       "certification_status": "certified",

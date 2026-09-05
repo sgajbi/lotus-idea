@@ -134,6 +134,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
             "/api/v1/outbox-delivery/dead-letters/{supportReference}/redrive",
         ),
         ("GET", "/api/v1/idea-candidates/{candidateId}"),
+        ("POST", "/api/v1/idea-candidates/{candidateId}/ai-explanations"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/conversion-intents"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/evidence-replay"),

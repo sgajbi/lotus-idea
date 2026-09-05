@@ -1,16 +1,17 @@
 # AI Governance And Model-Risk Posture
 
 `lotus-idea` uses AI only as a governed assistance layer. The current
-implementation is an internal domain and API foundation; it does not call
-providers, does not execute `lotus-ai` runtime workflows, and does not promote
-AI-assisted explanation as a supported feature. The evaluator now records
+implementation is an internal domain and API foundation. A bounded generation
+route can invoke the registered `lotus-ai` explanation workflow pack in
+`local`/`test`; Idea still does not call providers and does not promote
+AI-assisted explanation as a supported feature. The evaluator records
 source-safe lineage through the repository port behind API `Idempotency-Key`
 replay/conflict protection; when PostgreSQL is configured that lineage is
 stored durably. The repo now also carries source-valid model-risk
-operations dashboard and alert artifacts over
-implemented AI explanation telemetry. None of this is certified `lotus-ai`
-runtime lineage, live-provider execution, Workbench product proof, or
-supported-feature promotion.
+operations dashboard and alert artifacts over implemented AI explanation
+telemetry. Local deterministic-stub execution is not certified `lotus-ai`
+live-provider execution, production runtime lineage, Workbench product proof,
+or supported-feature promotion.
 
 It can verify a signed Lotus AI workflow-run attestation supplied with
 producer output, bind that output to the exact Idea request, and persist a
@@ -103,6 +104,20 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     forbidden action types, and forbidden action content. Rejected provider
     narrative is digest-bound for tamper evidence but absent from the domain
     result, API response, replay response, audit attributes, and lineage record.
+25. a capability-owned generation API at
+    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations` that derives
+    redacted input only from persisted candidate evidence, sends a stable
+    hashed owner idempotency key, retains the exact Lotus AI run id, and sends
+    returned content through the existing deterministic evaluation pipeline.
+26. an exact pre-call/post-call candidate evidence fence over business
+    identity, material version, evidence version, evidence packet id, and
+    repository evidence hash. Changed evidence discards generated content and
+    retains only deterministic fallback lineage.
+27. explicit `EXPLANATION_SERVED` and `EXPLANATION_UNAVAILABLE` response
+    posture, with bounded dispositions for runtime failure, invalid owner
+    response, owner idempotency conflict, non-accepted output, changed evidence,
+    and production-like attestation requirements.
+28. low-cardinality requested/served/unavailable counters by governed purpose.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -117,7 +132,10 @@ Successful API responses always return:
 3. `durableStorageBacked=false` only for allowed `local`/`test` process-local
    writes and `true` when the active repository provider is PostgreSQL,
 4. `lotusAiRuntimeExecuted=true` only for cryptographically verified,
-   request-bound producer execution; fallback and local fixtures remain `false`,
+   request-bound producer execution on the evaluation route. The generation
+   response separately exposes `lotusAiRuntimeExecutionConfirmed`; local/test
+   runtime execution can therefore be reported truthfully without claiming
+   verified production provenance,
 5. `supportedFeaturePromoted=false`,
 6. `grantsDownstreamAuthority=false`,
 7. `verifiedOutput.claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`,
@@ -151,6 +169,29 @@ The readiness diagnostic always returns:
     certification and the other blockers remain explicit.
 10. `claimGroundingAvailable=true` and
     `claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`.
+
+## Generation Route And Degraded Posture
+
+The generation route is an Idea-owned orchestration boundary, not an AI
+provider boundary. It accepts only request identity, one of the three purposes
+with declared generated outputs, and caller time. Prompts, evidence, workflow
+identity, expected outputs, tenant binding, and the Lotus AI owner key are
+server-derived. `missing_evidence_check` remains evaluate-only.
+
+| Condition | Public posture | Generated content served |
+| --- | --- | --- |
+| Local/test owner execution and Idea evaluation both pass | `EXPLANATION_SERVED / executed` | Yes, with exact owner run id and evaluation verdict. |
+| Runtime missing or unreachable | `EXPLANATION_UNAVAILABLE / runtime_unavailable` | No; deterministic fallback only. |
+| Owner returns malformed output or a conflicting owner idempotency fingerprint | `EXPLANATION_UNAVAILABLE / invalid_runtime_response` or `owner_idempotency_conflict` | No; no blind retry. |
+| Candidate evidence changes during owner execution | `EXPLANATION_UNAVAILABLE / candidate_evidence_changed` | No; owner run id is retained for audit and output is discarded. |
+| Idea grounding/action evaluation blocks returned output | `EXPLANATION_UNAVAILABLE / output_not_accepted` | No; unsafe or unsupported narrative is not projected. |
+| Demo/staging/production requires verified attestation | `EXPLANATION_UNAVAILABLE / attested_execution_required` | No; the current increment never executes unattested output in a production-like profile. |
+
+`LOTUS_AI_BASE_URL` configures the internal runtime endpoint. Transport failure
+is a product-level unavailable outcome; durable Idea repository
+misconfiguration remains a fail-closed `503`. Runtime execution confirmation,
+cryptographic provenance verification, and supported-feature promotion are
+three separate facts and must never be inferred from one another.
 
 ## Provider-Safe Metadata Envelope
 

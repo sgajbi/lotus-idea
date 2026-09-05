@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from tests.support.http import ManagedTestClient, managed_test_client
 
+import app.api.ai_explanation_generation as ai_explanation_generation_api
 import app.api.ai_governance as ai_governance_api
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.domain import InMemoryIdeaRepository, InvalidAIWorkflowOutput
@@ -895,3 +896,218 @@ def test_ai_explanation_readiness_api_requires_operator_role_and_capability() ->
     assert missing_role.json()["code"] == "permission_denied"
     assert missing_capability.status_code == 403
     assert missing_capability.json()["code"] == "permission_denied"
+
+
+def generation_headers(
+    capabilities: str = "idea.ai-explanation.generate",
+    *,
+    idempotency_key: str = "ai-generation-api-001",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": capabilities,
+        "Idempotency-Key": idempotency_key,
+        "X-Correlation-Id": "corr-ai-generation-api",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+    }
+
+
+def generation_payload(*, request_id: str = "ai-generation-001") -> dict[str, Any]:
+    return {
+        "requestId": request_id,
+        "purpose": "advisor_rationale_draft",
+        "requestedAtUtc": "2026-06-21T10:12:00Z",
+    }
+
+
+_GENERATION_STUB_MESSAGE = "Drafted a review-gated Lotus Idea explanation from redacted evidence."
+
+
+class _FakeGenerationRuntime:
+    def __init__(self, error: Exception | None = None) -> None:
+        self.error = error
+        self.requests: list[dict[str, Any]] = []
+
+    async def execute_workflow_pack(
+        self,
+        request: dict[str, Any],
+        *,
+        caller_app: str,
+    ) -> dict[str, Any]:
+        self.requests.append(request)
+        if self.error is not None:
+            raise self.error
+        return {
+            "execution": {
+                "status": "COMPLETED",
+                "output_label": "EXPLANATION_ONLY",
+                "result": {
+                    "message": _GENERATION_STUB_MESSAGE,
+                    "structured_output": {
+                        "idea_workflow_output": {
+                            "output_id": "idea-explanation-output-ai-generation-001",
+                            "explanation_text": _GENERATION_STUB_MESSAGE,
+                            "claims": [
+                                {
+                                    "claim_id": "reason-01-high_cash_ratio",
+                                    "claim_text": (
+                                        "The candidate was surfaced with reason code "
+                                        "HIGH_CASH_RATIO under the deterministic scoring policy."
+                                    ),
+                                    "source_product_ids": ["lotus-core:PortfolioStateSnapshot:v1"],
+                                }
+                            ],
+                            "proposed_actions": [
+                                {
+                                    "action_type": "advisor_review",
+                                    "action_label": "Review the evidence",
+                                }
+                            ],
+                        }
+                    },
+                },
+            },
+            "workflow_pack_run": {"run_id": "wpr_generation_api_001"},
+        }
+
+
+def test_ai_generation_api_executes_pack_and_returns_accepted_explanation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-001")
+    transition_candidate_to_review_ready(client, candidate_id)
+    runtime = _FakeGenerationRuntime()
+    monkeypatch.setattr(
+        ai_explanation_generation_api,
+        "get_lotus_ai_workflow_runtime",
+        lambda: runtime,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(),
+        headers=generation_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "EXPLANATION_SERVED"
+    assert payload["disposition"] == "executed"
+    assert payload["lotusAiRunId"] == "wpr_generation_api_001"
+    assert payload["lotusAiRuntimeExecutionConfirmed"] is True
+    assert payload["evaluationVerdict"] == "accepted"
+    explanation = payload["explanation"]
+    assert explanation["posture"] == "ready_for_advisor_review"
+    assert explanation["fallbackUsed"] is False
+    assert explanation["aiLineageRecorded"] is True
+    assert explanation["grantsDownstreamAuthority"] is False
+    assert explanation["lotusAiRuntimeExecuted"] is True
+    assert explanation["supportedFeaturePromoted"] is False
+    assert len(runtime.requests) == 1
+    executed = runtime.requests[0]
+    assert executed["pack_id"] == "idea_explanation.pack"
+    assert executed["idempotency_key"].startswith("idea-explanation-")
+    assert "ai-generation-api-001" not in executed["idempotency_key"]
+    assert executed["task_request"]["task_id"] == "explain.v1"
+    assert "portfolioId" not in str(executed)
+
+
+def test_ai_generation_api_degrades_to_fallback_when_runtime_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.ports.lotus_ai_runtime import LotusAIWorkflowRuntimeUnavailable
+
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-002")
+    transition_candidate_to_review_ready(client, candidate_id)
+    runtime = _FakeGenerationRuntime(
+        error=LotusAIWorkflowRuntimeUnavailable("lotus-ai workflow runtime is unavailable")
+    )
+    monkeypatch.setattr(
+        ai_explanation_generation_api,
+        "get_lotus_ai_workflow_runtime",
+        lambda: runtime,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(request_id="ai-generation-002"),
+        headers=generation_headers(idempotency_key="ai-generation-api-002"),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "EXPLANATION_UNAVAILABLE"
+    assert payload["disposition"] == "runtime_unavailable"
+    assert payload["lotusAiRunId"] is None
+    assert payload["lotusAiRuntimeExecutionConfirmed"] is False
+    assert payload["explanation"]["posture"] == "fallback_used"
+    assert payload["explanation"]["fallbackReason"] == "ai_unavailable"
+    assert payload["explanation"]["fallbackUsed"] is True
+
+
+def test_ai_generation_api_requires_generation_capability() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-003")
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(request_id="ai-generation-003"),
+        headers=generation_headers(capabilities="idea.ai-explanation.evaluate"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+
+
+def test_ai_generation_api_reports_unconfigured_runtime_without_execution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-004")
+    transition_candidate_to_review_ready(client, candidate_id)
+
+    def raise_unconfigured() -> Any:
+        raise RuntimeError("LOTUS_AI_BASE_URL is required for governed AI workflow execution")
+
+    monkeypatch.setattr(
+        ai_explanation_generation_api,
+        "get_lotus_ai_workflow_runtime",
+        raise_unconfigured,
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=generation_payload(request_id="ai-generation-004"),
+        headers=generation_headers(idempotency_key="ai-generation-api-004"),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "EXPLANATION_UNAVAILABLE"
+    assert payload["disposition"] == "runtime_unavailable"
+    assert payload["lotusAiRunId"] is None
+    assert payload["lotusAiRuntimeExecutionConfirmed"] is False
+
+
+def test_ai_generation_api_rejects_evaluate_only_purpose() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-generation-005")
+    payload = generation_payload(request_id="ai-generation-005")
+    payload["purpose"] = "missing_evidence_check"
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
+        json=payload,
+        headers=generation_headers(idempotency_key="ai-generation-api-005"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"

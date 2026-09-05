@@ -20,6 +20,11 @@ from app.application.ai_governance import (
     EvaluateAIExplanationToRepositoryCommand,
     build_ai_explanation_readiness_snapshot,
 )
+from app.application.lotus_ai_idea_explanation_generation import (
+    AIExplanationGenerationDisposition,
+    AIExplanationGenerationStatus,
+    GeneratedAIExplanationOutcome,
+)
 from app.domain import (
     AIExplanationCommand,
     AIExplanationPosture,
@@ -179,6 +184,24 @@ class AIApprovedMetadataRequest(CamelModel):
             for key, value in self.model_dump(exclude_none=True).items()
             if isinstance(value, str)
         }
+
+
+class AIExplanationGenerationRequest(CamelModel):
+    request_id: str = Field(..., alias="requestId")
+    purpose: AIWorkflowPurpose
+    requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
+
+    @field_validator("request_id")
+    @classmethod
+    def _generation_request_id_must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("requestId is required")
+        return value
+
+    @field_validator("requested_at_utc")
+    @classmethod
+    def _generation_requested_at_must_be_aware(cls, value: datetime) -> datetime:
+        return require_timezone_aware(value, field_name="requestedAtUtc")
 
 
 class AIExplanationEvaluationRequest(CamelModel):
@@ -460,6 +483,7 @@ class AIExplanationEvaluationResponse(CamelModel):
         ai_lineage_persistence_decision: str | None,
         durable_storage_backed: bool,
         provider_retention_confirmation_recorded: bool = False,
+        runtime_execution_confirmed: bool | None = None,
     ) -> "AIExplanationEvaluationResponse":
         return cls(
             requestId=result.request.request_id,
@@ -496,10 +520,40 @@ class AIExplanationEvaluationResponse(CamelModel):
             durableStorageBacked=durable_storage_backed,
             providerRetentionConfirmationRecorded=provider_retention_confirmation_recorded,
             lotusAiRuntimeExecuted=(
-                result.execution_provenance_posture
+                runtime_execution_confirmed
+                if runtime_execution_confirmed is not None
+                else result.execution_provenance_posture
                 is AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED
             ),
             supportedFeaturePromoted=False,
+        )
+
+
+class AIExplanationGenerationResponse(CamelModel):
+    status: AIExplanationGenerationStatus
+    disposition: AIExplanationGenerationDisposition
+    lotus_ai_run_id: str | None = Field(default=None, alias="lotusAiRunId")
+    lotus_ai_runtime_execution_confirmed: bool = Field(
+        ...,
+        alias="lotusAiRuntimeExecutionConfirmed",
+    )
+    evaluation_verdict: str = Field(..., alias="evaluationVerdict")
+    explanation: AIExplanationEvaluationResponse
+
+    @classmethod
+    def from_outcome(
+        cls,
+        outcome: GeneratedAIExplanationOutcome,
+        *,
+        explanation: AIExplanationEvaluationResponse,
+    ) -> "AIExplanationGenerationResponse":
+        return cls(
+            status=outcome.status,
+            disposition=outcome.disposition,
+            lotusAiRunId=outcome.lotus_ai_run_id,
+            lotusAiRuntimeExecutionConfirmed=outcome.runtime_execution_confirmed,
+            evaluationVerdict=outcome.result.decision.value,
+            explanation=explanation,
         )
 
 
@@ -627,6 +681,8 @@ def build_ai_explanation_readiness_response(
 __all__ = [
     "AIExplanationEvaluationRequest",
     "AIExplanationEvaluationResponse",
+    "AIExplanationGenerationRequest",
+    "AIExplanationGenerationResponse",
     "AIExplanationReadinessResponse",
     "AIOutputClaimRequest",
     "AIProposedActionRequest",

@@ -17,6 +17,24 @@ data-product certification, or supported-feature promotion.
 | Conversion and downstream limits | [Downstream](#downstream), [Conversion Boundaries](#conversion-boundaries) |
 | Data product dependencies | [Data Product Dependencies](#data-product-dependencies) |
 | Lifecycle and retention receipts | [Lotus AI Provider-Retention Receipt](#lotus-ai-provider-retention-receipt), [Lotus Archive Lifecycle Posture](#lotus-archive-lifecycle-posture), [Bank Lifecycle Authority](#bank-lifecycle-authority) |
+| Governed explanation generation | [Lotus AI Explanation Generation](#lotus-ai-explanation-generation) |
+
+### Lotus AI Explanation Generation
+
+`POST /api/v1/idea-candidates/{candidateId}/ai-explanations` is the bounded
+Idea-to-Lotus-AI generation boundary. Idea derives redacted input from the
+persisted candidate, sends a stable hashed owner idempotency key, retains the
+exact owner run id, and evaluates returned content under Idea-owned grounding,
+action, replay, and lineage policy before anything is served.
+
+The current executable posture is deliberately narrow. `local` and `test` may
+exercise the registered deterministic workflow-pack stub. Runtime failure,
+owner conflict, invalid output, an in-flight candidate evidence change, or a
+failed Idea evaluation returns explicit `EXPLANATION_UNAVAILABLE` with
+deterministic fallback evidence. Demo, staging, and production remain
+attestation-required and do not execute this unattested path. This integration
+does not prove a live provider, production model approval, Workbench
+realization, downstream authority, or supported-feature promotion.
 
 ### Lotus AI Provider-Retention Receipt
 
