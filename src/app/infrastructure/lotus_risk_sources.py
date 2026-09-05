@@ -7,12 +7,12 @@ from typing import Any
 
 from app.domain import (
     EvidenceFreshness,
-    SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
     SourceSystem,
 )
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_revision_claims import build_source_revision_claims
 from app.infrastructure.source_product_payloads import first_reason_code
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
@@ -465,7 +465,7 @@ def _source_revision_claims(*payloads: dict[str, Any]) -> SourceRevisionClaims |
         )
     ):
         return None
-    return SourceRevisionClaims(
+    return build_source_revision_claims(
         snapshot_id=snapshot_id,
         source_revision=source_revision,
         restatement_version=restatement_version,
@@ -474,12 +474,10 @@ def _source_revision_claims(*payloads: dict[str, Any]) -> SourceRevisionClaims |
         calculation_run_id=calculation_run_id,
         methodology_version=methodology_version,
         policy_version=policy_version,
-        reconciliation_posture=_source_reconciliation_posture(
-            _text_from_payloads(
-                payloads,
-                "reconciliation_status",
-                "reconciliationStatus",
-            )
+        reconciliation_status=_text_from_payloads(
+            payloads,
+            "reconciliation_status",
+            "reconciliationStatus",
         ),
     )
 
@@ -491,18 +489,6 @@ def _text_from_payloads(payloads: tuple[dict[str, Any], ...], *keys: str) -> str
             if value is not None:
                 return value
     return None
-
-
-def _source_reconciliation_posture(value: str | None) -> SourceReconciliationPosture:
-    normalized = value.lower() if value is not None else "unknown"
-    aliases = {
-        "complete": SourceReconciliationPosture.COMPLETE,
-        "partial": SourceReconciliationPosture.PARTIAL,
-        "failed": SourceReconciliationPosture.FAILED,
-        "unreconciled": SourceReconciliationPosture.FAILED,
-        "not_applicable": SourceReconciliationPosture.NOT_APPLICABLE,
-    }
-    return aliases.get(normalized, SourceReconciliationPosture.UNKNOWN)
 
 
 def _validate_mandate_health_payload(payload: dict[str, Any]) -> None:

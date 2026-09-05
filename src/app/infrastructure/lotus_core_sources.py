@@ -8,13 +8,13 @@ from urllib.parse import quote
 
 from app.domain import (
     EvidenceFreshness,
-    SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
     SourceSystem,
     benchmark_assignment_diagnostic,
 )
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_revision_claims import build_source_revision_claims
 from app.ports.core_sources import (
     CASHFLOW_PROJECTION_PRODUCT_ID,
     CASH_MOVEMENT_PRODUCT_ID,
@@ -518,7 +518,7 @@ def _source_revision_claims(payload: dict[str, Any]) -> SourceRevisionClaims | N
     calculation_run_id = _text_field(payload, "calculation_id", "calculationId", "run_id", "runId")
     if not any((snapshot_id, source_revision, source_batch_id, calculation_run_id)):
         return None
-    return SourceRevisionClaims(
+    return build_source_revision_claims(
         snapshot_id=snapshot_id,
         source_revision=source_revision,
         restatement_version=_text_field(
@@ -535,22 +535,12 @@ def _source_revision_claims(payload: dict[str, Any]) -> SourceRevisionClaims | N
             "methodologyVersion",
         ),
         policy_version=_text_field(payload, "policy_version", "policyVersion"),
-        reconciliation_posture=_source_reconciliation_posture(
-            _text_field(payload, "reconciliation_status", "reconciliationStatus")
+        reconciliation_status=_text_field(
+            payload,
+            "reconciliation_status",
+            "reconciliationStatus",
         ),
     )
-
-
-def _source_reconciliation_posture(value: str | None) -> SourceReconciliationPosture:
-    normalized = value.strip().lower() if value is not None else "unknown"
-    aliases = {
-        "complete": SourceReconciliationPosture.COMPLETE,
-        "partial": SourceReconciliationPosture.PARTIAL,
-        "failed": SourceReconciliationPosture.FAILED,
-        "unreconciled": SourceReconciliationPosture.FAILED,
-        "not_applicable": SourceReconciliationPosture.NOT_APPLICABLE,
-    }
-    return aliases.get(normalized, SourceReconciliationPosture.UNKNOWN)
 
 
 def _datetime_field(payload: dict[str, Any], *keys: str) -> datetime:
