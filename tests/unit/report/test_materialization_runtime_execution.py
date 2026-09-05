@@ -66,12 +66,16 @@ def test_report_materialization_runtime_execution_builder_binds_runtime_checks()
 
 def test_local_asgi_proof_cannot_clear_live_render_or_archive_blockers() -> None:
     payload = valid_report_materialization_runtime_execution()
+    blockers_satisfied = cast(list[str] | tuple[str, ...], payload["aggregateBlockersSatisfied"])
+    remaining_blockers = cast(
+        list[str] | tuple[str, ...], payload["remainingCertificationBlockers"]
+    )
 
     assert payload["runtimeMode"] == "local_asgi_testclient"
-    assert "rendered_output_creation_missing" not in payload["aggregateBlockersSatisfied"]
-    assert "archive_record_creation_missing" not in payload["aggregateBlockersSatisfied"]
-    assert "rendered_output_creation_missing" in payload["remainingCertificationBlockers"]
-    assert "archive_record_creation_missing" in payload["remainingCertificationBlockers"]
+    assert "rendered_output_creation_missing" not in blockers_satisfied
+    assert "archive_record_creation_missing" not in blockers_satisfied
+    assert "rendered_output_creation_missing" in remaining_blockers
+    assert "archive_record_creation_missing" in remaining_blockers
 
 
 def test_report_materialization_runtime_execution_builder_requires_aware_generation_time() -> None:
