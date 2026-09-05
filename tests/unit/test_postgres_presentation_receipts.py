@@ -11,6 +11,13 @@ from app.domain import (
     PresentationReceiptDecision,
 )
 from app.infrastructure.postgres_presentation_receipts import _record_presentation_receipt
+from app.infrastructure.postgres_presentation_receipts import (
+    PostgresPresentationReceiptRepositoryMixin,
+)
+from app.infrastructure.postgres_codecs import (
+    _review_authority_grant_from_json,
+    _review_authority_grant_to_json,
+)
 
 
 def test_postgres_receipt_insert_is_candidate_tenant_and_version_fenced() -> None:
@@ -76,6 +83,49 @@ def test_postgres_receipt_candidate_state_mismatch_rolls_back() -> None:
     assert connection.rollbacks == 1
 
 
+def test_postgres_receipt_scoped_lookup_returns_only_exact_candidate_tenant_match() -> None:
+    receipt = _receipt()
+    repository = _ReceiptRepository(_Connection([[_row(receipt)]]))
+
+    assert (
+        repository.presentation_receipt_by_id(
+            receipt.receipt_id,
+            candidate_id=receipt.candidate_id,
+            tenant_id=receipt.tenant_id,
+        )
+        == receipt
+    )
+    assert repository.connection.cursor_instance.executed_params[0] == (
+        receipt.receipt_id,
+        receipt.candidate_id,
+        receipt.tenant_id,
+    )
+
+    missing_repository = _ReceiptRepository(_Connection([[]]))
+    assert (
+        missing_repository.presentation_receipt_by_id(
+            "receipt-missing",
+            candidate_id=receipt.candidate_id,
+            tenant_id=receipt.tenant_id,
+        )
+        is None
+    )
+
+
+def test_postgres_receipt_repository_delegates_mutation_with_observability() -> None:
+    repository = _ReceiptRepository(_Connection([[{"receipt_id": "receipt-0001"}]]))
+
+    result = repository.record_presentation_receipt(_receipt())
+
+    assert result.decision is PresentationReceiptDecision.ACCEPTED
+    assert repository.connection.commits == 1
+
+
+def test_postgres_review_authority_codec_preserves_absent_legacy_grant() -> None:
+    assert _review_authority_grant_to_json(None) is None
+    assert _review_authority_grant_from_json(None) is None
+
+
 class _Cursor:
     def __init__(self, results: list[Sequence[Any]]) -> None:
         self._results = results
@@ -112,6 +162,12 @@ class _Connection:
 
     def rollback(self) -> None:
         self.rollbacks += 1
+
+
+class _ReceiptRepository(PostgresPresentationReceiptRepositoryMixin):
+    def __init__(self, connection: _Connection) -> None:
+        self._connection = connection
+        self.connection = connection
 
 
 def _receipt(**overrides: Any) -> CandidatePresentationReceipt:
