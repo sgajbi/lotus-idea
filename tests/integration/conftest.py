@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import os
 from typing import Iterator
 
 import pytest
 
 from app.infrastructure.migrations import MigrationDirection
+from app.runtime import trusted_clock_state
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.integration.postgres_runtime_support import (
     POSTGRES_REQUIRED_ENV,
@@ -13,7 +15,18 @@ from tests.integration.postgres_runtime_support import (
     clear_disposable_database_rows,
     execute_migrations,
 )
+from tests.support.fixed_utc_clock import FixedUtcClock
 from tests.support.http import managed_test_client_scope
+
+
+@pytest.fixture(autouse=True)
+def _deterministic_control_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep fixed scenario timestamps deterministic without changing runtime policy."""
+    monkeypatch.setattr(
+        trusted_clock_state,
+        "_TRUSTED_CLOCK",
+        FixedUtcClock(datetime(2026, 6, 21, 10, 15, tzinfo=UTC)),
+    )
 
 
 @pytest.fixture(autouse=True)
