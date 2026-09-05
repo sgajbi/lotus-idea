@@ -168,6 +168,79 @@ def test_revision_claims_reject_duplicate_causal_input_products() -> None:
         _claims(causal_input_revisions=(causal, causal))
 
 
+def test_revision_claim_value_objects_reject_unusable_identity() -> None:
+    with pytest.raises(ValueError, match="product_id is required"):
+        CausalInputRevision(product_id="", source_revision="revision-1")
+    with pytest.raises(ValueError, match="surrounding whitespace"):
+        CausalInputRevision(product_id=" product-1", source_revision="revision-1")
+    with pytest.raises(ValueError, match="owner-issued revision identity"):
+        SourceRevisionClaims()
+    with pytest.raises(ValueError, match="must be non-negative"):
+        SourceCutTolerance(
+            policy_version="source-cut-tolerance-v1",
+            maximum_generated_time_skew_seconds=-1,
+        )
+
+
+def test_cut_posture_classifies_incomplete_and_incoherent_owner_cuts() -> None:
+    first = _source("lotus-core:PortfolioStateSnapshot:v1")
+    second = _source("lotus-core:HoldingsAsOf:v1")
+
+    assert (
+        source_cut_posture(
+            (
+                replace(
+                    first,
+                    revision_claims=_claims(
+                        reconciliation_posture=SourceReconciliationPosture.PARTIAL
+                    ),
+                ),
+            )
+        )
+        is SourceCutPosture.PARTIAL
+    )
+    assert (
+        source_cut_posture(
+            (
+                replace(
+                    first,
+                    revision_claims=_claims(
+                        reconciliation_posture=SourceReconciliationPosture.UNKNOWN
+                    ),
+                ),
+            )
+        )
+        is SourceCutPosture.PARTIAL
+    )
+    assert (
+        source_cut_posture((first, replace(second, as_of_date=date(2026, 9, 3))))
+        is SourceCutPosture.MIXED
+    )
+    assert (
+        source_cut_posture((first, replace(second, revision_claims=_claims(source_cut_id=None))))
+        is SourceCutPosture.PARTIAL
+    )
+    assert (
+        source_cut_posture(
+            (
+                replace(first, revision_claims=_claims(source_cut_id=None)),
+                replace(
+                    second,
+                    generated_at_utc=first.generated_at_utc + timedelta(seconds=61),
+                    revision_claims=_claims(source_cut_id=None),
+                ),
+            ),
+            tolerance=SourceCutTolerance(
+                policy_version="source-cut-tolerance-v1",
+                maximum_generated_time_skew_seconds=60,
+            ),
+        )
+        is SourceCutPosture.MIXED
+    )
+    with pytest.raises(ValueError, match="source_refs is required"):
+        source_cut_posture(())
+
+
 def test_revision_vector_rejects_duplicate_source_products() -> None:
     source = _source("lotus-core:PortfolioStateSnapshot:v1")
 

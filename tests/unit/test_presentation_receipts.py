@@ -75,6 +75,7 @@ def test_legacy_receipt_retains_unknown_cut_and_cannot_match_current_candidate()
             "must be UTC",
         ),
         ("accepted_at_utc", datetime(2026, 8, 30), "timezone-aware"),
+        ("accepted_at_utc", "2026-08-30T12:00:01Z", "must be a datetime"),
         (
             "accepted_at_utc",
             datetime(2026, 8, 30, tzinfo=timezone(timedelta(hours=1))),
@@ -87,6 +88,12 @@ def test_legacy_receipt_retains_unknown_cut_and_cannot_match_current_candidate()
         ("visible_candidate_count", True, "must be between"),
         ("queue_snapshot_digest", "queue-snapshot", "must be a sha256 digest"),
         ("source_revision_vector_digest", "source-vector", "must be a sha256 digest"),
+        (
+            "source_revision_vector_digest",
+            f"sha256:{'a' * 64}",
+            "legacy presentation receipts cannot claim a revision vector",
+        ),
+        ("source_cut_posture", "coherent", "must be a governed posture"),
         ("candidate_material_version", 0, "must be a positive integer"),
         ("candidate_material_version", True, "must be a positive integer"),
         ("candidate_evidence_version", 0, "must be a positive integer"),
@@ -97,8 +104,20 @@ def test_candidate_presentation_receipt_rejects_ungoverned_evidence(
     value: object,
     message: str,
 ) -> None:
+    overrides = {field_name: value}
+    if message.startswith("legacy presentation"):
+        overrides["schema_version"] = "lotus-idea.candidate-presentation-receipt.v1"
     with pytest.raises(ValueError, match=message):
-        _receipt(**{field_name: value})
+        _receipt(**overrides)
+
+
+def test_legacy_receipt_rejects_non_unknown_source_cut_posture() -> None:
+    with pytest.raises(ValueError, match="must retain unknown source cut posture"):
+        _receipt(
+            schema_version="lotus-idea.candidate-presentation-receipt.v1",
+            source_revision_vector_digest=None,
+            source_cut_posture=SourceCutPosture.COHERENT,
+        )
 
 
 def test_in_memory_repository_records_and_replays_exact_receipt() -> None:
@@ -170,6 +189,7 @@ def test_in_memory_repository_does_not_disclose_receipt_across_candidate_scope()
         {"candidate_material_version": 2},
         {"candidate_evidence_version": 2},
         {"source_revision_vector_digest": f"sha256:{'f' * 64}"},
+        {"source_cut_posture": SourceCutPosture.COHERENT},
         {"accepted_at_utc": datetime(2026, 8, 30, 11, 59, 59, tzinfo=UTC)},
     ),
 )
