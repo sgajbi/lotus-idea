@@ -364,6 +364,9 @@ durable claim `in_flight`. Advise and Report reconciliation refuse that claim
 until its lease expires, preventing recovery from racing the original POST.
 After expiry, trusted server time admits one exact read-only owner recovery;
 the submission retains one attempt and exact replay performs no owner I/O.
+Manage recovery for this failure window remains dependent on the exact scoped
+conversion-intent lookup tracked by `sgajbi/lotus-manage#665`. Idea does not
+invent the missing intake identity or repeat the owner POST.
 
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.

@@ -553,6 +553,10 @@ the exact owner identity and reconcile the existing claim. Trusted server
 acceptance time controls this boundary; recovery never reissues the POST, never
 increments the submission attempt, and exact replay performs no further owner
 I/O.
+Manage does not yet expose a safe lookup when its intake identity was lost
+before Idea finalization. Track that owner contract in
+`sgajbi/lotus-manage#665`; operators must not retry the POST or manufacture an
+intake identity.
 
 ### Local Advise, Manage, And Report Intake Fixtures
 
