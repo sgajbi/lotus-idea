@@ -58,9 +58,30 @@ policy matrix and engineering details. Historical queue and learning snapshots
 also use acceptance time for inclusion and ordering, so a backdated producer
 timestamp accepted later cannot rewrite an earlier review, feedback,
 effectiveness, or ranking result. Downstream owner event version remains the
-authority for downstream business chronology. This control does not itself establish
-the immutable presentation-to-review authority grant tracked by issue `#1225`
-or source-revision posture tracked by `#1227`.
+authority for downstream business chronology. Exact presentation-to-review
+authority is now enforced by `idea-review-authority-v1`; source-revision
+posture tracked by `#1227` remains separate.
+
+## Exact Presentation-To-Conversion Authority
+
+```mermaid
+flowchart LR
+    Queue["Ranked queue item<br/>material/evidence identity"] --> Receipt["Persisted presentation receipt"]
+    Receipt --> Review["Immutable review decision / authority grant"]
+    Review --> Fence["Locked exact-identity and expiry fence"]
+    Fence --> Intent["Conversion intent + outbox"]
+    Intent --> Owner["Advise / Manage / Report authority"]
+```
+
+Workbench review requires the exact tenant/candidate-scoped receipt and exact
+material version, evidence version, packet ID, and content hash. Operator review
+is explicit and cannot claim a Workbench receipt. Conversion selects the exact
+persisted approving review and rechecks active authority under the candidate
+mutation lock. Every evidence change supersedes authority under v1 because no
+non-semantic repair proof is certified. Migration `025` preserves ambiguous
+history as `legacy_unverified` and exposes a read-only audit view; it does not
+fabricate authority. Canonical Gateway/Workbench runtime proof remains required
+before product-support promotion.
 
 `lotus-idea` is a separate domain service because opportunity intelligence spans
 portfolio facts, performance, risk, advisory, management, reporting, AI, gateway,

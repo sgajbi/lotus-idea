@@ -26,6 +26,12 @@ AI/human-governance posture, and non-claim rules before changing architecture
 or RFC implementation scope. It is context truth, not support-promotion
 evidence.
 
+The human-decision safety boundary from visible queue item through conversion
+is defined in `docs/architecture/exact-review-authority.md`. It specifies exact
+candidate/evidence identity, Workbench presentation causality, operator channel
+semantics, locked conversion admission, expiry/replay behavior, and the
+fail-closed legacy migration audit.
+
 Codebase cleanup and modularity evidence lives in:
 
 1. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`

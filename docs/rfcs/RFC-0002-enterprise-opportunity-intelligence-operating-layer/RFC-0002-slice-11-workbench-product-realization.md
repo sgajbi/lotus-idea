@@ -118,3 +118,12 @@ Gateway/BFF only.
    states.
 3. UI copy uses advisor-safe private-banking language.
 4. No demo screenshot is promoted before API and panel validation pass.
+
+### Exact authority consumer requirement
+
+Workbench must persist a presentation receipt only after the exact candidate
+revision is visible, then submit that receipt and unchanged
+material/evidence/packet/hash identity with review. Conversion must submit the
+exact approving review and evidence identity. Gateway must forward these fields
+without reconstruction or aliases. Idea contract tests do not satisfy the
+remaining canonical browser/runtime proof.

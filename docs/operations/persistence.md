@@ -255,7 +255,7 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `020_independent_presentation_rank`. Migration `016`
+The current schema head is `025_exact_review_authority`. Migration `016`
 adds tenant-scoped business identity, material/evidence version, material
 fingerprint, change-reason, and superseded-version columns. Migration `017`
 adds the versioned feedback outcome/reason taxonomy and immutable offline
@@ -269,6 +269,13 @@ rank-within-visible-count constraint with a validated positive-global-rank
 constraint while retaining the independent visible-set bound. The replacement
 constraint is validated before the legacy constraint is removed; rollback fails
 closed if stored receipts rely on the independent rank semantics.
+Migrations `021` through `024` add score-breakdown, downstream-owner,
+Manage-history, and trusted-acceptance-time controls. Migration `025` classifies
+incomplete historical review decisions as `legacy_unverified`, records explicit
+null authority on legacy conversion intents, and exposes the read-only
+`idea_review_authority_migration_audit` view. It never invents historic evidence
+versions or presentation receipts. See
+`docs/architecture/exact-review-authority.md` for audit and remediation.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
