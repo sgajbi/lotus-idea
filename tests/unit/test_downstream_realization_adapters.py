@@ -10,7 +10,6 @@ from tests.support.report_materialization import (
     duplicate_required_report_blocker,
     report_materialization_receipt_payload,
 )
-
 from app.domain import (
     SourceCutPosture,
     ConversionBoundary,
@@ -1126,8 +1125,6 @@ def advise_service_context() -> AdviseRealizationServiceContext:
             "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
         ),
     )
-
-
 def report_service_context() -> ReportRealizationServiceContext:
     return ReportRealizationServiceContext(
         actor_id="lotus-idea-local-development",
