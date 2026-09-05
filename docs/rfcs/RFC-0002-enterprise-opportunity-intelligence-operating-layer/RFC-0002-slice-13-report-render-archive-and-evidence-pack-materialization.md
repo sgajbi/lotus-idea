@@ -192,12 +192,13 @@ Partially satisfied:
    present.
 6. The Idea consumer can submit a strictly bounded local/test materialization
    request only after resolving persisted candidate scope and matching source
-   dates. The `json` fixture avoids a false render/archive claim.
-7. The receipt-bound Report materialization runtime proof now requires exact
-   Render #65/PR #67 and Archive #72/PR #73 owner-mainline evidence. When the
-   accepted archived receipt and owner evidence both validate, Idea readiness
-   clears `report_evidence_pack_live_materialization_proof_missing`,
-   `rendered_output_creation_missing`, and `archive_record_creation_missing`.
+   dates. Its server-owned output profile is exactly one `pdf`, selecting the
+   governed Render and Archive path without granting callers format authority.
+7. The local-ASGI Report materialization proof clears only
+   `report_evidence_pack_live_materialization_proof_missing`. Its injected Render
+   and Archive test doubles cannot clear `rendered_output_creation_missing` or
+   `archive_record_creation_missing`; those require a rebuilt current-source HTTP
+   chain through the actual owner services under `#1240` and Render `#282`.
 8. An uncertain Report materialization submission can recover its exact
    Report-owned receipt through the existing downstream-submission aggregate.
    Idea authorizes complete scope before the owner read, binds the stored
@@ -217,12 +218,11 @@ Not yet satisfied:
    trust telemetry, client-publication proof, or supported-feature promotion
    exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
-5. A source-safe local/test `json` request can observe a Report-owned job, but
-   it does not certify a supportable Report completion, rendered document,
-   Archive record, retention/legal-hold posture, client publication, or
-   production identity. Rendered-output and Archive-record creation blockers
-   are cleared only by the separate accepted archived receipt path with bound
-   Render/Archive owner-mainline evidence.
+5. The configured local/test `pdf` request can exercise the owner chain, but
+   current-source HTTP evidence has not yet established a Render artifact and
+   Archive record through the Idea-owned submission path. It also does not
+   certify client publication, production identity, legal approval, or
+   retention/legal-hold posture.
 
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,
@@ -238,11 +238,12 @@ declared Report-owned routes, and can expose Report owner proof refs
 `sgajbi/lotus-report#152` and `sgajbi/lotus-report#286` as provenance. Source
 contracts clear no blocker.
 With a valid aggregate-current Report materialization runtime proof, the
-runtime target advances to the Report materialization route and the materialized
-Report/Render/Archive creation blockers are cleared only because the proof
-binds accepted archived receipt posture to exact Render and Archive owner
-mainline evidence. They keep Report/Render/Archive ownership outside
-`lotus-idea` and remain `not_certified` until client publication,
+runtime target advances to the Report materialization route and clears only its
+execution blocker. The injected Render and Archive collaborators do not prove
+owner-service execution. A separate rebuilt current-source HTTP chain must
+establish Render artifact and Archive custody identities while keeping those
+authorities outside `lotus-idea`; the capability remains `not_certified` until
+client publication,
 Gateway/Workbench product proof, data-mesh certification, production identity,
 legal/retention posture, and supported-feature promotion are implemented and
 validated.

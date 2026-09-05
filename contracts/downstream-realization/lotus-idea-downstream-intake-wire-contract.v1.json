@@ -209,7 +209,7 @@
         "tenant_id": "tenant-sg",
         "region": "APAC",
         "output_formats": [
-          "json"
+          "pdf"
         ]
       },
       "boundary": "REPORT_JOB_MATERIALIZATION",
