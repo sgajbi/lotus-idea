@@ -32,12 +32,7 @@ def _claims(**changes: object) -> SourceRevisionClaims:
         "restatement_version": "restatement-2",
         "source_cut_id": "close-2026-09-04",
         "methodology_version": "methodology-4",
-        "causal_input_revisions": (
-            CausalInputRevision(
-                product_id="lotus-core:HoldingsAsOf:v1",
-                source_revision="holdings-31",
-            ),
-        ),
+        "causal_input_revisions": (),
         "reconciliation_posture": SourceReconciliationPosture.COMPLETE,
     }
     values.update(changes)
@@ -159,6 +154,170 @@ def test_declared_tolerance_is_explicit_and_versioned() -> None:
         )
         is SourceCutPosture.COHERENT_WITH_DECLARED_TOLERANCE
     )
+
+
+@pytest.mark.parametrize("reverse_order", [False, True])
+@pytest.mark.parametrize(
+    ("causal_revision", "causal_restatement"),
+    [
+        ("revision-1", "restatement-2"),
+        ("revision-2", "restatement-1"),
+    ],
+)
+def test_explicit_causal_contradiction_is_mixed_even_with_shared_cut(
+    causal_revision: str,
+    causal_restatement: str,
+    reverse_order: bool,
+) -> None:
+    holdings = _source(
+        "lotus-core:HoldingsAsOf:v1",
+        revision_claims=_claims(
+            source_revision="revision-2",
+            restatement_version="restatement-2",
+        ),
+    )
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        revision_claims=_claims(
+            source_revision="risk-revision-5",
+            restatement_version="risk-restatement-1",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id=holdings.product_id,
+                    source_revision=causal_revision,
+                    restatement_version=causal_restatement,
+                ),
+            ),
+        ),
+    )
+    sources = (risk, holdings) if reverse_order else (holdings, risk)
+
+    assert source_cut_posture(sources) is SourceCutPosture.MIXED
+
+
+def test_matching_causal_revision_and_restatement_preserve_coherent_cut() -> None:
+    holdings = _source(
+        "lotus-core:HoldingsAsOf:v1",
+        revision_claims=_claims(
+            source_revision="revision-2",
+            restatement_version="restatement-2",
+        ),
+    )
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        revision_claims=_claims(
+            source_revision="risk-revision-5",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id=holdings.product_id,
+                    source_revision="revision-2",
+                    restatement_version="restatement-2",
+                ),
+            ),
+        ),
+    )
+
+    assert source_cut_posture((holdings, risk)) is SourceCutPosture.COHERENT
+
+
+def test_tolerance_cannot_excuse_explicit_causal_revision_contradiction() -> None:
+    holdings = _source(
+        "lotus-core:HoldingsAsOf:v1",
+        revision_claims=_claims(source_cut_id=None, source_revision="revision-2"),
+    )
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        generated_at_utc=holdings.generated_at_utc + timedelta(seconds=30),
+        revision_claims=_claims(
+            source_cut_id=None,
+            source_revision="risk-revision-5",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id=holdings.product_id,
+                    source_revision="revision-1",
+                ),
+            ),
+        ),
+    )
+
+    assert (
+        source_cut_posture(
+            (holdings, risk),
+            tolerance=SourceCutTolerance(
+                policy_version="source-cut-tolerance-v1",
+                maximum_generated_time_skew_seconds=60,
+            ),
+        )
+        is SourceCutPosture.MIXED
+    )
+
+
+def test_unverifiable_causal_revision_remains_partial() -> None:
+    holdings = _source(
+        "lotus-core:HoldingsAsOf:v1",
+        revision_claims=_claims(source_revision=None),
+    )
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        revision_claims=_claims(
+            source_revision="risk-revision-5",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id=holdings.product_id,
+                    source_revision="revision-2",
+                ),
+            ),
+        ),
+    )
+
+    assert source_cut_posture((holdings, risk)) is SourceCutPosture.PARTIAL
+
+
+def test_missing_causal_source_remains_partial_without_inventing_identity() -> None:
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        revision_claims=_claims(
+            source_revision="risk-revision-5",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id="lotus-core:HoldingsAsOf:v1",
+                    source_revision="revision-2",
+                ),
+            ),
+        ),
+    )
+
+    assert source_cut_posture((risk,)) is SourceCutPosture.PARTIAL
+
+
+def test_unstated_causal_restatement_remains_partial_when_source_is_restated() -> None:
+    holdings = _source(
+        "lotus-core:HoldingsAsOf:v1",
+        revision_claims=_claims(
+            source_revision="revision-2",
+            restatement_version="restatement-2",
+        ),
+    )
+    risk = _source(
+        "lotus-risk:PortfolioRiskSummary:v1",
+        source_system=SourceSystem.LOTUS_RISK,
+        revision_claims=_claims(
+            source_revision="risk-revision-5",
+            causal_input_revisions=(
+                CausalInputRevision(
+                    product_id=holdings.product_id,
+                    source_revision="revision-2",
+                ),
+            ),
+        ),
+    )
+
+    assert source_cut_posture((holdings, risk)) is SourceCutPosture.PARTIAL
 
 
 def test_revision_claims_reject_duplicate_causal_input_products() -> None:
