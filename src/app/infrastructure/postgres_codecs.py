@@ -64,7 +64,13 @@ from app.domain.review_authority import (
 )
 from app.domain.review_queue import QueuePriorityBucket
 from app.domain.scoring import CandidateScorePolicyVersion
-from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
+from app.ports.evidence_payloads import (
+    access_scope_payload,
+    source_cut_tolerance_from_payload,
+    source_cut_tolerance_payload,
+    source_ref_payload,
+    source_revision_claims_from_payload,
+)
 
 __all__ = (
     "ai_explanation_lineage_from_json",
@@ -832,11 +838,14 @@ def _evidence_packet_to_json(packet: IdeaEvidencePacket) -> dict[str, Any]:
             if packet.applicability_expires_at_utc is not None
             else None
         ),
+        "source_cut_posture": packet.source_cut_posture.value,
+        "source_cut_tolerance": source_cut_tolerance_payload(packet.source_cut_tolerance),
+        "source_revision_vector_digest": packet.source_revision_vector_digest,
     }
 
 
 def _evidence_packet_from_json(payload: Mapping[str, Any]) -> IdeaEvidencePacket:
-    return IdeaEvidencePacket(
+    packet = IdeaEvidencePacket(
         evidence_packet_id=str(payload["evidence_packet_id"]),
         supportability=EvidenceSupportability(payload["supportability"]),
         source_refs=tuple(_source_ref_from_json(item) for item in payload["source_refs"]),
@@ -851,7 +860,12 @@ def _evidence_packet_from_json(payload: Mapping[str, Any]) -> IdeaEvidencePacket
             if payload.get("applicability_expires_at_utc") is not None
             else None
         ),
+        source_cut_tolerance=source_cut_tolerance_from_payload(
+            _optional_mapping(payload.get("source_cut_tolerance"))
+        ),
     )
+    _verify_derived_source_revision_fields(payload, packet)
+    return packet
 
 
 def _lineage_ref_to_json(lineage_ref: LineageRef) -> dict[str, Any]:
@@ -881,7 +895,29 @@ def _source_ref_from_json(payload: Mapping[str, Any]) -> SourceRef:
         content_hash=str(payload["content_hash"]),
         data_quality_status=str(payload["data_quality_status"]),
         freshness=EvidenceFreshness(payload["freshness"]),
+        revision_claims=source_revision_claims_from_payload(
+            _optional_mapping(payload.get("revision_claims"))
+        ),
     )
+
+
+def _verify_derived_source_revision_fields(
+    payload: Mapping[str, Any], packet: IdeaEvidencePacket
+) -> None:
+    persisted_digest = payload.get("source_revision_vector_digest")
+    if persisted_digest is not None and persisted_digest != packet.source_revision_vector_digest:
+        raise ValueError("persisted source revision vector digest does not match source claims")
+    persisted_posture = payload.get("source_cut_posture")
+    if persisted_posture is not None and persisted_posture != packet.source_cut_posture.value:
+        raise ValueError("persisted source cut posture does not match source claims")
+
+
+def _optional_mapping(value: object) -> Mapping[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("source revision metadata must be a JSON object")
+    return value
 
 
 def _score_to_json(score: IdeaScore) -> dict[str, Any]:
