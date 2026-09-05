@@ -180,12 +180,8 @@ def _submission_eligibility_blocker(
             or submission.lease_expires_at_utc > accepted_at_utc
         ):
             return "report_materialization_submission_still_in_flight"
-        if submission.owner_receipt is not None:
-            return "report_materialization_uncertain_submission_has_owner_receipt"
         return None
     if submission.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED:
-        if submission.owner_receipt is not None:
-            return "report_materialization_uncertain_submission_has_owner_receipt"
         return None
     if (
         submission.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM

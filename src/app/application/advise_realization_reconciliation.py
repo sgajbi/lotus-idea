@@ -176,12 +176,8 @@ def _submission_eligibility_blocker(
             or submission.lease_expires_at_utc > accepted_at_utc
         ):
             return "advise_realization_submission_still_in_flight"
-        if submission.owner_receipt is not None:
-            return "advise_realization_uncertain_submission_has_owner_receipt"
         return None
     if submission.status is DownstreamSubmissionPosture.RECONCILIATION_REQUIRED:
-        if submission.owner_receipt is not None:
-            return "advise_realization_uncertain_submission_has_owner_receipt"
         return None
     if submission.status not in {
         DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
