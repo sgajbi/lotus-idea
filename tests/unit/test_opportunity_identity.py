@@ -7,6 +7,7 @@ import pytest
 
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import EvidenceFreshness, OpportunityFamily, SourceRef, SourceSystem
+from app.domain.source_revision import SourceReconciliationPosture, SourceRevisionClaims
 from app.domain.opportunity_identity import (
     OPPORTUNITY_IDENTITY_POLICY_VERSION,
     OpportunityIdentity,
@@ -94,6 +95,33 @@ def test_source_correction_changes_evidence_version_without_changing_business_ca
     assert corrected.signal_id != original.signal_id
     assert corrected.evidence_packet_id != original.evidence_packet_id
     assert corrected.lineage_id != original.lineage_id
+
+
+def test_same_date_restatement_changes_evidence_identity_without_new_business_identity() -> None:
+    source = _source_ref("portfolio-state", "sha256:portfolio-state-v1")
+    original = replace(
+        source,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id="snapshot-1",
+            restatement_version="restatement-1",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
+    )
+    restated = replace(
+        original,
+        revision_claims=replace(
+            original.revision_claims,
+            restatement_version="restatement-2",
+        ),
+    )
+
+    original_identity = _identity(source_refs=(original,))
+    restated_identity = _identity(source_refs=(restated,))
+
+    assert original.as_of_date == restated.as_of_date
+    assert restated_identity.business_identity_id == original_identity.business_identity_id
+    assert restated_identity.material_fingerprint == original_identity.material_fingerprint
+    assert restated_identity.evidence_fingerprint != original_identity.evidence_fingerprint
 
 
 def test_source_order_is_not_business_or_evidence_identity() -> None:
