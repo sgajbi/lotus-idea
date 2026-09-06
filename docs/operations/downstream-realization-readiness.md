@@ -107,9 +107,12 @@ complete caller scope before owner I/O and performs one read-only lookup using
 the persisted idempotency key plus exact evidence-pack, conversion-intent,
 candidate, evidence fingerprint, and portfolio identity. Only an exact typed
 receipt advances the existing submission. A stored receipt replays locally
-without another owner read; unavailable or contradictory owner evidence leaves
-the uncertain record unchanged. The route never repeats the materialization
-`POST` and does not create a second submission registry.
+without another owner read. An exact owner `404` returns the source-safe `409
+report_materialization_owner_acceptance_not_observed`; owner configuration or
+transport failure returns `503`, and contradictory evidence returns `409`.
+Every refusal leaves the uncertain record, receipt, attempt count, and audit
+history unchanged. The route never repeats the materialization `POST` and does
+not create a second submission registry.
 
 The Advise reconciliation route authorizes complete caller scope before owner
 I/O, reads the owner history through the typed port, validates source and
@@ -122,6 +125,14 @@ no review-work or proposal identity; its durable receipt is not discarded.
 The returned appended count is the delta committed by that serialized repository
 mutation. An exact replay, including a request that loses a concurrent append
 race, returns zero rather than overstating new owner progress.
+
+Lost-response recovery for Advise and Manage uses the same absence boundary as
+Report. A successful exact lookup with no matching owner record is not an
+outage and is not permission to retry: Idea returns a target-specific `409
+*_owner_acceptance_not_observed` problem and preserves
+`reconciliation_required`. A later exact lookup may observe owner acceptance
+and reconcile the same submission. Owner unavailability remains a distinct
+`503` posture.
 
 ## What It Does Not Prove
 

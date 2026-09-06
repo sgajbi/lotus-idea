@@ -347,16 +347,19 @@ When a response is lost after Advise commits, the same reconciliation endpoint
 uses the owner route keyed by `conversion_intent_id` under exact tenant,
 legal-entity, and portfolio scope. It reconstructs the original intake receipt
 only after candidate, intent, evidence, and scope match. The mutating intake is
-not retried; unavailable or conflicting owner evidence leaves the handoff
-uncertain or conflicted.
+not retried. Exact owner 404 is a point-in-time
+`owner_acceptance_not_observed` posture, distinct from owner outage; both leave
+the handoff uncertain, but the API reports them as 409 and 503 respectively.
+Conflicting owner evidence remains a 409 conflict.
 
 When a response is lost after Report commits, retain the existing support
 reference. The Report reconciliation route authorizes complete scope before
 calling `GET /reports/idea-evidence-packs/materializations` with the persisted
 idempotency key and exact pack, intent, candidate, evidence, and portfolio
 identity. A matching owner receipt finalizes the existing submission; a local
-replay returns that receipt without another owner read. Missing, unavailable,
-malformed, or contradictory evidence cannot advance local posture, and the
+replay returns that receipt without another owner read. Exact owner absence,
+owner unavailability, malformed evidence, and contradictory evidence cannot
+advance local posture. They remain distinct 409/503 API postures, and the
 materialization `POST` is never retried.
 
 An owner acceptance followed by Idea-local finalization failure leaves the

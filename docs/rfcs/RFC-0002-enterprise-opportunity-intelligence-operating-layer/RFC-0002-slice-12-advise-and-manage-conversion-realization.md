@@ -325,9 +325,13 @@ Implemented in this slice:
     under exact tenant, legal-entity, and portfolio scope, validates stable
     candidate/evidence identity, reconstructs the original version-one owner
     receipt, and then persists the append-only Advise history. Subsequent replay
-    uses the recovered intake identity. Missing, malformed, unavailable, or
-    mismatched owner evidence cannot become acceptance. Advise still owns the
-    realization and all advisory business state.
+    uses the recovered intake identity. An exact owner `404` is classified as
+    `owner_acceptance_not_observed`, returns a source-safe 409, and changes no
+    receipt, history, audit entry, or attempt count. Owner outage remains
+    unavailable/503; malformed or mismatched evidence remains a conflict. A
+    later exact read may recover the same submission, but no refusal authorizes
+    another POST. Advise still owns the realization and all advisory business
+    state.
 38. Owner recovery fences the original submission lease. Advise and Report
     reject reconciliation while an `in_flight` lease remains active because the
     mutating owner request may still be running. After expiry, trusted server
@@ -341,8 +345,11 @@ Implemented in this slice:
     source version, and owner request fingerprint agree. Trusted Idea time
     records local acceptance while source event times remain unchanged. The
     original POST is not repeated, the attempt count remains one, and exact
-    submission replay performs no owner I/O. Missing, malformed, unavailable,
-    or contradictory owner evidence cannot advance authority.
+    submission replay performs no owner I/O. Manage uses the same explicit
+    owner-absence classification as Advise: exact 404 preserves uncertainty and
+    returns 409, whereas transport/configuration failure returns 503. Neither
+    posture advances authority; malformed or contradictory evidence also fails
+    closed.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
