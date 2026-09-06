@@ -56,9 +56,7 @@ def validate_contract(path: Path = CONTRACT) -> list[str]:
     ):
         errors.append("consumer must use the governed strict Archive trust bundle")
     if payload.get("trust_bundle_contract") != REQUIRED_TRUST_BUNDLE_CONTRACT:
-        errors.append(
-            "Archive trust bundle must preserve the producer response and profile fence"
-        )
+        errors.append("Archive trust bundle must preserve the producer response and profile fence")
     if set(payload.get("required_bindings", ())) != REQUIRED_BINDINGS:
         errors.append(
             "receipt must bind tenant, candidate, evidence pack, document, policy, and action"
