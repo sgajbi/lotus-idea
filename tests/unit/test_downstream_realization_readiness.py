@@ -552,7 +552,7 @@ def test_advise_source_and_runtime_proofs_compose_without_cross_clearing() -> No
     assert "advise_timeout_uncertainty_certification_missing" not in snapshot.blockers
     assert "advise_owner_correction_certification_missing" not in snapshot.blockers
     assert "advise_concurrent_owner_advancement_certification_missing" not in snapshot.blockers
-    assert "advise_restart_replay_certification_missing" in snapshot.blockers
+    assert "advise_restart_replay_certification_missing" not in snapshot.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
     assert "manage_live_contract_proof_missing" in snapshot.blockers
     assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
@@ -569,7 +569,7 @@ def test_advise_source_and_runtime_proofs_compose_without_cross_clearing() -> No
     assert "suitability_policy_authority_remains_lotus_advise" in advise_contract.blockers
 
 
-def test_advise_intake_runtime_execution_closes_bounded_live_timeout_and_progression_blockers() -> (
+def test_advise_intake_runtime_execution_closes_live_timeout_progression_and_restart_blockers() -> (
     None
 ):
     proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
@@ -588,7 +588,7 @@ def test_advise_intake_runtime_execution_closes_bounded_live_timeout_and_progres
     assert "advise_timeout_uncertainty_certification_missing" not in snapshot.blockers
     assert "advise_owner_correction_certification_missing" not in snapshot.blockers
     assert "advise_concurrent_owner_advancement_certification_missing" not in snapshot.blockers
-    assert "advise_restart_replay_certification_missing" in snapshot.blockers
+    assert "advise_restart_replay_certification_missing" not in snapshot.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
     assert "manage_live_contract_proof_missing" in snapshot.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers

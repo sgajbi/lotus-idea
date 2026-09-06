@@ -69,7 +69,8 @@
         ],
         "advise_restart_replay_certification_missing": [
           "sgajbi/lotus-idea#1254",
-          "sgajbi/lotus-idea#379"
+          "sgajbi/lotus-idea#379",
+          "sgajbi/lotus-advise#615"
         ],
         "advise_owner_correction_certification_missing": [
           "sgajbi/lotus-idea#1253",

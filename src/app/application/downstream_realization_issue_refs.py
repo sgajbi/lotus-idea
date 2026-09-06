@@ -13,6 +13,7 @@ ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION = "sgajbi/lotus-idea#1253"
 ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION = "sgajbi/lotus-idea#1254"
 ISSUE_SUPPORTED_FEATURE_PROMOTION = "sgajbi/lotus-idea#380"
 ISSUE_ADVISE_SOURCE_AUTHORITY = "sgajbi/lotus-advise#461"
+ISSUE_ADVISE_RESTART_RECOVERY = "sgajbi/lotus-advise#615"
 ISSUE_MANAGE_SOURCE_AUTHORITY = "sgajbi/lotus-manage#621"
 ISSUE_REPORT_SOURCE_AUTHORITY = "sgajbi/lotus-report#152"
 ISSUE_RENDER_SOURCE_AUTHORITY = "sgajbi/lotus-render#65"
@@ -44,6 +45,7 @@ REQUIRED_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, frozenset[str]]] = Mappin
                 "advise_restart_replay_certification_missing": _required_refs(
                     ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                    ISSUE_ADVISE_RESTART_RECOVERY,
                 ),
                 "advise_owner_correction_certification_missing": _required_refs(
                     ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,
@@ -120,6 +122,7 @@ CAPABILITY_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, tuple[str, ...]]] = Map
                 "advise_restart_replay_certification_missing": _refs(
                     ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                    ISSUE_ADVISE_RESTART_RECOVERY,
                 ),
                 "advise_owner_correction_certification_missing": _refs(
                     ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,

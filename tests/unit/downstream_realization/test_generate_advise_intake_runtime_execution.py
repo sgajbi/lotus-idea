@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 
+from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_OWNER_RESTART_TEST_NODES,
+    IDEA_ADVISE_RECONCILIATION_TEST_NODES,
+)
 from scripts.downstream_realization import generate_advise_intake_runtime_execution as generator
+from scripts.downstream_realization import advise_postgres_restart_evidence as postgres_evidence
 
 
 def test_advise_testclient_execution_runs_source_safe_scenarios(
@@ -151,6 +156,209 @@ def test_advise_testclient_stdout_decoder_rejects_non_object() -> None:
         generator._json_object_from_stdout(
             "[1, 2, 3]",
             "Advise testclient execution did not return a JSON object",
+        )
+
+
+def test_advise_postgres_restart_tests_emit_source_safe_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_source = (
+        tmp_path / "tests/integration/advisory/engine/"
+        "test_engine_proposal_repository_postgres_integration.py"
+    )
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_restart(): pass\n", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def fake_run(
+        args: list[str],
+        *,
+        cwd: Path,
+        env: Mapping[str, str],
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        captured.update(args=args, cwd=cwd, env=dict(env), check=check)
+        assert capture_output is True
+        assert text is True
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="2 passed", stderr="")
+
+    monkeypatch.setattr(
+        "scripts.downstream_realization.advise_postgres_restart_evidence.subprocess.run",
+        fake_run,
+    )
+    evidence = postgres_evidence.execute_advise_postgres_restart_tests(
+        advise_root=tmp_path,
+        advise_python="python-owner",
+        postgres_dsn="postgresql://test-only",
+        allow_database_reset=True,
+    )
+
+    assert captured["args"] == [
+        "python-owner",
+        "-m",
+        "pytest",
+        *ADVISE_OWNER_RESTART_TEST_NODES,
+        "-q",
+    ]
+    assert captured["cwd"] == tmp_path
+    assert captured["env"]["PROPOSAL_POSTGRES_INTEGRATION_DSN"] == "postgresql://test-only"  # type: ignore[index]
+    assert evidence["testProcessExitCode"] == 0
+    assert evidence["testPassedCount"] == 2
+    assert evidence["restartOutcomeVersions"] == (1, 2, 3)
+    assert evidence["ownerHistoryUnchangedAcrossRestart"] is True
+    assert evidence["ownerIdentitiesUnchangedAcrossRestart"] is True
+    assert evidence["duplicateOwnerWorkCount"] == 0
+    assert evidence["testSourceDigest"].startswith("sha256:")
+    assert "postgresql://test-only" not in json.dumps(evidence)
+
+
+@pytest.mark.parametrize(
+    ("postgres_dsn", "allow_database_reset", "message"),
+    (
+        ("", True, "--advise-postgres-dsn is required"),
+        ("postgresql://test-only", False, "--allow-destructive-test-database-reset is required"),
+    ),
+)
+def test_advise_postgres_restart_tests_require_explicit_disposable_database_authority(
+    tmp_path: Path,
+    postgres_dsn: str,
+    allow_database_reset: bool,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        postgres_evidence.execute_advise_postgres_restart_tests(
+            advise_root=tmp_path,
+            advise_python="python-owner",
+            postgres_dsn=postgres_dsn,
+            allow_database_reset=allow_database_reset,
+        )
+
+
+def test_advise_postgres_restart_tests_reject_skipped_execution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_source = (
+        tmp_path / "tests/integration/advisory/engine/"
+        "test_engine_proposal_repository_postgres_integration.py"
+    )
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_restart(): pass\n", encoding="utf-8")
+    monkeypatch.setattr(
+        "scripts.downstream_realization.advise_postgres_restart_evidence.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args=args[0], returncode=0, stdout="2 skipped", stderr=""
+        ),
+    )
+
+    with pytest.raises(ValueError, match="requires exactly two passed tests"):
+        postgres_evidence.execute_advise_postgres_restart_tests(
+            advise_root=tmp_path,
+            advise_python="python-owner",
+            postgres_dsn="postgresql://test-only",
+            allow_database_reset=True,
+        )
+
+
+def test_idea_postgres_reconciliation_test_emits_zero_delta_replay_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_source = tmp_path / "tests/integration/test_postgres_downstream_submission_runtime.py"
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_reconciliation(): pass\n", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def fake_run(
+        args: list[str],
+        *,
+        cwd: Path,
+        env: Mapping[str, str],
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        captured.update(args=args, cwd=cwd, env=dict(env), check=check)
+        assert capture_output is True
+        assert text is True
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="1 passed", stderr="")
+
+    monkeypatch.setattr(
+        "scripts.downstream_realization.advise_postgres_restart_evidence.subprocess.run",
+        fake_run,
+    )
+    evidence = postgres_evidence.execute_idea_postgres_reconciliation_test(
+        repository_root=tmp_path,
+        idea_python="python-idea",
+        postgres_dsn="postgresql://idea-test-only",
+        allow_database_reset=True,
+    )
+
+    assert captured["args"] == [
+        "python-idea",
+        "-m",
+        "pytest",
+        *IDEA_ADVISE_RECONCILIATION_TEST_NODES,
+        "-q",
+    ]
+    assert captured["cwd"] == tmp_path
+    assert captured["env"]["LOTUS_IDEA_POSTGRES_INTEGRATION_URL"] == (  # type: ignore[index]
+        "postgresql://idea-test-only"
+    )
+    assert captured["env"]["LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED"] == "1"  # type: ignore[index]
+    assert evidence["firstReconciliationAppendedOutcomeCount"] == 3
+    assert evidence["exactReplayAppendedOutcomeCount"] == 0
+    assert evidence["submissionAttemptCount"] == 1
+    assert evidence["ownerIdentityUnchanged"] is True
+    assert evidence["governedTableCountsUnchangedOnReplay"] is True
+    assert "postgresql://idea-test-only" not in json.dumps(evidence)
+
+
+@pytest.mark.parametrize(
+    ("postgres_dsn", "allow_database_reset", "message"),
+    (
+        ("", True, "--idea-postgres-dsn is required"),
+        (
+            "postgresql://idea-test-only",
+            False,
+            "--allow-destructive-test-database-reset is required",
+        ),
+    ),
+)
+def test_idea_postgres_reconciliation_test_requires_disposable_database_authority(
+    tmp_path: Path,
+    postgres_dsn: str,
+    allow_database_reset: bool,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        postgres_evidence.execute_idea_postgres_reconciliation_test(
+            repository_root=tmp_path,
+            idea_python="python-idea",
+            postgres_dsn=postgres_dsn,
+            allow_database_reset=allow_database_reset,
+        )
+
+
+def test_idea_postgres_reconciliation_test_rejects_skipped_execution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_source = tmp_path / "tests/integration/test_postgres_downstream_submission_runtime.py"
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_reconciliation(): pass\n", encoding="utf-8")
+    monkeypatch.setattr(
+        "scripts.downstream_realization.advise_postgres_restart_evidence.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args=args[0], returncode=0, stdout="1 skipped", stderr=""
+        ),
+    )
+
+    with pytest.raises(ValueError, match="requires exactly one passed test"):
+        postgres_evidence.execute_idea_postgres_reconciliation_test(
+            repository_root=tmp_path,
+            idea_python="python-idea",
+            postgres_dsn="postgresql://idea-test-only",
+            allow_database_reset=True,
         )
 
 
