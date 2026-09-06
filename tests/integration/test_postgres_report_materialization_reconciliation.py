@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
+from threading import Lock
 from typing import cast
 
 import psycopg
@@ -75,6 +77,7 @@ class _CountingReader:
     expected_idempotency_key: str
     call_count: int = 0
     acceptance_observed: bool = True
+    _call_count_lock: Lock = field(default_factory=Lock, repr=False)
 
     def recover_report_evidence_pack_receipt(
         self,
@@ -85,7 +88,8 @@ class _CountingReader:
         trace_id: str | None = None,
         idempotency_key: str,
     ) -> DownstreamOwnerReceipt:
-        self.call_count += 1
+        with self._call_count_lock:
+            self.call_count += 1
         assert evidence_pack.report_evidence_pack_id == "report-evidence-pack-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         assert idempotency_key == self.expected_idempotency_key
@@ -185,7 +189,7 @@ def test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays(
         assert persisted.audit_history[-1].occurred_at_utc == RECORDED_AT
 
     assert submit_client.call_count == 1
-    assert reader.call_count == 2
+    assert reader.call_count == 3
 
 
 def test_postgres_recovers_owner_acceptance_after_local_finalize_failure_and_restart(
@@ -269,4 +273,89 @@ def test_postgres_recovers_owner_acceptance_after_local_finalize_failure_and_res
         assert replayed.owner_receipt == recovered.owner_receipt
 
     assert submit_client.call_count == 1
-    assert reader.call_count == 1
+    assert reader.call_count == 2
+
+
+def test_postgres_concurrent_report_owner_advancement_converges_without_duplicate_state(
+    postgres_database_url: str,
+) -> None:
+    source_repository = repository_with_report_pack()
+    evidence_pack = source_repository.report_evidence_pack_by_id("report-evidence-pack-001")
+    assert evidence_pack is not None
+    owner_outcome = authoritative_report_outcome(evidence_pack)
+    assert owner_outcome.owner_receipt is not None
+    first_reader = _CountingReader(
+        owner_outcome.owner_receipt,
+        expected_idempotency_key="postgres-report-owner-advance-001",
+    )
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        repository.replace_snapshot(source_repository.snapshot())
+        submission = submit_report_evidence_pack_to_downstream(
+            RealizeReportEvidencePackCommand(
+                report_evidence_pack_id=evidence_pack.report_evidence_pack_id,
+                idempotency_key="postgres-report-owner-advance-001",
+                actor_subject="advisor-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+                submitted_at_utc=RECORDED_AT,
+            ),
+            repository=repository,
+            report_client=_LostResponseClient(),
+        )
+        assert submission.support_reference is not None
+        command = ReconcileReportMaterializationCommand(
+            support_reference=submission.support_reference,
+            actor_subject="operator-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+            accepted_at_utc=RECORDED_AT + timedelta(seconds=1),
+        )
+        first = reconcile_report_materialization_receipt(
+            command,
+            repository=repository,
+            report_reader=first_reader,
+        )
+        assert first.status is ReportMaterializationReconciliationStatus.ACCEPTED
+        assert first.owner_receipt is not None
+        assert first.owner_receipt.report_materialization is not None
+        advanced_receipt = replace(
+            owner_outcome.owner_receipt,
+            source_event_version=2,
+            report_materialization=replace(
+                first.owner_receipt.report_materialization,
+                status="collecting_data",
+                materialization_status="collecting_data",
+            ),
+        )
+
+    reader = _CountingReader(
+        advanced_receipt,
+        expected_idempotency_key="postgres-report-owner-advance-001",
+    )
+
+    def reconcile_from_new_runtime() -> ReportMaterializationReconciliationStatus:
+        with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+            result = reconcile_report_materialization_receipt(
+                replace(command, accepted_at_utc=RECORDED_AT + timedelta(seconds=2)),
+                repository=repository,
+                report_reader=reader,
+            )
+            return result.status
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        statuses = tuple(executor.map(lambda _index: reconcile_from_new_runtime(), range(2)))
+
+    assert sorted(statuses) == sorted(
+        (
+            ReportMaterializationReconciliationStatus.ACCEPTED,
+            ReportMaterializationReconciliationStatus.REPLAYED,
+        )
+    )
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        persisted = repository.downstream_submission_by_support_reference(command.support_reference)
+        assert persisted is not None
+        assert persisted.owner_receipt is not None
+        assert persisted.owner_receipt.source_event_version == 2
+        assert [entry.action.value for entry in persisted.audit_history].count("reconciled") == 2
+    assert reader.call_count == 2
