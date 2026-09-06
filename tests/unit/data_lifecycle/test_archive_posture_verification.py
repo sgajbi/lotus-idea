@@ -178,6 +178,8 @@ def test_archive_posture_domain_rejects_malformed_claim_envelope_and_key_state()
         replace(key, key_id="invalid key")
     with pytest.raises(ValueError, match="public_key_base64url is required"):
         replace(key, public_key_base64url="")
+    with pytest.raises(ValueError, match="canonical base64url"):
+        replace(key, public_key_base64url="A=")
     with pytest.raises(ValueError, match="32-byte Ed25519 public key"):
         replace(key, public_key_base64url=base64.urlsafe_b64encode(b"short").decode("ascii"))
     with pytest.raises(ValueError, match="algorithm must be ed25519"):
