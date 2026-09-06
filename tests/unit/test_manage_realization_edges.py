@@ -83,6 +83,7 @@ def test_reconcile_command_requires_identifying_text() -> None:
             support_reference="  ",
             actor_subject="operator",
             access_scope_filter=AUTHORIZED_SCOPE,
+            accepted_at_utc=RECORDED_AT,
         )
 
 
@@ -100,9 +101,9 @@ def test_empty_caller_scope_is_denied_before_any_owner_io() -> None:
     assert reader.calls == 0
 
 
-def test_non_terminal_submissions_are_not_eligible() -> None:
-    """A submission still in flight - claimed, not yet finalized with an
-    owner outcome - has no owner history to reconcile."""
+def test_active_submission_lease_is_not_eligible() -> None:
+    """An active claim may still be executing its owner POST, so recovery
+    must not race it with a read even if owner history could already exist."""
 
     from datetime import timedelta as _timedelta
 
@@ -131,7 +132,7 @@ def test_non_terminal_submissions_are_not_eligible() -> None:
     )
 
     assert result.status is ManageRealizationReconciliationStatus.NOT_ELIGIBLE
-    assert result.blocker == "manage_realization_requires_terminal_owner_submission"
+    assert result.blocker == "manage_realization_submission_still_in_flight"
 
 
 def test_missing_source_resources_conflict_before_owner_io() -> None:
@@ -249,7 +250,8 @@ def test_persistence_blocker_names_every_ineligible_submission_shape() -> None:
             replace(
                 submission,
                 resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
-            )
+            ),
+            accepted_at_utc=RECORDED_AT,
         )
         == "manage_realization_requires_conversion_intent_submission"
     )

@@ -206,6 +206,7 @@ def test_manage_adapter_loads_the_exact_owner_outcome_history() -> None:
     assert captured["headers"]["x-portfolio-ids"] == "PB_SG_GLOBAL_BAL_001"
     assert history.intake_id == "iai_1f2e3d4c5b6a7f8e9d0c"
     assert history.management_action_id == "ima_9f8e7d6c5b4a3f2e1d0c"
+    assert history.request_fingerprint == "sha256:aabbccddeeff"
     assert history.status is ManageActionRealizationStatus.PENDING_REVIEW
     assert history.source_event_version == 3
     assert [event.event_type.value for event in history.events] == [
@@ -213,6 +214,40 @@ def test_manage_adapter_loads_the_exact_owner_outcome_history() -> None:
         "APPROVE",
         "REQUEST_CHANGES",
     ]
+
+
+def test_manage_adapter_recovers_owner_history_by_opaque_conversion_intent() -> None:
+    captured: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = str(request.url)
+        captured["headers"] = dict(request.headers)
+        return httpx.Response(
+            200,
+            json=_manage_history_payload(conversion_intent_id="vendor/123"),
+        )
+
+    adapter = _manage_adapter(
+        handler,
+        recovery_history_path=(
+            "/api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent"
+        ),
+    )
+    history = adapter.load_realization_by_conversion_intent(
+        conversion_intent_id="  vendor/123  ",
+        access_scope=report_access_scope(),
+        correlation_id="corr-recovery",
+        trace_id="trace-recovery",
+    )
+
+    assert captured["url"] == (
+        "https://manage.example/api/v1/rebalance/idea-action-intakes/outcomes/"
+        "by-conversion-intent?conversion_intent_id=vendor%2F123&"
+        "portfolio_id=PB_SG_GLOBAL_BAL_001"
+    )
+    assert captured["headers"]["x-portfolio-ids"] == "PB_SG_GLOBAL_BAL_001"
+    assert history.conversion_intent_id == "vendor/123"
+    assert history.request_fingerprint == "sha256:aabbccddeeff"
 
 
 def test_manage_adapter_maps_owner_read_failures_and_invalid_histories() -> None:
@@ -293,16 +328,63 @@ def test_manage_adapter_requires_history_path_template_for_reads() -> None:
         )
 
 
+def test_manage_adapter_requires_unambiguous_recovery_path() -> None:
+    adapter = _manage_adapter(lambda _request: httpx.Response(200, json={}))
+
+    with pytest.raises(
+        DownstreamRealizationConfigurationError,
+        match="recovery_history_path",
+    ):
+        adapter.load_realization_by_conversion_intent(
+            conversion_intent_id="conversion-001",
+            access_scope=report_access_scope(),
+        )
+
+    with pytest.raises(
+        DownstreamRealizationConfigurationError,
+        match="must not include query string or fragment",
+    ):
+        _manage_adapter(
+            lambda _request: httpx.Response(200, json={}),
+            recovery_history_path="/outcomes?conversion_intent_id=hard-coded",
+        )
+
+    configured = _manage_adapter(
+        lambda _request: httpx.Response(200, json=_manage_history_payload()),
+        recovery_history_path="/outcomes/by-conversion-intent",
+    )
+    with pytest.raises(ValueError, match="conversion_intent_id is required"):
+        configured.load_realization_by_conversion_intent(
+            conversion_intent_id=" ",
+            access_scope=report_access_scope(),
+        )
+
+
+def test_manage_recovery_adapter_maps_owner_unavailability() -> None:
+    adapter = _manage_adapter(
+        lambda _request: httpx.Response(503, json={"detail": "down"}),
+        recovery_history_path="/outcomes/by-conversion-intent",
+    )
+
+    with pytest.raises(DownstreamRealizationReadError):
+        adapter.load_realization_by_conversion_intent(
+            conversion_intent_id="conversion-001",
+            access_scope=report_access_scope(),
+        )
+
+
 def _manage_adapter(
     handler: Any,
     *,
     history_path_template: str | None = None,
+    recovery_history_path: str | None = None,
 ) -> HttpManageActionRealizationClient:
     return HttpManageActionRealizationClient(
         DownstreamRealizationAdapterConfig(
             base_url="https://manage.example",
             submit_path="/api/v1/rebalance/idea-action-intake",
             history_path_template=history_path_template,
+            recovery_history_path=recovery_history_path,
             source_authority=SourceSystem.LOTUS_MANAGE,
             manage_service_context=manage_service_context(),
         ),
@@ -330,7 +412,7 @@ def _manage_intake_receipt_payload() -> dict[str, Any]:
     }
 
 
-def _manage_history_payload() -> dict[str, Any]:
+def _manage_history_payload(*, conversion_intent_id: str = "conversion-001") -> dict[str, Any]:
     """The shipped outcome-history body, exercising the owner\'s reopened
     review: PENDING_REVIEW -> APPROVED -> (REQUEST_CHANGES) PENDING_REVIEW."""
     base_event = {
@@ -338,7 +420,7 @@ def _manage_history_payload() -> dict[str, Any]:
         "actor_id": "pm-001",
         "actor_role": "PORTFOLIO_MANAGER",
         "correlation_id": "corr-owner",
-        "causation_id": "conversion-001",
+        "causation_id": conversion_intent_id,
     }
     return {
         "contract_version": "lotus-manage.idea-action-outcome-history.v1",
@@ -347,7 +429,8 @@ def _manage_history_payload() -> dict[str, Any]:
         "management_action_id": "ima_9f8e7d6c5b4a3f2e1d0c",
         "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "idea_candidate_id": "idea_high_cash_redacted",
-        "conversion_intent_id": "conversion-001",
+        "conversion_intent_id": conversion_intent_id,
+        "request_fingerprint": "sha256:aabbccddeeff",
         "status": "PENDING_REVIEW",
         "source_event_version": 3,
         "events": [

@@ -21,6 +21,7 @@ from app.runtime.downstream_realization_state import (
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
+    DEFAULT_MANAGE_RECOVERY_HISTORY_PATH,
     DEFAULT_ADVISE_RECOVERY_HISTORY_PATH,
     DEFAULT_REPORT_RECOVERY_PATH,
     MANAGE_BASE_URL_ENV,
@@ -72,6 +73,7 @@ def test_conversion_realization_clients_are_built_from_environment(
     # route (manage#660) is the default, not opt-in configuration.
     manage_client = cast(HttpManageActionRealizationClient, clients.manage_client)
     assert manage_client._config.history_path_template == DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE
+    assert manage_client._config.recovery_history_path == DEFAULT_MANAGE_RECOVERY_HISTORY_PATH
     advise_client = cast(HttpAdviseProposalRealizationClient, clients.advise_client)
     assert advise_client._config.recovery_history_path == DEFAULT_ADVISE_RECOVERY_HISTORY_PATH
 

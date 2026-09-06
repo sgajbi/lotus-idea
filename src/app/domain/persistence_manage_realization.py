@@ -101,6 +101,7 @@ def manage_realization_submission_blocker(
         or receipt.owner_request_id != history.intake_id
         or receipt.owner_realization_id != history.management_action_id
         or receipt.owner_work_id != history.management_action_id
+        or receipt.source_evidence_fingerprint != history.request_fingerprint
         or submission.resource_id != history.conversion_intent_id
     ):
         return "manage_realization_owner_receipt_conflict"

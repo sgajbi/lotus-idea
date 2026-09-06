@@ -121,7 +121,7 @@ class OwnerLifecycleClient:
             ),
         )
 
-    def load_proposal_realization_by_conversion_intent(
+    def load_realization_by_conversion_intent(
         self,
         *,
         conversion_intent_id: str,

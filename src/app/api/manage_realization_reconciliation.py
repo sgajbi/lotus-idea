@@ -24,6 +24,7 @@ from app.api.runtime_dependencies import (
     DownstreamRealizationClientsUnavailableError,
     get_conversion_realization_clients,
     get_idea_repository,
+    get_trusted_clock,
     idea_repository_durable_storage_backed,
 )
 from app.application.manage_realization_reconciliation import (
@@ -60,6 +61,7 @@ class ManageRealizationHistoryResponse(CamelModel):
     management_action_id: str = Field(alias="managementActionId")
     realization_authority: str = Field(alias="realizationAuthority")
     portfolio_id: str = Field(alias="portfolioId")
+    request_fingerprint: str = Field(alias="requestFingerprint")
     status: str
     source_event_version: int = Field(alias="sourceEventVersion")
     events: tuple[ManageRealizationEventResponse, ...]
@@ -77,6 +79,7 @@ class ManageRealizationHistoryResponse(CamelModel):
             managementActionId=history.management_action_id,
             realizationAuthority=history.source_authority,
             portfolioId=history.portfolio_id,
+            requestFingerprint=history.request_fingerprint,
             status=history.status.value,
             sourceEventVersion=history.source_event_version,
             events=tuple(
@@ -155,6 +158,7 @@ async def post_manage_realization_reconciliation(
                 support_reference=support_reference,
                 actor_subject=caller.subject,
                 access_scope_filter=access_scope_filter,
+                accepted_at_utc=get_trusted_clock().now_utc(),
                 correlation_id=request_context_id(request, "correlation_id"),
                 trace_id=request_context_id(request, "trace_id"),
             ),
@@ -231,14 +235,15 @@ MANAGE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
     "operation_id": "reconcileIdeaManageRealizationHistory",
     "summary": "Reconcile authoritative Manage realization outcomes",
     "description": (
-        "Reads the exact trusted-scope Manage-owned action outcome history for an accepted "
-        "Idea submission and persists only an append-only, identity-consistent owner history. "
+        "Reads exact trusted-scope Manage-owned action history for a receipt-bound submission, "
+        "or recovers an owner-accepted expired claim by its persisted conversion identity, and "
+        "persists only append-only, identity-consistent owner evidence without repeating intake. "
         "The owner's review status is not absorbing - REQUEST_CHANGES reopens APPROVED and "
         "REJECTED reviews - so monotonicity is enforced on the append-only event versions. "
         "HTTP transport acceptance is never treated as review, rebalance-execution, order, "
-        "fill, settlement, or client-publication evidence. Missing receipts, scope drift, "
-        "identity drift, version gaps, chain defects, and unsupported authority claims fail "
-        "closed."
+        "fill, settlement, or client-publication evidence. Active leases, scope drift, identity "
+        "or request-fingerprint drift, conversion causation drift, version gaps, chain defects, "
+        "and unsupported authority claims fail closed."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ManageRealizationReconciliationResponse,
@@ -256,6 +261,7 @@ MANAGE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
                             "managementActionId": "ima_9f8e7d6c5b4a3f2e1d0c",
                             "realizationAuthority": "lotus-manage",
                             "portfolioId": "portfolio-001",
+                            "requestFingerprint": "sha256:aabbccddeeff",
                             "status": "APPROVED",
                             "sourceEventVersion": 2,
                             "events": [

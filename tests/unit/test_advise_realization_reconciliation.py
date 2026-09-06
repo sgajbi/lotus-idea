@@ -90,7 +90,7 @@ class StubAdviseReader:
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         return self.history
 
-    def load_proposal_realization_by_conversion_intent(
+    def load_realization_by_conversion_intent(
         self,
         *,
         conversion_intent_id: str,
@@ -324,7 +324,7 @@ def test_reconcile_maps_owner_read_failure_without_infrastructure_dependency() -
         def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
             raise DownstreamRealizationReadError("owner unavailable")
 
-        def load_proposal_realization_by_conversion_intent(
+        def load_realization_by_conversion_intent(
             self, **_kwargs: object
         ) -> AdviseProposalRealizationHistory:
             raise DownstreamRealizationReadError("owner unavailable")
@@ -365,7 +365,7 @@ def test_reconcile_rejects_malformed_authoritative_history() -> None:
         def load_proposal_realization(self, **_kwargs: object) -> AdviseProposalRealizationHistory:
             raise ValueError("owner payload is malformed")
 
-        def load_proposal_realization_by_conversion_intent(
+        def load_realization_by_conversion_intent(
             self, **_kwargs: object
         ) -> AdviseProposalRealizationHistory:
             raise ValueError("owner payload is malformed")

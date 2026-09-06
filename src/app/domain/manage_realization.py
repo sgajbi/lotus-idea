@@ -118,6 +118,7 @@ class ManageActionRealizationHistory:
     portfolio_id: str
     idea_candidate_id: str
     conversion_intent_id: str
+    request_fingerprint: str
     status: ManageActionRealizationStatus
     source_event_version: int
     rebalance_execution_proven: bool
@@ -132,6 +133,7 @@ class ManageActionRealizationHistory:
             ("portfolio_id", self.portfolio_id),
             ("idea_candidate_id", self.idea_candidate_id),
             ("conversion_intent_id", self.conversion_intent_id),
+            ("request_fingerprint", self.request_fingerprint),
         ):
             _require_text(value, field_name)
         if self.contract_version != MANAGE_ACTION_OUTCOME_HISTORY_CONTRACT_VERSION:
@@ -140,6 +142,13 @@ class ManageActionRealizationHistory:
             raise ValueError("source_authority must be lotus-manage")
         if self.source_event_version <= 0:
             raise ValueError("source_event_version must be positive")
+        fingerprint_value = self.request_fingerprint.removeprefix("sha256:")
+        if (
+            len(fingerprint_value) != 12
+            or not fingerprint_value.isascii()
+            or any(character not in "0123456789abcdef" for character in fingerprint_value)
+        ):
+            raise ValueError("request_fingerprint must be sha256 followed by 12 lowercase hex")
         if any(
             (
                 self.rebalance_execution_proven,
@@ -195,6 +204,7 @@ def _history_identity(history: ManageActionRealizationHistory) -> tuple[str, ...
         history.portfolio_id,
         history.idea_candidate_id,
         history.conversion_intent_id,
+        history.request_fingerprint,
     )
 
 
@@ -227,6 +237,8 @@ def _validate_history(history: ManageActionRealizationHistory) -> None:
             raise ValueError("Manage realization events must be chronological")
     if any(event.action_id != history.management_action_id for event in history.events):
         raise ValueError("Manage realization action identity changed")
+    if any(event.causation_id != history.conversion_intent_id for event in history.events):
+        raise ValueError("Manage realization conversion causation identity changed")
     last = history.events[-1]
     if history.source_event_version != last.source_event_version:
         raise ValueError("source_event_version must match the final event")

@@ -302,7 +302,7 @@ class HttpAdviseProposalRealizationClient:
             trace_id=trace_id,
         )
 
-    def load_proposal_realization_by_conversion_intent(
+    def load_realization_by_conversion_intent(
         self,
         *,
         conversion_intent_id: str,
@@ -433,6 +433,38 @@ class HttpManageActionRealizationClient:
         try:
             payload = self._client.get_json(
                 self._config.history_path_template.format(intake_id=normalized_intake_id),
+                correlation_id=correlation_id,
+                trace_id=trace_id,
+                additional_headers=self._manage_scoped_headers(access_scope),
+            )
+        except DownstreamServiceError as exc:
+            raise DownstreamRealizationReadError(
+                "authoritative Manage realization history is unavailable"
+            ) from exc
+        return _manage_realization_history_from_payload(payload)
+
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        if self._config.recovery_history_path is None:
+            raise DownstreamRealizationConfigurationError(
+                "manage realization recovery_history_path is required."
+            )
+        normalized_conversion_intent_id = conversion_intent_id.strip()
+        if not normalized_conversion_intent_id or not normalized_conversion_intent_id.isprintable():
+            raise ValueError("conversion_intent_id is required")
+        try:
+            payload = self._client.get_json(
+                self._config.recovery_history_path,
+                query_params={
+                    "conversion_intent_id": normalized_conversion_intent_id,
+                    "portfolio_id": access_scope.portfolio_id,
+                },
                 correlation_id=correlation_id,
                 trace_id=trace_id,
                 additional_headers=self._manage_scoped_headers(access_scope),
@@ -797,6 +829,7 @@ def _manage_realization_history_from_payload(
         portfolio_id=_required_response_text(payload, "portfolio_id"),
         idea_candidate_id=_required_response_text(payload, "idea_candidate_id"),
         conversion_intent_id=_required_response_text(payload, "conversion_intent_id"),
+        request_fingerprint=_required_response_text(payload, "request_fingerprint"),
         status=ManageActionRealizationStatus(_required_response_text(payload, "status")),
         source_event_version=_required_response_int(payload, "source_event_version"),
         rebalance_execution_proven=_required_response_bool(
