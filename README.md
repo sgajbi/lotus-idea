@@ -126,7 +126,7 @@ The recommended local path is the durable Docker Compose runtime.
 | Git | Clone and inspect the repository |
 | Docker Desktop with Compose | Run the API and PostgreSQL |
 | PowerShell | Execute the readiness example below |
-| GNU Make and Python 3.13 | Required only for contributor validation |
+| GNU Make and Python >=3.12 | Required only for contributor validation. Python 3.12 is the tested CI and container baseline; `pyproject.toml` declares `>=3.12`, and `make install` creates the local virtual environment. See [Getting Started](wiki/Getting-Started.md). |
 
 Start the API and its durable PostgreSQL repository:
 
