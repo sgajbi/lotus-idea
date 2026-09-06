@@ -39,6 +39,9 @@ def _advise_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
         blockers=(
             "suitability_policy_authority_remains_lotus_advise",
             "advise_live_contract_proof_missing",
+            "advise_restart_replay_certification_missing",
+            "advise_owner_correction_certification_missing",
+            "advise_concurrent_owner_advancement_certification_missing",
         ),
         blocker_issue_refs=capability_blocker_issue_refs("advise-proposal-realization"),
     )

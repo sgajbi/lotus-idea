@@ -37,6 +37,9 @@ def source_safe_execution_evidence(
         if name == "ownerRealization":
             evidence[name] = _owner_realization(response, body)
             continue
+        if name == "ownerAdvancement":
+            evidence[name] = _owner_advancement(response)
+            continue
         if name == "preCommitTimeout":
             evidence[name] = _pre_commit_timeout(response)
             continue
@@ -168,4 +171,71 @@ def _owner_realization(response: object, body: object) -> dict[str, Any]:
             }
             for outcome in outcomes
         ],
+    }
+
+
+def _owner_advancement(value: object) -> dict[str, Any]:
+    raw = value if isinstance(value, Mapping) else {}
+    linked = raw.get("linked")
+    stale = raw.get("staleCorrection")
+    after_refusal = raw.get("afterStaleCorrection")
+    concurrent = raw.get("concurrentAdvancement")
+    final = raw.get("finalReadback")
+    linked_body = linked.get("body") if isinstance(linked, Mapping) else None
+    after_refusal_body = after_refusal.get("body") if isinstance(after_refusal, Mapping) else None
+    final_body = final.get("body") if isinstance(final, Mapping) else None
+    concurrent_responses = concurrent if isinstance(concurrent, list) else []
+    final_outcomes = body_get(final_body, "outcomes")
+    outcomes = final_outcomes if isinstance(final_outcomes, list) else []
+    return {
+        "ownerIdentityDigest": source_safe_binding_digest(
+            body_get(final_body, "intake_id"),
+            body_get(final_body, "realization_id"),
+            body_get(final_body, "review_work_id"),
+        ),
+        "scopeDigest": source_safe_binding_digest(
+            body_get(final_body, "tenant_id"),
+            body_get(final_body, "legal_entity_code"),
+            body_get(final_body, "portfolio_id"),
+        ),
+        "sourceIntentDigest": source_safe_binding_digest(
+            body_get(final_body, "idea_candidate_id"),
+            body_get(final_body, "conversion_intent_id"),
+        ),
+        "sourceEvidenceFingerprint": body_get(final_body, "source_evidence_fingerprint"),
+        "linkedStatusCode": linked.get("statusCode") if isinstance(linked, Mapping) else None,
+        "linkedSourceEventVersion": body_get(linked_body, "current_source_event_version"),
+        "staleCorrectionStatusCode": (
+            stale.get("statusCode") if isinstance(stale, Mapping) else None
+        ),
+        "staleCorrectionReasonCodes": reason_codes(
+            stale.get("body") if isinstance(stale, Mapping) else None
+        ),
+        "sourceEventVersionAfterRefusal": body_get(
+            after_refusal_body, "current_source_event_version"
+        ),
+        "concurrentStatusCodes": [
+            response.get("statusCode") if isinstance(response, Mapping) else None
+            for response in concurrent_responses
+        ],
+        "concurrentSourceEventVersions": [
+            body_get(response.get("body"), "current_source_event_version")
+            if isinstance(response, Mapping)
+            else None
+            for response in concurrent_responses
+        ],
+        "finalStatusCode": final.get("statusCode") if isinstance(final, Mapping) else None,
+        "finalStatus": body_get(final_body, "current_status"),
+        "finalSourceEventVersion": body_get(final_body, "current_source_event_version"),
+        "finalOutcomeVersions": [body_get(outcome, "source_event_version") for outcome in outcomes],
+        "finalOutcomeStatuses": [body_get(outcome, "status") for outcome in outcomes],
+        "proposalIdentityPresent": body_get(final_body, "proposal_id") is not None,
+        "proposalRecordCreated": bool(body_get(final_body, "proposal_record_created") or False),
+        "suitabilityAuthorityGranted": bool(
+            body_get(final_body, "suitability_authority_granted") or False
+        ),
+        "orderCreated": bool(body_get(final_body, "order_created") or False),
+        "clientPublicationAuthorized": bool(
+            body_get(final_body, "client_publication_authorized") or False
+        ),
     }
