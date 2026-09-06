@@ -63,11 +63,16 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
         "tenantScopedIdempotency",
         "ownerRealization",
         "submittedIntent",
+        "preCommitTimeout",
     }
     assert captured["args"][0:2] == ["python-test", "-c"]
     assert "acceptedReplay" in captured["args"][2]
     assert "ThreadPoolExecutor" in captured["args"][2]
     assert "/realization" in captured["args"][2]
+    assert "reset_proposal_workflow_service_for_tests" in captured["args"][2]
+    assert "InMemoryProposalRepository" in captured["args"][2]
+    assert "preCommitTimeout" in captured["args"][2]
+    assert '"failureStage": "before_owner_request_dispatch"' in captured["args"][2]
     assert '"portfolio_id": "PB_SG_GLOBAL_BAL_001"' in captured["args"][2]
     assert "authorizationDenied" in captured["args"][2]
     assert captured["cwd"] == tmp_path
@@ -76,6 +81,7 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     assert captured["text"] is True
     assert captured["env"]["PYTHONPATH"] == str(tmp_path.resolve())
     assert captured["env"]["ENVIRONMENT"] == "test"
+    assert captured["env"]["IDEA_PROPOSAL_RECONCILIATION_ENABLED"] == "true"
     assert captured["env"]["PROPOSAL_STORE_BACKEND"] == "POSTGRES"
     assert captured["env"]["POLICY_STORE_BACKEND"] == "POSTGRES"
     assert captured["env"]["WORKSPACE_STORE_BACKEND"] == "POSTGRES"
@@ -106,6 +112,13 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     submitted = receipts["submittedIntent"]
     assert submitted["scopeDigest"].startswith("sha256:")
     assert submitted["sourceIntentDigest"].startswith("sha256:")
+    pre_commit_timeout = receipts["preCommitTimeout"]
+    assert pre_commit_timeout["failureStage"] == "before_owner_request_dispatch"
+    assert pre_commit_timeout["ownerLookupStatusCode"] == 404
+    assert pre_commit_timeout["repeatedOwnerLookupStatusCode"] == 404
+    assert pre_commit_timeout["downstreamPostAttemptCount"] == 0
+    assert pre_commit_timeout["automaticResubmissionAttemptCount"] == 0
+    assert pre_commit_timeout["ownerStateObserved"] is False
     serialized_evidence = json.dumps(receipts)
     for forbidden_marker in (
         "portfolioId",
@@ -211,6 +224,25 @@ def _advise_receipt_responses() -> dict[str, dict[str, object]]:
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
         "tenantId": "tenant-private-bank-sg",
         "legalEntityCode": "SGPB",
+    }
+    responses["preCommitTimeout"] = {
+        "failureStage": "before_owner_request_dispatch",
+        "downstreamPostAttemptCount": 0,
+        "automaticResubmissionAttemptCount": 0,
+        "ownerStateObserved": False,
+        "ideaCandidateId": "idea_candidate_precommit_timeout_001",
+        "conversionIntentId": "conversion_intent_precommit_timeout_001",
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "tenantId": "tenant-private-bank-sg",
+        "legalEntityCode": "SGPB",
+        "ownerLookup": _error_response(
+            status_code=404,
+            detail="IDEA_PROPOSAL_REALIZATION_NOT_FOUND",
+        ),
+        "repeatedOwnerLookup": _error_response(
+            status_code=404,
+            detail="IDEA_PROPOSAL_REALIZATION_NOT_FOUND",
+        ),
     }
     return responses
 

@@ -224,11 +224,16 @@ Implemented in this slice:
     history. It retains source-safe digests of trusted scope, source intent,
     and owner identities plus the evidence fingerprint, status, version, and
     bounded outcome history needed to prove causal identity. Exactly one
-    concurrent call must be accepted and
-    one replayed, both must converge on the same owner work, and the readback
-    must match the original candidate and conversion intent. Aggregate and
-    downstream readiness can still clear only
-    `advise_live_contract_proof_missing`.
+    concurrent call must be accepted and one replayed, both must converge on
+    the same owner work, and the readback must match the original candidate and
+    conversion intent. The v3 proof also executes a controlled
+    timeout-before-owner-commit window: no downstream POST is made, two exact
+    owner reads return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`, no automatic
+    resubmission occurs, and no owner state is asserted. Aggregate and
+    downstream readiness can clear `advise_live_contract_proof_missing` and
+    `advise_timeout_uncertainty_certification_missing`; restart reconciliation,
+    owner correction, concurrent owner advancement, and suitability authority
+    remain explicit blockers.
 30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/unit/test_implementation_proof_readiness.py`,
@@ -382,12 +387,10 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. the Manage exact conversion-intent owner lookup in
-   `sgajbi/lotus-manage#665`, followed by Idea restart recovery without a
-   repeated POST; plus cross-repository exact-main/runtime acceptance of the
-   Advise and Manage history consumers under the remaining
-   timeout-before-owner-commit, owner-correction, and concurrent-version
-   windows,
+5. cross-repository exact-main/runtime acceptance of the Advise and Manage
+   history consumers under the remaining restart, owner-correction, and
+   concurrent-version windows; the Advise timeout-before-owner-commit window is
+   certified by #1251 without authorizing retry,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
@@ -401,10 +404,12 @@ Valid Advise and Manage source contracts prove only that governed declarations
 exist at bound digests; they are not route-serving, acceptance, authorization,
 tenant-isolation, suitability, rebalance, execution, client-publication, or
 supported-feature proof. The Advise idea-intake runtime proof adds bounded
-  route-serving, concurrent duplicate convergence, and exact owner-history
-  readback evidence only. It is not restart, timeout, owner-correction,
-  suitability, proposal creation, production identity, client-publication,
-  Workbench/Gateway, or supported-feature proof.
+route-serving, concurrent duplicate convergence, exact owner-history readback,
+and controlled timeout-before-owner-commit evidence. The timeout scenario
+proves no owner POST, two exact owner not-found reads, no automatic
+resubmission, and no authority advance. It is not restart, owner-correction,
+suitability, proposal creation, production identity, client-publication,
+Workbench/Gateway, or supported-feature proof.
 
 ## Required Work
 

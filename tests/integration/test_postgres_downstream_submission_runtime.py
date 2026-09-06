@@ -9,9 +9,12 @@ from typing import cast
 import psycopg
 import pytest
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 
 from app.domain import (
+    AdviseProposalRealizationHistory,
     AdviseRealizationHistoryMutationDecision,
+    ConversionTarget,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionOwnerReceipt,
@@ -19,17 +22,34 @@ from app.domain import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     SourceSystem,
+    QueueAccessScopeFilter,
 )
+from app.application.advise_realization_reconciliation import (
+    AdviseRealizationReconciliationStatus,
+    ReconcileAdviseRealizationCommand,
+    reconcile_advise_realization_history,
+)
+from app.ports.downstream_realization import DownstreamRealizationNotObserved
+from app.domain.evidence_hashing import evidence_hash_for_candidate
 from app.infrastructure.postgres_repository import (
     PostgresConnection,
     PostgresIdeaRepository,
+)
+from app.infrastructure.postgres_codecs import (
+    conversion_intent_to_json,
+    idea_candidate_to_json,
 )
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from tests.integration.postgres_runtime_support import (
     run_concurrent_repository_mutations,
     seed_active_conversion_resource,
+    table_count,
 )
 from tests.unit.test_advise_realization_reconciliation import _history
+from tests.unit.test_downstream_realization_application import (
+    candidate,
+    repository_with_conversion,
+)
 
 
 SUBMITTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
@@ -177,6 +197,145 @@ def test_postgres_advise_history_race_reports_one_atomic_append_delta(
         (AdviseRealizationHistoryMutationDecision.ACCEPTED.value, 2),
         (AdviseRealizationHistoryMutationDecision.REPLAYED.value, 0),
     ]
+
+
+def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owner_progress(
+    postgres_database_url: str,
+) -> None:
+    conversion_intent_id = "conversion-precommit-timeout"
+    candidate_id = seed_active_conversion_resource(postgres_database_url, conversion_intent_id)
+    candidate_value = candidate(candidate_id)
+    fixture_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    fixture_record = fixture_repository.snapshot().candidate_records["idea-downstream-001"]
+    fixture_intent = fixture_record.conversion_intents[0]
+    conversion_intent = replace(
+        fixture_intent,
+        intent=replace(
+            fixture_intent.intent,
+            conversion_intent_id=conversion_intent_id,
+            candidate_id=candidate_id,
+        ),
+        evidence_packet_id=candidate_value.evidence_packet.evidence_packet_id,
+        evidence_content_hash=candidate_value.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=(
+            candidate_value.evidence_packet.source_revision_vector_digest
+        ),
+        source_cut_posture=candidate_value.evidence_packet.source_cut_posture,
+        source_signal_ids=candidate_value.source_signal_ids,
+        review_authority_grant=None,
+    )
+    with psycopg.connect(postgres_database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE idea_candidate_record
+            SET evidence_packet_id = %s,
+                evidence_hash = %s,
+                candidate_json = %s,
+                business_identity_id = %s,
+                identity_policy_version = %s,
+                material_fingerprint = %s,
+                material_version = %s,
+                evidence_version = %s,
+                change_reason = %s,
+                supersedes_material_version = %s
+            WHERE candidate_id = %s
+            """,
+            (
+                candidate_value.evidence_packet.evidence_packet_id,
+                evidence_hash_for_candidate(candidate_value),
+                Jsonb(idea_candidate_to_json(candidate_value)),
+                candidate_value.identity.business_identity_id,
+                candidate_value.identity.policy_version,
+                candidate_value.identity.material_fingerprint,
+                candidate_value.identity.material_version,
+                candidate_value.identity.evidence_version,
+                candidate_value.identity.change_reason.value,
+                candidate_value.identity.supersedes_material_version,
+                candidate_id,
+            ),
+        )
+        cursor.execute(
+            """
+            UPDATE idea_conversion_intent
+            SET intent_json = %s
+            WHERE conversion_intent_id = %s
+            """,
+            (Jsonb(conversion_intent_to_json(conversion_intent)), conversion_intent_id),
+        )
+    claim = build_downstream_submission_claim(
+        idempotency_key="precommit-timeout-submission",
+        request_fingerprint="sha256:precommit-timeout",
+        resource_id=conversion_intent_id,
+        submitted_at_utc=SUBMITTED_AT,
+    )
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as submission_connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, submission_connection))
+        repository.claim_downstream_submission(claim)
+        repository.finalize_downstream_submission(
+            idempotency_key=claim.idempotency_key,
+            lease_owner=claim.lease_owner or "",
+            lease_attempt_id=claim.lease_attempt_id or "",
+            posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+            finalized_at_utc=SUBMITTED_AT + timedelta(minutes=1),
+            failure_reason="downstream_timeout",
+        )
+
+    class OwnerAbsenceReader:
+        recovery_calls = 0
+
+        def load_realization_by_conversion_intent(
+            self, **_: object
+        ) -> AdviseProposalRealizationHistory:
+            self.recovery_calls += 1
+            raise DownstreamRealizationNotObserved("owner acceptance not observed")
+
+        def load_proposal_realization(self, **_: object) -> AdviseProposalRealizationHistory:
+            raise AssertionError("recovery without a receipt must use conversion intent identity")
+
+    reader = OwnerAbsenceReader()
+    governed_tables = {"idea_audit_event", "idea_outbox_event"}
+    counts_before = {
+        table: table_count(
+            postgres_database_url,
+            table,
+            allowed_tables=governed_tables,
+        )
+        for table in governed_tables
+    }
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as restart_connection:
+        restarted = PostgresIdeaRepository(cast(PostgresConnection, restart_connection))
+        before = restarted.downstream_submission_by_support_reference(claim.support_reference)
+        assert before is not None
+
+        result = reconcile_advise_realization_history(
+            ReconcileAdviseRealizationCommand(
+                support_reference=claim.support_reference,
+                actor_subject="platform-operator",
+                access_scope_filter=QueueAccessScopeFilter(tenant_id="tenant-sg"),
+                accepted_at_utc=SUBMITTED_AT + timedelta(minutes=2),
+            ),
+            repository=restarted,
+            advise_reader=reader,
+        )
+
+        after = restarted.downstream_submission_by_support_reference(claim.support_reference)
+        history = restarted.advise_realization_history_by_support_reference(claim.support_reference)
+
+    assert result.status is AdviseRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+    assert result.appended_outcome_count == 0
+    assert before.attempt_count == 1
+    assert after == before
+    assert after.owner_receipt is None
+    assert history is None
+    assert reader.recovery_calls == 1
+    assert {
+        table: table_count(
+            postgres_database_url,
+            table,
+            allowed_tables=governed_tables,
+        )
+        for table in governed_tables
+    } == counts_before
 
 
 def _claim(idempotency_key: str) -> DownstreamSubmissionRecord:

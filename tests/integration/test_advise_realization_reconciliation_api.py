@@ -156,7 +156,9 @@ class LostResponseOwnerLifecycleClient(OwnerLifecycleClient):
     ) -> DownstreamRealizationOutcome:
         self.intent = intent
         self.submission_calls += 1
-        raise TimeoutError("response lost after Advise committed")
+        if self.acceptance_observed:
+            raise TimeoutError("response lost after Advise committed")
+        raise TimeoutError("transport timed out before Advise committed")
 
     def load_realization_by_conversion_intent(
         self,
@@ -316,7 +318,7 @@ def test_advise_reconciliation_api_recovers_lost_owner_response_without_resubmis
     assert advise_client.recovery_calls == 1
 
 
-def test_advise_recovery_api_preserves_uncertainty_when_acceptance_is_not_observed(
+def test_advise_precommit_timeout_recovery_is_read_only_until_owner_acceptance_exists(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
@@ -376,6 +378,16 @@ def test_advise_recovery_api_preserves_uncertainty_when_acceptance_is_not_observ
     assert advise_client.submission_calls == 1
     assert advise_client.recovery_calls == 1
 
+    repeated_absence = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    assert repeated_absence.status_code == 409
+    assert repeated_absence.json()["code"] == ("advise_realization_owner_acceptance_not_observed")
+    assert repository.snapshot() == before_snapshot
+    assert advise_client.submission_calls == 1
+    assert advise_client.recovery_calls == 2
+
     advise_client.acceptance_observed = True
     recovered = client.post(
         f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
@@ -385,7 +397,7 @@ def test_advise_recovery_api_preserves_uncertainty_when_acceptance_is_not_observ
     assert recovered.status_code == 200
     assert recovered.json()["reconciliationStatus"] == "accepted"
     assert advise_client.submission_calls == 1
-    assert advise_client.recovery_calls == 2
+    assert advise_client.recovery_calls == 3
 
 
 def test_advise_recovery_api_waits_for_expired_lease_after_local_commit_failure(

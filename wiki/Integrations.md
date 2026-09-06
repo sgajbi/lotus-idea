@@ -267,15 +267,22 @@ set. Valid Advise, Manage, and Report route artifacts are `source_contract`
 evidence: they add declaration provenance but clear no live route, request
 acceptance, downstream-record, or supportability blockers until governed
 runtime evidence exists. The separate Advise idea-intake runtime-execution
-artifact is `runtime_execution` evidence and can clear only
-`advise_live_contract_proof_missing` after it observes source-safe accepted,
+artifact is `runtime_execution` evidence and can clear
+`advise_live_contract_proof_missing` and
+`advise_timeout_uncertainty_certification_missing` after it observes source-safe accepted,
 replayed, rejected, idempotency-conflict, authorization-denied, and
 tenant-scoped idempotency receipts, identical concurrent duplicate
-convergence, and an exact Advise-owned realization-history readback. The
-readback must bind source-safe digests of the accepted source intent, trusted
-scope, and owner work plus the evidence fingerprint, status, and source-event
-version. Raw governed identifiers are not retained in the artifact.
-Timeout, restart, owner correction, concurrent owner advancement, suitability,
+convergence, an exact Advise-owned realization-history readback, and a
+controlled timeout-before-owner-commit scenario. The timeout proof binds the
+source intent and trusted scope, records zero downstream POST attempts, makes
+two exact owner reads that both return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`,
+and records zero automatic resubmission attempts and no owner state. It proves
+point-in-time absence only; it neither authorizes retry nor advances business
+authority. The accepted readback must bind source-safe digests of the source
+intent, trusted scope, and owner work plus the evidence fingerprint, status,
+and source-event version. Raw governed identifiers are not retained in the
+artifact. Restart reconciliation, owner correction, concurrent owner
+advancement, suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked. The separate Manage action-intake

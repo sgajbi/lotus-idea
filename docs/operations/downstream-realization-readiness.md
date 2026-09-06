@@ -277,19 +277,23 @@ by default from `LOTUS_ADVISE_ROOT=../lotus-advise` and
 `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only when an already
 generated artifact should be consumed instead.
 
-The artifact validates closed receipt posture for accepted, replayed, rejected,
-idempotency-conflict, authorization-denied, and tenant-scoped idempotency calls.
-It also requires an identical concurrent duplicate pair to converge on one
-accepted receipt and one exact replay, then reads Advise's owner history and
-binds source-safe digests of trusted scope, source intent, and owner work plus
-the evidence fingerprint, status, and version to the accepted receipt. It
-stores only the bounded fields needed for that causal
-proof. It clears
-`advise_live_contract_proof_missing` only when the proof is valid and
-aggregate-current; it deliberately preserves suitability authority, proposal
-lifecycle persistence, client publication, production identity, production
-certification, supported-feature, timeout, restart, owner-correction, and
-concurrent owner-version advancement blockers.
+The v3 artifact validates closed receipt posture for accepted, replayed,
+rejected, idempotency-conflict, authorization-denied, and tenant-scoped
+idempotency calls. It requires an identical concurrent duplicate pair to
+converge on one accepted receipt and one exact replay, then binds the accepted
+receipt to the exact Advise-owned history. It also injects a controlled timeout
+before owner request dispatch for a unique conversion intent, proves zero POST
+and automatic-resubmission attempts, and requires two scoped recovery reads to
+return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`. Source-safe digests bind trusted
+scope, source intent, and owner work without retaining raw identifiers.
+
+A valid aggregate-current proof clears `advise_live_contract_proof_missing`
+and `advise_timeout_uncertainty_certification_missing`. It deliberately
+preserves restart, owner-correction, concurrent owner-version advancement,
+suitability, proposal lifecycle, client-publication, production-identity,
+production-certification, and supported-feature blockers. A point-in-time owner
+absence remains uncertainty: it does not authorize retry or advance business
+state.
 
 ## Manage Action-Intake Runtime Execution Proof
 

@@ -62,10 +62,16 @@ def main(argv: list[str] | None = None) -> int:
             receipt_evidence={
                 name: evidence
                 for name, evidence in execution_evidence.items()
-                if name not in {"ownerRealization", "submittedIntent"}
+                if name
+                not in {
+                    "ownerRealization",
+                    "submittedIntent",
+                    "preCommitTimeout",
+                }
             },
             submitted_intent_evidence=execution_evidence["submittedIntent"],
             owner_realization_evidence=execution_evidence["ownerRealization"],
+            pre_commit_timeout_evidence=execution_evidence["preCommitTimeout"],
         )
         write_json_payload(payload, output=args.output)
         return 0
@@ -122,8 +128,10 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.testclient import TestClient
 from uuid import uuid4
+import src.api.proposals.router as proposals_router
+import src.runtime.proposal_repositories as proposal_repositories
 from src.api.main import app
-from src.core.proposals.idea_proposal_intake import reset_idea_proposal_intake_idempotency_for_tests
+from src.infrastructure.proposals.in_memory import InMemoryProposalRepository
 ROUTE = "/advisory/proposals/idea-intake"
 RUN_ID = uuid4().hex
 def payload(intent_type="REVIEW_FOR_ADVISORY_PROPOSAL", conversion_intent_id=None):
@@ -158,9 +166,11 @@ def headers(idempotency_key=None, tenant_id="tenant-private-bank-sg", legal_enti
 
 
 def _advise_testclient_scenario_script() -> str:
-    return r"""
+    return (
+        r"""
 
-reset_idea_proposal_intake_idempotency_for_tests()
+proposal_repositories.PostgresProposalRepository = lambda **_kwargs: InMemoryProposalRepository()
+proposals_router.reset_proposal_workflow_service_for_tests()
 client = TestClient(app)
 accepted = client.post(ROUTE, json=payload(), headers=headers())
 accepted_replay = client.post(ROUTE, json=payload(), headers=headers())
@@ -223,6 +233,9 @@ owner_realization = client.get(
         "X-Authorized-Portfolio-Id": accepted.json()["portfolio_id"],
     },
 )
+"""
+        + _advise_precommit_timeout_scenario_script()
+        + r"""
 
 def response_payload(response):
     try:
@@ -248,7 +261,42 @@ print(json.dumps({
         "tenantId": "tenant-private-bank-sg",
         "legalEntityCode": "SGPB",
     },
+    "preCommitTimeout": {
+        "failureStage": "before_owner_request_dispatch",
+        "downstreamPostAttemptCount": 0,
+        "automaticResubmissionAttemptCount": 0,
+        "ownerStateObserved": False,
+        "ideaCandidateId": "idea_candidate_precommit_timeout_001",
+        "conversionIntentId": precommit_conversion_intent_id,
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "tenantId": "tenant-private-bank-sg",
+        "legalEntityCode": "SGPB",
+        "ownerLookup": response_payload(precommit_owner_lookup),
+        "repeatedOwnerLookup": response_payload(precommit_owner_lookup_replay),
+    },
 }, sort_keys=True))
+"""
+    )
+
+
+def _advise_precommit_timeout_scenario_script() -> str:
+    return r"""
+precommit_conversion_intent_id = f"conversion_intent_precommit_timeout_{RUN_ID}"
+precommit_lookup_headers = {
+    **headers(capabilities="advisory.idea_proposal_realization.read"),
+    "X-Portfolio-Id": "PB_SG_GLOBAL_BAL_001",
+    "X-Authorized-Portfolio-Id": "PB_SG_GLOBAL_BAL_001",
+}
+precommit_owner_lookup = client.get(
+    f"{ROUTE}/realization",
+    params={"conversion_intent_id": precommit_conversion_intent_id},
+    headers=precommit_lookup_headers,
+)
+precommit_owner_lookup_replay = client.get(
+    f"{ROUTE}/realization",
+    params={"conversion_intent_id": precommit_conversion_intent_id},
+    headers=precommit_lookup_headers,
+)
 """
 
 
@@ -256,6 +304,7 @@ def _advise_testclient_env(advise_root: Path) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(advise_root.resolve())
     env.setdefault("ENVIRONMENT", "test")
+    env.setdefault("IDEA_PROPOSAL_RECONCILIATION_ENABLED", "true")
     env.setdefault("PROPOSAL_STORE_BACKEND", "POSTGRES")
     env.setdefault("PROPOSAL_POSTGRES_DSN", "postgresql://test:test@localhost:5432/proposals")
     env.setdefault("POLICY_STORE_BACKEND", "POSTGRES")
@@ -393,7 +442,33 @@ def _execute_http_service(base_url: str | None) -> dict[str, dict[str, Any]]:
             "legalEntityCode": "SGPB",
         },
     }
+    calls["preCommitTimeout"] = _execute_precommit_http_recovery(endpoint, run_id)
     return source_safe_execution_evidence(calls)
+
+
+def _execute_precommit_http_recovery(endpoint: str, run_id: str) -> dict[str, Any]:
+    precommit_conversion_intent_id = f"conversion_intent_precommit_timeout_{run_id}"
+    precommit_lookup_headers = {
+        **_headers(capabilities="advisory.idea_proposal_realization.read"),
+        "X-Portfolio-Id": "PB_SG_GLOBAL_BAL_001",
+        "X-Authorized-Portfolio-Id": "PB_SG_GLOBAL_BAL_001",
+    }
+    precommit_recovery_endpoint = (
+        f"{endpoint}/realization?conversion_intent_id={precommit_conversion_intent_id}"
+    )
+    return {
+        "failureStage": "before_owner_request_dispatch",
+        "downstreamPostAttemptCount": 0,
+        "automaticResubmissionAttemptCount": 0,
+        "ownerStateObserved": False,
+        "ideaCandidateId": "idea_candidate_precommit_timeout_001",
+        "conversionIntentId": precommit_conversion_intent_id,
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "tenantId": "tenant-private-bank-sg",
+        "legalEntityCode": "SGPB",
+        "ownerLookup": http_get(precommit_recovery_endpoint, precommit_lookup_headers),
+        "repeatedOwnerLookup": http_get(precommit_recovery_endpoint, precommit_lookup_headers),
+    }
 
 
 def _headers(

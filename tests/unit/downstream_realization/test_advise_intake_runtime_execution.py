@@ -30,8 +30,14 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
     payload = valid_advise_intake_runtime_execution()
 
     assert advise_intake_runtime_execution_is_valid(payload)
-    assert payload["aggregateBlockersSatisfied"] == ("advise_live_contract_proof_missing",)
+    assert payload["aggregateBlockersSatisfied"] == (
+        "advise_live_contract_proof_missing",
+        "advise_timeout_uncertainty_certification_missing",
+    )
     assert payload["remainingCertificationBlockers"] == REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS
+    runtime_checks = nested_payload_section(payload, "runtimeChecks")
+    assert runtime_checks["timeoutBeforeOwnerCommitObserved"] is True
+    assert runtime_checks["automaticResubmissionPrevented"] is True
     assert nested_payload_section(payload, "nonProofClaims")["supportedFeaturePromoted"] is False
 
 
@@ -46,12 +52,39 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         receipt_evidence=receipt_evidence_for_builder(baseline),
         submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
         owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
+        pre_commit_timeout_evidence=nested_payload_section(baseline, "preCommitTimeoutEvidence"),
     )
 
     assert payload["runtimeChecks"]["acceptedReceiptObserved"] is True
     assert payload["runtimeChecks"]["tenantIsolationObserved"] is True
     assert payload["runtimeChecks"]["concurrentDuplicateConvergenceObserved"] is True
     assert payload["runtimeChecks"]["ownerRealizationReadbackObserved"] is True
+    assert payload["runtimeChecks"]["timeoutBeforeOwnerCommitObserved"] is True
+    assert payload["runtimeChecks"]["automaticResubmissionPrevented"] is True
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
+        ("failureStage", "after_owner_commit"),
+        ("sourceIntentDigest", "not-a-digest"),
+        ("scopeDigest", "not-a-digest"),
+        ("ownerLookupStatusCode", 200),
+        ("ownerLookupReasonCodes", ("unexpected",)),
+        ("repeatedOwnerLookupStatusCode", 503),
+        ("downstreamPostAttemptCount", 1),
+        ("automaticResubmissionAttemptCount", 1),
+        ("ownerStateObserved", True),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_false_precommit_timeout_evidence(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["preCommitTimeoutEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
 
 
 @pytest.mark.parametrize(
@@ -105,6 +138,9 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             receipt_evidence=receipt_evidence_for_builder(baseline),
             submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
             owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
+            pre_commit_timeout_evidence=nested_payload_section(
+                baseline, "preCommitTimeoutEvidence"
+            ),
         )
     except ValueError as exc:
         assert "timezone-aware" in str(exc)
@@ -185,6 +221,7 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     (
         ("ownerRealizationEvidence", None),
         ("submittedIntentEvidence", None),
+        ("preCommitTimeoutEvidence", None),
     ),
 )
 def test_advise_intake_runtime_execution_rejects_non_object_causal_evidence(

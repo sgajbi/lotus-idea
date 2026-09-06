@@ -66,6 +66,9 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         "downstreamAuthority": "lotus-advise",
         "targetRoute": "POST /advisory/proposals/idea-intake",
         "ownerReadRoute": "GET /advisory/proposals/idea-intake/{intake_id}/realization",
+        "ownerRecoveryRoute": (
+            "GET /advisory/proposals/idea-intake/realization?conversion_intent_id={id}"
+        ),
         "runtimeMode": "local_asgi_testclient",
         "sourceAuthority": tuple(
             {
@@ -86,6 +89,23 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             ),
         },
         "ownerRealizationEvidence": _valid_advise_owner_realization_evidence(),
+        "preCommitTimeoutEvidence": {
+            "failureStage": "before_owner_request_dispatch",
+            "sourceIntentDigest": source_safe_binding_digest(
+                "idea_candidate_precommit_timeout_001",
+                "conversion_intent_precommit_timeout_001",
+            ),
+            "scopeDigest": source_safe_binding_digest(
+                "tenant-private-bank-sg", "SGPB", "PB_SG_GLOBAL_BAL_001"
+            ),
+            "ownerLookupStatusCode": 404,
+            "ownerLookupReasonCodes": ("IDEA_PROPOSAL_REALIZATION_NOT_FOUND",),
+            "repeatedOwnerLookupStatusCode": 404,
+            "repeatedOwnerLookupReasonCodes": ("IDEA_PROPOSAL_REALIZATION_NOT_FOUND",),
+            "downstreamPostAttemptCount": 0,
+            "automaticResubmissionAttemptCount": 0,
+            "ownerStateObserved": False,
+        },
         "runtimeChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "sourceAuthorityDigestBound": True,
@@ -99,6 +119,8 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             "idempotencyConflictObserved": True,
             "concurrentDuplicateConvergenceObserved": True,
             "ownerRealizationReadbackObserved": True,
+            "timeoutBeforeOwnerCommitObserved": True,
+            "automaticResubmissionPrevented": True,
             "proposalAuthorityRetained": True,
             "suitabilityAuthorityRetained": True,
             "clientPublicationAuthorityRetained": True,
