@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import binascii
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -12,6 +14,7 @@ ARCHIVE_LIFECYCLE_SCHEMA_VERSION = "lotus-archive:IdeaEvidenceLifecycleDecision:
 _REFERENCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$")
 _REGION = re.compile(r"^[A-Z]{2,16}$")
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+_BASE64URL = re.compile(r"^[A-Za-z0-9_-]+={0,2}$")
 
 
 class ArchiveLifecycleAction(StrEnum):
@@ -30,6 +33,20 @@ class ArchivePurgeStatus(StrEnum):
     NOT_ELIGIBLE = "not_eligible"
     ELIGIBLE = "eligible"
     PURGED = "purged"
+
+
+class ArchiveLifecycleKeyAlgorithm(StrEnum):
+    ED25519 = "ed25519"
+
+
+class ArchiveLifecycleKeyStatus(StrEnum):
+    ACTIVE = "active"
+    RETIRED = "retired"
+
+
+class ArchiveLifecycleKeyProvenance(StrEnum):
+    MANAGED = "managed"
+    EPHEMERAL_DEVELOPMENT = "ephemeral_development"
 
 
 @dataclass(frozen=True)
@@ -107,21 +124,32 @@ class ArchiveLifecycleDecisionEnvelope:
 @dataclass(frozen=True)
 class ArchiveLifecycleTrustedKey:
     key_id: str
+    algorithm: ArchiveLifecycleKeyAlgorithm
     public_key_base64url: str
-    status: str
+    provenance: ArchiveLifecycleKeyProvenance
+    status: ArchiveLifecycleKeyStatus
     not_before_utc: datetime
     not_after_utc: datetime | None = None
 
     def __post_init__(self) -> None:
         if not _REFERENCE.fullmatch(self.key_id):
             raise ValueError("key_id must be a source-safe reference")
-        if not self.public_key_base64url:
-            raise ValueError("public_key_base64url is required")
+        if self.algorithm is not ArchiveLifecycleKeyAlgorithm.ED25519:
+            raise ValueError("Archive trusted key algorithm must be ed25519")
+        if not isinstance(self.provenance, ArchiveLifecycleKeyProvenance):
+            raise ValueError("Archive trusted key provenance is invalid")
+        if not isinstance(self.status, ArchiveLifecycleKeyStatus):
+            raise ValueError("Archive trusted key status is invalid")
+        _require_ed25519_public_key(self.public_key_base64url)
         _require_utc(self.not_before_utc, "not_before_utc")
         if self.not_after_utc is not None:
             _require_utc(self.not_after_utc, "not_after_utc")
             if self.not_after_utc <= self.not_before_utc:
                 raise ValueError("Archive trusted key validity window is invalid")
+        if self.status is ArchiveLifecycleKeyStatus.ACTIVE and self.not_after_utc is not None:
+            raise ValueError("active Archive trusted key must have an open validity window")
+        if self.status is ArchiveLifecycleKeyStatus.RETIRED and self.not_after_utc is None:
+            raise ValueError("retired Archive trusted key requires not_after_utc")
 
 
 @dataclass(frozen=True)
@@ -185,3 +213,20 @@ def _require_utc(value: datetime, field_name: str) -> None:
 def _require_reference(value: str, field_name: str) -> None:
     if not _REFERENCE.fullmatch(value):
         raise ValueError(f"{field_name} must be a source-safe reference")
+
+
+def _require_ed25519_public_key(value: str) -> None:
+    if not value:
+        raise ValueError("public_key_base64url is required")
+    if not _BASE64URL.fullmatch(value):
+        raise ValueError("public_key_base64url must be canonical base64url")
+    padded = value + "=" * (-len(value) % 4)
+    try:
+        decoded = base64.b64decode(padded, altchars=b"-_", validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError("public_key_base64url must be canonical base64url") from exc
+    canonical = base64.urlsafe_b64encode(decoded).decode("ascii")
+    if canonical != value:
+        raise ValueError("public_key_base64url must be canonical base64url")
+    if len(decoded) != 32:
+        raise ValueError("public_key_base64url must encode a 32-byte Ed25519 public key")

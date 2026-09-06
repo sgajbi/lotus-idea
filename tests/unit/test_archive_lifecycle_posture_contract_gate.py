@@ -18,6 +18,10 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
         "independent_signed_authority_required"
     )
     assert payload["policy"]["purge_requires_archive_action"] == "DISPOSAL_EXECUTED"
+    assert payload["trust_bundle_contract"]["producer_response_model"] == (
+        "LifecycleVerificationKeys"
+    )
+    assert payload["trust_bundle_contract"]["discovery_endpoint_establishes_trust"] is False
     assert payload["supported_feature_promoted"] is False
 
 
@@ -27,6 +31,12 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
         (
             lambda payload: payload["verification_controls"].update({"maximum_ttl_seconds": 3600}),
             "Archive receipt verification controls must remain strict and source-bound",
+        ),
+        (
+            lambda payload: payload["trust_bundle_contract"].update(
+                {"managed_provenance_required_profiles": ["production"]}
+            ),
+            "Archive trust bundle must preserve the producer response and profile fence",
         ),
         (
             lambda payload: payload["policy"].update(

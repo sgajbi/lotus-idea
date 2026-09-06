@@ -10,6 +10,7 @@ from app.domain.data_lifecycle.archive_posture import (
     ArchiveLegalHoldStatus,
     ArchiveLifecycleAction,
     ArchiveLifecycleDecisionEnvelope,
+    ArchiveLifecycleKeyStatus,
     ArchiveLifecycleTrustedKey,
     ArchivePurgeStatus,
     ExpectedArchiveLifecyclePosture,
@@ -116,7 +117,10 @@ def _select_key(
     matches = tuple(key for key in trusted_keys if key.key_id == key_id)
     _require(len(matches) == 1, "known unique signing key")
     key = matches[0]
-    _require(key.status in {"active", "rotated"}, "signing key status")
+    _require(
+        key.status in {ArchiveLifecycleKeyStatus.ACTIVE, ArchiveLifecycleKeyStatus.RETIRED},
+        "signing key status",
+    )
     _require(key.not_before_utc <= issued_at_utc, "key validity start")
     _require(key.not_after_utc is None or issued_at_utc < key.not_after_utc, "key validity end")
     return key

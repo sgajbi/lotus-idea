@@ -21,6 +21,29 @@ REQUIRED_REPLAY_FENCES = {
     "applied_digest_replay_fence": "archive_payload_digest",
     "blocked_attempt_consumes_receipt": False,
 }
+REQUIRED_TRUST_BUNDLE_CONTRACT = {
+    "producer_response_model": "LifecycleVerificationKeys",
+    "producer_endpoint": "GET /documents/idea-lifecycle-decisions/verification-keys",
+    "transport": "authenticated_out_of_band_configuration",
+    "key_fields": [
+        "key_id",
+        "algorithm",
+        "public_key_base64",
+        "provenance",
+        "status",
+        "not_before_utc",
+        "not_after_utc",
+    ],
+    "algorithm": "ed25519",
+    "accepted_verification_statuses": ["active", "retired"],
+    "unique_key_ids_required": True,
+    "raw_public_key_bytes": 32,
+    "managed_provenance_required_profiles": ["demo", "staging", "production"],
+    "ephemeral_development_allowed_profiles": ["local", "test"],
+    "active_key_requires_open_window": True,
+    "retired_key_requires_not_after": True,
+    "discovery_endpoint_establishes_trust": False,
+}
 
 
 def validate_contract(path: Path = CONTRACT) -> list[str]:
@@ -32,6 +55,10 @@ def validate_contract(path: Path = CONTRACT) -> list[str]:
         "LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON"
     ):
         errors.append("consumer must use the governed strict Archive trust bundle")
+    if payload.get("trust_bundle_contract") != REQUIRED_TRUST_BUNDLE_CONTRACT:
+        errors.append(
+            "Archive trust bundle must preserve the producer response and profile fence"
+        )
     if set(payload.get("required_bindings", ())) != REQUIRED_BINDINGS:
         errors.append(
             "receipt must bind tenant, candidate, evidence pack, document, policy, and action"
@@ -42,7 +69,7 @@ def validate_contract(path: Path = CONTRACT) -> list[str]:
         "signature_algorithm": "Ed25519",
         "digest_algorithm": "sha256",
         "maximum_ttl_seconds": 300,
-        "active_or_rotated_trusted_key_required": True,
+        "active_or_retired_trusted_key_required": True,
         "exact_linked_evidence_pack_required": True,
         "disposal_authorized_must_be_false": True,
     }

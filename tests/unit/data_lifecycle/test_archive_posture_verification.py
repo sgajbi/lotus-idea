@@ -16,6 +16,9 @@ from app.application.data_lifecycle.archive_posture_verification import (
 )
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLifecycleAction,
+    ArchiveLifecycleKeyAlgorithm,
+    ArchiveLifecycleKeyProvenance,
+    ArchiveLifecycleKeyStatus,
     ArchiveLifecycleTrustedKey,
     ExpectedArchiveLifecyclePosture,
     VerifiedArchiveLifecycleReceipt,
@@ -99,14 +102,11 @@ def test_accepts_active_hold_only_with_matching_archive_posture() -> None:
     assert receipt.lifecycle_action is ArchiveLifecycleAction.LEGAL_HOLD
 
 
-def test_rejects_expiry_unknown_key_revocation_digest_and_signature_tampering() -> None:
+def test_rejects_expiry_unknown_key_digest_and_signature_tampering() -> None:
     with pytest.raises(ValueError, match="validity window"):
         _verify(_signed_payload(), verified_at=NOW + timedelta(minutes=5))
     with pytest.raises(ValueError, match="known unique signing key"):
         _verify(_signed_payload(), key_id="archive-other")
-    with pytest.raises(ValueError, match="signing key status"):
-        _verify(_signed_payload(), key_status="revoked")
-
     digest_tampered = _signed_payload()
     digest_tampered["payload_digest"] = "sha256:" + "f" * 64
     with pytest.raises(ValueError, match="payload digest"):
@@ -167,17 +167,88 @@ def test_archive_posture_domain_rejects_malformed_claim_envelope_and_key_state()
 
     key = ArchiveLifecycleTrustedKey(
         key_id="archive-lifecycle-2026-07",
-        public_key_base64url="public-key",
-        status="active",
+        algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+        public_key_base64url=_public_key(PRIVATE_KEY),
+        provenance=ArchiveLifecycleKeyProvenance.MANAGED,
+        status=ArchiveLifecycleKeyStatus.ACTIVE,
         not_before_utc=NOW - timedelta(days=1),
-        not_after_utc=NOW + timedelta(days=1),
+        not_after_utc=None,
     )
     with pytest.raises(ValueError, match="source-safe reference"):
         replace(key, key_id="invalid key")
     with pytest.raises(ValueError, match="public_key_base64url is required"):
         replace(key, public_key_base64url="")
+    with pytest.raises(ValueError, match="32-byte Ed25519 public key"):
+        replace(key, public_key_base64url=base64.urlsafe_b64encode(b"short").decode("ascii"))
+    with pytest.raises(ValueError, match="algorithm must be ed25519"):
+        replace(key, algorithm="rsa")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="provenance is invalid"):
+        replace(key, provenance="self_asserted")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="status is invalid"):
+        replace(key, status="unknown")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="validity window is invalid"):
-        replace(key, not_after_utc=key.not_before_utc)
+        replace(
+            key,
+            status=ArchiveLifecycleKeyStatus.RETIRED,
+            not_after_utc=key.not_before_utc,
+        )
+    with pytest.raises(ValueError, match="requires not_after_utc"):
+        replace(key, status=ArchiveLifecycleKeyStatus.RETIRED, not_after_utc=None)
+
+    with pytest.raises(ValueError, match="active Archive trusted key must have an open"):
+        replace(key, not_after_utc=NOW + timedelta(days=1))
+
+
+def test_verifies_historical_decision_with_retained_key() -> None:
+    incoming_key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    keys = (
+        ArchiveLifecycleTrustedKey(
+            key_id="archive-lifecycle-2026-08",
+            algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+            public_key_base64url=_public_key(incoming_key),
+            provenance=ArchiveLifecycleKeyProvenance.MANAGED,
+            status=ArchiveLifecycleKeyStatus.ACTIVE,
+            not_before_utc=NOW,
+        ),
+        ArchiveLifecycleTrustedKey(
+            key_id="archive-lifecycle-2026-07",
+            algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+            public_key_base64url=_public_key(PRIVATE_KEY),
+            provenance=ArchiveLifecycleKeyProvenance.MANAGED,
+            status=ArchiveLifecycleKeyStatus.RETIRED,
+            not_before_utc=NOW - timedelta(days=30),
+            not_after_utc=NOW + timedelta(minutes=1),
+        ),
+    )
+
+    receipt = verify_archive_lifecycle_decision(
+        envelope=map_archive_lifecycle_decision(_signed_payload()),
+        trusted_keys=keys,
+        expected=_expected_posture(),
+        signature_verifier=Ed25519SignatureVerifier(),
+    )
+
+    assert receipt.key_id == "archive-lifecycle-2026-07"
+
+
+def test_rejects_retained_key_outside_declared_rotation_window() -> None:
+    key = ArchiveLifecycleTrustedKey(
+        key_id="archive-lifecycle-2026-07",
+        algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+        public_key_base64url=_public_key(PRIVATE_KEY),
+        provenance=ArchiveLifecycleKeyProvenance.MANAGED,
+        status=ArchiveLifecycleKeyStatus.RETIRED,
+        not_before_utc=NOW - timedelta(days=30),
+        not_after_utc=NOW,
+    )
+
+    with pytest.raises(ValueError, match="key validity end"):
+        verify_archive_lifecycle_decision(
+            envelope=map_archive_lifecycle_decision(_signed_payload()),
+            trusted_keys=(key,),
+            expected=_expected_posture(),
+            signature_verifier=Ed25519SignatureVerifier(),
+        )
 
 
 def _verify(
@@ -185,29 +256,41 @@ def _verify(
     *,
     verified_at: datetime = NOW,
     key_id: str = "archive-lifecycle-2026-07",
-    key_status: str = "active",
+    key_status: ArchiveLifecycleKeyStatus = ArchiveLifecycleKeyStatus.ACTIVE,
 ) -> VerifiedArchiveLifecycleReceipt:
     return verify_archive_lifecycle_decision(
         envelope=map_archive_lifecycle_decision(payload),
         trusted_keys=(
             ArchiveLifecycleTrustedKey(
                 key_id=key_id,
-                public_key_base64url=base64.urlsafe_b64encode(
-                    PRIVATE_KEY.public_key().public_bytes_raw()
-                ).decode("ascii"),
+                algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+                public_key_base64url=_public_key(PRIVATE_KEY),
+                provenance=ArchiveLifecycleKeyProvenance.MANAGED,
                 status=key_status,
                 not_before_utc=NOW - timedelta(days=1),
-                not_after_utc=NOW + timedelta(days=30),
+                not_after_utc=(
+                    None
+                    if key_status is ArchiveLifecycleKeyStatus.ACTIVE
+                    else NOW + timedelta(days=30)
+                ),
             ),
         ),
-        expected=ExpectedArchiveLifecyclePosture(
-            tenant_id="tenant-001",
-            candidate_id="candidate-001",
-            linked_evidence_pack_ids=frozenset({"report-pack-001"}),
-            verified_at_utc=verified_at,
-        ),
+        expected=_expected_posture(verified_at=verified_at),
         signature_verifier=Ed25519SignatureVerifier(),
     )
+
+
+def _expected_posture(*, verified_at: datetime = NOW) -> ExpectedArchiveLifecyclePosture:
+    return ExpectedArchiveLifecyclePosture(
+        tenant_id="tenant-001",
+        candidate_id="candidate-001",
+        linked_evidence_pack_ids=frozenset({"report-pack-001"}),
+        verified_at_utc=verified_at,
+    )
+
+
+def _public_key(private_key: Ed25519PrivateKey) -> str:
+    return base64.urlsafe_b64encode(private_key.public_key().public_bytes_raw()).decode("ascii")
 
 
 def _signed_payload(payload: dict[str, Any] | None = None) -> dict[str, Any]:
