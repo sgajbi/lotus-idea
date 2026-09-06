@@ -15,6 +15,8 @@ def validated_report_submission_receipt(
     """Validate and convert one Report-owned receipt for durable Idea persistence."""
     if receipt.owner_authority is not SourceSystem.LOTUS_REPORT:
         raise ValueError("Report submission requires an authoritative owner receipt")
+    if getattr(receipt, "source_event_version", None) is None:
+        raise ValueError("Report owner receipt requires source_event_version")
     evidence = receipt.report_materialization
     if evidence is None:
         raise ValueError("Report owner receipt requires materialization evidence")

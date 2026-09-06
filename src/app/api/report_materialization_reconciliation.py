@@ -182,9 +182,11 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
     "summary": "Recover an uncertain Report materialization receipt",
     "description": (
         "Reads the exact trusted-scope Report materialization receipt for an uncertain "
-        "Idea evidence-pack submission and finalizes the existing submission only after "
+        "or previously accepted Idea evidence-pack submission. It records a Report owner "
+        "update only when a higher version passes "
         "tenant, portfolio, candidate, conversion-intent, evidence and idempotency identity "
-        "validation. Active submission leases fail closed; an expired in-flight lease may be "
+        "validation. Version regression and same-version mutation fail closed; exact owner "
+        "replay is non-mutating. Active submission leases fail closed; an expired in-flight lease may be "
         "recovered using trusted server acceptance time. It never repeats materialization POST "
         "and grants no client-publication or supported-feature authority. A point-in-time owner "
         "absence returns 409 and preserves uncertainty, while owner unavailability returns 503."
@@ -204,7 +206,7 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
                             "ownerRequestId": "report-request-001",
                             "ownerRealizationId": "report-job-001",
                             "ownerWorkId": None,
-                            "sourceEventVersion": None,
+                            "sourceEventVersion": 1,
                             "sourceEvidenceFingerprint": "sha256:idea-evidence-content",
                             "reportMaterialization": {
                                 "status": "archived",
@@ -261,6 +263,17 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
                         "the uncertain submission remains unchanged and is not authorized for retry."
                     ),
                     description="The exact owner lookup completed but found no matching acceptance.",
+                ),
+                conflict_metadata(
+                    code="report_materialization_owner_version_conflict",
+                    title="Report owner version conflict",
+                    detail=(
+                        "The Report owner receipt regressed or changed without a higher "
+                        "source event version; no Idea evidence changed."
+                    ),
+                    description=(
+                        "The owner chronology cannot safely advance the persisted receipt."
+                    ),
                 ),
             ),
         ),

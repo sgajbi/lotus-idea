@@ -827,7 +827,7 @@ def _report_owner_receipt_from_payload(
         owner_request_id=_required_response_text(payload, "report_request_id"),
         owner_realization_id=report_job_id,
         owner_work_id=None,
-        source_event_version=None,
+        source_event_version=_required_response_int(payload, "source_event_version"),
         source_evidence_fingerprint=evidence_pack.evidence_content_hash,
         report_materialization=evidence,
     )

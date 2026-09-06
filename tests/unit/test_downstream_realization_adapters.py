@@ -367,7 +367,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     assert outcome.owner_receipt.owner_authority is SourceSystem.LOTUS_REPORT
     assert outcome.owner_receipt.owner_request_id == ("report-request-report-evidence-pack-001")
     assert outcome.owner_receipt.owner_realization_id == "report-job-report-evidence-pack-001"
-    assert outcome.owner_receipt.source_event_version is None
+    assert outcome.owner_receipt.source_event_version == 1
     materialization = outcome.owner_receipt.report_materialization
     assert materialization is not None
     assert materialization.status == "data_ready"

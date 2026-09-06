@@ -53,6 +53,7 @@ _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
 _REQUIRED_REPORT_MATERIALIZATION_RECEIPT_FIELDS = {
     "report_request_id",
     "report_job_id",
+    "source_event_version",
     "status",
     "materialization_status",
     "status_url",
@@ -226,6 +227,10 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
             "supported_feature_promotion_forbidden": True,
             "malformed_receipt_requires_reconciliation": True,
             "persist_exact_owner_receipt": True,
+            "positive_owner_version_required": True,
+            "higher_owner_version_advances_existing_receipt": True,
+            "version_regression_or_same_version_mutation_forbidden": True,
+            "exact_owner_replay_is_non_mutating": True,
         },
         "receipt_source_authority": {
             "idea_evidence": "lotus-idea",
