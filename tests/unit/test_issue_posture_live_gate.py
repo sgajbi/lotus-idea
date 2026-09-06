@@ -5,12 +5,9 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from datetime import date
 from pathlib import Path
 from types import ModuleType
-from typing import Any
-
-import pytest
+from typing import Any, cast
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,44 +28,36 @@ def _load_gate() -> ModuleType:
     return module
 
 
-def _issue(number: int, *, state: str, labels: list[str], title: str) -> dict[str, Any]:
+def _issue(number: int, *, state: str, status_labels: list[str]) -> dict[str, Any]:
     return {
         "number": number,
         "state": state,
-        "title": title,
+        "title": f"RFC-0002 issue {number}",
         "url": f"https://github.com/{REPOSITORY}/issues/{number}",
-        "updatedAt": "2026-08-30T00:00:00Z",
-        "labels": [{"name": label} for label in labels],
+        "updatedAt": "2026-09-06T00:00:00Z",
+        "labels": [
+            {"name": "rfc/RFC-0002"},
+            {"name": "rfc/RFC-0002/slice-18"},
+            *({"name": label} for label in status_labels),
+        ],
     }
 
 
-def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
-    open_issue = _issue(
-        1139,
-        state="OPEN",
-        title="Live posture audit",
-        labels=["rfc/RFC-0002", "rfc/RFC-0002/slice-18", "status/in-progress"],
-    )
-    closed_issue = _issue(
-        1131,
-        state="CLOSED",
-        title="Closed workflow hardening",
-        labels=["rfc/RFC-0002", "rfc/RFC-0002/slice-17", "status/merged-main"],
-    )
-    title_only = _issue(
-        704,
-        state="OPEN",
-        title="RFC-0002 title-only reference",
-        labels=[],
-    )
+def _write_fixture(
+    tmp_path: Path,
+    *,
+    open_issues: list[dict[str, Any]],
+    closed_issues: list[dict[str, Any]] | None = None,
+) -> tuple[Path, Path]:
+    closed = closed_issues or []
     fixture = tmp_path / "issues.json"
     fixture.write_text(
         json.dumps(
             {
                 REPOSITORY: {
-                    "openIssues": [open_issue, title_only],
-                    "allIssues": [open_issue, closed_issue, title_only],
-                    "rfc0002Issues": [open_issue, closed_issue],
+                    "openIssues": open_issues,
+                    "allIssues": [*open_issues, *closed],
+                    "rfc0002Issues": [*open_issues, *closed],
                 }
             }
         ),
@@ -85,317 +74,150 @@ def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
         ),
         encoding="utf-8",
     )
-    snapshot = tmp_path / "snapshot.json"
-    snapshot.write_text(
-        json.dumps(
-            {
-                "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
-                "asOfDate": "2026-08-30",
-                "asOfTimezone": "UTC",
-                "comparisonPolicy": {
-                    "mode": "dated_non_regression_v1",
-                    "allowedOpenStatusLabels": [
-                        "status/blocked",
-                        "status/fixed-local",
-                        "status/in-progress",
-                        "status/merged-main",
-                        "status/pr-open",
-                        "status/ready",
-                        "status/tracker",
-                    ],
-                },
-                "crossRepo": {
-                    "repositoriesChecked": 1,
-                    "totalRfc0002Issues": 2,
-                    "openRfc0002Issues": 1,
-                    "closedRfc0002Issues": 1,
-                    "openBlockedIssues": 0,
-                    "appActionableBlockedIssues": 0,
-                    "openStatusCounts": {"status/in-progress": 1},
-                    "openIssueRefs": ["sgajbi/lotus-idea#1139"],
-                    "titleOnlyReferencesExcludedFromGovernedCounts": ["sgajbi/lotus-idea#704"],
-                },
-            }
+    return fixture, blocker_classification
+
+
+def _live_errors(
+    module: ModuleType,
+    *,
+    fixture: Path,
+    blocker_classification: Path,
+) -> list[str]:
+    return cast(
+        list[str],
+        module.live_posture_errors(
+            repositories=(REPOSITORY,),
+            fixture_path=fixture,
+            blocker_classification_path=blocker_classification,
         ),
-        encoding="utf-8",
-    )
-    return fixture, blocker_classification, snapshot
-
-
-def test_live_posture_gate_accepts_current_exact_snapshot(tmp_path: Path) -> None:
-    module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
     )
 
-    assert errors == []
 
-
-def test_live_posture_gate_rejects_inconsistent_snapshot_count_partition(
-    tmp_path: Path,
-) -> None:
+def test_live_posture_gate_accepts_current_lifecycle_state(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    payload = json.loads(snapshot.read_text(encoding="utf-8"))
-    payload["crossRepo"]["openRfc0002Issues"] = 0
-    snapshot.write_text(json.dumps(payload), encoding="utf-8")
-
-    with pytest.raises(
-        ValueError,
-        match="snapshot crossRepo open/closed counts must sum to totalRfc0002Issues",
-    ):
-        module.live_posture_errors(
-            snapshot_path=snapshot,
-            repositories=(REPOSITORY,),
-            fixture_path=fixture,
-            blocker_classification_path=blocker_classification,
-            today=date(2026, 8, 30),
-        )
-
-
-def test_live_posture_gate_requires_complete_baseline_open_issue_identities(
-    tmp_path: Path,
-) -> None:
-    module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    payload = json.loads(snapshot.read_text(encoding="utf-8"))
-    payload["crossRepo"]["openIssueRefs"] = []
-    snapshot.write_text(json.dumps(payload), encoding="utf-8")
-
-    with pytest.raises(
-        ValueError,
-        match="openIssueRefs must contain exactly 1 baseline identities",
-    ):
-        module.live_posture_errors(
-            snapshot_path=snapshot,
-            repositories=(REPOSITORY,),
-            fixture_path=fixture,
-            blocker_classification_path=blocker_classification,
-            today=date(2026, 8, 30),
-        )
-
-
-def test_live_posture_gate_allows_lifecycle_status_redistribution(tmp_path: Path) -> None:
-    module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    fixture_payload = json.loads(fixture.read_text(encoding="utf-8"))
-    repository_payload = fixture_payload[REPOSITORY]
-    for collection_name in ("openIssues", "allIssues", "rfc0002Issues"):
-        for issue in repository_payload[collection_name]:
-            if issue["number"] == 1139:
-                issue["labels"] = [
-                    {"name": "rfc/RFC-0002"},
-                    {"name": "rfc/RFC-0002/slice-18"},
-                    {"name": "status/pr-open"},
-                ]
-    fixture.write_text(json.dumps(fixture_payload), encoding="utf-8")
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[_issue(1248, state="OPEN", status_labels=["status/in-progress"])],
+        closed_issues=[_issue(1247, state="CLOSED", status_labels=["status/merged-main"])],
     )
 
-    assert errors == []
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == []
 
 
-def test_live_posture_gate_allows_issue_closure_within_freshness_window(tmp_path: Path) -> None:
+def test_live_posture_gate_accepts_new_and_reopened_issues(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    fixture_payload = json.loads(fixture.read_text(encoding="utf-8"))
-    repository_payload = fixture_payload[REPOSITORY]
-    repository_payload["openIssues"] = [
-        issue for issue in repository_payload["openIssues"] if issue["number"] != 1139
-    ]
-    for collection_name in ("allIssues", "rfc0002Issues"):
-        for issue in repository_payload[collection_name]:
-            if issue["number"] == 1139:
-                issue["state"] = "CLOSED"
-    fixture.write_text(json.dumps(fixture_payload), encoding="utf-8")
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[
+            _issue(1248, state="OPEN", status_labels=["status/pr-open"]),
+            _issue(1300, state="OPEN", status_labels=["status/ready"]),
+        ],
     )
 
-    assert errors == []
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == []
 
 
-def test_live_posture_gate_rejects_reopened_issue(tmp_path: Path) -> None:
+def test_live_posture_gate_accepts_repository_specific_merged_label(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    fixture_payload = json.loads(fixture.read_text(encoding="utf-8"))
-    repository_payload = fixture_payload[REPOSITORY]
-    reopened_issue: dict[str, Any] | None = None
-    for collection_name in ("allIssues", "rfc0002Issues"):
-        for issue in repository_payload[collection_name]:
-            if issue["number"] == 1131:
-                issue["state"] = "OPEN"
-                reopened_issue = issue
-    assert reopened_issue is not None
-    repository_payload["openIssues"].append(reopened_issue)
-    fixture.write_text(json.dumps(fixture_payload), encoding="utf-8")
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[_issue(615, state="OPEN", status_labels=["status/merged-to-main"])],
     )
 
-    assert any("openRfc0002Issues baseline 1 regressed" in error for error in errors)
-    assert any("newly open or reopened issues" in error for error in errors)
-    assert any("sgajbi/lotus-idea#1131" in error for error in errors)
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == []
 
 
-def test_live_posture_gate_rejects_blocker_growth(tmp_path: Path) -> None:
+def test_live_posture_gate_rejects_missing_lifecycle_label(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    fixture_payload = json.loads(fixture.read_text(encoding="utf-8"))
-    repository_payload = fixture_payload[REPOSITORY]
-    for collection_name in ("openIssues", "allIssues", "rfc0002Issues"):
-        for issue in repository_payload[collection_name]:
-            if issue["number"] == 1139:
-                issue["labels"] = [
-                    {"name": "rfc/RFC-0002"},
-                    {"name": "rfc/RFC-0002/slice-18"},
-                    {"name": "status/blocked"},
-                ]
-    fixture.write_text(json.dumps(fixture_payload), encoding="utf-8")
-    blocker_classification.write_text(
-        json.dumps(
-            {
-                "schemaVersion": ("lotus-idea:rfc0002-cross-repo-blocker-classification:v1"),
-                "rfcId": "RFC-0002",
-                "classifications": [
-                    {
-                        "repository": REPOSITORY,
-                        "issueNumber": 1139,
-                        "actionability": "external_or_protected_evidence",
-                        "blockerClass": "protected_evidence",
-                        "remainingAuthority": "test authority boundary",
-                    }
-                ],
-            }
-        ),
-        encoding="utf-8",
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[_issue(1248, state="OPEN", status_labels=[])],
     )
 
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
-    )
-
-    assert errors == [
-        "RFC-0002 posture snapshot crossRepo.openBlockedIssues baseline 0 regressed to live "
-        "GitHub posture 1; dated snapshot permits only same or fewer blocked issues"
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == [
+        f"{REPOSITORY}#1248: open RFC-0002 issue has ungoverned lifecycle label status/unlabeled"
     ]
 
 
-def test_live_posture_gate_rejects_ungoverned_open_status(tmp_path: Path) -> None:
+def test_live_posture_gate_rejects_conflicting_lifecycle_labels(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    fixture_payload = json.loads(fixture.read_text(encoding="utf-8"))
-    repository_payload = fixture_payload[REPOSITORY]
-    for collection_name in ("openIssues", "allIssues", "rfc0002Issues"):
-        for issue in repository_payload[collection_name]:
-            if issue["number"] == 1139:
-                issue["labels"] = [
-                    {"name": "rfc/RFC-0002"},
-                    {"name": "rfc/RFC-0002/slice-18"},
-                    {"name": "status/unreviewed"},
-                ]
-    fixture.write_text(json.dumps(fixture_payload), encoding="utf-8")
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[
+            _issue(
+                1248,
+                state="OPEN",
+                status_labels=["status/in-progress", "status/pr-open"],
+            )
+        ],
     )
 
-    assert errors == [
-        "RFC-0002 live posture contains ungoverned open lifecycle statuses: ['status/unreviewed']"
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == [
+        f"{REPOSITORY}#1248: open RFC-0002 issue requires exactly one status/* "
+        "lifecycle label; found status/in-progress,status/pr-open"
     ]
 
 
-def test_live_posture_gate_rejects_snapshot_older_than_tolerance(tmp_path: Path) -> None:
+def test_live_posture_gate_rejects_unknown_lifecycle_label(tmp_path: Path) -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    payload = json.loads(snapshot.read_text(encoding="utf-8"))
-    payload["asOfDate"] = "2026-08-22"
-    snapshot.write_text(json.dumps(payload), encoding="utf-8")
-
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
-        max_snapshot_age_days=7,
+    fixture, blockers = _write_fixture(
+        tmp_path,
+        open_issues=[_issue(1248, state="OPEN", status_labels=["status/imagined"])],
     )
 
-    assert errors == ["RFC-0002 posture snapshot is 8 days old; maximum allowed age is 7 days"]
+    assert _live_errors(module, fixture=fixture, blocker_classification=blockers) == [
+        f"{REPOSITORY}#1248: open RFC-0002 issue has ungoverned lifecycle label status/imagined"
+    ]
 
 
-def test_live_posture_gate_rejects_future_snapshot_date(tmp_path: Path) -> None:
+def test_live_posture_gate_rejects_app_actionable_blocked_work() -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    payload = json.loads(snapshot.read_text(encoding="utf-8"))
-    payload["asOfDate"] = "2026-08-31"
-    snapshot.write_text(json.dumps(payload), encoding="utf-8")
+    live = {
+        "counts": {
+            "repositories": 1,
+            "totalRfc0002Issues": 0,
+            "openRfc0002Issues": 0,
+            "closedRfc0002Issues": 0,
+        },
+        "blockedActionability": {"appActionableBlockedIssueCount": 1},
+        "repositories": [],
+    }
 
-    errors = module.live_posture_errors(
-        snapshot_path=snapshot,
-        repositories=(REPOSITORY,),
-        fixture_path=fixture,
-        blocker_classification_path=blocker_classification,
-        today=date(2026, 8, 30),
-    )
-
-    assert errors == ["RFC-0002 posture snapshot asOfDate 2026-08-31 is in the future"]
+    assert module._live_posture_errors(live=live, expected_repository_count=1) == [
+        "RFC-0002 live posture contains 1 app-actionable issue(s) incorrectly marked blocked"
+    ]
 
 
-def test_live_posture_gate_requires_explicit_utc_snapshot_timezone(tmp_path: Path) -> None:
+def test_live_posture_gate_rejects_inconsistent_counts() -> None:
     module = _load_gate()
-    fixture, blocker_classification, snapshot = _write_inputs(tmp_path)
-    payload = json.loads(snapshot.read_text(encoding="utf-8"))
-    payload["asOfTimezone"] = "Asia/Singapore"
-    snapshot.write_text(json.dumps(payload), encoding="utf-8")
+    live = {
+        "counts": {
+            "repositories": 2,
+            "totalRfc0002Issues": 4,
+            "openRfc0002Issues": 2,
+            "closedRfc0002Issues": 1,
+        },
+        "blockedActionability": {"appActionableBlockedIssueCount": 0},
+        "repositories": [],
+    }
 
-    with pytest.raises(ValueError, match="asOfTimezone must be UTC"):
-        module.live_posture_errors(
-            snapshot_path=snapshot,
-            repositories=(REPOSITORY,),
-            fixture_path=fixture,
-            blocker_classification_path=blocker_classification,
-            today=date(2026, 8, 30),
-        )
+    assert module._live_posture_errors(live=live, expected_repository_count=1) == [
+        "RFC-0002 live posture repository count 2 does not match requested repository count 1",
+        "RFC-0002 live posture open/closed counts do not sum to total issues: "
+        "open=2, closed=1, total=4",
+        "RFC-0002 live posture projected open issues do not match aggregate count: "
+        "projected=0, aggregate=2",
+    ]
 
 
-def test_live_posture_workflow_runs_on_schedule_dispatch_and_main_snapshot_change() -> None:
+def test_live_posture_workflow_runs_on_schedule_dispatch_and_live_control_change() -> None:
     workflow = (ROOT / ".github/workflows/issue-posture-audit.yml").read_text(encoding="utf-8")
 
     assert "workflow_dispatch:" in workflow
     assert "schedule:" in workflow
     assert 'cron: "23 3 * * *"' in workflow
     assert "push:" in workflow
-    assert '"contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"' in workflow
+    assert '"scripts/issue_posture_live_gate.py"' in workflow
     assert '"scripts/github_issue_inventory.py"' in workflow
+    assert '"contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"' not in workflow
     assert "python scripts/issue_posture_live_gate.py" in workflow

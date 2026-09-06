@@ -173,6 +173,7 @@ def _learning_patterns(
         current_issues = raw_pattern["currentLedgerIssueNumbers"]
         if not isinstance(current_issues, list):
             raise ValueError("currentLedgerIssueNumbers must be a list")
+        agent_rule = raw_pattern.get("currentSteeringRule", raw_pattern["futureAgentRule"])
         patterns.append(
             {
                 "patternId": raw_pattern["patternId"],
@@ -182,7 +183,7 @@ def _learning_patterns(
                     for issue_number in current_issues
                     if issue_number in live_open_issue_numbers
                 ),
-                "futureAgentRule": raw_pattern["futureAgentRule"],
+                "futureAgentRule": agent_rule,
             }
         )
     return patterns

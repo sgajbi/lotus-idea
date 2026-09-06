@@ -10,7 +10,6 @@ on:
     paths:
       - ".github/workflows/issue-posture-audit.yml"
       - "contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json"
-      - "contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"
       - "scripts/cross_repo_blocker_actionability.py"
       - "scripts/cross_repo_issue_posture.py"
       - "scripts/github_issue_inventory.py"
@@ -26,7 +25,7 @@ concurrency:
 
 jobs:
   live-posture:
-    name: Compare Published Snapshot With Live GitHub State
+    name: Validate Complete Live GitHub State
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -40,5 +39,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fail on stale or drifting RFC-0002 issue posture
+      - name: Fail on invalid RFC-0002 issue posture
         run: python scripts/issue_posture_live_gate.py

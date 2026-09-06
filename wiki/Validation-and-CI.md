@@ -1443,17 +1443,14 @@ evidence.
 
 ### Live RFC-0002 Posture And Protected-Lane Liveness
 
-`make rfc0002-issue-posture-live-gate` compares the dated source snapshot with
-the full label-backed GitHub posture across all 13 governed repositories. It
-requires exact repository and total-issue cardinality, preserves the exact
-baseline open-issue identity set, and rejects newly open or reopened issues,
-open/blocker growth, closed-count regression, ungoverned status coverage,
-title-only-reference drift, and snapshots more than seven days old. Issue
-closure and lifecycle redistribution are allowed inside the freshness window
-when those non-regression invariants hold. The `RFC-0002 Issue Posture Audit` workflow runs this check daily,
-manually, and when the governed snapshot or audit implementation changes on
-`main`. This live external-state check is deliberately separate from the
-deterministic documentation gate used on every branch.
+`make rfc0002-issue-posture-live-gate` validates complete label-backed GitHub
+posture across all 13 governed repositories. It requires one governed lifecycle
+label per open RFC issue, consistent aggregate/projection counts, and zero
+app-actionable issues hidden behind `status/blocked`. It accepts new, reopened,
+closed, and reclassified issues as current execution truth; none requires a
+source snapshot rewrite. The `RFC-0002 Issue Posture Audit` workflow runs this
+check daily, manually, and when the live audit or blocker-classification control
+changes on `main`.
 
 `make rfc0002-github-issue-execution-state-audit` additionally validates
 structured `currentBlockerIssueRefs` on open blocked ledger entries. Every
