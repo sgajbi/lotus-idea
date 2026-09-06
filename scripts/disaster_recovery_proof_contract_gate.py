@@ -103,7 +103,7 @@ def _validate_resume(restore: dict[str, Any], resume: dict[str, Any]) -> list[st
     errors = _expected_values(resume, expected, "resume evidence")
     decisions = resume.get("downstream_claim_decisions")
     if decisions != {
-        "conversion_intent": "reconciliation_required",
+        "conversion_intent": "replayed",
         "report_evidence_pack": "reconciliation_required",
     }:
         errors.append("disaster recovery downstream resume decisions drifted")
