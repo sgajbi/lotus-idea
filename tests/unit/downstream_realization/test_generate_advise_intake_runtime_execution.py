@@ -62,6 +62,7 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
         "authorizationDenied",
         "tenantScopedIdempotency",
         "ownerRealization",
+        "ownerAdvancement",
         "submittedIntent",
         "preCommitTimeout",
     }
@@ -72,6 +73,8 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     assert "reset_proposal_workflow_service_for_tests" in captured["args"][2]
     assert "InMemoryProposalRepository" in captured["args"][2]
     assert "preCommitTimeout" in captured["args"][2]
+    assert "stale_owner_correction" in captured["args"][2]
+    assert "concurrent_owner_advancement" in captured["args"][2]
     assert '"failureStage": "before_owner_request_dispatch"' in captured["args"][2]
     assert '"portfolio_id": "PB_SG_GLOBAL_BAL_001"' in captured["args"][2]
     assert "authorizationDenied" in captured["args"][2]
@@ -108,6 +111,13 @@ def test_advise_testclient_execution_runs_source_safe_scenarios(
     assert owner["ownerIdentityDigest"] == accepted["ownerIdentityDigest"]
     assert owner["scopeDigest"] == accepted["scopeDigest"]
     assert owner["currentSourceEventVersion"] == 1
+    advancement = receipts["ownerAdvancement"]
+    assert advancement["staleCorrectionStatusCode"] == 409
+    assert advancement["sourceEventVersionAfterRefusal"] == 2
+    assert advancement["concurrentStatusCodes"] == [200, 200]
+    assert advancement["concurrentSourceEventVersions"] == [3, 3]
+    assert advancement["finalOutcomeVersions"] == [1, 2, 3]
+    assert advancement["finalStatus"] == "ADVISORY_REJECTED"
 
     submitted = receipts["submittedIntent"]
     assert submitted["scopeDigest"].startswith("sha256:")
@@ -225,6 +235,18 @@ def _advise_receipt_responses() -> dict[str, dict[str, object]]:
         "tenantId": "tenant-private-bank-sg",
         "legalEntityCode": "SGPB",
     }
+    linked_history = _owner_history_response(version=2)
+    final_history = _owner_history_response(version=3)
+    responses["ownerAdvancement"] = {
+        "linked": linked_history,
+        "staleCorrection": _error_response(
+            status_code=409,
+            detail="IDEA_PROPOSAL_REALIZATION_VERSION_CONFLICT",
+        ),
+        "afterStaleCorrection": linked_history,
+        "concurrentAdvancement": [final_history, final_history],
+        "finalReadback": final_history,
+    }
     responses["preCommitTimeout"] = {
         "failureStage": "before_owner_request_dispatch",
         "downstreamPostAttemptCount": 0,
@@ -286,3 +308,58 @@ def _response(
 
 def _error_response(*, status_code: int, detail: str) -> dict[str, object]:
     return {"statusCode": status_code, "body": {"detail": detail}}
+
+
+def _owner_history_response(*, version: int) -> dict[str, object]:
+    outcomes: list[dict[str, object]] = [
+        {
+            "source_event_version": 1,
+            "status": "ACCEPTED_FOR_REVIEW",
+            "reason_code": "idea_intake_accepted_for_adviser_review",
+            "review_work_id": "iarw_001",
+            "proposal_id": None,
+            "terminal": False,
+        },
+        {
+            "source_event_version": 2,
+            "status": "PROPOSAL_LINKED",
+            "reason_code": "advise_proposal_linked",
+            "review_work_id": "iarw_001",
+            "proposal_id": "proposal-001",
+            "terminal": False,
+        },
+    ]
+    if version == 3:
+        outcomes.append(
+            {
+                "source_event_version": 3,
+                "status": "ADVISORY_REJECTED",
+                "reason_code": "advise_proposal_rejected",
+                "review_work_id": "iarw_001",
+                "proposal_id": "proposal-001",
+                "terminal": True,
+            }
+        )
+    return {
+        "statusCode": 200,
+        "body": {
+            "intake_id": "ipi_001",
+            "realization_id": "ipr_001",
+            "review_work_id": "iarw_001",
+            "review_work_status": "CLOSED" if version == 3 else "PROPOSAL_LINKED",
+            "tenant_id": "tenant-private-bank-sg",
+            "legal_entity_code": "SGPB",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+            "idea_candidate_id": "idea_candidate_001",
+            "conversion_intent_id": "conversion_intent_001",
+            "source_evidence_fingerprint": "sha256:" + "a" * 64,
+            "current_status": "ADVISORY_REJECTED" if version == 3 else "PROPOSAL_LINKED",
+            "current_source_event_version": version,
+            "proposal_id": "proposal-001",
+            "proposal_record_created": True,
+            "suitability_authority_granted": False,
+            "order_created": False,
+            "client_publication_authorized": False,
+            "outcomes": outcomes,
+        },
+    }

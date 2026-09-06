@@ -59,7 +59,7 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-07-22T00:00:00Z",
         "proofType": "lotus_advise_idea_proposal_intake_runtime_execution",
-        "proofScope": "advise_intake_route_serving_and_receipt_behavior",
+        "proofScope": "advise_intake_and_owner_progression_route_behavior",
         "evidenceClass": EvidenceClass.RUNTIME_EXECUTION.value,
         "runtimeProofValid": True,
         "sourceRepository": "lotus-idea",
@@ -68,6 +68,9 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         "ownerReadRoute": "GET /advisory/proposals/idea-intake/{intake_id}/realization",
         "ownerRecoveryRoute": (
             "GET /advisory/proposals/idea-intake/realization?conversion_intent_id={id}"
+        ),
+        "ownerReconciliationRoute": (
+            "POST /advisory/proposals/idea-intake/{intake_id}/realization/proposal-reconciliation"
         ),
         "runtimeMode": "local_asgi_testclient",
         "sourceAuthority": tuple(
@@ -89,6 +92,7 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             ),
         },
         "ownerRealizationEvidence": _valid_advise_owner_realization_evidence(),
+        "ownerAdvancementEvidence": _valid_advise_owner_advancement_evidence(),
         "preCommitTimeoutEvidence": {
             "failureStage": "before_owner_request_dispatch",
             "sourceIntentDigest": source_safe_binding_digest(
@@ -119,6 +123,9 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             "idempotencyConflictObserved": True,
             "concurrentDuplicateConvergenceObserved": True,
             "ownerRealizationReadbackObserved": True,
+            "staleOwnerAdvancementRefused": True,
+            "correctedOwnerAdvancementObserved": True,
+            "concurrentOwnerAdvancementConverged": True,
             "timeoutBeforeOwnerCommitObserved": True,
             "automaticResubmissionPrevented": True,
             "proposalAuthorityRetained": True,
@@ -135,7 +142,7 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             "client_publication_authority_blocked",
         ),
         "nonProofClaims": {
-            "proposalRecordCreated": False,
+            "ideaOwnedProposalRecordCreated": False,
             "suitabilityAuthorityGranted": False,
             "orderCreated": False,
             "clientPublicationAuthorized": False,
@@ -734,6 +741,40 @@ def _valid_advise_owner_realization_evidence() -> dict[str, object]:
                 "terminal": False,
             }
         ],
+    }
+
+
+def _valid_advise_owner_advancement_evidence() -> dict[str, object]:
+    return {
+        "ownerIdentityDigest": source_safe_binding_digest("ipi_001", "ipr_001", "iarw_001"),
+        "scopeDigest": source_safe_binding_digest(
+            "tenant-private-bank-sg", "SGPB", "PB_SG_GLOBAL_BAL_001"
+        ),
+        "sourceIntentDigest": source_safe_binding_digest(
+            "idea_candidate_001", "conversion_intent_001"
+        ),
+        "sourceEvidenceFingerprint": f"sha256:{'a' * 64}",
+        "linkedStatusCode": 200,
+        "linkedSourceEventVersion": 2,
+        "staleCorrectionStatusCode": 409,
+        "staleCorrectionReasonCodes": ("IDEA_PROPOSAL_REALIZATION_VERSION_CONFLICT",),
+        "sourceEventVersionAfterRefusal": 2,
+        "concurrentStatusCodes": [200, 200],
+        "concurrentSourceEventVersions": [3, 3],
+        "finalStatusCode": 200,
+        "finalStatus": "ADVISORY_REJECTED",
+        "finalSourceEventVersion": 3,
+        "finalOutcomeVersions": [1, 2, 3],
+        "finalOutcomeStatuses": [
+            "ACCEPTED_FOR_REVIEW",
+            "PROPOSAL_LINKED",
+            "ADVISORY_REJECTED",
+        ],
+        "proposalIdentityPresent": True,
+        "proposalRecordCreated": True,
+        "suitabilityAuthorityGranted": False,
+        "orderCreated": False,
+        "clientPublicationAuthorized": False,
     }
 
 

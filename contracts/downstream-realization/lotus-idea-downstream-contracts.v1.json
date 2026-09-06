@@ -51,7 +51,10 @@
       ],
       "blockers": [
         "suitability_policy_authority_remains_lotus_advise",
-        "advise_live_contract_proof_missing"
+        "advise_live_contract_proof_missing",
+        "advise_restart_replay_certification_missing",
+        "advise_owner_correction_certification_missing",
+        "advise_concurrent_owner_advancement_certification_missing"
       ],
       "blocker_issue_refs": {
         "suitability_policy_authority_remains_lotus_advise": [
@@ -63,6 +66,18 @@
           "sgajbi/lotus-idea#688",
           "sgajbi/lotus-idea#379",
           "sgajbi/lotus-advise#461"
+        ],
+        "advise_restart_replay_certification_missing": [
+          "sgajbi/lotus-idea#1254",
+          "sgajbi/lotus-idea#379"
+        ],
+        "advise_owner_correction_certification_missing": [
+          "sgajbi/lotus-idea#1253",
+          "sgajbi/lotus-idea#379"
+        ],
+        "advise_concurrent_owner_advancement_certification_missing": [
+          "sgajbi/lotus-idea#1253",
+          "sgajbi/lotus-idea#379"
         ]
       }
     },

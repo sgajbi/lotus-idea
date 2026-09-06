@@ -33,11 +33,16 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
     assert payload["aggregateBlockersSatisfied"] == (
         "advise_live_contract_proof_missing",
         "advise_timeout_uncertainty_certification_missing",
+        "advise_owner_correction_certification_missing",
+        "advise_concurrent_owner_advancement_certification_missing",
     )
     assert payload["remainingCertificationBlockers"] == REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS
     runtime_checks = nested_payload_section(payload, "runtimeChecks")
     assert runtime_checks["timeoutBeforeOwnerCommitObserved"] is True
     assert runtime_checks["automaticResubmissionPrevented"] is True
+    assert runtime_checks["staleOwnerAdvancementRefused"] is True
+    assert runtime_checks["correctedOwnerAdvancementObserved"] is True
+    assert runtime_checks["concurrentOwnerAdvancementConverged"] is True
     assert nested_payload_section(payload, "nonProofClaims")["supportedFeaturePromoted"] is False
 
 
@@ -52,6 +57,7 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         receipt_evidence=receipt_evidence_for_builder(baseline),
         submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
         owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
+        owner_advancement_evidence=nested_payload_section(baseline, "ownerAdvancementEvidence"),
         pre_commit_timeout_evidence=nested_payload_section(baseline, "preCommitTimeoutEvidence"),
     )
 
@@ -61,6 +67,33 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
     assert payload["runtimeChecks"]["ownerRealizationReadbackObserved"] is True
     assert payload["runtimeChecks"]["timeoutBeforeOwnerCommitObserved"] is True
     assert payload["runtimeChecks"]["automaticResubmissionPrevented"] is True
+    assert payload["runtimeChecks"]["staleOwnerAdvancementRefused"] is True
+    assert payload["runtimeChecks"]["correctedOwnerAdvancementObserved"] is True
+    assert payload["runtimeChecks"]["concurrentOwnerAdvancementConverged"] is True
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
+        ("staleCorrectionStatusCode", 200),
+        ("staleCorrectionReasonCodes", ("unexpected",)),
+        ("sourceEventVersionAfterRefusal", 3),
+        ("concurrentStatusCodes", [200, 409]),
+        ("concurrentSourceEventVersions", [3, 4]),
+        ("finalSourceEventVersion", 4),
+        ("finalOutcomeVersions", [1, 2, 4]),
+        ("finalOutcomeStatuses", ["ACCEPTED_FOR_REVIEW", "PROPOSAL_LINKED"]),
+        ("suitabilityAuthorityGranted", True),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_false_owner_advancement_evidence(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ownerAdvancementEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
 
 
 @pytest.mark.parametrize(
@@ -138,6 +171,7 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             receipt_evidence=receipt_evidence_for_builder(baseline),
             submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
             owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
+            owner_advancement_evidence=nested_payload_section(baseline, "ownerAdvancementEvidence"),
             pre_commit_timeout_evidence=nested_payload_section(
                 baseline, "preCommitTimeoutEvidence"
             ),
@@ -220,6 +254,7 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     ("section", "replacement"),
     (
         ("ownerRealizationEvidence", None),
+        ("ownerAdvancementEvidence", None),
         ("submittedIntentEvidence", None),
         ("preCommitTimeoutEvidence", None),
     ),

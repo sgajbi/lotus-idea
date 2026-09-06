@@ -9,6 +9,8 @@ ISSUE_MANAGE_LIVE_INTAKE = "sgajbi/lotus-idea#689"
 ISSUE_REPORT_LIVE_INTAKE = "sgajbi/lotus-idea#690"
 ISSUE_RENDER_ARCHIVE_LIFECYCLE = "sgajbi/lotus-idea#691"
 ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES = "sgajbi/lotus-idea#379"
+ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION = "sgajbi/lotus-idea#1253"
+ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION = "sgajbi/lotus-idea#1254"
 ISSUE_SUPPORTED_FEATURE_PROMOTION = "sgajbi/lotus-idea#380"
 ISSUE_ADVISE_SOURCE_AUTHORITY = "sgajbi/lotus-advise#461"
 ISSUE_MANAGE_SOURCE_AUTHORITY = "sgajbi/lotus-manage#621"
@@ -38,6 +40,18 @@ REQUIRED_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, frozenset[str]]] = Mappin
                     ISSUE_ADVISE_LIVE_INTAKE,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                     ISSUE_ADVISE_SOURCE_AUTHORITY,
+                ),
+                "advise_restart_replay_certification_missing": _required_refs(
+                    ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                ),
+                "advise_owner_correction_certification_missing": _required_refs(
+                    ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                ),
+                "advise_concurrent_owner_advancement_certification_missing": _required_refs(
+                    ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                 ),
             }
         ),
@@ -102,6 +116,18 @@ CAPABILITY_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, tuple[str, ...]]] = Map
                     ISSUE_ADVISE_LIVE_INTAKE,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                     ISSUE_ADVISE_SOURCE_AUTHORITY,
+                ),
+                "advise_restart_replay_certification_missing": _refs(
+                    ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                ),
+                "advise_owner_correction_certification_missing": _refs(
+                    ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                ),
+                "advise_concurrent_owner_advancement_certification_missing": _refs(
+                    ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                 ),
             }
         ),
