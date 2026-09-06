@@ -234,20 +234,14 @@ Blocked actionability remains 0 app-actionable blocked issues.
 
 Slice 18 live-posture enforcement is owned by
 `scripts/issue_posture_live_gate.py` and
-`.github/workflows/issue-posture-audit.yml`. The gate compares the dated source
-snapshot with all 13 repositories. It requires exact repository and total-issue
-cardinality, rejects newly open or reopened issue identities, open/blocker
-growth, closed-count regression, ungoverned status coverage,
-title-only-reference drift, or a snapshot older than seven days. It permits
-issue closure and lifecycle redistribution inside the freshness window when
-those non-regression invariants hold, so normal issue delivery cannot make the
-snapshot recursively invalidate itself. The shared GitHub issue
-inventory used by both the local Idea issue-state audit and cross-repository
-posture command first queries each repository issue total and rejects incomplete
-cardinality, so newly RFC-labeled issues remain visible in GitHub-backed live
-posture without requiring source-ledger transcription. The execution ledger is
-a one-way compatibility control for its historical entries: every ledger row
-must reconcile to GitHub, but additional GitHub-owned issues need not be copied
+`.github/workflows/issue-posture-audit.yml`. The gate validates complete live
+state across all 13 repositories: one governed lifecycle label per open RFC
+issue, consistent aggregate/projection counts, and zero app-actionable issues
+hidden behind `status/blocked`. New, reopened, closed, and reclassified issues
+are valid current execution state and never require a source snapshot rewrite.
+The shared GitHub inventory first queries each repository issue total and
+rejects incomplete cardinality. The execution ledger remains a one-way
+historical coverage control; additional GitHub-owned issues need not be copied
 into source. Open blocked ledger entries
 now use canonical `currentBlockerIssueRefs` values when they assert a specific
 external issue as current; the live state audit fails if a declared blocker is

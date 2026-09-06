@@ -23,10 +23,6 @@
           "ref": "contracts/implementation-proof/rfc0002-github-issue-execution-ledger-gate-policy.v1.json"
         },
         {
-          "type": "contract",
-          "ref": "contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"
-        },
-        {
           "type": "gate",
           "ref": "scripts/github_issue_execution_state_audit.py"
         },

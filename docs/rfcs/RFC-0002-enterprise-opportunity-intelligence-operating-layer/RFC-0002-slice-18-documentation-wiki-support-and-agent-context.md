@@ -1073,18 +1073,14 @@ The 2026-08-30 `#1139` hardening tranche removes the hidden 200-issue audit
 window and the same fixed-cap pattern from the 13-repository posture command.
 The shared inventory now queries each repository issue total, requests that
 complete result set, and fails closed when GitHub returns a different
-cardinality. A separate `make rfc0002-issue-posture-live-gate` compares the
-dated source snapshot with live label-backed posture across all 13 repositories.
-Its `dated_non_regression_v1` policy requires exact repository and total-issue
-cardinality, retains the exact baseline open-issue identity set, and rejects
-newly open or reopened issues, open/blocker growth, closed-count regression,
-ungoverned status coverage, title-only-reference drift, or seven-day freshness
-drift. It permits issue closure and lifecycle-status redistribution while those
-invariants hold, preventing the snapshot issue's own post-merge transition from
-creating a recursive synchronization PR. `.github/workflows/issue-posture-audit.yml` runs that volatile
-external-state check on a daily schedule, manual dispatch, and relevant
-`main`-path changes without making unrelated PR validation depend on mutable
-GitHub state.
+cardinality. `make rfc0002-issue-posture-live-gate` validates that complete live
+posture directly across all 13 repositories. It requires one governed lifecycle
+label per open RFC issue, consistent aggregate/projection counts, and zero
+app-actionable issues hidden behind `status/blocked`. New, reopened, closed, or
+reclassified issues are valid current state and do not require a source snapshot
+rewrite. `.github/workflows/issue-posture-audit.yml` runs the live check daily,
+on manual dispatch, and when its implementation or blocker-classification
+contract changes on `main`.
 
 The execution ledger also separates historical issue references from current
 external blockers. An open blocked entry that asserts a specific current

@@ -315,6 +315,8 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert (
         "Current counts, lifecycle status and issue lists are derived from live GitHub" in rendered
     )
+    assert "GitHub is authoritative for current RFC-0002 execution state" in rendered
+    assert "keep the source snapshot within its explicit age tolerance" not in rendered
 
 
 def test_github_issue_execution_summary_fails_when_ledger_gate_fails(tmp_path: Path) -> None:
