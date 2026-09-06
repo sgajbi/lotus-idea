@@ -35,6 +35,8 @@ class LostResponseReportClient:
     recovery_calls: int = 0
     contradictory_candidate: bool = False
     acceptance_observed: bool = True
+    source_event_version: int = 1
+    materialization_status: str = "data_ready"
 
     def submit_report_evidence_pack_request(
         self,
@@ -69,6 +71,16 @@ class LostResponseReportClient:
         assert idempotency_key == "downstream-submit-report-recovery-api-001"
         receipt = authoritative_report_outcome(evidence_pack).owner_receipt
         assert receipt is not None
+        assert receipt.report_materialization is not None
+        receipt = replace(
+            receipt,
+            source_event_version=self.source_event_version,
+            report_materialization=replace(
+                receipt.report_materialization,
+                status=self.materialization_status,
+                materialization_status=self.materialization_status,
+            ),
+        )
         if not self.contradictory_candidate:
             return receipt
         assert receipt.report_materialization is not None
@@ -141,11 +153,84 @@ def test_report_recovery_api_closes_lost_response_without_second_post(
         "reconciliationStatus": "replayed",
     }
     assert report_client.submission_calls == 1
-    assert report_client.recovery_calls == 1
+    assert report_client.recovery_calls == 2
     persisted = get_idea_repository().downstream_submission_by_support_reference(support_reference)
     assert persisted is not None
     assert persisted.status.value == "accepted_by_downstream"
     assert persisted.owner_receipt is not None
+
+
+def test_report_recovery_api_persists_owner_advancement_and_replays_exactly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = LostResponseReportClient()
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    support_reference = _create_uncertain_report_submission(client)
+    accepted = client.post(_recovery_path(support_reference), headers=_reconciliation_headers())
+    report_client.source_event_version = 2
+    report_client.materialization_status = "collecting_data"
+    advanced = client.post(_recovery_path(support_reference), headers=_reconciliation_headers())
+    repository = get_idea_repository()
+    advanced_snapshot = repository.snapshot()
+    replayed = client.post(_recovery_path(support_reference), headers=_reconciliation_headers())
+
+    assert accepted.status_code == 200
+    assert accepted.json()["ownerReceipt"]["sourceEventVersion"] == 1
+    assert advanced.status_code == 200
+    assert advanced.json()["reconciliationStatus"] == "accepted"
+    assert advanced.json()["ownerReceipt"]["sourceEventVersion"] == 2
+    assert (
+        advanced.json()["ownerReceipt"]["reportMaterialization"]["materializationStatus"]
+        == "collecting_data"
+    )
+    assert replayed.status_code == 200
+    assert replayed.json() == {**advanced.json(), "reconciliationStatus": "replayed"}
+    assert repository.snapshot() == advanced_snapshot
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 3
+
+
+def test_report_recovery_api_refuses_same_version_owner_correction_without_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = LostResponseReportClient()
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    support_reference = _create_uncertain_report_submission(client)
+    accepted = client.post(_recovery_path(support_reference), headers=_reconciliation_headers())
+    repository = get_idea_repository()
+    accepted_snapshot = repository.snapshot()
+    report_client.materialization_status = "collecting_data"
+
+    conflict = client.post(_recovery_path(support_reference), headers=_reconciliation_headers())
+
+    assert accepted.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "report_materialization_owner_version_conflict"
+    assert repository.snapshot() == accepted_snapshot
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 2
 
 
 def test_report_recovery_api_preserves_uncertainty_when_acceptance_is_not_observed(
@@ -282,7 +367,7 @@ def test_report_recovery_api_waits_for_expired_lease_after_local_commit_failure(
     assert replayed.status_code == 200
     assert replayed.json()["reconciliationStatus"] == "replayed"
     assert report_client.submission_calls == 1
-    assert report_client.recovery_calls == 1
+    assert report_client.recovery_calls == 2
     final_record = repository.downstream_submission_by_support_reference(support_reference)
     assert final_record is not None
     assert final_record.status.value == "accepted_by_downstream"
@@ -382,6 +467,7 @@ def test_report_recovery_openapi_publishes_named_failure_modes() -> None:
         "/api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation": (
             "report_materialization_reconciliation_conflict",
             "report_materialization_owner_acceptance_not_observed",
+            "report_materialization_owner_version_conflict",
         ),
     }
     schema = app.openapi()
