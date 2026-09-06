@@ -201,6 +201,11 @@ def _validate_pattern(
     future_agent_rule = pattern.get("futureAgentRule")
     if not isinstance(future_agent_rule, str) or len(future_agent_rule.strip()) < 40:
         errors.append(f"{pattern_id}.futureAgentRule must contain actionable guidance")
+    current_steering_rule = pattern.get("currentSteeringRule")
+    if current_steering_rule is not None and (
+        not isinstance(current_steering_rule, str) or len(current_steering_rule.strip()) < 80
+    ):
+        errors.append(f"{pattern_id}.currentSteeringRule must contain actionable guidance")
 
     missing_current = sorted(set(current_issues) - execution_issues)
     if missing_current:

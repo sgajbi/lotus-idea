@@ -5,7 +5,7 @@ import argparse
 import json
 import subprocess
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,9 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.github_issue_execution_ledger_gate import (
-    CLOSED_STATUSES,
     LEDGER_PATH,
-    OPEN_STATUSES,
     POLICY_PATH,
     IssueEntry,
     _entries,
@@ -30,23 +28,17 @@ from scripts.github_issue_inventory import (
 )
 
 
-EXPECTED_OPEN_LABEL_BY_STATUS = {
-    "open_ready": "status/ready",
-    "open_blocked": "status/blocked",
-    "open_in_progress": "status/in-progress",
-    "open_fixed_local": "status/fixed-local",
-    "open_pr_raised": "status/pr-open",
-    "open_merged_main_qa_pending": "status/merged-main",
-    "open_tracker": "status/tracker",
-    "open_pending_final_closure": "status/blocked",
-    "open_pending_post_completion": "status/blocked",
-}
 EXPECTED_CLOSED_LABEL = "status/merged-main"
 EXPECTED_RFC_LABEL = "rfc/RFC-0002"
 GITHUB_ISSUE_FIELDS = "number,state,title,labels,url"
 KNOWN_STATUS_LABELS = frozenset(
     {
-        *EXPECTED_OPEN_LABEL_BY_STATUS.values(),
+        "status/ready",
+        "status/blocked",
+        "status/in-progress",
+        "status/fixed-local",
+        "status/pr-open",
+        "status/tracker",
         EXPECTED_CLOSED_LABEL,
     }
 )
@@ -213,7 +205,7 @@ def audit_github_issue_execution_state(
         if github_issue is None:
             errors.append(f"#{entry.issue_number}: missing from GitHub issue state")
             continue
-        errors.extend(_audit_issue_state(entry, github_issue))
+        errors.extend(_audit_recorded_issue_closure_label(entry, github_issue))
 
     tracked_github_issues = set(github_issues)
     missing_from_github_input = sorted(seen_ledger_issues - tracked_github_issues)
@@ -224,6 +216,7 @@ def audit_github_issue_execution_state(
         )
 
     errors.extend(_audit_ledger_rfc_labels(ledger_entries, github_issues))
+    errors.extend(audit_live_rfc_issue_lifecycle(github_issues.values()))
     if current_blocker_issues is not None:
         errors.extend(_audit_current_blocker_issue_states(ledger_entries, current_blocker_issues))
     return errors
@@ -250,60 +243,50 @@ def _audit_current_blocker_issue_states(
     return errors
 
 
-def _audit_issue_state(entry: IssueEntry, github_issue: GitHubIssueState) -> list[str]:
-    errors: list[str] = []
-    expected_github_state = entry.github_state.upper()
-    if github_issue.state != expected_github_state:
-        errors.append(
-            f"#{entry.issue_number}: ledger githubState={entry.github_state} "
-            f"but GitHub state={github_issue.state.lower()}"
-        )
-
-    if entry.github_state == "open" and entry.execution_status not in OPEN_STATUSES:
-        errors.append(f"#{entry.issue_number}: open ledger entry has invalid execution status")
-    if entry.github_state == "closed" and entry.execution_status not in CLOSED_STATUSES:
-        errors.append(f"#{entry.issue_number}: closed ledger entry has invalid execution status")
-
-    expected_label = EXPECTED_OPEN_LABEL_BY_STATUS.get(entry.execution_status)
-    if expected_label is not None and expected_label not in github_issue.labels:
-        errors.append(
-            f"#{entry.issue_number}: executionStatus={entry.execution_status} "
-            f"requires GitHub label {expected_label}"
-        )
-    errors.extend(_audit_conflicting_status_labels(entry, github_issue, expected_label))
-    if (
-        entry.execution_status == "closed_complete"
-        and EXPECTED_CLOSED_LABEL not in github_issue.labels
-    ):
-        errors.append(
-            f"#{entry.issue_number}: closed_complete requires GitHub label {EXPECTED_CLOSED_LABEL}"
-        )
-    if entry.execution_status == "closed_complete":
-        errors.extend(_audit_conflicting_status_labels(entry, github_issue, EXPECTED_CLOSED_LABEL))
-    if entry.execution_status == "open_blocked" and github_issue.state != "OPEN":
-        errors.append(f"#{entry.issue_number}: blocked execution issue must remain open")
-    return errors
-
-
-def _audit_conflicting_status_labels(
+def _audit_recorded_issue_closure_label(
     entry: IssueEntry,
     github_issue: GitHubIssueState,
-    expected_label: str | None,
 ) -> list[str]:
-    if expected_label is None:
+    if github_issue.state != "CLOSED":
         return []
-    conflicting_labels = sorted(
-        label
-        for label in github_issue.labels
-        if label.startswith("status/") and label != expected_label
-    )
-    if not conflicting_labels:
+    if EXPECTED_CLOSED_LABEL in github_issue.labels:
         return []
     return [
-        f"#{entry.issue_number}: executionStatus={entry.execution_status} "
-        f"allows only GitHub status label {expected_label}; found conflicting status "
-        f"label(s): {', '.join(conflicting_labels)}"
+        f"#{entry.issue_number}: closed ledger-tracked issue requires GitHub label "
+        f"{EXPECTED_CLOSED_LABEL}"
     ]
+
+
+def audit_live_rfc_issue_lifecycle(
+    github_issues: Iterable[GitHubIssueState],
+) -> list[str]:
+    errors: list[str] = []
+    for github_issue in sorted(github_issues, key=lambda issue: issue.issue_number):
+        if EXPECTED_RFC_LABEL not in github_issue.labels:
+            continue
+        status_labels = sorted(
+            label for label in github_issue.labels if label.startswith("status/")
+        )
+        unknown_status_labels = [
+            label for label in status_labels if label not in KNOWN_STATUS_LABELS
+        ]
+        if unknown_status_labels:
+            errors.append(
+                f"#{github_issue.issue_number}: unknown GitHub lifecycle label(s): "
+                + ", ".join(unknown_status_labels)
+            )
+        if github_issue.state == "OPEN" and len(status_labels) != 1:
+            errors.append(
+                f"#{github_issue.issue_number}: open RFC-0002 issue requires exactly one "
+                "governed status/* lifecycle label; found "
+                + (", ".join(status_labels) if status_labels else "none")
+            )
+        elif len(status_labels) > 1:
+            errors.append(
+                f"#{github_issue.issue_number}: RFC-0002 issue has conflicting status/* "
+                f"lifecycle labels: {', '.join(status_labels)}"
+            )
+    return errors
 
 
 def _audit_ledger_rfc_labels(
