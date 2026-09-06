@@ -22,8 +22,10 @@ from tests.unit.downstream_realization.runtime_execution_test_support import (
     set_receipt_evidence_value,
 )
 from scripts.downstream_realization.generate_manage_intake_runtime_execution import (
+    MANAGE_TESTCLIENT_SCRIPT,
     _decode_manage_testclient_stdout,
 )
+from scripts.downstream_realization.intake_runtime_generator_common import reason_codes
 
 
 def test_manage_intake_runtime_execution_accepts_bounded_live_receipts() -> None:
@@ -84,6 +86,25 @@ def test_manage_intake_runtime_execution_rejects_missing_replay_evidence() -> No
     assert not manage_intake_runtime_execution_is_valid(payload)
 
 
+@pytest.mark.parametrize(
+    ("receipt_name", "action_created"),
+    [("accepted", False), ("rejected", True), ("authorizationDenied", True)],
+)
+def test_manage_intake_runtime_execution_requires_truthful_owner_action_creation(
+    receipt_name: str,
+    action_created: bool,
+) -> None:
+    payload = deepcopy(valid_manage_intake_runtime_execution())
+    set_receipt_evidence_value(
+        payload,
+        receipt_name,
+        "actionRegisterCreated",
+        action_created,
+    )
+
+    assert not manage_intake_runtime_execution_is_valid(payload)
+
+
 def test_manage_intake_runtime_execution_rejects_contract_drift() -> None:
     payload = deepcopy(valid_manage_intake_runtime_execution())
     payload["evidenceRefs"] = ()
@@ -133,6 +154,20 @@ def test_manage_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
 def test_manage_intake_runtime_generator_rejects_non_object_stdout() -> None:
     with pytest.raises(ValueError, match="JSON object"):
         _decode_manage_testclient_stdout("[]")
+
+
+def test_manage_intake_runtime_generator_uses_current_repository_reset_boundary() -> None:
+    assert "reset_idea_management_action_repository_for_tests" in MANAGE_TESTCLIENT_SCRIPT
+    assert "reset_idea_action_intake_idempotency_for_tests" not in MANAGE_TESTCLIENT_SCRIPT
+    assert '"portfolio_id": "PB_SG_GLOBAL_BAL_001"' in MANAGE_TESTCLIENT_SCRIPT
+    assert '"X-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001"' in MANAGE_TESTCLIENT_SCRIPT
+
+
+@pytest.mark.parametrize("field", ["reasonCode", "reason_code"])
+def test_runtime_generator_extracts_problem_detail_reason_code(field: str) -> None:
+    assert reason_codes({field: "IDEA_ACTION_INTAKE_CAPABILITY_REQUIRED"}) == [
+        "IDEA_ACTION_INTAKE_CAPABILITY_REQUIRED"
+    ]
 
 
 def test_load_manage_intake_runtime_execution_from_env_returns_payload_and_relative_ref(

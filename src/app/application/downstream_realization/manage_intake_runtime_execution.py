@@ -104,7 +104,6 @@ _RECEIPT_DIGEST_FIELDS = (
     "clientPublicationAuthorized",
 )
 _RETAINED_FALSE_RECEIPT_FIELDS = (
-    "actionRegisterCreated",
     "rebalanceExecutionAuthorityGranted",
     "orderCreated",
     "clientPublicationAuthorized",
@@ -316,38 +315,50 @@ def _runtime_checks(
 
 
 def _accepted_receipt_is_valid(value: object) -> bool:
-    return _receipt_matches(
-        value,
-        status_code=202,
-        intake_status="ACCEPTED",
-        accepted=True,
-        replay=False,
-        reason_codes=("idea_action_intake_receipt_accepted",),
+    return (
+        _receipt_matches(
+            value,
+            status_code=202,
+            intake_status="ACCEPTED",
+            accepted=True,
+            replay=False,
+            reason_codes=("idea_action_created_for_management_review",),
+        )
+        and isinstance(value, Mapping)
+        and value.get("actionRegisterCreated") is True
     )
 
 
 def _replay_receipt_is_valid(value: object) -> bool:
-    return _receipt_matches(
-        value,
-        status_code=202,
-        intake_status="ACCEPTED_REPLAYED",
-        accepted=True,
-        replay=True,
-        reason_codes=("idea_action_intake_receipt_replayed",),
+    return (
+        _receipt_matches(
+            value,
+            status_code=202,
+            intake_status="ACCEPTED_REPLAYED",
+            accepted=True,
+            replay=True,
+            reason_codes=("idea_action_replayed_for_management_review",),
+        )
+        and isinstance(value, Mapping)
+        and value.get("actionRegisterCreated") is True
     )
 
 
 def _rejected_receipt_is_valid(value: object) -> bool:
-    return _receipt_matches(
-        value,
-        status_code=202,
-        intake_status="REJECTED",
-        accepted=False,
-        replay=False,
-        reason_codes=(
-            "action_register_persistence_not_certified",
-            "idea_action_intake_receipt_rejected_no_action_created",
-        ),
+    return (
+        _receipt_matches(
+            value,
+            status_code=202,
+            intake_status="REJECTED",
+            accepted=False,
+            replay=False,
+            reason_codes=(
+                "idea_action_intent_type_not_supported",
+                "idea_action_intake_rejected_no_management_work_created",
+            ),
+        )
+        and isinstance(value, Mapping)
+        and value.get("actionRegisterCreated") is False
     )
 
 
@@ -356,24 +367,32 @@ def _tenant_isolation_receipt_is_valid(value: object) -> bool:
 
 
 def _conflict_receipt_is_valid(value: object) -> bool:
-    return _receipt_matches(
-        value,
-        status_code=409,
-        intake_status=None,
-        accepted=None,
-        replay=None,
-        reason_codes=("IDEA_ACTION_INTAKE_IDEMPOTENCY_CONFLICT",),
+    return (
+        _receipt_matches(
+            value,
+            status_code=409,
+            intake_status=None,
+            accepted=None,
+            replay=None,
+            reason_codes=("IDEA_ACTION_INTAKE_IDEMPOTENCY_CONFLICT",),
+        )
+        and isinstance(value, Mapping)
+        and value.get("actionRegisterCreated") is False
     )
 
 
 def _authorization_denied_receipt_is_valid(value: object) -> bool:
-    return _receipt_matches(
-        value,
-        status_code=403,
-        intake_status=None,
-        accepted=None,
-        replay=None,
-        reason_codes=("IDEA_ACTION_INTAKE_CAPABILITY_REQUIRED",),
+    return (
+        _receipt_matches(
+            value,
+            status_code=403,
+            intake_status=None,
+            accepted=None,
+            replay=None,
+            reason_codes=("IDEA_ACTION_INTAKE_CAPABILITY_REQUIRED",),
+        )
+        and isinstance(value, Mapping)
+        and value.get("actionRegisterCreated") is False
     )
 
 
