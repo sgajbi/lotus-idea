@@ -163,34 +163,9 @@ def test_owner_receipt_and_submission_reject_contradictory_owner_evidence() -> N
 
 
 def test_report_owner_receipt_rejects_authority_or_supportability_inflation() -> None:
-    evidence = ReportMaterializationReceiptEvidence(
-        status="data_ready",
-        materialization_status="data_ready",
-        status_url="/reports/jobs/report-job-001",
-        report_evidence_pack_id="report-pack-001",
-        conversion_intent_id="conversion-report-001",
-        candidate_id="candidate-report-001",
-        evidence_packet_id="evidence-packet-001",
-        creates_report_job=True,
-        creates_rendered_output=False,
-        creates_archive_record=False,
-        render_job_id=None,
-        archive_document_id=None,
-        supportability_status="not_certified",
-        remaining_blockers=(
-            "client_publication_authority_blocked",
-            "supported_feature_promotion_missing",
-        ),
-    )
-    receipt = DownstreamSubmissionOwnerReceipt(
-        owner_authority=SourceSystem.LOTUS_REPORT,
-        owner_request_id="report-request-001",
-        owner_realization_id="report-job-001",
-        owner_work_id=None,
-        source_event_version=1,
-        source_evidence_fingerprint="sha256:report-evidence",
-        report_materialization=evidence,
-    )
+    receipt = _report_owner_receipt()
+    evidence = receipt.report_materialization
+    assert evidence is not None
 
     assert receipt.report_materialization == evidence
     with pytest.raises(ValueError, match="must remain not_certified"):
@@ -230,6 +205,73 @@ def test_report_owner_receipt_rejects_authority_or_supportability_inflation() ->
             owner_authority=SourceSystem.LOTUS_ADVISE,
             source_event_version=1,
         )
+
+
+def test_report_owner_reconciliation_is_version_fenced_before_audit_mutation() -> None:
+    receipt = _report_owner_receipt()
+    accepted = finalize_downstream_submission(
+        _report_claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-report-001",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        owner_receipt=receipt,
+    ).record
+    assert accepted is not None
+
+    exact_replay = reconcile_downstream_submission(
+        accepted,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_report_history_recovered",
+        change_reference="report-owner-v1-replay",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        owner_receipt=receipt,
+    )
+    contradictory_identity = reconcile_downstream_submission(
+        accepted,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_report_history_recovered",
+        change_reference="report-owner-v2",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        owner_receipt=replace(receipt, owner_request_id="report-request-conflict"),
+    )
+
+    assert exact_replay.decision is DownstreamSubmissionMutationDecision.REPLAYED
+    assert exact_replay.record == accepted
+    assert contradictory_identity.decision is DownstreamSubmissionMutationDecision.INVALID_STATE
+    assert contradictory_identity.record == accepted
+    assert contradictory_identity.blocker == "downstream_submission_owner_version_conflict"
+
+
+def test_legacy_report_receipt_advances_once_from_explicit_owner_chronology() -> None:
+    legacy_receipt = replace(_report_owner_receipt(), source_event_version=None)
+    accepted = finalize_downstream_submission(
+        _report_claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-report-001",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        owner_receipt=legacy_receipt,
+    ).record
+    assert accepted is not None
+    versioned_receipt = _report_owner_receipt(source_event_version=4)
+
+    advanced = reconcile_downstream_submission(
+        accepted,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="authoritative_report_history_recovered",
+        change_reference="report-owner-v4",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        owner_receipt=versioned_receipt,
+    )
+
+    assert advanced.decision is DownstreamSubmissionMutationDecision.ACCEPTED
+    assert advanced.record is not None
+    assert advanced.record.owner_receipt == versioned_receipt
+    assert len(advanced.record.audit_history) == len(accepted.audit_history) + 1
 
 
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:
@@ -478,4 +520,53 @@ def _owner_receipt(
         owner_work_id="iarw_001",
         source_event_version=source_event_version,
         source_evidence_fingerprint=source_evidence_fingerprint,
+    )
+
+
+def _report_claim() -> DownstreamSubmissionRecord:
+    return create_downstream_submission_claim(
+        idempotency_key="report-downstream-secret-key",
+        request_fingerprint="sha256:report-request-fingerprint",
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id="report-pack-001",
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=SourceSystem.LOTUS_REPORT,
+        actor_subject="advisor-redacted",
+        claimed_at_utc=CLAIMED_AT,
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-report-001",
+        lease_expires_at_utc=CLAIMED_AT + timedelta(minutes=5),
+        correlation_id="corr-report",
+        trace_id="trace-report",
+    )
+
+
+def _report_owner_receipt(*, source_event_version: int = 1) -> DownstreamSubmissionOwnerReceipt:
+    evidence = ReportMaterializationReceiptEvidence(
+        status="data_ready",
+        materialization_status="data_ready",
+        status_url="/reports/jobs/report-job-001",
+        report_evidence_pack_id="report-pack-001",
+        conversion_intent_id="conversion-report-001",
+        candidate_id="candidate-report-001",
+        evidence_packet_id="evidence-packet-001",
+        creates_report_job=True,
+        creates_rendered_output=False,
+        creates_archive_record=False,
+        render_job_id=None,
+        archive_document_id=None,
+        supportability_status="not_certified",
+        remaining_blockers=(
+            "client_publication_authority_blocked",
+            "supported_feature_promotion_missing",
+        ),
+    )
+    return DownstreamSubmissionOwnerReceipt(
+        owner_authority=SourceSystem.LOTUS_REPORT,
+        owner_request_id="report-request-001",
+        owner_realization_id="report-job-001",
+        owner_work_id=None,
+        source_event_version=source_event_version,
+        source_evidence_fingerprint="sha256:report-evidence",
+        report_materialization=evidence,
     )
