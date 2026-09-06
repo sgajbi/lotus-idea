@@ -274,6 +274,39 @@ def test_legacy_report_receipt_advances_once_from_explicit_owner_chronology() ->
     assert len(advanced.record.audit_history) == len(accepted.audit_history) + 1
 
 
+def test_report_reconciliation_rejects_receipts_without_matching_authority() -> None:
+    uncertain = finalize_downstream_submission(
+        _report_claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-report-001",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="report_owner_outcome_unknown",
+    ).record
+    assert uncertain is not None
+
+    with pytest.raises(ValueError, match="quarantined reconciliation forbids"):
+        reconcile_downstream_submission(
+            uncertain,
+            resolution=DownstreamSubmissionResolution.QUARANTINED,
+            actor_subject="operations-user",
+            reason="report_receipt_cannot_be_verified",
+            change_reference="report-owner-quarantine",
+            reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+            owner_receipt=_report_owner_receipt(),
+        )
+    with pytest.raises(ValueError, match="authority must match"):
+        reconcile_downstream_submission(
+            uncertain,
+            resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+            actor_subject="operations-user",
+            reason="foreign_owner_receipt_presented",
+            change_reference="report-owner-foreign-authority",
+            reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+            owner_receipt=_owner_receipt(),
+        )
+
+
 def test_unknown_outcome_requires_explicit_reconciliation() -> None:
     uncertain = finalize_downstream_submission(
         _claim(),
