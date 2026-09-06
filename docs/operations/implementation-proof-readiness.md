@@ -140,19 +140,16 @@ reruns keep the original `pull_request` event payload, so rerunning the failed
 job alone can continue evaluating stale title/body text even when the current PR
 description has already been corrected.
 
-`make rfc0002-github-issue-execution-state-audit` compares the ledger with
-current GitHub issue state through the GitHub CLI. It is intentionally a
-GitHub-backed audit rather than a CI lint gate: run it before PR evidence, after
-manual label or reopen/close changes, and whenever the RFC issue count is used
-as delivery truth. The audit fails when a ledger-tracked issue is missing from
-GitHub output, GitHub open/closed state contradicts the ledger, `open_blocked`
-issues lack `status/blocked`, `open_in_progress` issues lack
-`status/in-progress`, `open_fixed_local` issues lack `status/fixed-local`,
-`open_pr_raised` issues lack `status/pr-open`, `open_tracker` parent issues
-lack `status/tracker`, merged-main-QA-pending issues lack `status/merged-main`,
-closed-complete issues do not retain
-`status/merged-main`, or a GitHub issue has the `rfc/RFC-0002` label but is
-missing from the ledger.
+`make rfc0002-github-issue-execution-state-audit` validates current GitHub issue
+state through the GitHub CLI. It is intentionally a GitHub-backed audit rather
+than an offline lint gate: run it before PR evidence, after manual label or
+reopen/close changes, and whenever RFC issue posture is used as delivery truth.
+Every open `rfc/RFC-0002` issue must carry exactly one governed `status/*`
+lifecycle label; conflicting or unknown lifecycle labels fail closed. Every
+historical ledger row must still resolve to an RFC-labelled GitHub issue, and a
+closed ledger-tracked issue must retain `status/merged-main`. The audit also
+validates declared current external blockers. It does not require GitHub's
+current open/closed state to equal the dated ledger snapshot.
 
 This ledger is issue-lifecycle governance only. It does not promote a feature,
 clear blockers, or replace the blocker closure manifest. It prevents GitHub
@@ -160,25 +157,11 @@ state drift when a PR lands partial RFC progress, such as consuming owner proof
 while keeping Report, Render, Archive, client-publication, and promotion proof
 open.
 
-`make rfc0002-github-issue-execution-summary` renders a compact Markdown
-summary from the source-controlled execution ledger and issue-learning ledger.
-Use it after the live state audit when reporting fixed/open counts, active
-implementation issues, blocked issues, trackers, or the learning pattern that
-should guide the next implementation slice. The summary is source posture, not
-live GitHub proof; it deliberately points back to
-`make rfc0002-github-issue-execution-state-audit` for current GitHub label and
-open/closed verification.
-
-Current Slice 18 ledger synchronization records 157 tracked RFC-0002 issues:
-129 `closed_complete` and 28 open, with 12 `open_blocked`, 4
-`open_in_progress`, 2 `open_merged_main_qa_pending`, no `open_ready`, no
-`open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
-`open_pending_post_completion`, and 8 `open_tracker`. The in-progress issues are
-#681/#685/#686/#1142; #1142 owns the single-image Compose build correction,
-while #1155/#1156 are merged-main pending canonical consumer QA;
-#1168/#1169/#1170/#1178 are closed with exact-main release, wiki-parity, and branch
-hygiene evidence. The live audit and cross-repo posture command pass with #685
-and #686 classified as active writable work rather than external blockers.
+`make rfc0002-github-issue-execution-summary` renders current counts, lifecycle
+groups, slice membership, and active learning-pattern references from complete
+live GitHub state. It separately identifies the source ledger's dated snapshot
+for historical coverage and closure evidence. Use it after the live audit when
+reporting current posture; do not copy its volatile counts back into source.
 
 Historical execution evidence follows. PR #745 reconciled #340 to
 `open_merged_main_qa_pending` on

@@ -459,20 +459,15 @@ execution-control fix tracked by `sgajbi/lotus-platform#653` and merged in PR
 
 The same Slice 18 learning loop now adds
 `make rfc0002-github-issue-execution-state-audit`, backed by
-`scripts/github_issue_execution_state_audit.py`. The audit compares the ledger
-with current GitHub issue state and lifecycle labels, so reopened issues,
-blocked issues, in-progress issues, open tracker issues,
-merged-main-QA-pending issues, and closed-complete issues cannot drift silently
-away from the durable execution ledger. It also fails when a GitHub issue is
-represented in the legacy ledger but lacks its RFC label in GitHub. Additional
-RFC-labeled GitHub issues do not require ledger transcription. Parent
-`open_tracker` issues now require
-`status/tracker`; the #681 anchor carries the current execution label, such as
-`status/pr-open` while a Slice 18 synchronization PR is open and
-`status/in-progress` between PRs. Future partial Slice 18 PRs must keep the
-correct lifecycle label and use `Keep #681 open`
-until full RFC documentation, wiki, support, and agent context closure is
-complete.
+`scripts/github_issue_execution_state_audit.py`. GitHub owns current lifecycle
+truth: every open RFC-0002 issue requires exactly one governed `status/*` label,
+and conflicting or unknown labels fail closed. Historical ledger rows must
+still resolve to RFC-labelled GitHub issues; closed tracked issues retain
+`status/merged-main`, and declared current blocker references remain live. The
+dated ledger remains coverage and closure evidence, so normal issue movement,
+closure, or reopening does not require ledger transcription. The generated
+execution summary derives current counts and grouping from complete GitHub
+state while presenting the dated ledger snapshot separately.
 
 Slice 18 now also adds `make rfc0002-cross-repo-issue-posture`, backed by
 `scripts/cross_repo_issue_posture.py`, so cross-repository RFC-0002
