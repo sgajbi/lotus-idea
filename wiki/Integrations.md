@@ -269,7 +269,9 @@ acceptance, downstream-record, or supportability blockers until governed
 runtime evidence exists. The separate Advise idea-intake runtime-execution
 artifact is `runtime_execution` evidence and can clear
 `advise_live_contract_proof_missing` and
-`advise_timeout_uncertainty_certification_missing` after it observes source-safe accepted,
+`advise_timeout_uncertainty_certification_missing`,
+`advise_owner_correction_certification_missing`, and
+`advise_concurrent_owner_advancement_certification_missing` after it observes source-safe accepted,
 replayed, rejected, idempotency-conflict, authorization-denied, and
 tenant-scoped idempotency receipts, identical concurrent duplicate
 convergence, an exact Advise-owned realization-history readback, and a
@@ -281,8 +283,10 @@ point-in-time absence only; it neither authorizes retry nor advances business
 authority. The accepted readback must bind source-safe digests of the source
 intent, trusted scope, and owner work plus the evidence fingerprint, status,
 and source-event version. Raw governed identifiers are not retained in the
-artifact. Restart reconciliation, owner correction, concurrent owner
-advancement, suitability,
+artifact. The v4 proof also links an Advise-owned proposal, refuses a stale
+source version without mutation, and requires two corrected concurrent calls
+to converge on one contiguous version-three owner history. Storage-backed
+Advise restart remains tracked by #1254. Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked. The separate Manage action-intake

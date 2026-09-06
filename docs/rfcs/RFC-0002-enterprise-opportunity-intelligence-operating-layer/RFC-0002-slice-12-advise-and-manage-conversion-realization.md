@@ -226,14 +226,17 @@ Implemented in this slice:
     bounded outcome history needed to prove causal identity. Exactly one
     concurrent call must be accepted and one replayed, both must converge on
     the same owner work, and the readback must match the original candidate and
-    conversion intent. The v3 proof also executes a controlled
+    conversion intent. The v4 proof also executes a controlled
     timeout-before-owner-commit window: no downstream POST is made, two exact
     owner reads return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`, no automatic
     resubmission occurs, and no owner state is asserted. Aggregate and
     downstream readiness can clear `advise_live_contract_proof_missing` and
-    `advise_timeout_uncertainty_certification_missing`; restart reconciliation,
-    owner correction, concurrent owner advancement, and suitability authority
-    remain explicit blockers.
+    `advise_timeout_uncertainty_certification_missing`. It then uses the owned
+    proposal-reconciliation route to link a proposal, refuses a stale source
+    version without mutation, and requires two corrected concurrent calls to
+    converge on one contiguous version-three terminal owner history. This
+    clears the owner-correction and concurrent-owner-advancement blockers;
+    restart reconciliation and suitability authority remain explicit.
 30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/unit/test_implementation_proof_readiness.py`,
@@ -387,10 +390,11 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. cross-repository exact-main/runtime acceptance of the Advise and Manage
-   history consumers under the remaining restart, owner-correction, and
-   concurrent-version windows; the Advise timeout-before-owner-commit window is
-   certified by #1251 without authorizing retry,
+5. cross-repository exact-main/runtime acceptance of the remaining Advise
+   restart window; timeout-before-owner-commit is certified by #1251, while
+   bounded owner correction and concurrent version advancement are certified
+   by #1253 without authorizing suitability, execution, or publication; #1254
+   owns the remaining storage-backed Advise restart proof,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
@@ -405,10 +409,13 @@ exist at bound digests; they are not route-serving, acceptance, authorization,
 tenant-isolation, suitability, rebalance, execution, client-publication, or
 supported-feature proof. The Advise idea-intake runtime proof adds bounded
 route-serving, concurrent duplicate convergence, exact owner-history readback,
-and controlled timeout-before-owner-commit evidence. The timeout scenario
+controlled timeout-before-owner-commit evidence, stale owner-version refusal,
+and corrected concurrent owner advancement. The timeout scenario
 proves no owner POST, two exact owner not-found reads, no automatic
-resubmission, and no authority advance. It is not restart, owner-correction,
-suitability, proposal creation, production identity, client-publication,
+resubmission, and no authority advance. The owner progression scenario observes
+an Advise-owned proposal and a terminal rejection but grants no Idea-side
+proposal or suitability authority. It is not restart, broader proposal-lifecycle
+certification, production identity, client-publication,
 Workbench/Gateway, or supported-feature proof.
 
 ## Required Work

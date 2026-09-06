@@ -277,7 +277,7 @@ by default from `LOTUS_ADVISE_ROOT=../lotus-advise` and
 `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only when an already
 generated artifact should be consumed instead.
 
-The v3 artifact validates closed receipt posture for accepted, replayed,
+The v4 artifact validates closed receipt posture for accepted, replayed,
 rejected, idempotency-conflict, authorization-denied, and tenant-scoped
 idempotency calls. It requires an identical concurrent duplicate pair to
 converge on one accepted receipt and one exact replay, then binds the accepted
@@ -286,14 +286,19 @@ before owner request dispatch for a unique conversion intent, proves zero POST
 and automatic-resubmission attempts, and requires two scoped recovery reads to
 return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`. Source-safe digests bind trusted
 scope, source intent, and owner work without retaining raw identifiers.
+It then links an Advise-owned proposal through the owner reconciliation route,
+proves a stale source-version correction is refused at version two, and races
+two corrected version-two calls. Both calls must return the same contiguous
+version-three `ADVISORY_REJECTED` history, with one append-only owner outcome
+and no suitability, order, or publication authority.
 
 A valid aggregate-current proof clears `advise_live_contract_proof_missing`
-and `advise_timeout_uncertainty_certification_missing`. It deliberately
-preserves restart, owner-correction, concurrent owner-version advancement,
-suitability, proposal lifecycle, client-publication, production-identity,
+and `advise_timeout_uncertainty_certification_missing`, plus the bounded
+owner-correction and concurrent-owner-advancement blockers. It deliberately
+preserves restart, suitability, broader proposal lifecycle, client-publication, production-identity,
 production-certification, and supported-feature blockers. A point-in-time owner
 absence remains uncertainty: it does not authorize retry or advance business
-state.
+state. #1254 owns the remaining storage-backed Advise restart proof.
 
 ## Manage Action-Intake Runtime Execution Proof
 
