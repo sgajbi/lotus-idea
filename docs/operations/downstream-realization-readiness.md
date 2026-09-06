@@ -282,7 +282,7 @@ default. Set
 `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only when an already
 generated artifact should be consumed instead.
 
-The v5 artifact validates closed receipt posture for accepted, replayed,
+The v6 artifact validates closed receipt posture for accepted, replayed,
 rejected, idempotency-conflict, authorization-denied, and tenant-scoped
 idempotency calls. It requires an identical concurrent duplicate pair to
 converge on one accepted receipt and one exact replay, then binds the accepted
@@ -308,7 +308,15 @@ source-digest-bound Idea PostgreSQL test reconciles the retained three-version
 owner history exactly once, reconstructs the Idea repository, and proves an
 exact second reconciliation appends zero outcomes, preserves one submission
 attempt and owner receipt identities, and changes none of the governed table
-counts. Neither DSN is retained. The proof deliberately preserves suitability, broader
+counts. The composed failure-window test then uses both retained stores in one
+chain: Advise commits one intake, Idea records the lost response as uncertain,
+both repositories are reconstructed, and Idea recovers through the scoped
+conversion-intent GET without another intake POST. It binds Advise's canonical
+source-reference fingerprint rather than comparing it to the inner Idea content
+hash, rejects wrong scope before owner I/O, reconciles once, and leaves all
+governed counts unchanged on replay. A reconciliation replay may repeat the
+read-only GET so later owner progression remains observable; it never repeats
+the POST or mutates unchanged state. Neither DSN is retained. The proof deliberately preserves suitability, broader
 proposal lifecycle, client-publication, production-identity, production-certification,
 and supported-feature blockers. A point-in-time owner
 absence remains uncertainty: it does not authorize retry or advance business

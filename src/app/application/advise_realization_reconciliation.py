@@ -25,6 +25,9 @@ from app.ports.downstream_realization import (
     DownstreamRealizationReadError,
 )
 from app.ports.idea_repository import DownstreamSubmissionRepository
+from app.domain.advise_evidence_identity import (
+    advise_source_evidence_fingerprint,
+)
 
 
 class AdviseRealizationReconciliationStatus(StrEnum):
@@ -126,7 +129,10 @@ def reconcile_advise_realization_history(
         access_scope=access_scope,
         candidate_id=candidate_record.candidate.candidate_id,
         conversion_intent_id=conversion_intent.intent.conversion_intent_id,
-        evidence_fingerprint=conversion_intent.evidence_content_hash,
+        evidence_fingerprint=advise_source_evidence_fingerprint(
+            candidate_id=candidate_record.candidate.candidate_id,
+            evidence_content_hash=conversion_intent.evidence_content_hash,
+        ),
     )
     if identity_blocker is not None:
         return _result(AdviseRealizationReconciliationStatus.CONFLICT, blocker=identity_blocker)

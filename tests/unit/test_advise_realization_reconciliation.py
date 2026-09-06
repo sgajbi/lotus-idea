@@ -29,6 +29,9 @@ from app.application.downstream_realization import (
     RealizeConversionIntentCommand,
     submit_conversion_intent_to_downstream,
 )
+from app.domain.advise_evidence_identity import (
+    advise_source_evidence_fingerprint,
+)
 from app.domain import (
     AdviseProposalRealizationHistory,
     AdviseProposalRealizationOutcome,
@@ -64,6 +67,10 @@ from tests.unit.test_downstream_realization_application import (
 
 
 RECORDED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
+OWNER_EVIDENCE_FINGERPRINT = advise_source_evidence_fingerprint(
+    candidate_id="idea-downstream-001",
+    evidence_content_hash="sha256:downstream-evidence",
+)
 AUTHORIZED_SCOPE = QueueAccessScopeFilter(
     tenant_id="tenant-sg",
     book_id="book-private-bank-sg",
@@ -642,7 +649,7 @@ def test_advise_reconciliation_identity_check_names_exact_evidence_drift() -> No
                 access_scope=scope,
                 candidate_id="idea-downstream-001",
                 conversion_intent_id="conversion-advise_proposal-001",
-                evidence_fingerprint="sha256:downstream-evidence",
+                evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
             )
             == blocker
         )
@@ -652,7 +659,7 @@ def test_advise_reconciliation_identity_check_names_exact_evidence_drift() -> No
             access_scope=scope,
             candidate_id="idea-downstream-001",
             conversion_intent_id="conversion-advise_proposal-001",
-            evidence_fingerprint="sha256:downstream-evidence",
+            evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         )
         is None
     )
@@ -798,7 +805,7 @@ def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]
                     owner_realization_id="ipr_001",
                     owner_work_id="iarw_001",
                     source_event_version=1,
-                    source_evidence_fingerprint="sha256:downstream-evidence",
+                    source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
                 )
             )
         ),
@@ -854,7 +861,7 @@ def _repository_with_rejected_submission() -> tuple[InMemoryIdeaRepository, str]
                     owner_realization_id="ipr_001",
                     owner_work_id=None,
                     source_event_version=1,
-                    source_evidence_fingerprint="sha256:downstream-evidence",
+                    source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
                 ),
             )
         ),
@@ -928,7 +935,7 @@ def _history(*, version: int) -> AdviseProposalRealizationHistory:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         idea_candidate_id="idea-downstream-001",
         conversion_intent_id="conversion-advise_proposal-001",
-        source_evidence_fingerprint="sha256:downstream-evidence",
+        source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         current_status=final.status,
         current_source_event_version=final.source_event_version,
         proposal_id=final.proposal_id,
@@ -965,7 +972,7 @@ def _rejected_history() -> AdviseProposalRealizationHistory:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         idea_candidate_id="idea-downstream-001",
         conversion_intent_id="conversion-advise_proposal-001",
-        source_evidence_fingerprint="sha256:downstream-evidence",
+        source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         current_status=AdviseProposalRealizationStatus.REJECTED_BEFORE_WORK,
         current_source_event_version=1,
         proposal_id=None,

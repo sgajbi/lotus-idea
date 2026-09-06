@@ -283,17 +283,20 @@ point-in-time absence only; it neither authorizes retry nor advances business
 authority. The accepted readback must bind source-safe digests of the source
 intent, trusted scope, and owner work plus the evidence fingerprint, status,
 and source-event version. Raw governed identifiers are not retained in the
-artifact. The v5 proof also links an Advise-owned proposal, refuses a stale
+artifact. The v6 proof also links an Advise-owned proposal, refuses a stale
 source version without mutation, and requires two corrected concurrent calls
 to converge on one contiguous version-three owner history. It then executes
 the source-digest-bound Advise PostgreSQL restart/replay tests across two owner
 repository instances, using an explicitly disposable database without retaining
 its DSN. It proves stable owner history and identities plus no duplicate owner
-work. A separate source-digest-bound Idea PostgreSQL test reconciles the retained
-three-version history once and, after Idea repository reconstruction, proves an
-exact replay appends zero outcomes, preserves one submission attempt and owner
-receipt identity, and changes no governed table count. Neither database DSN is
-retained. The owner recovery contract remains `sgajbi/lotus-advise#615`.
+work. A composed source-digest-bound PostgreSQL test submits through the real
+Advise route, discards the successful response, and reconstructs both runtimes
+before Idea performs exact read-only reconciliation. It proves one owner intake,
+review realization, and outcome; one Idea submission attempt; stable owner
+identity; and zero additional owner writes or Idea mutations on replay. Replay
+may repeat the exact owner GET so later owner progression remains observable,
+but it must never repeat the intake POST. Neither database DSN is retained. The
+owner recovery contract remains `sgajbi/lotus-advise#615`.
 Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
@@ -370,6 +373,12 @@ not retried. Exact owner 404 is a point-in-time
 `owner_acceptance_not_observed` posture, distinct from owner outage; both leave
 the handoff uncertain, but the API reports them as 409 and 503 respectively.
 Conflicting owner evidence remains a 409 conflict.
+The v6 retained-state proof exercises this as one chain over real Idea and
+Advise PostgreSQL stores. It binds Advise's canonical source-reference
+fingerprint, reconstructs both repository boundaries, retains one intake and
+one Idea attempt, and produces no database delta on unchanged replay. A
+reconciliation replay may perform the scoped read-only GET to observe later
+owner progression; it never issues another intake POST.
 
 When a response is lost after Report commits, retain the existing support
 reference. The Report reconciliation route authorizes complete scope before
@@ -384,8 +393,8 @@ materialization `POST` is never retried.
 An owner acceptance followed by Idea-local finalization failure leaves the
 durable claim `in_flight`. Advise and Report reconciliation refuse that claim
 until its lease expires, preventing recovery from racing the original POST.
-After expiry, trusted server time admits one exact read-only owner recovery;
-the submission retains one attempt and exact replay performs no owner I/O.
+After expiry, trusted server time admits exact read-only owner recovery;
+the submission retains one attempt and unchanged replay performs no writes.
 Manage recovery uses the owner-scoped conversion-intent lookup delivered by
 `sgajbi/lotus-manage#665` plus its persisted request fingerprint. It advances
 only when portfolio, candidate, conversion intent, event causation, management

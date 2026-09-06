@@ -208,6 +208,12 @@
           "dependencyRole": "Storage-backed Advise owner restart and replay proof"
         },
         {
+          "repository": "sgajbi/lotus-idea",
+          "number": 1257,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/1257",
+          "dependencyRole": "Single retained Idea-to-Advise lost-response recovery chain"
+        },
+        {
           "repository": "sgajbi/lotus-advise",
           "number": 615,
           "url": "https://github.com/sgajbi/lotus-advise/issues/615",
@@ -216,6 +222,7 @@
       ],
       "blockers": [
         "advise_restart_replay_certification_missing",
+        "advise_lost_response_restart_certification_missing",
         "advise_owner_correction_certification_missing",
         "advise_concurrent_owner_advancement_certification_missing"
       ]

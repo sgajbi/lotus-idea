@@ -8,6 +8,9 @@ import pytest
 
 import app.api.advise_realization_reconciliation as reconciliation_api
 import app.api.downstream_realization as downstream_realization_api
+from app.domain.advise_evidence_identity import (
+    advise_source_evidence_fingerprint,
+)
 from app.domain import (
     AdviseProposalRealizationHistory,
     AdviseProposalRealizationOutcome,
@@ -37,6 +40,13 @@ from tests.support.http import managed_test_client
 RECORDED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
 
 
+def _owner_evidence_fingerprint(intent: Any) -> str:
+    return advise_source_evidence_fingerprint(
+        candidate_id=intent.intent.candidate_id,
+        evidence_content_hash=intent.evidence_content_hash,
+    )
+
+
 @dataclass
 class OwnerLifecycleClient:
     intent: Any = None
@@ -61,7 +71,7 @@ class OwnerLifecycleClient:
                 owner_realization_id="ipr_api_001",
                 owner_work_id="iarw_api_001",
                 source_event_version=1,
-                source_evidence_fingerprint=intent.evidence_content_hash,
+                source_evidence_fingerprint=_owner_evidence_fingerprint(intent),
             )
         )
 
@@ -88,7 +98,7 @@ class OwnerLifecycleClient:
             portfolio_id=access_scope.portfolio_id,
             idea_candidate_id=self.intent.intent.candidate_id,
             conversion_intent_id=self.intent.intent.conversion_intent_id,
-            source_evidence_fingerprint=self.intent.evidence_content_hash,
+            source_evidence_fingerprint=_owner_evidence_fingerprint(self.intent),
             current_status=AdviseProposalRealizationStatus.PROPOSAL_LINKED,
             current_source_event_version=2,
             proposal_id="proposal-api-001",

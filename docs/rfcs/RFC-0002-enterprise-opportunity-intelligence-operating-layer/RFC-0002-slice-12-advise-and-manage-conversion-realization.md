@@ -226,7 +226,7 @@ Implemented in this slice:
     bounded outcome history needed to prove causal identity. Exactly one
     concurrent call must be accepted and one replayed, both must converge on
     the same owner work, and the readback must match the original candidate and
-    conversion intent. The v5 proof also executes a controlled
+    conversion intent. The v6 proof also executes a controlled
     timeout-before-owner-commit window: no downstream POST is made, two exact
     owner reads return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`, no automatic
     resubmission occurs, and no owner state is asserted. Aggregate and
@@ -239,11 +239,15 @@ Implemented in this slice:
     additionally runs the source-digest-bound Advise PostgreSQL restart tests
     against an explicitly disposable migrated database, proving retained
     version-three history, stable owner identities, exact claim replay, and no
-    duplicate owner work across two owner repository instances. A second
-    source-digest-bound Idea PostgreSQL test reconciles that three-version
-    posture once, reconstructs the Idea repository, and proves exact replay
-    appends zero outcomes, leaves governed table counts unchanged, and preserves
-    one submission attempt. Neither DSN is retained. Suitability authority remains explicit.
+    duplicate owner work across two owner repository instances. A composed
+    source-digest-bound PostgreSQL test submits through the real Advise route,
+    loses the successful response, reconstructs both runtimes, and then
+    reconciles the retained owner history exactly once. A further reconstruction
+    proves replay appends zero outcomes, leaves governed Idea and Advise table
+    counts unchanged, preserves one submission attempt and one owner intake, and
+    issues no second owner POST. The exact read-only owner GET remains permitted
+    so later owner progression can be observed. Neither DSN is retained.
+    Suitability authority remains explicit.
     The owner recovery dependency remains `sgajbi/lotus-advise#615`; Idea
     consumes its exact PostgreSQL behavior rather than recreating it.
 30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
@@ -341,8 +345,9 @@ Implemented in this slice:
     case reads Advise history by the source-owned conversion-intent identity
     under exact tenant, legal-entity, and portfolio scope, validates stable
     candidate/evidence identity, reconstructs the original version-one owner
-    receipt, and then persists the append-only Advise history. Subsequent replay
-    uses the recovered intake identity. An exact owner `404` is classified as
+    receipt, and then persists the append-only Advise history. Subsequent
+    reconciliation reads use the recovered intake identity and may perform an
+    exact read-only GET to observe later owner progression. An exact owner `404` is classified as
     `owner_acceptance_not_observed`, returns a source-safe 409, and changes no
     receipt, history, audit entry, or attempt count. Owner outage remains
     unavailable/503; malformed or mismatched evidence remains a conflict. A
@@ -354,7 +359,8 @@ Implemented in this slice:
     mutating owner request may still be running. After expiry, trusted server
     acceptance time admits one exact read-only recovery of an owner-accepted
     request whose Idea finalization failed. Recovery retains one submission
-    attempt, does not repeat the POST, and exact replay performs no owner I/O.
+    attempt and does not repeat the POST. An unchanged reconciliation replay may
+    read owner history but appends no local history, audit, or outbox state.
     Manage now uses the owner-scoped conversion-intent lookup delivered by
     `sgajbi/lotus-manage#665` and the owner fingerprint added by
     `sgajbi/lotus-manage#668`. It recovers an expired claim only when the
@@ -400,7 +406,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
 5. cross-repository runtime acceptance beyond the completed Advise timeout,
-   owner progression, and PostgreSQL restart proofs (#1251, #1253, #1254),
+   owner progression, PostgreSQL restart, and composed lost-response proofs
+   (#1251, #1253, #1254, #1257),
    without authorizing suitability, execution, or publication,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
@@ -421,7 +428,7 @@ and corrected concurrent owner advancement. The timeout scenario
 proves no owner POST, two exact owner not-found reads, no automatic
 resubmission, and no authority advance. The owner progression scenario observes
 an Advise-owned proposal and a terminal rejection but grants no Idea-side
-proposal or suitability authority. The v5 proof adds restart/replay
+proposal or suitability authority. The v6 proof adds restart/replay
 certification for the bounded owner and Idea
 reconciliation paths only; it is not broader proposal-lifecycle certification,
 production identity, client-publication, Workbench/Gateway, or supported-feature

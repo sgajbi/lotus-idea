@@ -39,6 +39,7 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
         "advise_owner_correction_certification_missing",
         "advise_concurrent_owner_advancement_certification_missing",
         "advise_restart_replay_certification_missing",
+        "advise_lost_response_restart_certification_missing",
     )
     assert payload["remainingCertificationBlockers"] == REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS
     runtime_checks = nested_payload_section(payload, "runtimeChecks")
@@ -65,6 +66,9 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         owner_advancement_evidence=nested_payload_section(baseline, "ownerAdvancementEvidence"),
         owner_restart_evidence=nested_payload_section(baseline, "ownerRestartEvidence"),
         idea_reconciliation_evidence=nested_payload_section(baseline, "ideaReconciliationEvidence"),
+        lost_response_restart_evidence=nested_payload_section(
+            baseline, "lostResponseRestartEvidence"
+        ),
         pre_commit_timeout_evidence=nested_payload_section(baseline, "preCommitTimeoutEvidence"),
     )
 
@@ -168,6 +172,35 @@ def test_advise_intake_runtime_execution_rejects_false_idea_reconciliation_evide
 @pytest.mark.parametrize(
     ("field", "replacement"),
     (
+        ("databaseBackend", "sqlite"),
+        ("testNodes", ()),
+        ("testPassedCount", 0),
+        ("ownerIntakePostCount", 2),
+        ("ownerIntakeCount", 2),
+        ("submissionAttemptCount", 2),
+        ("firstReconciliationStatus", "conflict"),
+        ("exactReplayStatus", "accepted"),
+        ("exactReplayAppendedOutcomeCount", 1),
+        ("wrongScopeRejectedBeforeOwnerRead", False),
+        ("sourceEvidenceFingerprintBound", False),
+        ("governedTableCountsUnchangedOnReplay", False),
+        ("trustedAcceptanceSeparatedFromOwnerTime", False),
+        ("rawDatabaseDsnRetained", True),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_false_lost_response_restart_evidence(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["lostResponseRestartEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
         ("failureStage", "after_owner_commit"),
         ("sourceIntentDigest", "not-a-digest"),
         ("scopeDigest", "not-a-digest"),
@@ -244,6 +277,9 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             owner_restart_evidence=nested_payload_section(baseline, "ownerRestartEvidence"),
             idea_reconciliation_evidence=nested_payload_section(
                 baseline, "ideaReconciliationEvidence"
+            ),
+            lost_response_restart_evidence=nested_payload_section(
+                baseline, "lostResponseRestartEvidence"
             ),
             pre_commit_timeout_evidence=nested_payload_section(
                 baseline, "preCommitTimeoutEvidence"
