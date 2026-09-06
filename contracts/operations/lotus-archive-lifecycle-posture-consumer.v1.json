@@ -23,6 +23,7 @@
       "active",
       "retired"
     ],
+    "active_key_count": 1,
     "unique_key_ids_required": true,
     "raw_public_key_bytes": 32,
     "managed_provenance_required_profiles": [

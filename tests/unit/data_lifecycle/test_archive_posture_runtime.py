@@ -153,6 +153,29 @@ def test_runtime_rejects_duplicate_archive_key_identity(
         get_archive_lifecycle_dependencies()
 
 
+@pytest.mark.parametrize("active_key_count", [0, 2])
+def test_runtime_requires_exactly_one_active_archive_key(
+    monkeypatch: pytest.MonkeyPatch,
+    active_key_count: int,
+) -> None:
+    payload = _trust_bundle()
+    if active_key_count == 0:
+        payload["keys"][0].update(
+            {
+                "status": "retired",
+                "not_after_utc": "2026-08-01T00:00:00Z",
+            }
+        )
+    else:
+        second_key = deepcopy(payload["keys"][0])
+        second_key["key_id"] = "archive-key-002"
+        payload["keys"].append(second_key)
+    monkeypatch.setenv(ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV, json.dumps(payload))
+
+    with pytest.raises(ArchiveLifecycleTrustUnavailableError, match="invalid"):
+        get_archive_lifecycle_dependencies()
+
+
 @pytest.mark.parametrize("value", ["", "not-json", '{"keys":[]}'])
 def test_runtime_fails_closed_for_missing_or_invalid_archive_trust(
     monkeypatch: pytest.MonkeyPatch,

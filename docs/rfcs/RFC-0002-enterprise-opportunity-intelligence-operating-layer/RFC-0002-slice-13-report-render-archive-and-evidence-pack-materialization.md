@@ -224,10 +224,10 @@ Partially satisfied:
 10. Archive lifecycle trust preserves the producer-owned
     `LifecycleVerificationKeys` response shape. Unique key identity, Ed25519
     key material, provenance, status, and authoritative validity windows fail
-    closed before verification. Retired keys can verify historical decisions
-    only inside their declared window; production-like profiles refuse
-    ephemeral development keys. The discovery route remains descriptive rather
-    than a trust anchor.
+    closed before verification; exactly one active key is required. Retired
+    keys can verify historical decisions only inside their declared window;
+    production-like profiles refuse ephemeral development keys. The discovery
+    route remains descriptive rather than a trust anchor.
 
 Not yet satisfied:
 

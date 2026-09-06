@@ -63,8 +63,9 @@ same transaction, not from caller claims.
 The trusted-key input preserves Archive's `LifecycleVerificationKeys` response
 shape and is provisioned through authenticated out-of-band configuration. Idea
 validates unique key identity, literal Ed25519 algorithm, canonical 32-byte key
-material, provenance, status, and key windows. Retired keys remain usable only
-for decisions issued inside their declared window; production-like profiles
+material, provenance, status, key windows, and exactly one active signer.
+Retired keys remain usable only for decisions issued inside their declared
+window; production-like profiles
 reject ephemeral development provenance. The public Archive route describes
 the keys but does not establish trust in them.
 
