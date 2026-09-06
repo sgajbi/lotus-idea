@@ -320,8 +320,8 @@ adapter foundations when the corresponding adapter configuration is present:
    or to recover a lost intake receipt through a scoped, read-only owner lookup
    by the already-persisted conversion-intent identity,
 4. `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation`
-   to reconcile the Manage-owned action outcome history
-   (`lotus-manage.idea-action-outcome-history.v1`) from its persisted receipt.
+   to reconcile receipt-bound Manage history or recover an owner-accepted,
+   expired local claim by exact conversion intent without repeating the intake.
 5. `POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation`
    to recover an exact Report-owned materialization receipt for an uncertain
    evidence-pack submission without repeating the materialization request.
@@ -364,9 +364,13 @@ durable claim `in_flight`. Advise and Report reconciliation refuse that claim
 until its lease expires, preventing recovery from racing the original POST.
 After expiry, trusted server time admits one exact read-only owner recovery;
 the submission retains one attempt and exact replay performs no owner I/O.
-Manage recovery for this failure window remains dependent on the exact scoped
-conversion-intent lookup tracked by `sgajbi/lotus-manage#665`. Idea does not
-invent the missing intake identity or repeat the owner POST.
+Manage recovery uses the owner-scoped conversion-intent lookup delivered by
+`sgajbi/lotus-manage#665` plus its persisted request fingerprint. It advances
+only when portfolio, candidate, conversion intent, event causation, management
+action, version, and fingerprint agree. Owner event time remains source truth;
+trusted Idea time records local acceptance. The attempt stays at one and exact
+submission replay performs no owner I/O. Issue `#1226` remains open for the
+deployed-data audit.
 
 Advise and Manage adapter wire shape is pinned in
 `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.

@@ -555,6 +555,8 @@ client-publication authority, or downstream supportability. Track the future
 trusted identity integration through issue `#380`.
 
 For local Compose only, Manage intake requires server-process settings:
+`LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE`,
+`LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH`,
 `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
 `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`,
@@ -568,6 +570,14 @@ and capability headers, including `X-Legal-Entity-Code` and
 identity from a browser or use this as evidence of IdP/session/token-claim
 integration, suitability, rebalance, or downstream acceptance. Track the future
 trusted identity integration through issue `#380`.
+
+If Manage accepted an intake but Idea failed before persisting the receipt,
+do not repeat the intake POST. Wait for the local claim lease to expire, then
+invoke the Manage reconciliation route with complete trusted entitlement
+scope. Recovery binds the exact conversion intent, portfolio, candidate,
+management action, owner event chain, and owner request fingerprint; a mismatch
+leaves the posture unresolved. Issue `#1226` continues to govern the deployed
+data audit and is not closed by local recovery proof.
 
 Report materialization intake uses the same server-only local/test fixture posture. It requires
 `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,

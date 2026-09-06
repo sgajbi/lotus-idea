@@ -334,9 +334,15 @@ Implemented in this slice:
     acceptance time admits one exact read-only recovery of an owner-accepted
     request whose Idea finalization failed. Recovery retains one submission
     attempt, does not repeat the POST, and exact replay performs no owner I/O.
-    Manage recovery for this window remains dependent on the exact scoped
-    conversion-intent lookup tracked by `sgajbi/lotus-manage#665`; Idea does
-    not invent the missing intake identity or retry the owner POST.
+    Manage now uses the owner-scoped conversion-intent lookup delivered by
+    `sgajbi/lotus-manage#665` and the owner fingerprint added by
+    `sgajbi/lotus-manage#668`. It recovers an expired claim only when the
+    portfolio, candidate, conversion intent, event causation, action identity,
+    source version, and owner request fingerprint agree. Trusted Idea time
+    records local acceptance while source event times remain unchanged. The
+    original POST is not repeated, the attempt count remains one, and exact
+    submission replay performs no owner I/O. Missing, malformed, unavailable,
+    or contradictory owner evidence cannot advance authority.
 
 ## Issue 326 Outcome Lifecycle Hardening
 

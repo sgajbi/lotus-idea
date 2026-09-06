@@ -73,7 +73,7 @@ The submission routes are:
 | `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request and return bounded submission posture plus the exact validated Report-owned materialization receipt. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 | `POST /api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation` | Read the exact Advise-owned realization history for a receipt-bearing Advise submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
-| `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation` | Read the exact Manage-owned action outcome history for a receipt-bearing Manage submission and persist an append-only local evidence copy. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
+| `POST /api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation` | Reconcile receipt-bound Manage history or recover an expired, accepted owner intake by exact conversion intent without repeating the POST. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 | `POST /api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation` | Recover the exact Report-owned receipt for an uncertain evidence-pack submission without repeating materialization. | `idea.downstream-realization.reconcile` plus complete tenant/book/portfolio/client entitlement scope |
 
 These routes are API-certified internal foundations. They propagate
@@ -513,7 +513,7 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |
 | Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_ADVISE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_ADVISE_REALIZATION_RECOVERY_HISTORY_PATH` |
-| Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
+| Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE`, `LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH` |
 | Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`, `LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH` |
 
 Local Compose configures all three realization pairs to the canonical Advise,
@@ -553,10 +553,15 @@ the exact owner identity and reconcile the existing claim. Trusted server
 acceptance time controls this boundary; recovery never reissues the POST, never
 increments the submission attempt, and exact replay performs no further owner
 I/O.
-Manage does not yet expose a safe lookup when its intake identity was lost
-before Idea finalization. Track that owner contract in
-`sgajbi/lotus-manage#665`; operators must not retry the POST or manufacture an
-intake identity.
+Manage uses its portfolio-scoped conversion-intent lookup when acceptance was
+committed but the intake receipt was lost before Idea finalization. Recovery
+starts only after the local lease expires and validates the exact candidate,
+conversion intent, management action, event causation, owner version, and
+owner-generated request fingerprint. Idea preserves owner event times, records
+local acceptance at trusted server time, retains one attempt, and never
+manufactures an intake identity or repeats the POST. Missing or contradictory
+history remains unresolved. Historical deployed-data compatibility remains
+subject to the open audit in issue `#1226`.
 
 ### Local Advise, Manage, And Report Intake Fixtures
 
@@ -598,7 +603,9 @@ call, even when the variables are present.
 | `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID` | `local-development` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE` | `SGPB` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY` | `lotus-idea-local-development` |
-| `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES` | `manage.write` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES` | `manage.idea_action_intake.accept,manage.idea_action_intake.read` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE` | `/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH` | `/api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent` |
 
 The adapter sends these values only as `X-Actor-Id`, `X-Role`, `X-Tenant-Id`,
 `X-Legal-Entity-Code`, `X-Service-Identity`, `X-Capabilities`, and

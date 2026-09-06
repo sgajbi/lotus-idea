@@ -25,6 +25,15 @@ def _normalized_model(*, include_worker: bool = True) -> dict[str, Any]:
                 "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES": (
                     "advisory.idea_proposal_intake.accept,advisory.idea_proposal_realization.read"
                 ),
+                "LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE": (
+                    "/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"
+                ),
+                "LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH": (
+                    "/api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent"
+                ),
+                "LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES": (
+                    "manage.idea_action_intake.accept,manage.idea_action_intake.read"
+                ),
             },
             "depends_on": {
                 "lotus-idea-migrations": {"condition": "service_completed_successfully"}
@@ -121,3 +130,15 @@ def test_normalized_compose_contract_requires_advise_recovery_history_configurat
     errors = validate_compose_model(model, include_worker=True)
 
     assert any("lost-response recovery history path" in error for error in errors)
+
+
+def test_normalized_compose_contract_requires_manage_recovery_configuration() -> None:
+    model = _normalized_model()
+    environment = model["services"]["lotus-idea"]["environment"]
+    del environment["LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH"]
+    environment["LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES"] = "manage.idea_action_intake.accept"
+
+    errors = validate_compose_model(model, include_worker=True)
+
+    assert any("canonical Manage lost-response recovery history path" in error for error in errors)
+    assert any("Manage intake and realization-read capabilities" in error for error in errors)

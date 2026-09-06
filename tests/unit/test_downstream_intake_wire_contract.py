@@ -78,6 +78,11 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
     wire_headers = set(context.request_headers()) | {"X-Portfolio-Ids"}
     assert wire_headers == set(contract["required_server_headers"])
     assert contract["receipt_outcomes"] == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+    assert contract["owner_recovery_history_route"] == (
+        "GET /api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent?"
+        "conversion_intent_id={conversion_intent_id}&portfolio_id={portfolio_id}"
+    )
+    assert "request_fingerprint" in contract["history_response_fields"]
     assert contract["local_dev_principal_source"] == (
         "trusted_headers_until_production_idp_available"
     )
