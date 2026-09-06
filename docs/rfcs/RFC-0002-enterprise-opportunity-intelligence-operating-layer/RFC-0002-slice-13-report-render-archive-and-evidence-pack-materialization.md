@@ -206,9 +206,11 @@ Partially satisfied:
    Idea authorizes complete scope before the owner read, binds the stored
    idempotency key to the exact pack, intent, candidate, evidence, and portfolio
    identity, and never repeats the materialization request. Matching receipts
-   persist with trusted local acceptance time; unavailable or contradictory
-    owner evidence cannot advance posture, and exact replay performs no owner
-    read.
+   persist with trusted local acceptance time. Exact owner 404 is
+   `owner_acceptance_not_observed` and returns 409 without changing the
+   submission; owner outage remains unavailable/503; contradictory evidence
+   remains conflict/409. Only a later exact read may advance the same uncertain
+   submission, and exact replay performs no owner read.
 9. A Report acceptance followed by Idea-local finalization failure retains the
    original `in_flight` claim. Reconciliation refuses owner I/O while that lease
    is active, then uses trusted server acceptance time to admit one read-only

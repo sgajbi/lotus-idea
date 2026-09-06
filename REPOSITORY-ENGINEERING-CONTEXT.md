@@ -1541,16 +1541,26 @@ reconciliation-required. The receipt is owner evidence, not an Idea assertion
 of Report completion, Render or Archive authority, client publication, or
 supported-feature promotion.
 
+All three uncertain-submission recovery adapters preserve an explicit owner
+absence boundary. A completed exact lookup that returns owner 404 raises the
+typed `DownstreamRealizationNotObserved` port outcome; the application returns
+target-specific `owner_acceptance_not_observed` posture and the API publishes
+it as 409. It is neither downstream rejection nor owner outage and never changes
+the submission, receipt, owner history, audit trail, or attempt count. Transport,
+configuration, malformed-response, and 5xx failures remain `owner_unavailable`
+and map to 503. A later exact read may observe acceptance and reconcile the same
+record; no recovery path repeats the owner POST.
+
 Advise and Report owner recovery must also fence the original submission
 lease. An `in_flight` claim is not recoverable while its lease is active because
 the mutating POST may still be running. Once the lease expires, trusted server
 acceptance time may admit one exact, read-only owner recovery. The recovery
 reconciles the existing claim without another POST or attempt increment; exact
 replay performs no additional owner I/O.
-Manage lost-acceptance recovery remains dependent on
-`sgajbi/lotus-manage#665`: Idea must not invent the missing intake identity or
-retry the owner POST until Manage exposes an exact, scoped conversion-intent
-lookup.
+Manage lost-acceptance recovery uses the exact, scoped conversion-intent lookup
+delivered under `sgajbi/lotus-manage#665`; Idea never invents a missing intake
+identity or retries the owner POST. Deployed-data audit remains tracked by
+`#1226`.
 
 Outbox broker:
 

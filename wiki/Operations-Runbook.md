@@ -532,8 +532,10 @@ scope-bound lookup at
 `/advisory/proposals/idea-intake/realization?conversion_intent_id={conversion_intent_id}`,
 validates the exact candidate, intent, evidence, tenant, legal entity, and
 portfolio, reconstructs the original intake receipt, and persists the
-Advise-owned history. It never repeats the intake POST. Missing, unavailable,
-malformed, or mismatched owner evidence cannot advance local posture.
+Advise-owned history. It never repeats the intake POST. Exact owner 404 returns
+`409 advise_realization_owner_acceptance_not_observed` and leaves the uncertain
+record unchanged; a later exact read may recover it. Owner outage returns 503.
+Malformed or mismatched owner evidence cannot advance local posture.
 The owner lookup carries the opaque conversion identity as a query parameter, preserving recovery
 for previously accepted printable identities without rewriting durable records.
 
@@ -606,9 +608,11 @@ For an uncertain Report submission, call the Idea Report reconciliation route
 with the opaque support reference and the same operator reconciliation
 capability and complete entitlement scope used by the Advise/Manage owner-read
 flows. Idea looks up current Report state by the stored idempotency key and
-exact source identity, then persists only a fully matching receipt. `404`,
-owner unavailability, malformed data, or identity conflict changes no local
-evidence. Exact replay is satisfied from PostgreSQL and makes no further Report
+exact source identity, then persists only a fully matching receipt. Owner `404`
+returns `409 report_materialization_owner_acceptance_not_observed`;
+configuration or transport outage returns 503. Neither changes local evidence
+or authorizes a second POST. Malformed data or identity conflict also fails
+closed. Exact replay is satisfied from PostgreSQL and makes no further Report
 request.
 
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
