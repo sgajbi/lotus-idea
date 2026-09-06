@@ -227,7 +227,12 @@ owner_realization = client.get(
 """
         + _advise_owner_advancement_scenario_script()
         + _advise_precommit_timeout_scenario_script()
-        + r"""
+        + _advise_testclient_result_script()
+    )
+
+
+def _advise_testclient_result_script() -> str:
+    return r"""
 
 def response_payload(response):
     try:
@@ -277,7 +282,6 @@ print(json.dumps({
     },
 }, sort_keys=True))
 """
-    )
 
 
 def _advise_owner_advancement_scenario_script() -> str:
