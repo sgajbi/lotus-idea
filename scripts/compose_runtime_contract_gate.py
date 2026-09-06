@@ -21,6 +21,15 @@ REQUIRED_ADVISE_CAPABILITIES = {
     "advisory.idea_proposal_intake.accept",
     "advisory.idea_proposal_realization.read",
 }
+MANAGE_HISTORY_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE"
+MANAGE_HISTORY_PATH = "/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"
+MANAGE_RECOVERY_HISTORY_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH"
+MANAGE_RECOVERY_HISTORY_PATH = "/api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent"
+MANAGE_CAPABILITIES_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES"
+REQUIRED_MANAGE_CAPABILITIES = {
+    "manage.idea_action_intake.accept",
+    "manage.idea_action_intake.read",
+}
 
 
 def validate_compose_model(
@@ -97,6 +106,26 @@ def validate_compose_model(
     if not REQUIRED_ADVISE_CAPABILITIES.issubset(capabilities):
         errors.append(
             "normalized Compose lotus-idea service must configure Advise intake and "
+            "realization-read capabilities"
+        )
+    if api_environment.get(MANAGE_HISTORY_PATH_ENV) != MANAGE_HISTORY_PATH:
+        errors.append(
+            "normalized Compose lotus-idea service must configure the canonical Manage "
+            "realization history path"
+        )
+    if api_environment.get(MANAGE_RECOVERY_HISTORY_PATH_ENV) != MANAGE_RECOVERY_HISTORY_PATH:
+        errors.append(
+            "normalized Compose lotus-idea service must configure the canonical Manage "
+            "lost-response recovery history path"
+        )
+    manage_capabilities = {
+        value.strip()
+        for value in str(api_environment.get(MANAGE_CAPABILITIES_ENV, "")).split(",")
+        if value.strip()
+    }
+    if not REQUIRED_MANAGE_CAPABILITIES.issubset(manage_capabilities):
+        errors.append(
+            "normalized Compose lotus-idea service must configure Manage intake and "
             "realization-read capabilities"
         )
     return errors

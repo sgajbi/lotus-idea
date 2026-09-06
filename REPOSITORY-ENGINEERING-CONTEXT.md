@@ -1473,7 +1473,13 @@ Downstream realization:
    authority, or supported-feature evidence,
 6. `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL`,
 7. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
-8. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
+8. `LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE` and
+   `LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH`; these bind ordinary
+   history reads by owner intake id and lost-response recovery by exact opaque
+   conversion intent plus trusted portfolio scope. An expired local claim may
+   advance only when owner action, causation, version, and request fingerprint
+   remain consistent; recovery never repeats the POST or increments attempts,
+9. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
    `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE`,
@@ -1484,10 +1490,10 @@ Downstream realization:
    and `X-Principal-Status: ACTIVE`; they are not browser headers,
    production authn/authz, suitability authority, rebalance authority, or
    supported-feature evidence,
-9. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
-10. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
-11. `LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH`,
-12. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+10. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
+11. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
+12. `LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH`,
+13. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
    `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
    `LOTUS_IDEA_REPORT_REALIZATION_REGION`. The owner-authorized synthetic
@@ -1496,13 +1502,13 @@ Downstream realization:
    `lotus-report:idea-evidence-retention:v1` reference maps to the
    Report-owned `generated-report-standard` selector. Do not persist that
    selector in Idea or treat it as trusted production identity,
-13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
-14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
-17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
-18. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
-19. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+17. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+18. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+19. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+20. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
 
 The Advise, Manage, and Report fixtures are server-side local/test development aids
 only. They never trust browser-supplied identity headers and fail closed in
