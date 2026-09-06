@@ -7,6 +7,8 @@ import sys
 from types import ModuleType
 from typing import Any
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -21,6 +23,34 @@ def test_disaster_recovery_proof_gate_accepts_real_restore_evidence(tmp_path: Pa
         )
         == []
     )
+
+
+@pytest.mark.parametrize(
+    ("resource_type", "incorrect_decision"),
+    (
+        ("conversion_intent", "reconciliation_required"),
+        ("report_evidence_pack", "replayed"),
+    ),
+)
+def test_disaster_recovery_proof_gate_rejects_incorrect_downstream_resume_decision(
+    tmp_path: Path,
+    resource_type: str,
+    incorrect_decision: str,
+) -> None:
+    module = load_gate()
+    restore, resume = valid_evidence(module)
+    resume["downstream_claim_decisions"][resource_type] = incorrect_decision
+    restore_path = tmp_path / "restore.json"
+    resume_path = tmp_path / "resume.json"
+    restore_path.write_text(json.dumps(restore), encoding="utf-8")
+    resume_path.write_text(json.dumps(resume), encoding="utf-8")
+
+    errors = module.validate_disaster_recovery_proof(
+        restore_evidence_path=restore_path,
+        resume_evidence_path=resume_path,
+    )
+
+    assert errors == ["disaster recovery downstream resume decisions drifted"]
 
 
 def test_disaster_recovery_proof_gate_rejects_false_passing_and_mutation(
@@ -103,7 +133,7 @@ def valid_evidence(module: ModuleType) -> tuple[dict[str, Any], dict[str, Any]]:
         "supported_feature_promoted": False,
         "certification_status": "not_certified",
         "downstream_claim_decisions": {
-            "conversion_intent": "reconciliation_required",
+            "conversion_intent": "replayed",
             "report_evidence_pack": "reconciliation_required",
         },
         "table_content_sha256_before": dict(hashes),
