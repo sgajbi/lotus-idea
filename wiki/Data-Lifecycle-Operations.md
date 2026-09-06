@@ -26,8 +26,9 @@ Trust configuration preserves Archive's `LifecycleVerificationKeys` response
 shape. It requires unique key IDs, literal Ed25519 metadata, canonical 32-byte
 base64url public keys, explicit provenance/status, and authoritative validity
 windows. Active keys have open windows; retired keys require an end time.
-Production-like profiles refuse `ephemeral_development`; only explicit
-local/test profiles may use it. Key discovery is not itself trust
+Exactly one active key is required. Production-like profiles refuse
+`ephemeral_development`; only explicit local/test profiles may use it. Key
+discovery is not itself trust
 establishment—the producer document must arrive through the approved
 authenticated configuration channel.
 

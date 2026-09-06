@@ -1711,7 +1711,8 @@ The trust value preserves the producer-owned `LifecycleVerificationKeys`
 response shape through authenticated out-of-band configuration. The mapper and
 domain require unique key IDs, literal `ed25519`, canonical 32-byte base64url
 public keys, explicit provenance/status, and authoritative key windows; active
-keys have an open window and retired keys require an end time.
+keys have an open window, exactly one active key is required, and retired keys
+require an end time.
 `ephemeral_development` is accepted only by local/test profiles. Archive
 discovery does not establish trust, and Idea must not invent rotation windows
 or add a compatibility shape for an incomplete producer.

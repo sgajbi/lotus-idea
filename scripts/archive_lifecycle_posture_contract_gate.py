@@ -36,6 +36,7 @@ REQUIRED_TRUST_BUNDLE_CONTRACT = {
     ],
     "algorithm": "ed25519",
     "accepted_verification_statuses": ["active", "retired"],
+    "active_key_count": 1,
     "unique_key_ids_required": True,
     "raw_public_key_bytes": 32,
     "managed_provenance_required_profiles": ["demo", "staging", "production"],

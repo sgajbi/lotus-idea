@@ -96,6 +96,9 @@ class ArchiveLifecycleTrustBundle(BaseModel):
         key_ids = tuple(key.key_id for key in self.keys)
         if len(key_ids) != len(set(key_ids)):
             raise ValueError("Archive lifecycle trust bundle key IDs must be unique")
+        active_key_count = sum(key.status is ArchiveLifecycleKeyStatus.ACTIVE for key in self.keys)
+        if active_key_count != 1:
+            raise ValueError("Archive lifecycle trust bundle must contain exactly one active key")
         return self
 
     def to_domain(self) -> tuple[ArchiveLifecycleTrustedKey, ...]:

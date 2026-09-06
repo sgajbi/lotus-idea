@@ -55,10 +55,10 @@ excluded from the receipt and audit projection.
 The configured key set preserves Archive's `LifecycleVerificationKeys`
 response shape. Idea rejects unknown fields, duplicate IDs, non-Ed25519 or
 malformed key material, contradictory windows, and development-ephemeral
-provenance outside local/test. It accepts a retained key only for decisions
-issued within that key's declared window. The public discovery route describes
-keys but does not authenticate them; production-like trust remains an
-out-of-band configuration responsibility.
+provenance outside local/test; exactly one active key is required. It accepts a
+retained key only for decisions issued within that key's declared window. The
+public discovery route describes keys but does not authenticate them;
+production-like trust remains an out-of-band configuration responsibility.
 
 Run id and replay nonce are durable unique identities. Operation events expose
 only bounded verification/rejection posture; they exclude signatures, keys,
