@@ -221,6 +221,13 @@ Partially satisfied:
    recovery after expiry. PostgreSQL restart proof retains one attempt, appends
    `claimed` then `reconciled`; exact replay performs a read-only owner GET but no
    Idea mutation and no Report POST.
+10. Archive lifecycle trust preserves the producer-owned
+    `LifecycleVerificationKeys` response shape. Unique key identity, Ed25519
+    key material, provenance, status, and authoritative validity windows fail
+    closed before verification. Retired keys can verify historical decisions
+    only inside their declared window; production-like profiles refuse
+    ephemeral development keys. The discovery route remains descriptive rather
+    than a trust anchor.
 
 Not yet satisfied:
 

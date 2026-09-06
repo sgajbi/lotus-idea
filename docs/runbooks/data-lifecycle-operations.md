@@ -30,6 +30,20 @@ must also carry a signed `lotus-archive:IdeaEvidenceLifecycleDecision:v1`
 envelope. Configure the JSON trust bundle through
 `LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON`; malformed, missing, unknown,
 expired, revoked, digest-mismatched, or signature-invalid evidence fails closed.
+The value must preserve Archive's `LifecycleVerificationKeys` response shape
+and arrive through an authenticated out-of-band configuration path. Each key
+carries its ID, literal `ed25519` algorithm, canonical 32-byte
+`public_key_base64`, provenance, status, and authoritative validity window. Key
+IDs must be unique; an active key has an open window and a retired key has an
+end time. `demo`, `staging`, and `production` accept only `managed` provenance,
+while `ephemeral_development` is limited to explicit `local` and `test`
+profiles.
+
+Archive's discovery endpoint can supply the envelope shape, but an
+unauthenticated response does not establish trust in the returned key. Do not
+rewrite fields into an operator-authored shape, invent rotation dates, or
+activate an incomplete producer response. Provision the producer document through the
+approved trust channel and retain the source revision used for rollout.
 
 | Local action | Required Archive posture |
 | --- | --- |
