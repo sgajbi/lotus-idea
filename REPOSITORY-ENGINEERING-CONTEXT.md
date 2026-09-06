@@ -1548,9 +1548,10 @@ record; no recovery path repeats the owner POST.
 Advise and Report owner recovery must also fence the original submission
 lease. An `in_flight` claim is not recoverable while its lease is active because
 the mutating POST may still be running. Once the lease expires, trusted server
-acceptance time may admit one exact, read-only owner recovery. The recovery
-reconciles the existing claim without another POST or attempt increment; exact
-replay performs no additional owner I/O.
+acceptance time may admit exact, read-only owner recovery. The recovery
+reconciles the existing claim without another POST or attempt increment. An
+unchanged reconciliation replay may read owner history to observe later
+progression, but it performs no owner write and changes no Idea state.
 Manage lost-acceptance recovery uses the exact, scoped conversion-intent lookup
 delivered under `sgajbi/lotus-manage#665`; Idea never invents a missing intake
 identity or retries the owner POST. Deployed-data audit remains tracked by
@@ -2445,10 +2446,11 @@ aggregate-current artifact may clear `advise_live_contract_proof_missing`,
 `advise_timeout_uncertainty_certification_missing`,
 `advise_owner_correction_certification_missing`, and
 `advise_concurrent_owner_advancement_certification_missing`, and
-`advise_restart_replay_certification_missing`
+`advise_restart_replay_certification_missing` and
+`advise_lost_response_restart_certification_missing`
 after observing the Advise owner route's accepted, replayed, rejected,
 idempotency-conflict, authorization-denied, and tenant-scoped idempotency
-receipt behavior. The v5 artifact also proves identical concurrent duplicate
+receipt behavior. The v6 artifact also proves identical concurrent duplicate
 convergence and exact owner-history readback bound through source-safe source
 intent, trusted-scope, and owner-identity digests plus the evidence fingerprint,
 status, and source-event version. Its controlled timeout-before-owner-commit
@@ -2467,8 +2469,15 @@ repository instances. A separate source-digest-bound Idea PostgreSQL execution
 reconciles the three-version owner posture once, reconstructs the Idea repository,
 and proves exact replay appends zero outcomes, preserves the single submission
 attempt and owner receipt identities, and leaves governed table counts unchanged.
+It then composes the real owner commit, lost response, Idea uncertain posture,
+both PostgreSQL repository reconstructions, scoped conversion-intent GET, and
+one-time Idea reconciliation into a single chain. The proof retains one Advise
+intake/review identity and one Idea attempt, rejects wrong scope before owner
+I/O, compares Advise's canonical source-reference fingerprint rather than the
+inner Idea content hash, and changes no governed rows on unchanged replay.
 Neither DSN is retained. This clears
-the owner-correction, concurrent-owner-advancement, and restart blockers while
+the owner-correction, concurrent-owner-advancement, restart, and lost-response
+restart blockers while
 retaining `suitability_policy_authority_remains_lotus_advise`. The controlled
 scenario may observe an Advise-owned proposal, but it must not treat that as
 suitability, execution, order, or publication authority and must not claim production

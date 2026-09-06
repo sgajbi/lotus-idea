@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
@@ -13,6 +14,8 @@ from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from app.domain import ConversionTarget
+from app.domain.evidence_hashing import evidence_hash_for_candidate
 from app.infrastructure.migrations import (
     MigrationConnection,
     MigrationDirection,
@@ -20,6 +23,8 @@ from app.infrastructure.migrations import (
     execute_migration_plan,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_codecs import conversion_intent_to_json, idea_candidate_to_json
+from tests.unit.test_downstream_realization_application import candidate, repository_with_conversion
 from tests.support.source_revision import lotus_core_source_ref
 
 
@@ -176,6 +181,66 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             (conversion_intent_id, candidate_id, recorded_at, recorded_at),
         )
     return candidate_id
+
+
+def seed_governed_advise_conversion_resource(
+    database_url: str,
+    conversion_intent_id: str,
+) -> tuple[str, str]:
+    candidate_id = seed_active_conversion_resource(database_url, conversion_intent_id)
+    candidate_value = candidate(candidate_id)
+    fixture_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    fixture_record = fixture_repository.snapshot().candidate_records["idea-downstream-001"]
+    fixture_intent = fixture_record.conversion_intents[0]
+    conversion_intent = replace(
+        fixture_intent,
+        intent=replace(
+            fixture_intent.intent,
+            conversion_intent_id=conversion_intent_id,
+            candidate_id=candidate_id,
+        ),
+        evidence_packet_id=candidate_value.evidence_packet.evidence_packet_id,
+        evidence_content_hash=candidate_value.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=candidate_value.evidence_packet.source_revision_vector_digest,
+        source_cut_posture=candidate_value.evidence_packet.source_cut_posture,
+        source_signal_ids=candidate_value.source_signal_ids,
+        review_authority_grant=None,
+    )
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE idea_candidate_record
+            SET evidence_packet_id = %s,
+                evidence_hash = %s,
+                candidate_json = %s,
+                business_identity_id = %s,
+                identity_policy_version = %s,
+                material_fingerprint = %s,
+                material_version = %s,
+                evidence_version = %s,
+                change_reason = %s,
+                supersedes_material_version = %s
+            WHERE candidate_id = %s
+            """,
+            (
+                candidate_value.evidence_packet.evidence_packet_id,
+                evidence_hash_for_candidate(candidate_value),
+                Jsonb(idea_candidate_to_json(candidate_value)),
+                candidate_value.identity.business_identity_id,
+                candidate_value.identity.policy_version,
+                candidate_value.identity.material_fingerprint,
+                candidate_value.identity.material_version,
+                candidate_value.identity.evidence_version,
+                candidate_value.identity.change_reason.value,
+                candidate_value.identity.supersedes_material_version,
+                candidate_id,
+            ),
+        )
+        cursor.execute(
+            "UPDATE idea_conversion_intent SET intent_json = %s WHERE conversion_intent_id = %s",
+            (Jsonb(conversion_intent_to_json(conversion_intent)), conversion_intent_id),
+        )
+    return candidate_id, conversion_intent.evidence_content_hash
 
 
 def run_concurrent_repository_mutations(

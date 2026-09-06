@@ -21,6 +21,9 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
 )
+from app.domain.advise_evidence_identity import (
+    advise_candidate_source_ref,
+)
 from app.domain.data_lifecycle import REPORT_EVIDENCE_RETENTION_POLICY_REF
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
@@ -1030,12 +1033,10 @@ def _conversion_intent_envelope(
         "conversion_intent_id": intent.intent.conversion_intent_id,
         "intent_type": intent_type,
         "source_refs": [
-            {
-                "source_system": "lotus-idea",
-                "source_type": "IdeaCandidate",
-                "source_id": intent.intent.candidate_id,
-                "content_hash": intent.evidence_content_hash,
-            }
+            advise_candidate_source_ref(
+                candidate_id=intent.intent.candidate_id,
+                evidence_content_hash=intent.evidence_content_hash,
+            )
         ],
     }
     # Both shipped owner intakes bind the authoritative portfolio scope in

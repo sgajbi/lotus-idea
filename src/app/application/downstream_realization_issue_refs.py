@@ -11,6 +11,7 @@ ISSUE_RENDER_ARCHIVE_LIFECYCLE = "sgajbi/lotus-idea#691"
 ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES = "sgajbi/lotus-idea#379"
 ISSUE_ADVISE_OWNER_VERSION_CERTIFICATION = "sgajbi/lotus-idea#1253"
 ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION = "sgajbi/lotus-idea#1254"
+ISSUE_ADVISE_LOST_RESPONSE_CERTIFICATION = "sgajbi/lotus-idea#1257"
 ISSUE_SUPPORTED_FEATURE_PROMOTION = "sgajbi/lotus-idea#380"
 ISSUE_ADVISE_SOURCE_AUTHORITY = "sgajbi/lotus-advise#461"
 ISSUE_ADVISE_RESTART_RECOVERY = "sgajbi/lotus-advise#615"
@@ -44,6 +45,11 @@ REQUIRED_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, frozenset[str]]] = Mappin
                 ),
                 "advise_restart_replay_certification_missing": _required_refs(
                     ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                    ISSUE_ADVISE_RESTART_RECOVERY,
+                ),
+                "advise_lost_response_restart_certification_missing": _required_refs(
+                    ISSUE_ADVISE_LOST_RESPONSE_CERTIFICATION,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                     ISSUE_ADVISE_RESTART_RECOVERY,
                 ),
@@ -121,6 +127,11 @@ CAPABILITY_BLOCKER_ISSUE_REFS: Mapping[str, Mapping[str, tuple[str, ...]]] = Map
                 ),
                 "advise_restart_replay_certification_missing": _refs(
                     ISSUE_ADVISE_OWNER_RESTART_CERTIFICATION,
+                    ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
+                    ISSUE_ADVISE_RESTART_RECOVERY,
+                ),
+                "advise_lost_response_restart_certification_missing": _refs(
+                    ISSUE_ADVISE_LOST_RESPONSE_CERTIFICATION,
                     ISSUE_DOWNSTREAM_PERSISTENCE_OUTCOMES,
                     ISSUE_ADVISE_RESTART_RECOVERY,
                 ),

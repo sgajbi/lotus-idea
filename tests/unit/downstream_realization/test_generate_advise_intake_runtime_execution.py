@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_LOST_RESPONSE_RESTART_TEST_NODES,
     ADVISE_OWNER_RESTART_TEST_NODES,
     IDEA_ADVISE_RECONCILIATION_TEST_NODES,
 )
@@ -360,6 +361,60 @@ def test_idea_postgres_reconciliation_test_rejects_skipped_execution(
             postgres_dsn="postgresql://idea-test-only",
             allow_database_reset=True,
         )
+
+
+def test_lost_response_restart_test_emits_cross_service_postgres_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_source = tmp_path / "tests/integration/test_advise_lost_response_postgres_chain.py"
+    test_source.parent.mkdir(parents=True)
+    test_source.write_text("def test_chain(): pass\n", encoding="utf-8")
+    advise_root = tmp_path / "lotus-advise"
+    advise_root.mkdir()
+    captured: dict[str, object] = {}
+
+    def fake_run(
+        args: list[str],
+        *,
+        cwd: Path,
+        env: Mapping[str, str],
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        captured.update(args=args, cwd=cwd, env=dict(env), check=check)
+        assert capture_output is True
+        assert text is True
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="1 passed", stderr="")
+
+    monkeypatch.setattr(
+        "scripts.downstream_realization.advise_postgres_restart_evidence.subprocess.run",
+        fake_run,
+    )
+    evidence = postgres_evidence.execute_lost_response_restart_test(
+        repository_root=tmp_path,
+        idea_python="python-idea",
+        idea_postgres_dsn="postgresql://idea-test-only",
+        advise_root=advise_root,
+        advise_python="python-advise",
+        advise_postgres_dsn="postgresql://advise-test-only",
+        allow_database_reset=True,
+    )
+
+    assert captured["args"] == [
+        "python-idea",
+        "-m",
+        "pytest",
+        *ADVISE_LOST_RESPONSE_RESTART_TEST_NODES,
+        "-q",
+    ]
+    assert captured["env"]["LOTUS_ADVISE_PYTHON"] == "python-advise"  # type: ignore[index]
+    assert evidence["ownerIntakePostCount"] == 1
+    assert evidence["ownerReadCount"] == 2
+    assert evidence["submissionAttemptCount"] == 1
+    assert evidence["exactReplayAppendedOutcomeCount"] == 0
+    assert evidence["wrongScopeRejectedBeforeOwnerRead"] is True
+    assert "postgresql://" not in json.dumps(evidence)
 
 
 def _advise_receipt_responses() -> dict[str, dict[str, object]]:

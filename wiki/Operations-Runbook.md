@@ -538,6 +538,11 @@ record unchanged; a later exact read may recover it. Owner outage returns 503.
 Malformed or mismatched owner evidence cannot advance local posture.
 The owner lookup carries the opaque conversion identity as a query parameter, preserving recovery
 for previously accepted printable identities without rewriting durable records.
+Advise fingerprints the canonical source-reference array; Idea recomputes that
+owner-contract fingerprint from the persisted candidate and evidence hash before
+advancing. An unchanged reconciliation replay may repeat the read-only GET to
+observe later owner progression, but it creates no additional owner work or Idea
+state and never repeats the intake POST.
 
 For local Compose only, Advise intake requires server-process settings:
 `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,

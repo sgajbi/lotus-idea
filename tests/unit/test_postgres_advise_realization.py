@@ -19,7 +19,11 @@ from app.infrastructure.postgres_advise_realization import (
     _history_to_json,
 )
 from tests.unit.postgres_repository_fake import FakePostgresConnection
-from tests.unit.test_advise_realization_reconciliation import RECORDED_AT, _history
+from tests.unit.test_advise_realization_reconciliation import (
+    OWNER_EVIDENCE_FINGERPRINT,
+    RECORDED_AT,
+    _history,
+)
 from tests.unit.test_postgres_downstream_submission import _claim
 
 
@@ -40,7 +44,7 @@ def test_postgres_advise_history_survives_restart_and_appends_monotonically() ->
             owner_realization_id="ipr_001",
             owner_work_id="iarw_001",
             source_event_version=1,
-            source_evidence_fingerprint="sha256:downstream-evidence",
+            source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         ),
     )
 
@@ -100,7 +104,7 @@ def test_postgres_advise_history_rejects_owner_identity_conflict_without_mutatio
             owner_realization_id="ipr_001",
             owner_work_id="iarw_001",
             source_event_version=1,
-            source_evidence_fingerprint="sha256:downstream-evidence",
+            source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         ),
     )
 
@@ -145,7 +149,7 @@ def test_postgres_advise_history_rolls_back_compare_and_set_failure() -> None:
             owner_realization_id="ipr_001",
             owner_work_id="iarw_001",
             source_event_version=1,
-            source_evidence_fingerprint="sha256:downstream-evidence",
+            source_evidence_fingerprint=OWNER_EVIDENCE_FINGERPRINT,
         ),
     )
     repository.persist_advise_realization_history(

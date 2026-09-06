@@ -16,6 +16,7 @@ from scripts.proof_worktree_import_guard import ensure_worktree_imports  # noqa:
 ensure_worktree_imports(__file__)
 
 from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_LOST_RESPONSE_RESTART_TEST_NODES,
     ADVISE_OWNER_RESTART_TEST_NODES,
     IDEA_ADVISE_RECONCILIATION_TEST_NODES,
 )
@@ -109,6 +110,69 @@ def execute_idea_postgres_reconciliation_test(
         "retainedOutcomeVersions": (1, 2, 3),
         "ownerIdentityUnchanged": True,
         "governedTableCountsUnchangedOnReplay": True,
+        "rawDatabaseDsnRetained": False,
+    }
+
+
+def execute_lost_response_restart_test(
+    *,
+    repository_root: Path,
+    idea_python: str,
+    idea_postgres_dsn: str,
+    advise_root: Path,
+    advise_python: str,
+    advise_postgres_dsn: str,
+    allow_database_reset: bool,
+) -> dict[str, Any]:
+    if not idea_postgres_dsn:
+        raise ValueError("--idea-postgres-dsn is required for lost-response certification")
+    if not advise_postgres_dsn:
+        raise ValueError("--advise-postgres-dsn is required for lost-response certification")
+    _require_database_reset_authority(allow_database_reset, "lost-response restart")
+    test_source = repository_root / "tests/integration/test_advise_lost_response_postgres_chain.py"
+    env = os.environ.copy()
+    env.update(
+        {
+            "LOTUS_IDEA_POSTGRES_INTEGRATION_URL": idea_postgres_dsn,
+            "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED": "1",
+            "LOTUS_ADVISE_POSTGRES_INTEGRATION_DSN": advise_postgres_dsn,
+            "LOTUS_ADVISE_ROOT": str(advise_root.resolve()),
+            "LOTUS_ADVISE_PYTHON": advise_python,
+        }
+    )
+    completed = subprocess.run(
+        [idea_python, "-m", "pytest", *ADVISE_LOST_RESPONSE_RESTART_TEST_NODES, "-q"],
+        cwd=repository_root,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    _require_exact_pass_count(completed.stdout, expected=1, owner="Idea/Advise lost-response")
+    return {
+        "evidenceClass": EvidenceClass.TEST_EXECUTION.value,
+        "databaseBackend": "postgresql",
+        "testNodes": ADVISE_LOST_RESPONSE_RESTART_TEST_NODES,
+        "testProcessExitCode": completed.returncode,
+        "testPassedCount": 1,
+        "testSourceDigest": _source_digest(test_source),
+        "ideaRepositoryInstanceCount": 3,
+        "adviseProcessInstanceCount": 3,
+        "ownerIntakePostCount": 1,
+        "ownerReadCount": 2,
+        "ownerIntakeCount": 1,
+        "ownerReviewWorkCount": 1,
+        "ownerOutcomeCount": 1,
+        "uncertainSubmissionStatus": "reconciliation_required",
+        "submissionAttemptCount": 1,
+        "firstReconciliationStatus": "accepted",
+        "exactReplayStatus": "replayed",
+        "exactReplayAppendedOutcomeCount": 0,
+        "wrongScopeRejectedBeforeOwnerRead": True,
+        "ownerIdentityUnchanged": True,
+        "sourceEvidenceFingerprintBound": True,
+        "governedTableCountsUnchangedOnReplay": True,
+        "trustedAcceptanceSeparatedFromOwnerTime": True,
         "rawDatabaseDsnRetained": False,
     }
 
