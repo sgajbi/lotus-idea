@@ -205,7 +205,7 @@ def _load_owner_history(
             correlation_id=correlation_id,
             trace_id=trace_id,
         )
-    return advise_reader.load_proposal_realization_by_conversion_intent(
+    return advise_reader.load_realization_by_conversion_intent(
         conversion_intent_id=submission.resource_id,
         access_scope=access_scope,
         correlation_id=correlation_id,

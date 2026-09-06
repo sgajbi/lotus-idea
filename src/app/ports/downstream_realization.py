@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 from app.domain import (
     AdviseProposalRealizationHistory,
@@ -130,7 +130,30 @@ class AdviseProposalRealizationClient(Protocol):
         """Submit a source-safe proposal intent envelope to lotus-advise."""
 
 
-class AdviseProposalRealizationReader(Protocol):
+_RealizationHistoryT_co = TypeVar(
+    "_RealizationHistoryT_co",
+    AdviseProposalRealizationHistory,
+    ManageActionRealizationHistory,
+    covariant=True,
+)
+
+
+class ConversionIntentRealizationRecoveryReader(Protocol[_RealizationHistoryT_co]):
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> _RealizationHistoryT_co:
+        """Recover exact owner history by the persisted Idea conversion identity."""
+
+
+class AdviseProposalRealizationReader(
+    ConversionIntentRealizationRecoveryReader[AdviseProposalRealizationHistory],
+    Protocol,
+):
     def load_proposal_realization(
         self,
         *,
@@ -141,18 +164,11 @@ class AdviseProposalRealizationReader(Protocol):
     ) -> AdviseProposalRealizationHistory:
         """Load the exact Advise-owned realization history in trusted scope."""
 
-    def load_proposal_realization_by_conversion_intent(
-        self,
-        *,
-        conversion_intent_id: str,
-        access_scope: ReviewAccessScope,
-        correlation_id: str | None = None,
-        trace_id: str | None = None,
-    ) -> AdviseProposalRealizationHistory:
-        """Recover exact owner history when the intake response was unavailable."""
 
-
-class ManageActionRealizationReader(Protocol):
+class ManageActionRealizationReader(
+    ConversionIntentRealizationRecoveryReader[ManageActionRealizationHistory],
+    Protocol,
+):
     def load_action_realization(
         self,
         *,

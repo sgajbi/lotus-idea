@@ -10,7 +10,7 @@ machine) reconcile as ordinary appends.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -28,6 +28,8 @@ from app.application.manage_realization_reconciliation import (
 )
 from app.domain import (
     ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionResourceType,
     InMemoryIdeaRepository,
     ManageActionRealizationEvent,
     ManageActionRealizationEventType,
@@ -36,6 +38,7 @@ from app.domain import (
     QueueAccessScopeFilter,
     ReviewAccessScope,
     SourceSystem,
+    create_downstream_submission_claim,
 )
 from app.domain.persistence_manage_realization import manage_realization_submission_blocker
 from app.ports.downstream_realization import (
@@ -62,6 +65,7 @@ AUTHORIZED_SCOPE = QueueAccessScopeFilter(
 class StubManageReader:
     history: ManageActionRealizationHistory
     calls: int = 0
+    recovery_calls: int = 0
 
     def load_action_realization(
         self,
@@ -76,6 +80,19 @@ class StubManageReader:
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         return self.history
 
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        self.recovery_calls += 1
+        assert conversion_intent_id == "conversion-manage_review-001"
+        assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+        return self.history
+
 
 @dataclass
 class RaisingManageReader:
@@ -84,6 +101,109 @@ class RaisingManageReader:
     def load_action_realization(self, **kwargs: object) -> ManageActionRealizationHistory:
         self.calls += 1
         raise DownstreamRealizationReadError("manage is down")
+
+    def load_realization_by_conversion_intent(
+        self, **kwargs: object
+    ) -> ManageActionRealizationHistory:
+        self.calls += 1
+        raise DownstreamRealizationReadError("manage is down")
+
+
+def test_reconcile_manage_history_recovers_lost_acceptance_without_resubmission() -> None:
+    repository = repository_with_conversion(ConversionTarget.MANAGE_REVIEW)
+
+    class LostResponseClient:
+        def submit_action_intent(
+            self, *_args: object, **_kwargs: object
+        ) -> DownstreamRealizationOutcome:
+            raise TimeoutError("response lost after owner commit")
+
+    submitted = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-manage_review-001",
+            idempotency_key="submission-manage-lost-response-001",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE,
+            submitted_at_utc=RECORDED_AT,
+        ),
+        repository=repository,
+        advise_client=None,
+        manage_client=LostResponseClient(),
+    )
+    assert submitted.status.value == "reconciliation_required"
+    assert submitted.support_reference is not None
+    reader = StubManageReader(_history(version=2))
+
+    recovered = reconcile_manage_realization_history(
+        _command(submitted.support_reference),
+        repository=repository,
+        manage_reader=reader,
+    )
+    replayed = reconcile_manage_realization_history(
+        _command(submitted.support_reference),
+        repository=repository,
+        manage_reader=reader,
+    )
+
+    assert recovered.status is ManageRealizationReconciliationStatus.ACCEPTED
+    assert recovered.appended_event_count == 2
+    assert replayed.status is ManageRealizationReconciliationStatus.REPLAYED
+    assert reader.recovery_calls == 1
+    assert reader.calls == 1
+    stored = repository.downstream_submission_by_support_reference(submitted.support_reference)
+    assert stored is not None
+    assert stored.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert stored.attempt_count == 1
+    assert stored.owner_receipt is not None
+    assert stored.owner_receipt.owner_request_id == "iai_001"
+    assert stored.owner_receipt.owner_realization_id == "ima_001"
+    assert stored.owner_receipt.owner_work_id == "ima_001"
+    assert stored.owner_receipt.source_event_version == 1
+    assert stored.owner_receipt.source_evidence_fingerprint == "sha256:aabbccddeeff"
+    assert [entry.action.value for entry in stored.audit_history] == [
+        "claimed",
+        "reconciliation_required",
+        "reconciled",
+    ]
+
+
+def test_active_manage_submission_refuses_recovery_before_owner_io() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=False)
+    reader = StubManageReader(_history(version=2))
+
+    result = reconcile_manage_realization_history(
+        _command(support_reference),
+        repository=repository,
+        manage_reader=reader,
+    )
+
+    assert result.status is ManageRealizationReconciliationStatus.NOT_ELIGIBLE
+    assert result.blocker == "manage_realization_submission_still_in_flight"
+    assert reader.calls == 0
+    assert reader.recovery_calls == 0
+
+
+def test_expired_manage_submission_recovers_owner_history_without_reposting() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=True)
+    reader = StubManageReader(_history(version=2))
+
+    result = reconcile_manage_realization_history(
+        _command(support_reference),
+        repository=repository,
+        manage_reader=reader,
+    )
+
+    assert result.status is ManageRealizationReconciliationStatus.ACCEPTED
+    assert result.appended_event_count == 2
+    assert reader.recovery_calls == 1
+    assert reader.calls == 0
+    stored = repository.downstream_submission_by_support_reference(support_reference)
+    assert stored is not None
+    assert stored.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+    assert stored.attempt_count == 1
+    assert stored.audit_history[-1].occurred_at_utc == RECORDED_AT
+    assert stored.owner_receipt is not None
+    assert stored.owner_receipt.source_evidence_fingerprint == "sha256:aabbccddeeff"
 
 
 def test_reconcile_manage_history_persists_append_only_owner_evidence() -> None:
@@ -185,6 +305,11 @@ def test_reconcile_manage_history_treats_invalid_owner_bodies_as_conflicts() -> 
         def load_action_realization(self, **kwargs: object) -> ManageActionRealizationHistory:
             raise ValueError("events must be an array")
 
+        def load_realization_by_conversion_intent(
+            self, **kwargs: object
+        ) -> ManageActionRealizationHistory:
+            raise ValueError("events must be an array")
+
     repository, support_reference = _repository_with_accepted_submission()
     result = reconcile_manage_realization_history(
         _command(support_reference),
@@ -206,6 +331,23 @@ def test_reconcile_manage_history_reports_unknown_submissions() -> None:
     )
 
     assert result.status is ManageRealizationReconciliationStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "accepted_at_utc",
+    [
+        datetime(2026, 9, 3, 10, 0),
+        datetime(2026, 9, 3, 18, 0, tzinfo=timezone(timedelta(hours=8))),
+    ],
+)
+def test_reconciliation_command_requires_trusted_utc_acceptance_time(
+    accepted_at_utc: datetime,
+) -> None:
+    with pytest.raises(ValueError, match="accepted_at_utc must be"):
+        replace(
+            _command("downstream-submission-ffffffffffffffffffffffff"),
+            accepted_at_utc=accepted_at_utc,
+        )
 
 
 def test_reconcile_manage_history_refuses_prefix_rewrites() -> None:
@@ -246,10 +388,11 @@ def test_submission_eligibility_requires_terminal_manage_ownership() -> None:
     submission = repository.downstream_submission_by_support_reference(support_reference)
     assert submission is not None
 
-    assert _submission_eligibility_blocker(submission) is None
+    assert _submission_eligibility_blocker(submission, accepted_at_utc=RECORDED_AT) is None
     assert (
         _submission_eligibility_blocker(
-            replace(submission, target=ConversionTarget.ADVISE_PROPOSAL)
+            replace(submission, target=ConversionTarget.ADVISE_PROPOSAL),
+            accepted_at_utc=RECORDED_AT,
         )
         == "manage_realization_requires_manage_target"
     )
@@ -261,13 +404,29 @@ def test_submission_eligibility_requires_terminal_manage_ownership() -> None:
                 submission,
                 source_authority=SourceSystem.LOTUS_ADVISE,
                 owner_receipt=replace(receipt, owner_authority=SourceSystem.LOTUS_ADVISE),
-            )
+            ),
+            accepted_at_utc=RECORDED_AT,
         )
         == "manage_realization_requires_manage_authority"
     )
     assert (
-        _submission_eligibility_blocker(replace(submission, owner_receipt=None))
+        _submission_eligibility_blocker(
+            replace(submission, owner_receipt=None),
+            accepted_at_utc=RECORDED_AT,
+        )
         == "manage_realization_owner_receipt_missing"
+    )
+    assert (
+        _submission_eligibility_blocker(
+            replace(
+                submission,
+                status=DownstreamSubmissionPosture.NOT_CONFIGURED,
+                downstream_failure_reason="manage_adapter_not_configured",
+                owner_receipt=None,
+            ),
+            accepted_at_utc=RECORDED_AT,
+        )
+        == "manage_realization_requires_terminal_owner_submission"
     )
 
 
@@ -298,7 +457,16 @@ def test_history_identity_blocker_names_each_drift() -> None:
         == "manage_realization_candidate_conflict"
     )
     assert (
-        blocker(replace(_history(version=2), conversion_intent_id="conversion-other"))
+        blocker(
+            replace(
+                _history(version=2),
+                conversion_intent_id="conversion-other",
+                events=tuple(
+                    replace(event, causation_id="conversion-other")
+                    for event in _history(version=2).events
+                ),
+            )
+        )
         == "manage_realization_conversion_intent_conflict"
     )
 
@@ -324,6 +492,17 @@ def test_persistence_blocker_binds_the_receipt_to_the_owner_history() -> None:
     )
     assert (
         manage_realization_submission_blocker(drifted, history)
+        == "manage_realization_owner_receipt_conflict"
+    )
+    fingerprint_drifted = replace(
+        submission,
+        owner_receipt=replace(
+            receipt,
+            source_evidence_fingerprint="sha256:112233445566",
+        ),
+    )
+    assert (
+        manage_realization_submission_blocker(fingerprint_drifted, history)
         == "manage_realization_owner_receipt_conflict"
     )
     regressed = replace(submission, owner_receipt=replace(receipt, source_event_version=9))
@@ -362,11 +541,38 @@ def _repository_with_accepted_submission() -> tuple[InMemoryIdeaRepository, str]
     return repository, result.support_reference
 
 
+def _repository_with_in_flight_submission(
+    *,
+    expired: bool,
+) -> tuple[InMemoryIdeaRepository, str]:
+    repository = repository_with_conversion(ConversionTarget.MANAGE_REVIEW)
+    claimed_at = RECORDED_AT - timedelta(minutes=2) if expired else RECORDED_AT
+    lease_expires_at = (
+        RECORDED_AT - timedelta(minutes=1) if expired else RECORDED_AT + timedelta(minutes=1)
+    )
+    claim = create_downstream_submission_claim(
+        idempotency_key=f"submission-manage-in-flight-{'expired' if expired else 'active'}",
+        request_fingerprint="sha256:manage-in-flight-recovery",
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id="conversion-manage_review-001",
+        target=ConversionTarget.MANAGE_REVIEW,
+        source_authority=SourceSystem.LOTUS_MANAGE,
+        actor_subject="advisor-redacted",
+        claimed_at_utc=claimed_at,
+        lease_owner="downstream-realization",
+        lease_attempt_id="manage-in-flight-attempt-001",
+        lease_expires_at_utc=lease_expires_at,
+    )
+    repository.claim_downstream_submission(claim)
+    return repository, claim.support_reference
+
+
 def _command(support_reference: str) -> ReconcileManageRealizationCommand:
     return ReconcileManageRealizationCommand(
         support_reference=support_reference,
         actor_subject="operator-redacted",
         access_scope_filter=AUTHORIZED_SCOPE,
+        accepted_at_utc=RECORDED_AT,
         correlation_id="corr-manage-history",
         trace_id="trace-manage-history",
     )
@@ -425,6 +631,7 @@ def _history(*, version: int) -> ManageActionRealizationHistory:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         idea_candidate_id="idea-downstream-001",
         conversion_intent_id="conversion-manage_review-001",
+        request_fingerprint="sha256:aabbccddeeff",
         status=events[-1].status,
         source_event_version=version,
         rebalance_execution_proven=False,

@@ -22,7 +22,7 @@ from app.ports.downstream_realization import (
 )
 from app.runtime.downstream_realization_state import ConversionRealizationClients
 from app.runtime.downstream_realization_state import DownstreamRealizationClientsUnavailableError
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from tests.integration.test_downstream_realization_api import (
     CapturingConversionClient,
     downstream_submission_headers,
@@ -30,6 +30,7 @@ from tests.integration.test_downstream_realization_api import (
     seed_approved_candidate,
 )
 from tests.support.http import managed_test_client
+from tests.support.fixed_utc_clock import FixedUtcClock
 
 
 RECORDED_AT = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
@@ -42,6 +43,9 @@ class OwnerLifecycleClient:
     the reopened review the owner machine permits."""
 
     intent: Any = None
+    submission_calls: int = 0
+    history_calls: int = 0
+    recovery_calls: int = 0
 
     def submit_action_intent(
         self,
@@ -52,6 +56,7 @@ class OwnerLifecycleClient:
         trace_id: str | None = None,
         idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
+        self.submission_calls += 1
         self.intent = intent
         return DownstreamRealizationOutcome.accepted_by_downstream(
             DownstreamOwnerReceipt(
@@ -72,10 +77,28 @@ class OwnerLifecycleClient:
         correlation_id: str | None = None,
         trace_id: str | None = None,
     ) -> ManageActionRealizationHistory:
+        self.history_calls += 1
         assert intake_id == "iai_api_001"
+        return self._owner_history(access_scope)
+
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        self.recovery_calls += 1
+        assert self.intent is not None
+        assert conversion_intent_id == self.intent.intent.conversion_intent_id
+        return self._owner_history(access_scope)
+
+    def _owner_history(self, access_scope: Any) -> ManageActionRealizationHistory:
         assert self.intent is not None
         events = (
             _owner_event(
+                causation_id=self.intent.intent.conversion_intent_id,
                 version=1,
                 event_type=ManageActionRealizationEventType.INTAKE_ACCEPTED,
                 previous_status=None,
@@ -84,6 +107,7 @@ class OwnerLifecycleClient:
                 reason_code="idea_conversion_intent_accepted_for_management_review",
             ),
             _owner_event(
+                causation_id=self.intent.intent.conversion_intent_id,
                 version=2,
                 event_type=ManageActionRealizationEventType.APPROVE,
                 previous_status=ManageActionRealizationStatus.PENDING_REVIEW,
@@ -92,6 +116,7 @@ class OwnerLifecycleClient:
                 reason_code="REVIEW_APPROVED",
             ),
             _owner_event(
+                causation_id=self.intent.intent.conversion_intent_id,
                 version=3,
                 event_type=ManageActionRealizationEventType.REQUEST_CHANGES,
                 previous_status=ManageActionRealizationStatus.APPROVED,
@@ -108,6 +133,7 @@ class OwnerLifecycleClient:
             portfolio_id=access_scope.portfolio_id,
             idea_candidate_id=self.intent.intent.candidate_id,
             conversion_intent_id=self.intent.intent.conversion_intent_id,
+            request_fingerprint="sha256:aabbccddeeff",
             status=ManageActionRealizationStatus.PENDING_REVIEW,
             source_event_version=3,
             rebalance_execution_proven=False,
@@ -119,6 +145,7 @@ class OwnerLifecycleClient:
 
 def _owner_event(
     *,
+    causation_id: str,
     version: int,
     event_type: ManageActionRealizationEventType,
     previous_status: ManageActionRealizationStatus | None,
@@ -138,7 +165,7 @@ def _owner_event(
         actor_role=actor_role,
         reason_code=reason_code,
         correlation_id="corr-owner-api",
-        causation_id="conversion-manage-owner-api-001",
+        causation_id=causation_id,
     )
 
 
@@ -223,6 +250,119 @@ def test_manage_realization_reconciliation_api_persists_exact_owner_history(
     )
     assert denied.status_code == 403
     assert denied.json()["code"] == "permission_denied"
+
+
+def test_manage_recovery_waits_for_lease_and_exact_submission_replay_has_no_owner_io(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    manage_client = OwnerLifecycleClient()
+    clients = ConversionRealizationClients(
+        advise_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+        manage_client=manage_client,
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-manage-finalize-failure",
+        idempotency_prefix="manage-finalize-failure",
+    )
+    conversion_intent_id = "conversion-manage-finalize-failure-001"
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        target="manage_review",
+        idempotency_key=conversion_intent_id,
+    )
+    repository = get_idea_repository()
+
+    def fail_finalize(**_: object) -> None:
+        raise RuntimeError("simulated Idea commit failure after Manage acceptance")
+
+    monkeypatch.setattr(repository, "finalize_downstream_submission", fail_finalize)
+    submission_headers = downstream_submission_headers("submission-manage-finalize-failure-001")
+    submitted = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=submission_headers,
+    )
+    assert submitted.status_code == 202
+    payload = submitted.json()["downstreamSubmission"]
+    assert payload["submissionStatus"] == "reconciliation_required"
+    support_reference = str(payload["supportReference"])
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.status.value == "in_flight"
+    assert persisted.lease_expires_at_utc is not None
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc - timedelta(seconds=1)),
+    )
+    active = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/manage-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    assert active.status_code == 409
+    assert active.json()["code"] == "manage_realization_submission_still_in_flight"
+    assert manage_client.recovery_calls == 0
+
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_trusted_clock",
+        lambda: FixedUtcClock(persisted.lease_expires_at_utc),
+    )
+    recovered = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/manage-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert recovered.json()["history"]["requestFingerprint"] == "sha256:aabbccddeeff"
+    assert manage_client.submission_calls == 1
+    assert manage_client.recovery_calls == 1
+    assert manage_client.history_calls == 0
+
+    owner_io_before_replay = (
+        manage_client.submission_calls,
+        manage_client.recovery_calls,
+        manage_client.history_calls,
+    )
+    exact_submission_replay = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=submission_headers,
+    )
+
+    assert exact_submission_replay.status_code == 200
+    replay_payload = exact_submission_replay.json()["downstreamSubmission"]
+    assert replay_payload["submissionStatus"] == "accepted_by_downstream"
+    assert replay_payload["ownerReceipt"]["ownerRequestId"] == "iai_api_001"
+    assert (
+        manage_client.submission_calls,
+        manage_client.recovery_calls,
+        manage_client.history_calls,
+    ) == owner_io_before_replay
+    final_record = repository.downstream_submission_by_support_reference(support_reference)
+    assert final_record is not None
+    assert final_record.attempt_count == 1
+    assert [entry.action.value for entry in final_record.audit_history] == [
+        "claimed",
+        "reconciled",
+    ]
+    assert final_record.audit_history[-1].occurred_at_utc == persisted.lease_expires_at_utc
 
 
 def test_manage_realization_reconciliation_api_reports_unconfigured_owner_reader(

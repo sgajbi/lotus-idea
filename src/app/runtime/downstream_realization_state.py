@@ -42,6 +42,10 @@ MANAGE_BASE_URL_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL"
 MANAGE_SUBMIT_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH"
 MANAGE_HISTORY_PATH_TEMPLATE_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_HISTORY_PATH_TEMPLATE"
 DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE = "/api/v1/rebalance/idea-action-intakes/{intake_id}/outcomes"
+MANAGE_RECOVERY_HISTORY_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_RECOVERY_HISTORY_PATH"
+DEFAULT_MANAGE_RECOVERY_HISTORY_PATH = (
+    "/api/v1/rebalance/idea-action-intakes/outcomes/by-conversion-intent"
+)
 REPORT_BASE_URL_ENV = "LOTUS_IDEA_REPORT_REALIZATION_BASE_URL"
 REPORT_SUBMIT_PATH_ENV = "LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH"
 REPORT_RECOVERY_PATH_ENV = "LOTUS_IDEA_REPORT_REALIZATION_RECOVERY_PATH"
@@ -219,6 +223,10 @@ def _manage_adapter_config(
             history_path_template=os.getenv(
                 MANAGE_HISTORY_PATH_TEMPLATE_ENV,
                 DEFAULT_MANAGE_HISTORY_PATH_TEMPLATE,
+            ).strip(),
+            recovery_history_path=os.getenv(
+                MANAGE_RECOVERY_HISTORY_PATH_ENV,
+                DEFAULT_MANAGE_RECOVERY_HISTORY_PATH,
             ).strip(),
             source_authority=source_authority,
             timeout_seconds=_timeout_seconds(),

@@ -84,6 +84,7 @@ def _history(*, version: int) -> ManageActionRealizationHistory:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         idea_candidate_id="idea-downstream-001",
         conversion_intent_id="conversion-manage_review-001",
+        request_fingerprint="sha256:aabbccddeeff",
         status=events[-1].status,
         source_event_version=version,
         rebalance_execution_proven=False,
@@ -124,6 +125,21 @@ def test_foreign_contract_versions_and_authorities_are_refused() -> None:
         replace(_history(version=1), contract_version="lotus-manage.other.v2")
     with pytest.raises(ValueError, match="must be lotus-manage"):
         replace(_history(version=1), source_authority="lotus-advise")
+
+
+@pytest.mark.parametrize(
+    "fingerprint",
+    (
+        "sha256:ABCDEF123456",
+        "sha256:aabbccddeef",
+        "sha256:aabbccddeeff0",
+        "sha512:aabbccddeeff",
+        "sha256:aabbccddeezz",
+    ),
+)
+def test_request_fingerprint_must_match_the_owner_contract(fingerprint: str) -> None:
+    with pytest.raises(ValueError, match="12 lowercase hex"):
+        replace(_history(version=1), request_fingerprint=fingerprint)
 
 
 def test_the_first_event_must_be_the_intake_acceptance() -> None:
@@ -202,6 +218,14 @@ def test_chronology_and_action_identity_are_held() -> None:
         )
     with pytest.raises(ValueError, match="action identity changed"):
         replace(history, events=(_event(1), replace(_event(2), action_id="ima_002")))
+    with pytest.raises(ValueError, match="causation identity changed"):
+        replace(
+            history,
+            events=(
+                _event(1),
+                replace(_event(2), causation_id="conversion-other"),
+            ),
+        )
 
 
 def test_the_summary_must_match_the_final_event() -> None:

@@ -90,6 +90,7 @@ def seed_manage_realization_recovery_fixture(
             portfolio_id=portfolio_id,
             idea_candidate_id=candidate_id,
             conversion_intent_id=conversion_intent_id,
+            request_fingerprint=receipt.source_evidence_fingerprint,
             status=intake_event.status,
             source_event_version=intake_event.source_event_version,
             rebalance_execution_proven=False,

@@ -195,4 +195,9 @@ def _repository_with_terminal_submission(
 
 
 def _postgres_history(*, version: int) -> ManageActionRealizationHistory:
-    return replace(_history(version=version), conversion_intent_id="conversion-001")
+    history = _history(version=version)
+    return replace(
+        history,
+        conversion_intent_id="conversion-001",
+        events=tuple(replace(event, causation_id="conversion-001") for event in history.events),
+    )
