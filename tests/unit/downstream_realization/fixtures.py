@@ -11,6 +11,9 @@ from app.application.downstream_realization.advise_intake_runtime_execution impo
     ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
     ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
     ADVISE_INTAKE_RUNTIME_SOURCE_REFS,
+    ADVISE_OWNER_RESTART_TEST_NODES,
+    IDEA_ADVISE_RECONCILIATION_SOURCE_REFS,
+    IDEA_ADVISE_RECONCILIATION_TEST_NODES,
     REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
     source_safe_receipt_digest,
 )
@@ -80,6 +83,14 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
                 "sha256": "b" * 64,
             }
             for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
+        )
+        + tuple(
+            {
+                "repository": "lotus-idea",
+                "ref": ref,
+                "sha256": "c" * 64,
+            }
+            for ref in IDEA_ADVISE_RECONCILIATION_SOURCE_REFS
         ),
         "evidenceRefs": ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
         "receiptEvidence": receipt_evidence,
@@ -93,6 +104,43 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         },
         "ownerRealizationEvidence": _valid_advise_owner_realization_evidence(),
         "ownerAdvancementEvidence": _valid_advise_owner_advancement_evidence(),
+        "ownerRestartEvidence": {
+            "evidenceClass": EvidenceClass.TEST_EXECUTION.value,
+            "databaseBackend": "postgresql",
+            "testNodes": ADVISE_OWNER_RESTART_TEST_NODES,
+            "testProcessExitCode": 0,
+            "testPassedCount": 2,
+            "testSourceDigest": "sha256:" + "b" * 64,
+            "ownerRepositoryInstanceCount": 2,
+            "intakeAcceptedCount": 1,
+            "intakeReplayCount": 1,
+            "restartReadbackStatus": "ADVISORY_REJECTED",
+            "restartReadbackVersion": 3,
+            "restartOutcomeVersions": (1, 2, 3),
+            "restartReplayCreatedNewState": False,
+            "ownerHistoryUnchangedAcrossRestart": True,
+            "ownerIdentitiesUnchangedAcrossRestart": True,
+            "duplicateOwnerWorkCount": 0,
+            "rawDatabaseDsnRetained": False,
+        },
+        "ideaReconciliationEvidence": {
+            "evidenceClass": EvidenceClass.TEST_EXECUTION.value,
+            "databaseBackend": "postgresql",
+            "testNodes": IDEA_ADVISE_RECONCILIATION_TEST_NODES,
+            "testProcessExitCode": 0,
+            "testPassedCount": 1,
+            "testSourceDigest": "sha256:" + "c" * 64,
+            "ideaRepositoryInstanceCount": 2,
+            "firstReconciliationStatus": "accepted",
+            "firstReconciliationAppendedOutcomeCount": 3,
+            "exactReplayStatus": "replayed",
+            "exactReplayAppendedOutcomeCount": 0,
+            "submissionAttemptCount": 1,
+            "retainedOutcomeVersions": (1, 2, 3),
+            "ownerIdentityUnchanged": True,
+            "governedTableCountsUnchangedOnReplay": True,
+            "rawDatabaseDsnRetained": False,
+        },
         "preCommitTimeoutEvidence": {
             "failureStage": "before_owner_request_dispatch",
             "sourceIntentDigest": source_safe_binding_digest(
@@ -126,6 +174,8 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
             "staleOwnerAdvancementRefused": True,
             "correctedOwnerAdvancementObserved": True,
             "concurrentOwnerAdvancementConverged": True,
+            "postgresOwnerRestartReplayObserved": True,
+            "postgresIdeaReconciliationReplayObserved": True,
             "timeoutBeforeOwnerCommitObserved": True,
             "automaticResubmissionPrevented": True,
             "proposalAuthorityRetained": True,

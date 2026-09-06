@@ -35,6 +35,7 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
         "advise_timeout_uncertainty_certification_missing",
         "advise_owner_correction_certification_missing",
         "advise_concurrent_owner_advancement_certification_missing",
+        "advise_restart_replay_certification_missing",
     )
     assert payload["remainingCertificationBlockers"] == REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS
     runtime_checks = nested_payload_section(payload, "runtimeChecks")
@@ -43,6 +44,7 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
     assert runtime_checks["staleOwnerAdvancementRefused"] is True
     assert runtime_checks["correctedOwnerAdvancementObserved"] is True
     assert runtime_checks["concurrentOwnerAdvancementConverged"] is True
+    assert runtime_checks["postgresOwnerRestartReplayObserved"] is True
     assert nested_payload_section(payload, "nonProofClaims")["supportedFeaturePromoted"] is False
 
 
@@ -58,6 +60,8 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
         owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
         owner_advancement_evidence=nested_payload_section(baseline, "ownerAdvancementEvidence"),
+        owner_restart_evidence=nested_payload_section(baseline, "ownerRestartEvidence"),
+        idea_reconciliation_evidence=nested_payload_section(baseline, "ideaReconciliationEvidence"),
         pre_commit_timeout_evidence=nested_payload_section(baseline, "preCommitTimeoutEvidence"),
     )
 
@@ -70,6 +74,8 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
     assert payload["runtimeChecks"]["staleOwnerAdvancementRefused"] is True
     assert payload["runtimeChecks"]["correctedOwnerAdvancementObserved"] is True
     assert payload["runtimeChecks"]["concurrentOwnerAdvancementConverged"] is True
+    assert payload["runtimeChecks"]["postgresOwnerRestartReplayObserved"] is True
+    assert payload["runtimeChecks"]["postgresIdeaReconciliationReplayObserved"] is True
 
 
 @pytest.mark.parametrize(
@@ -92,6 +98,66 @@ def test_advise_intake_runtime_execution_rejects_false_owner_advancement_evidenc
 ) -> None:
     payload = deepcopy(valid_advise_intake_runtime_execution())
     payload["ownerAdvancementEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
+        ("databaseBackend", "sqlite"),
+        ("testNodes", ()),
+        ("testProcessExitCode", 1),
+        ("testPassedCount", 1),
+        ("testSourceDigest", "not-a-digest"),
+        ("testSourceDigest", "sha256:" + "d" * 64),
+        ("ownerRepositoryInstanceCount", 1),
+        ("intakeAcceptedCount", 2),
+        ("intakeReplayCount", 0),
+        ("restartReadbackVersion", 2),
+        ("restartOutcomeVersions", (1, 3)),
+        ("restartReplayCreatedNewState", True),
+        ("ownerHistoryUnchangedAcrossRestart", False),
+        ("ownerIdentitiesUnchangedAcrossRestart", False),
+        ("duplicateOwnerWorkCount", 1),
+        ("rawDatabaseDsnRetained", True),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_false_owner_restart_evidence(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ownerRestartEvidence"][field] = replacement  # type: ignore[index]
+
+    assert not advise_intake_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    (
+        ("databaseBackend", "sqlite"),
+        ("testNodes", ()),
+        ("testPassedCount", 0),
+        ("testSourceDigest", "not-a-digest"),
+        ("ideaRepositoryInstanceCount", 1),
+        ("firstReconciliationStatus", "replayed"),
+        ("firstReconciliationAppendedOutcomeCount", 2),
+        ("exactReplayStatus", "accepted"),
+        ("exactReplayAppendedOutcomeCount", 1),
+        ("submissionAttemptCount", 2),
+        ("retainedOutcomeVersions", (1, 3)),
+        ("ownerIdentityUnchanged", False),
+        ("governedTableCountsUnchangedOnReplay", False),
+        ("rawDatabaseDsnRetained", True),
+    ),
+)
+def test_advise_intake_runtime_execution_rejects_false_idea_reconciliation_evidence(
+    field: str,
+    replacement: object,
+) -> None:
+    payload = deepcopy(valid_advise_intake_runtime_execution())
+    payload["ideaReconciliationEvidence"][field] = replacement  # type: ignore[index]
 
     assert not advise_intake_runtime_execution_is_valid(payload)
 
@@ -172,6 +238,10 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             submitted_intent_evidence=nested_payload_section(baseline, "submittedIntentEvidence"),
             owner_realization_evidence=nested_payload_section(baseline, "ownerRealizationEvidence"),
             owner_advancement_evidence=nested_payload_section(baseline, "ownerAdvancementEvidence"),
+            owner_restart_evidence=nested_payload_section(baseline, "ownerRestartEvidence"),
+            idea_reconciliation_evidence=nested_payload_section(
+                baseline, "ideaReconciliationEvidence"
+            ),
             pre_commit_timeout_evidence=nested_payload_section(
                 baseline, "preCommitTimeoutEvidence"
             ),
@@ -255,6 +325,8 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     (
         ("ownerRealizationEvidence", None),
         ("ownerAdvancementEvidence", None),
+        ("ownerRestartEvidence", None),
+        ("ideaReconciliationEvidence", None),
         ("submittedIntentEvidence", None),
         ("preCommitTimeoutEvidence", None),
     ),

@@ -19,6 +19,10 @@ ensure_worktree_imports(__file__)
 from app.application.downstream_realization.advise_intake_runtime_execution import (  # noqa: E402
     build_advise_intake_runtime_execution_payload,
 )
+from scripts.downstream_realization.advise_postgres_restart_evidence import (  # noqa: E402
+    execute_advise_postgres_restart_tests,
+    execute_idea_postgres_reconciliation_test,
+)
 from scripts.downstream_realization.advise_runtime_evidence_projection import (  # noqa: E402
     source_safe_execution_evidence,
 )
@@ -41,6 +45,18 @@ def main(argv: list[str] | None = None) -> int:
             advise_root=Path(args.advise_root),
             advise_python=args.advise_python,
         )
+        owner_restart_evidence = execute_advise_postgres_restart_tests(
+            advise_root=Path(args.advise_root),
+            advise_python=args.advise_python,
+            postgres_dsn=args.advise_postgres_dsn,
+            allow_database_reset=args.allow_destructive_test_database_reset,
+        )
+        idea_reconciliation_evidence = execute_idea_postgres_reconciliation_test(
+            repository_root=Path.cwd(),
+            idea_python=sys.executable,
+            postgres_dsn=args.idea_postgres_dsn,
+            allow_database_reset=args.allow_destructive_test_database_reset,
+        )
         payload = build_advise_intake_runtime_execution_payload(
             generated_at_utc=generated_at_utc,
             repository_root=Path.cwd(),
@@ -60,6 +76,8 @@ def main(argv: list[str] | None = None) -> int:
             submitted_intent_evidence=execution_evidence["submittedIntent"],
             owner_realization_evidence=execution_evidence["ownerRealization"],
             owner_advancement_evidence=execution_evidence["ownerAdvancement"],
+            owner_restart_evidence=owner_restart_evidence,
+            idea_reconciliation_evidence=idea_reconciliation_evidence,
             pre_commit_timeout_evidence=execution_evidence["preCommitTimeout"],
         )
         write_json_payload(payload, output=args.output)
@@ -86,6 +104,21 @@ def _parser() -> argparse.ArgumentParser:
         default="local_asgi_testclient",
     )
     parser.add_argument("--advise-python", default=sys.executable)
+    parser.add_argument(
+        "--advise-postgres-dsn",
+        default=os.getenv("PROPOSAL_POSTGRES_INTEGRATION_DSN", "").strip(),
+        help="Disposable, migrated Advise PostgreSQL test database; never retained in evidence.",
+    )
+    parser.add_argument(
+        "--idea-postgres-dsn",
+        default=os.getenv("LOTUS_IDEA_POSTGRES_INTEGRATION_URL", "").strip(),
+        help="Disposable, migrated Idea PostgreSQL test database; never retained in evidence.",
+    )
+    parser.add_argument(
+        "--allow-destructive-test-database-reset",
+        action="store_true",
+        help="Required because the owner integration tests reset their dedicated database.",
+    )
     return parser
 
 

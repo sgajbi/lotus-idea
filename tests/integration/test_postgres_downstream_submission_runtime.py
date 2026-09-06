@@ -199,69 +199,141 @@ def test_postgres_advise_history_race_reports_one_atomic_append_delta(
     ]
 
 
+def test_postgres_advise_reconciliation_is_one_time_and_exact_replay_is_zero_delta(
+    postgres_database_url: str,
+) -> None:
+    conversion_intent_id = "conversion-advise-restart-reconciliation"
+    candidate_id, evidence_fingerprint = _seed_governed_advise_conversion_resource(
+        postgres_database_url,
+        conversion_intent_id,
+    )
+    claim = build_downstream_submission_claim(
+        idempotency_key="advise-restart-reconciliation-submission",
+        request_fingerprint="sha256:advise-restart-reconciliation",
+        resource_id=conversion_intent_id,
+        submitted_at_utc=SUBMITTED_AT,
+    )
+    owner_history = replace(
+        _history(version=3),
+        idea_candidate_id=candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        source_evidence_fingerprint=evidence_fingerprint,
+    )
+
+    class RetainedOwnerHistoryReader:
+        call_count = 0
+
+        def load_proposal_realization(self, **_: object) -> AdviseProposalRealizationHistory:
+            self.call_count += 1
+            return owner_history
+
+        def load_realization_by_conversion_intent(
+            self, **_: object
+        ) -> AdviseProposalRealizationHistory:
+            raise AssertionError("the retained owner receipt must remain the lookup identity")
+
+    reader = RetainedOwnerHistoryReader()
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        repository.claim_downstream_submission(claim)
+        repository.finalize_downstream_submission(
+            idempotency_key=claim.idempotency_key,
+            lease_owner=claim.lease_owner or "",
+            lease_attempt_id=claim.lease_attempt_id or "",
+            posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+            finalized_at_utc=SUBMITTED_AT + timedelta(minutes=1),
+            owner_receipt=DownstreamSubmissionOwnerReceipt(
+                owner_authority=SourceSystem.LOTUS_ADVISE,
+                owner_request_id=owner_history.intake_id,
+                owner_realization_id=owner_history.realization_id,
+                owner_work_id=owner_history.review_work_id,
+                source_event_version=1,
+                source_evidence_fingerprint=evidence_fingerprint,
+            ),
+        )
+
+    command = ReconcileAdviseRealizationCommand(
+        support_reference=claim.support_reference,
+        actor_subject="platform-operator",
+        access_scope_filter=QueueAccessScopeFilter(
+            tenant_id="tenant-sg",
+            book_id="book-private-bank-sg",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-redacted",
+        ),
+        accepted_at_utc=SUBMITTED_AT + timedelta(minutes=2),
+    )
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as first_connection:
+        first_runtime = PostgresIdeaRepository(cast(PostgresConnection, first_connection))
+        first = reconcile_advise_realization_history(
+            command,
+            repository=first_runtime,
+            advise_reader=reader,
+        )
+        persisted_after_first = first_runtime.advise_realization_history_by_support_reference(
+            claim.support_reference
+        )
+        submission_after_first = first_runtime.downstream_submission_by_support_reference(
+            claim.support_reference
+        )
+
+    governed_tables = {
+        "idea_advise_realization_history",
+        "idea_audit_event",
+        "idea_downstream_submission",
+        "idea_outbox_event",
+    }
+    counts_after_first = {
+        table: table_count(postgres_database_url, table, allowed_tables=governed_tables)
+        for table in governed_tables
+    }
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as replay_connection:
+        reconstructed_runtime = PostgresIdeaRepository(cast(PostgresConnection, replay_connection))
+        replay = reconcile_advise_realization_history(
+            command,
+            repository=reconstructed_runtime,
+            advise_reader=reader,
+        )
+        persisted_after_replay = (
+            reconstructed_runtime.advise_realization_history_by_support_reference(
+                claim.support_reference
+            )
+        )
+        submission_after_replay = reconstructed_runtime.downstream_submission_by_support_reference(
+            claim.support_reference
+        )
+
+    assert first.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    assert first.appended_outcome_count == 3
+    assert replay.status is AdviseRealizationReconciliationStatus.REPLAYED
+    assert replay.appended_outcome_count == 0
+    assert persisted_after_first == owner_history
+    assert persisted_after_replay == persisted_after_first
+    assert submission_after_first == submission_after_replay
+    assert submission_after_replay is not None
+    assert submission_after_replay.attempt_count == 1
+    assert submission_after_replay.owner_receipt is not None
+    assert submission_after_replay.owner_receipt.owner_request_id == owner_history.intake_id
+    assert (
+        submission_after_replay.owner_receipt.owner_realization_id == owner_history.realization_id
+    )
+    assert submission_after_replay.owner_receipt.owner_work_id == owner_history.review_work_id
+    assert reader.call_count == 2
+    assert {
+        table: table_count(postgres_database_url, table, allowed_tables=governed_tables)
+        for table in governed_tables
+    } == counts_after_first
+
+
 def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owner_progress(
     postgres_database_url: str,
 ) -> None:
     conversion_intent_id = "conversion-precommit-timeout"
-    candidate_id = seed_active_conversion_resource(postgres_database_url, conversion_intent_id)
-    candidate_value = candidate(candidate_id)
-    fixture_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
-    fixture_record = fixture_repository.snapshot().candidate_records["idea-downstream-001"]
-    fixture_intent = fixture_record.conversion_intents[0]
-    conversion_intent = replace(
-        fixture_intent,
-        intent=replace(
-            fixture_intent.intent,
-            conversion_intent_id=conversion_intent_id,
-            candidate_id=candidate_id,
-        ),
-        evidence_packet_id=candidate_value.evidence_packet.evidence_packet_id,
-        evidence_content_hash=candidate_value.evidence_packet.lineage_ref.content_hash,
-        source_revision_vector_digest=(
-            candidate_value.evidence_packet.source_revision_vector_digest
-        ),
-        source_cut_posture=candidate_value.evidence_packet.source_cut_posture,
-        source_signal_ids=candidate_value.source_signal_ids,
-        review_authority_grant=None,
+    candidate_id, _ = _seed_governed_advise_conversion_resource(
+        postgres_database_url,
+        conversion_intent_id,
     )
-    with psycopg.connect(postgres_database_url) as connection, connection.cursor() as cursor:
-        cursor.execute(
-            """
-            UPDATE idea_candidate_record
-            SET evidence_packet_id = %s,
-                evidence_hash = %s,
-                candidate_json = %s,
-                business_identity_id = %s,
-                identity_policy_version = %s,
-                material_fingerprint = %s,
-                material_version = %s,
-                evidence_version = %s,
-                change_reason = %s,
-                supersedes_material_version = %s
-            WHERE candidate_id = %s
-            """,
-            (
-                candidate_value.evidence_packet.evidence_packet_id,
-                evidence_hash_for_candidate(candidate_value),
-                Jsonb(idea_candidate_to_json(candidate_value)),
-                candidate_value.identity.business_identity_id,
-                candidate_value.identity.policy_version,
-                candidate_value.identity.material_fingerprint,
-                candidate_value.identity.material_version,
-                candidate_value.identity.evidence_version,
-                candidate_value.identity.change_reason.value,
-                candidate_value.identity.supersedes_material_version,
-                candidate_id,
-            ),
-        )
-        cursor.execute(
-            """
-            UPDATE idea_conversion_intent
-            SET intent_json = %s
-            WHERE conversion_intent_id = %s
-            """,
-            (Jsonb(conversion_intent_to_json(conversion_intent)), conversion_intent_id),
-        )
+
     claim = build_downstream_submission_claim(
         idempotency_key="precommit-timeout-submission",
         request_fingerprint="sha256:precommit-timeout",
@@ -336,6 +408,72 @@ def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owne
         )
         for table in governed_tables
     } == counts_before
+
+
+def _seed_governed_advise_conversion_resource(
+    postgres_database_url: str,
+    conversion_intent_id: str,
+) -> tuple[str, str]:
+    candidate_id = seed_active_conversion_resource(postgres_database_url, conversion_intent_id)
+    candidate_value = candidate(candidate_id)
+    fixture_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    fixture_record = fixture_repository.snapshot().candidate_records["idea-downstream-001"]
+    fixture_intent = fixture_record.conversion_intents[0]
+    conversion_intent = replace(
+        fixture_intent,
+        intent=replace(
+            fixture_intent.intent,
+            conversion_intent_id=conversion_intent_id,
+            candidate_id=candidate_id,
+        ),
+        evidence_packet_id=candidate_value.evidence_packet.evidence_packet_id,
+        evidence_content_hash=candidate_value.evidence_packet.lineage_ref.content_hash,
+        source_revision_vector_digest=(
+            candidate_value.evidence_packet.source_revision_vector_digest
+        ),
+        source_cut_posture=candidate_value.evidence_packet.source_cut_posture,
+        source_signal_ids=candidate_value.source_signal_ids,
+        review_authority_grant=None,
+    )
+    with psycopg.connect(postgres_database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE idea_candidate_record
+            SET evidence_packet_id = %s,
+                evidence_hash = %s,
+                candidate_json = %s,
+                business_identity_id = %s,
+                identity_policy_version = %s,
+                material_fingerprint = %s,
+                material_version = %s,
+                evidence_version = %s,
+                change_reason = %s,
+                supersedes_material_version = %s
+            WHERE candidate_id = %s
+            """,
+            (
+                candidate_value.evidence_packet.evidence_packet_id,
+                evidence_hash_for_candidate(candidate_value),
+                Jsonb(idea_candidate_to_json(candidate_value)),
+                candidate_value.identity.business_identity_id,
+                candidate_value.identity.policy_version,
+                candidate_value.identity.material_fingerprint,
+                candidate_value.identity.material_version,
+                candidate_value.identity.evidence_version,
+                candidate_value.identity.change_reason.value,
+                candidate_value.identity.supersedes_material_version,
+                candidate_id,
+            ),
+        )
+        cursor.execute(
+            """
+            UPDATE idea_conversion_intent
+            SET intent_json = %s
+            WHERE conversion_intent_id = %s
+            """,
+            (Jsonb(conversion_intent_to_json(conversion_intent)), conversion_intent_id),
+        )
+    return candidate_id, conversion_intent.evidence_content_hash
 
 
 def _claim(idempotency_key: str) -> DownstreamSubmissionRecord:

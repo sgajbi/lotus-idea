@@ -1063,7 +1063,7 @@ def test_route_source_contracts_require_current_aggregate_provenance() -> None:
     assert "advise_live_contract_proof_missing" in downstream.blockers
 
 
-def test_advise_runtime_proof_closes_progression_blockers() -> None:
+def test_advise_runtime_proof_closes_progression_and_restart_blockers() -> None:
     proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 7, 22, 0, 0, tzinfo=UTC),
@@ -1081,7 +1081,7 @@ def test_advise_runtime_proof_closes_progression_blockers() -> None:
     assert "advise_concurrent_owner_advancement_certification_missing" not in set(
         snapshot.overall_blockers
     )
-    assert "advise_restart_replay_certification_missing" in snapshot.overall_blockers
+    assert "advise_restart_replay_certification_missing" not in snapshot.overall_blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.overall_blockers
     assert "manage_live_contract_proof_missing" in snapshot.overall_blockers
     assert "client_publication_authority_blocked" in snapshot.overall_blockers

@@ -29,17 +29,15 @@ from app.application.source_runtime_evidence import is_sha256
 from app.domain.proof_evidence import EvidenceClass
 
 ADVISE_INTAKE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF"
-ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v4"
+ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v5"
 ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED = (
     "advise_live_contract_proof_missing",
     "advise_timeout_uncertainty_certification_missing",
     "advise_owner_correction_certification_missing",
     "advise_concurrent_owner_advancement_certification_missing",
-)
-REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = (
     "advise_restart_replay_certification_missing",
-    "suitability_policy_authority_remains_lotus_advise",
 )
+REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = ("suitability_policy_authority_remains_lotus_advise",)
 ADVISE_REALIZATION_READ_ROUTE = "GET /advisory/proposals/idea-intake/{intake_id}/realization"
 ADVISE_REALIZATION_RECOVERY_ROUTE = (
     "GET /advisory/proposals/idea-intake/realization?conversion_intent_id={id}"
@@ -54,6 +52,18 @@ ADVISE_INTAKE_RUNTIME_SOURCE_REFS = (
     "src/core/proposals/idea_realization_commands.py",
     "src/core/proposals/idea_review_realization.py",
     "src/infrastructure/proposals/in_memory.py",
+    "src/infrastructure/proposals/postgres_idea_intakes.py",
+    "src/infrastructure/proposals/postgres_idea_repository.py",
+    "src/infrastructure/postgres_migrations/proposals/0011_idea_proposal_intakes.sql",
+    "src/infrastructure/postgres_migrations/proposals/0012_idea_review_realizations.sql",
+    "src/infrastructure/postgres_migrations/proposals/0013_idea_proposal_outcomes.sql",
+    "tests/integration/advisory/engine/test_engine_proposal_repository_postgres_integration.py",
+)
+IDEA_ADVISE_RECONCILIATION_SOURCE_REFS = (
+    "src/app/application/advise_realization_reconciliation.py",
+    "src/app/infrastructure/postgres_advise_realization.py",
+    "scripts/downstream_realization/advise_postgres_restart_evidence.py",
+    "tests/integration/test_postgres_downstream_submission_runtime.py",
 )
 ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS = (
     "../lotus-advise/contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
@@ -66,11 +76,16 @@ ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS = (
     "../lotus-advise/src/core/proposals/idea_review_realization.py",
     "../lotus-advise/src/api/proposals/router.py",
     "../lotus-advise/src/infrastructure/proposals/in_memory.py",
+    "../lotus-advise/src/infrastructure/proposals/postgres_idea_intakes.py",
+    "../lotus-advise/src/infrastructure/proposals/postgres_idea_repository.py",
+    "../lotus-advise/tests/integration/advisory/engine/test_engine_proposal_repository_postgres_integration.py",
     "../lotus-advise/tests/unit/advisory/api/test_idea_proposal_intake_api.py",
     "src/app/application/downstream_realization/advise_intake_runtime_execution.py",
     "scripts/downstream_realization/advise_runtime_evidence_projection.py",
     "scripts/downstream_realization/generate_advise_intake_runtime_execution.py",
+    "scripts/downstream_realization/advise_postgres_restart_evidence.py",
     "scripts/downstream_realization/advise_intake_runtime_execution_gate.py",
+    "tests/integration/test_postgres_downstream_submission_runtime.py",
     "GET /api/v1/downstream-realization/readiness",
     "GET /api/v1/implementation-proof/readiness",
 )
@@ -97,6 +112,8 @@ _PAYLOAD_FIELDS = frozenset(
         "submittedIntentEvidence",
         "ownerRealizationEvidence",
         "ownerAdvancementEvidence",
+        "ownerRestartEvidence",
+        "ideaReconciliationEvidence",
         "preCommitTimeoutEvidence",
         "runtimeChecks",
         "aggregateBlockersSatisfied",
@@ -177,6 +194,8 @@ _RUNTIME_CHECK_FIELDS = frozenset(
         "staleOwnerAdvancementRefused",
         "correctedOwnerAdvancementObserved",
         "concurrentOwnerAdvancementConverged",
+        "postgresOwnerRestartReplayObserved",
+        "postgresIdeaReconciliationReplayObserved",
         "timeoutBeforeOwnerCommitObserved",
         "automaticResubmissionPrevented",
         "proposalAuthorityRetained",
@@ -243,6 +262,54 @@ _OWNER_ADVANCEMENT_EVIDENCE_FIELDS = frozenset(
         "clientPublicationAuthorized",
     }
 )
+ADVISE_OWNER_RESTART_TEST_NODES = (
+    "tests/integration/advisory/engine/test_engine_proposal_repository_postgres_integration.py::test_live_postgres_idea_proposal_reconciliation_is_atomic_and_restart_safe",
+    "tests/integration/advisory/engine/test_engine_proposal_repository_postgres_integration.py::test_live_postgres_idea_intake_claim_is_restart_safe_and_conflict_detecting",
+)
+_OWNER_RESTART_EVIDENCE_FIELDS = frozenset(
+    {
+        "evidenceClass",
+        "databaseBackend",
+        "testNodes",
+        "testProcessExitCode",
+        "testPassedCount",
+        "testSourceDigest",
+        "ownerRepositoryInstanceCount",
+        "intakeAcceptedCount",
+        "intakeReplayCount",
+        "restartReadbackStatus",
+        "restartReadbackVersion",
+        "restartOutcomeVersions",
+        "restartReplayCreatedNewState",
+        "ownerHistoryUnchangedAcrossRestart",
+        "ownerIdentitiesUnchangedAcrossRestart",
+        "duplicateOwnerWorkCount",
+        "rawDatabaseDsnRetained",
+    }
+)
+IDEA_ADVISE_RECONCILIATION_TEST_NODES = (
+    "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_advise_reconciliation_is_one_time_and_exact_replay_is_zero_delta",
+)
+_IDEA_RECONCILIATION_EVIDENCE_FIELDS = frozenset(
+    {
+        "evidenceClass",
+        "databaseBackend",
+        "testNodes",
+        "testProcessExitCode",
+        "testPassedCount",
+        "testSourceDigest",
+        "ideaRepositoryInstanceCount",
+        "firstReconciliationStatus",
+        "firstReconciliationAppendedOutcomeCount",
+        "exactReplayStatus",
+        "exactReplayAppendedOutcomeCount",
+        "submissionAttemptCount",
+        "retainedOutcomeVersions",
+        "ownerIdentityUnchanged",
+        "governedTableCountsUnchangedOnReplay",
+        "rawDatabaseDsnRetained",
+    }
+)
 
 
 def build_advise_intake_runtime_execution_payload(
@@ -255,11 +322,16 @@ def build_advise_intake_runtime_execution_payload(
     submitted_intent_evidence: Mapping[str, Any],
     owner_realization_evidence: Mapping[str, Any],
     owner_advancement_evidence: Mapping[str, Any],
+    owner_restart_evidence: Mapping[str, Any],
+    idea_reconciliation_evidence: Mapping[str, Any],
     pre_commit_timeout_evidence: Mapping[str, Any],
 ) -> dict[str, Any]:
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
-    source_authority = _source_authority(advise_root or repository_root.parent / "lotus-advise")
+    source_authority = _source_authority(
+        repository_root,
+        advise_root or repository_root.parent / "lotus-advise",
+    )
     runtime_checks = _runtime_checks(
         generated_at_utc=generated_at_utc,
         source_authority=source_authority,
@@ -268,6 +340,8 @@ def build_advise_intake_runtime_execution_payload(
         submitted_intent_evidence=submitted_intent_evidence,
         owner_realization_evidence=owner_realization_evidence,
         owner_advancement_evidence=owner_advancement_evidence,
+        owner_restart_evidence=owner_restart_evidence,
+        idea_reconciliation_evidence=idea_reconciliation_evidence,
         pre_commit_timeout_evidence=pre_commit_timeout_evidence,
     )
     return {
@@ -293,6 +367,8 @@ def build_advise_intake_runtime_execution_payload(
         "submittedIntentEvidence": dict(submitted_intent_evidence),
         "ownerRealizationEvidence": dict(owner_realization_evidence),
         "ownerAdvancementEvidence": dict(owner_advancement_evidence),
+        "ownerRestartEvidence": dict(owner_restart_evidence),
+        "ideaReconciliationEvidence": dict(idea_reconciliation_evidence),
         "preCommitTimeoutEvidence": dict(pre_commit_timeout_evidence),
         "runtimeChecks": runtime_checks,
         "aggregateBlockersSatisfied": ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
@@ -369,6 +445,8 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
     submitted_intent = payload.get("submittedIntentEvidence")
     owner_realization = payload.get("ownerRealizationEvidence")
     owner_advancement = payload.get("ownerAdvancementEvidence")
+    owner_restart = payload.get("ownerRestartEvidence")
+    idea_reconciliation = payload.get("ideaReconciliationEvidence")
     pre_commit_timeout = payload.get("preCommitTimeoutEvidence")
     return (
         isinstance(receipt_evidence, Mapping)
@@ -391,6 +469,12 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         )
         and _owner_advancement_matches(
             owner_advancement, receipt_evidence.get("accepted"), submitted_intent
+        )
+        and _owner_restart_evidence_is_valid(owner_restart)
+        and _owner_restart_source_digest_matches(owner_restart, payload.get("sourceAuthority"))
+        and _idea_reconciliation_evidence_is_valid(idea_reconciliation)
+        and _idea_reconciliation_source_digest_matches(
+            idea_reconciliation, payload.get("sourceAuthority")
         )
         and _pre_commit_timeout_evidence_is_valid(pre_commit_timeout)
     )
@@ -424,6 +508,8 @@ def _runtime_checks(
     submitted_intent_evidence: Mapping[str, Any],
     owner_realization_evidence: Mapping[str, Any],
     owner_advancement_evidence: Mapping[str, Any],
+    owner_restart_evidence: Mapping[str, Any],
+    idea_reconciliation_evidence: Mapping[str, Any],
     pre_commit_timeout_evidence: Mapping[str, Any],
 ) -> dict[str, bool]:
     owner_advancement_valid = _owner_advancement_matches(
@@ -437,6 +523,10 @@ def _runtime_checks(
         ),
         "sourceAuthorityDigestBound": all(
             isinstance(item.get("sha256"), str) and item["sha256"] for item in source_authority
+        )
+        and _owner_restart_source_digest_matches(owner_restart_evidence, source_authority)
+        and _idea_reconciliation_source_digest_matches(
+            idea_reconciliation_evidence, source_authority
         ),
         "routeServingObserved": runtime_mode in _SUPPORTED_RUNTIME_MODES,
         "requestAuthorizationObserved": _authorization_denied_receipt_is_valid(
@@ -464,6 +554,12 @@ def _runtime_checks(
         "staleOwnerAdvancementRefused": owner_advancement_valid,
         "correctedOwnerAdvancementObserved": owner_advancement_valid,
         "concurrentOwnerAdvancementConverged": owner_advancement_valid,
+        "postgresOwnerRestartReplayObserved": _owner_restart_evidence_is_valid(
+            owner_restart_evidence
+        ),
+        "postgresIdeaReconciliationReplayObserved": (
+            _idea_reconciliation_evidence_is_valid(idea_reconciliation_evidence)
+        ),
         "timeoutBeforeOwnerCommitObserved": _pre_commit_timeout_evidence_is_valid(
             pre_commit_timeout_evidence
         ),
@@ -475,6 +571,84 @@ def _runtime_checks(
         "clientPublicationAuthorityRetained": True,
         "supportedFeatureNotPromoted": True,
     }
+
+
+def _owner_restart_evidence_is_valid(value: object) -> bool:
+    if not isinstance(value, Mapping) or set(value) != _OWNER_RESTART_EVIDENCE_FIELDS:
+        return False
+    return (
+        value.get("evidenceClass") == EvidenceClass.TEST_EXECUTION.value
+        and value.get("databaseBackend") == "postgresql"
+        and tuple(value.get("testNodes") or ()) == ADVISE_OWNER_RESTART_TEST_NODES
+        and value.get("testProcessExitCode") == 0
+        and value.get("testPassedCount") == 2
+        and is_sha256(value.get("testSourceDigest"))
+        and value.get("ownerRepositoryInstanceCount") == 2
+        and value.get("intakeAcceptedCount") == 1
+        and value.get("intakeReplayCount") == 1
+        and value.get("restartReadbackStatus") == "ADVISORY_REJECTED"
+        and value.get("restartReadbackVersion") == 3
+        and tuple(value.get("restartOutcomeVersions") or ()) == (1, 2, 3)
+        and value.get("restartReplayCreatedNewState") is False
+        and value.get("ownerHistoryUnchangedAcrossRestart") is True
+        and value.get("ownerIdentitiesUnchangedAcrossRestart") is True
+        and value.get("duplicateOwnerWorkCount") == 0
+        and value.get("rawDatabaseDsnRetained") is False
+    )
+
+
+def _owner_restart_source_digest_matches(value: object, source_authority: object) -> bool:
+    if not isinstance(value, Mapping) or not isinstance(source_authority, (tuple, list)):
+        return False
+    expected_ref = (
+        "../lotus-advise/tests/integration/advisory/engine/"
+        "test_engine_proposal_repository_postgres_integration.py"
+    )
+    expected_digest = str(value.get("testSourceDigest") or "").removeprefix("sha256:")
+    return any(
+        isinstance(item, Mapping)
+        and item.get("repository") == "lotus-advise"
+        and item.get("ref") == expected_ref
+        and item.get("sha256") == expected_digest
+        for item in source_authority
+    )
+
+
+def _idea_reconciliation_evidence_is_valid(value: object) -> bool:
+    if not isinstance(value, Mapping) or set(value) != _IDEA_RECONCILIATION_EVIDENCE_FIELDS:
+        return False
+    return (
+        value.get("evidenceClass") == EvidenceClass.TEST_EXECUTION.value
+        and value.get("databaseBackend") == "postgresql"
+        and tuple(value.get("testNodes") or ()) == IDEA_ADVISE_RECONCILIATION_TEST_NODES
+        and value.get("testProcessExitCode") == 0
+        and value.get("testPassedCount") == 1
+        and is_sha256(value.get("testSourceDigest"))
+        and value.get("ideaRepositoryInstanceCount") == 2
+        and value.get("firstReconciliationStatus") == "accepted"
+        and value.get("firstReconciliationAppendedOutcomeCount") == 3
+        and value.get("exactReplayStatus") == "replayed"
+        and value.get("exactReplayAppendedOutcomeCount") == 0
+        and value.get("submissionAttemptCount") == 1
+        and tuple(value.get("retainedOutcomeVersions") or ()) == (1, 2, 3)
+        and value.get("ownerIdentityUnchanged") is True
+        and value.get("governedTableCountsUnchangedOnReplay") is True
+        and value.get("rawDatabaseDsnRetained") is False
+    )
+
+
+def _idea_reconciliation_source_digest_matches(value: object, source_authority: object) -> bool:
+    if not isinstance(value, Mapping) or not isinstance(source_authority, (tuple, list)):
+        return False
+    expected_ref = "tests/integration/test_postgres_downstream_submission_runtime.py"
+    expected_digest = str(value.get("testSourceDigest") or "").removeprefix("sha256:")
+    return any(
+        isinstance(item, Mapping)
+        and item.get("repository") == "lotus-idea"
+        and item.get("ref") == expected_ref
+        and item.get("sha256") == expected_digest
+        for item in source_authority
+    )
 
 
 def _owner_advancement_matches(value: object, accepted: object, submitted: object) -> bool:
@@ -748,23 +922,31 @@ def _receipt_matches(
     )
 
 
-def _source_authority(advise_root: Path) -> tuple[dict[str, str | None], ...]:
+def _source_authority(
+    repository_root: Path,
+    advise_root: Path,
+) -> tuple[dict[str, str | None], ...]:
     return build_source_authority_records(
-        tuple(
-            SourceAuthoritySource(
-                ADVISE_ROUTE_PROFILE.owner_repository,
-                f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
-                advise_root / ref,
-            )
-            for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
+        (
+            *tuple(
+                SourceAuthoritySource(
+                    ADVISE_ROUTE_PROFILE.owner_repository,
+                    f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
+                    advise_root / ref,
+                )
+                for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
+            ),
+            *tuple(
+                SourceAuthoritySource("lotus-idea", ref, repository_root / ref)
+                for ref in IDEA_ADVISE_RECONCILIATION_SOURCE_REFS
+            ),
         )
     )
 
 
-def _source_authority_is_valid(value: object) -> bool:
-    return source_authority_records_are_valid(
-        value,
-        expected_sources=tuple(
+def _expected_source_authority() -> tuple[SourceAuthoritySource, ...]:
+    return (
+        *tuple(
             SourceAuthoritySource(
                 ADVISE_ROUTE_PROFILE.owner_repository,
                 f"../{ADVISE_ROUTE_PROFILE.owner_repository}/{ref}",
@@ -772,4 +954,15 @@ def _source_authority_is_valid(value: object) -> bool:
             )
             for ref in ADVISE_INTAKE_RUNTIME_SOURCE_REFS
         ),
+        *tuple(
+            SourceAuthoritySource("lotus-idea", ref, Path(ref))
+            for ref in IDEA_ADVISE_RECONCILIATION_SOURCE_REFS
+        ),
+    )
+
+
+def _source_authority_is_valid(value: object) -> bool:
+    return source_authority_records_are_valid(
+        value,
+        expected_sources=_expected_source_authority(),
     )

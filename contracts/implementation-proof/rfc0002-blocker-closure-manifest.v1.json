@@ -206,6 +206,12 @@
           "number": 1254,
           "url": "https://github.com/sgajbi/lotus-idea/issues/1254",
           "dependencyRole": "Storage-backed Advise owner restart and replay proof"
+        },
+        {
+          "repository": "sgajbi/lotus-advise",
+          "number": 615,
+          "url": "https://github.com/sgajbi/lotus-advise/issues/615",
+          "dependencyRole": "Owner-scoped PostgreSQL restart and lost-response recovery contract"
         }
       ],
       "blockers": [
