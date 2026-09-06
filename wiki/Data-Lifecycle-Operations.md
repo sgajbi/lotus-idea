@@ -22,6 +22,15 @@ erasure, and purge; local hold requires `LEGAL_HOLD`; purge requires
 single-use. This independent source posture never replaces the signed bank
 lifecycle decision or grants Archive disposal authority to Idea.
 
+Trust configuration preserves Archive's `LifecycleVerificationKeys` response
+shape. It requires unique key IDs, literal Ed25519 metadata, canonical 32-byte
+base64url public keys, explicit provenance/status, and authoritative validity
+windows. Active keys have open windows; retired keys require an end time.
+Production-like profiles refuse `ephemeral_development`; only explicit
+local/test profiles may use it. Key discovery is not itself trust
+establishment—the producer document must arrive through the approved
+authenticated configuration channel.
+
 The Idea, Report, Archive, and AI contract foundations are merged and
 mainline-proven. Production-authorized policy sources, provider-native evidence,
 managed keys/stores, bank approvals, and production purge execution remain

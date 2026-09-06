@@ -81,8 +81,12 @@ Report/Render/Archive authority refs, idempotency, audit, and a certified
 internal API foundation. Its read-only Report reconciliation consumes a positive
 owner lifecycle version, persists only higher versions, rejects regression or
 same-version contradiction, and leaves exact replay non-mutating without issuing
-another materialization request. Real PostgreSQL runtime proof exists for high-cash
-persistence/replay plus the first internal advisor queue, lifecycle, review,
+another materialization request. Archive lifecycle verification consumes the
+owner-defined versioned key envelope directly, rejects malformed or duplicate
+rotation metadata, and limits ephemeral keys to local/test. This is an internal
+trust control, not Archive production certification or client-publication
+support. Real PostgreSQL runtime proof exists for high-cash persistence/replay
+plus the first internal advisor queue, lifecycle, review,
 feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also

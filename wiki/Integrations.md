@@ -60,6 +60,14 @@ evidence-pack, document, retention-policy, and action bindings before domain
 policy runs. Exact linkage comes from Idea-owned PostgreSQL state inside the
 same transaction, not from caller claims.
 
+The trusted-key input preserves Archive's `LifecycleVerificationKeys` response
+shape and is provisioned through authenticated out-of-band configuration. Idea
+validates unique key identity, literal Ed25519 algorithm, canonical 32-byte key
+material, provenance, status, and key windows. Retired keys remain usable only
+for decisions issued inside their declared window; production-like profiles
+reject ephemeral development provenance. The public Archive route describes
+the keys but does not establish trust in them.
+
 Archive legal hold blocks local release, erasure, and purge. Local purge
 requires Archive `DISPOSAL_EXECUTED`; eligibility alone is insufficient.
 Migration `015` stores bounded receipt lineage and fences applied decision IDs
