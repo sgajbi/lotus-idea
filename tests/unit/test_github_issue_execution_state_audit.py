@@ -323,26 +323,35 @@ def test_github_issue_execution_state_audit_allows_github_owned_issue_outside_le
     )
 
 
-def test_github_issue_execution_state_audit_rejects_auto_closed_open_issue(
-    tmp_path: Path,
-) -> None:
+def test_github_issue_execution_state_audit_accepts_live_state_advancement_without_snapshot_sync() -> (
+    None
+):
     module = _load_audit()
     ledger = _load_ledger()
-    ledger["issues"] = [
-        entry
-        for entry in ledger["issues"]
-        if isinstance(entry, dict) and entry["issueNumber"] == 691
-    ]
     github_payload = _github_issue_payload(ledger)
-    github_payload[0]["state"] = "CLOSED"
+    issue_by_number = {issue["number"]: issue for issue in github_payload}
+    issue_by_number[379]["labels"] = [
+        {"name": "rfc/RFC-0002"},
+        {"name": "rfc/RFC-0002/slice-12"},
+        {"name": "rfc/RFC-0002/slice-13"},
+        {"name": "status/in-progress"},
+    ]
+    for issue_number in (675, 1155):
+        issue_by_number[issue_number]["state"] = "CLOSED"
+        issue_by_number[issue_number]["labels"] = [
+            label
+            for label in issue_by_number[issue_number]["labels"]
+            if not label["name"].startswith("status/")
+        ] + [{"name": "status/merged-main"}]
     github_issues = module._parse_github_issue_states(github_payload)
 
-    errors = module.audit_github_issue_execution_state(
-        ledger_path=_write_ledger(tmp_path, ledger),
-        github_issues=github_issues,
+    assert (
+        module.audit_github_issue_execution_state(
+            github_issues=github_issues,
+            current_blocker_issues=_current_blocker_states(module, ledger),
+        )
+        == []
     )
-
-    assert "#691: ledger githubState=open but GitHub state=closed" in errors
 
 
 def test_github_issue_execution_state_audit_rejects_missing_status_label(
@@ -371,9 +380,9 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
         github_issues=github_issues,
     )
 
-    issue_681_execution_status = ledger["issues"][0]["executionStatus"]
     assert (
-        f"#681: executionStatus={issue_681_execution_status} requires GitHub label {status_label}"
+        "#681: open RFC-0002 issue requires exactly one governed status/* lifecycle "
+        "label; found none"
     ) in errors
 
 
@@ -401,10 +410,9 @@ def test_github_issue_execution_state_audit_rejects_conflicting_status_labels(
         github_issues=github_issues,
     )
 
-    issue_681_execution_status = ledger["issues"][0]["executionStatus"]
     assert (
-        f"#681: executionStatus={issue_681_execution_status} allows only GitHub status label "
-        f"{status_label}; found conflicting status label(s): status/ready"
+        "#681: open RFC-0002 issue requires exactly one governed status/* lifecycle label; "
+        f"found {status_label}, status/ready"
     ) in errors
 
 
@@ -441,35 +449,31 @@ def test_github_issue_execution_state_audit_rejects_tracker_without_tracker_labe
         github_issues=github_issues,
     )
 
-    assert "#673: executionStatus=open_tracker requires GitHub label status/tracker" in errors
+    assert (
+        "#673: open RFC-0002 issue requires exactly one governed status/* lifecycle "
+        "label; found none"
+    ) in errors
 
 
-def test_github_issue_execution_state_audit_rejects_pending_final_closure_ready_label(
-    tmp_path: Path,
-) -> None:
+def test_github_issue_execution_state_audit_allows_live_label_to_advance_independently() -> None:
     module = _load_audit()
     ledger = _load_ledger()
-    ledger["issues"] = [
-        entry
-        for entry in ledger["issues"]
-        if isinstance(entry, dict) and entry["issueNumber"] == 683
-    ]
     github_payload = _github_issue_payload(ledger)
-    github_payload[0]["labels"] = [
+    issue_683 = next(issue for issue in github_payload if issue["number"] == 683)
+    issue_683["labels"] = [
         {"name": "rfc/RFC-0002"},
         {"name": "rfc/RFC-0002/slice-20"},
         {"name": "status/ready"},
     ]
     github_issues = module._parse_github_issue_states(github_payload)
 
-    errors = module.audit_github_issue_execution_state(
-        ledger_path=_write_ledger(tmp_path, ledger),
-        github_issues=github_issues,
-    )
-
     assert (
-        "#683: executionStatus=open_pending_final_closure requires GitHub label status/blocked"
-    ) in errors
+        module.audit_github_issue_execution_state(
+            github_issues=github_issues,
+            current_blocker_issues=_current_blocker_states(module, ledger),
+        )
+        == []
+    )
 
 
 def test_github_issue_execution_state_audit_rejects_closed_issue_without_merged_main_label(
@@ -493,4 +497,24 @@ def test_github_issue_execution_state_audit_rejects_closed_issue_without_merged_
         github_issues=github_issues,
     )
 
-    assert "#695: closed_complete requires GitHub label status/merged-main" in errors
+    assert "#695: closed ledger-tracked issue requires GitHub label status/merged-main" in errors
+
+
+def test_github_issue_execution_state_audit_rejects_unknown_live_status_label() -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    github_payload = _github_issue_payload(ledger)
+    issue_681 = next(issue for issue in github_payload if issue["number"] == 681)
+    issue_681["labels"] = [
+        {"name": "rfc/RFC-0002"},
+        {"name": "rfc/RFC-0002/slice-18"},
+        {"name": "status/imagined"},
+    ]
+    github_issues = module._parse_github_issue_states(github_payload)
+
+    errors = module.audit_github_issue_execution_state(
+        github_issues=github_issues,
+        current_blocker_issues=_current_blocker_states(module, ledger),
+    )
+
+    assert "#681: unknown GitHub lifecycle label(s): status/imagined" in errors

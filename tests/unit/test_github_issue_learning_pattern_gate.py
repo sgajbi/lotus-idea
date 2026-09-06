@@ -134,3 +134,20 @@ def test_github_issue_learning_pattern_gate_rejects_weak_future_rule(
         "github_execution_control_and_context_sync.futureAgentRule must contain actionable guidance"
         in errors
     )
+
+
+def test_github_issue_learning_pattern_gate_rejects_weak_current_steering_rule(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _pattern_payload(module)
+    payload["patterns"][0]["currentSteeringRule"] = "Use GitHub."
+
+    errors = module.validate_github_issue_learning_patterns(
+        _write_pattern_payload(tmp_path, payload)
+    )
+
+    assert (
+        "github_execution_control_and_context_sync.currentSteeringRule "
+        "must contain actionable guidance"
+    ) in errors

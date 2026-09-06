@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from collections import Counter
 from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
@@ -102,78 +101,94 @@ def _write_json(tmp_path: Path, name: str, payload: dict[str, Any]) -> Path:
     return path
 
 
+def _live_github_states(
+    module: ModuleType,
+    ledger_payload: dict[str, Any],
+) -> dict[int, Any]:
+    status_label_by_execution_status = {
+        "open_ready": "status/ready",
+        "open_blocked": "status/blocked",
+        "open_in_progress": "status/in-progress",
+        "open_fixed_local": "status/fixed-local",
+        "open_pr_raised": "status/pr-open",
+        "open_merged_main_qa_pending": "status/merged-main",
+        "open_tracker": "status/tracker",
+        "open_pending_final_closure": "status/blocked",
+        "open_pending_post_completion": "status/blocked",
+        "closed_complete": "status/merged-main",
+    }
+    states: dict[int, Any] = {}
+    for issue in _ledger_issues(ledger_payload):
+        states[issue["issueNumber"]] = module.GitHubIssueState(
+            issue_number=issue["issueNumber"],
+            state=issue["githubState"].upper(),
+            labels=frozenset(
+                {
+                    "rfc/RFC-0002",
+                    *(f"rfc/RFC-0002/{slice_id}" for slice_id in issue["rfcSlices"]),
+                    status_label_by_execution_status[issue["executionStatus"]],
+                }
+            ),
+            title=f"Issue {issue['issueNumber']}",
+            url=issue["url"],
+        )
+
+    states[379] = _state_with(states[379], status_label="status/in-progress")
+    states[675] = _state_with(states[675], state="CLOSED", status_label="status/merged-main")
+    states[1155] = _state_with(states[1155], state="CLOSED", status_label="status/merged-main")
+    states[1222] = module.GitHubIssueState(
+        issue_number=1222,
+        state="OPEN",
+        labels=frozenset({"rfc/RFC-0002", "rfc/RFC-0002/slice-09", "status/blocked"}),
+        title="Governed idea-candidate explanation",
+        url="https://github.com/sgajbi/lotus-idea/issues/1222",
+    )
+    states[1248] = module.GitHubIssueState(
+        issue_number=1248,
+        state="OPEN",
+        labels=frozenset({"rfc/RFC-0002", "rfc/RFC-0002/slice-18", "status/in-progress"}),
+        title="Derive execution posture from live GitHub state",
+        url="https://github.com/sgajbi/lotus-idea/issues/1248",
+    )
+    return states
+
+
+def _state_with(
+    issue: Any,
+    *,
+    state: str | None = None,
+    status_label: str,
+) -> Any:
+    return type(issue)(
+        issue_number=issue.issue_number,
+        state=state or issue.state,
+        labels=frozenset(
+            {label for label in issue.labels if not label.startswith("status/")} | {status_label}
+        ),
+        title=issue.title,
+        url=issue.url,
+    )
+
+
 def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
     ledger_issues = _ledger_issues(ledger_payload)
-    issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
-    issue_681_status = issue_681["executionStatus"]
-    expected_github_counts = Counter(issue["githubState"] for issue in ledger_issues)
-    expected_execution_counts = Counter(issue["executionStatus"] for issue in ledger_issues)
+    github_issues = _live_github_states(module, ledger_payload)
 
-    summary = module.build_issue_execution_summary()
+    summary = module.build_issue_execution_summary(github_issues=github_issues)
 
-    assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v1"
-    assert summary["counts"]["total"] == len(ledger_issues)
-    assert summary["counts"]["open"] == expected_github_counts["open"]
-    assert summary["counts"]["closed"] == expected_github_counts["closed"]
-    assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
-    assert issue_681_status == "open_in_progress"
-    assert (
-        summary["counts"]["byExecutionStatus"][issue_681_status]
-        == expected_execution_counts[issue_681_status]
-    )
-    for execution_status in (
-        "open_in_progress",
-        "open_fixed_local",
-        "open_pr_raised",
-        "open_merged_main_qa_pending",
-        "open_ready",
-    ):
-        assert (
-            summary["counts"]["byExecutionStatus"].get(execution_status, 0)
-            == expected_execution_counts[execution_status]
-        )
-    assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
-    assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
-    assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 12
-    assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
-    assert (
-        summary["counts"]["byExecutionStatus"]["closed_complete"]
-        == expected_execution_counts["closed_complete"]
-    )
-    assert 681 in summary["issuesByStatus"][issue_681_status]
-    for execution_status in (
-        "open_in_progress",
-        "open_fixed_local",
-        "open_pr_raised",
-        "open_merged_main_qa_pending",
-        "open_ready",
-    ):
-        _assert_summary_status_bucket(summary, ledger_issues, execution_status)
-    assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
-    assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
-    assert summary["issuesByStatus"]["open_blocked"] == [
-        343,
-        344,
-        345,
-        375,
-        379,
-        380,
-        687,
-        691,
-        692,
-        693,
-        699,
-        814,
-    ]
-    assert 681 in summary["issuesBySlice"]["slice-18"]
-    assert 878 in summary["issuesBySlice"]["slice-12"]
-    assert 878 in summary["issuesBySlice"]["slice-13"]
-    assert 880 in summary["issuesBySlice"]["slice-16"]
-    assert 880 in summary["issuesBySlice"]["slice-17"]
-    assert 874 in summary["issuesBySlice"]["slice-18"]
-    assert 854 in summary["issuesBySlice"]["slice-18"]
+    assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v2"
+    assert summary["counts"]["total"] == len(github_issues)
+    assert 379 in summary["issuesByStatus"]["open_in_progress"]
+    assert 1248 in summary["issuesByStatus"]["open_in_progress"]
+    assert 675 in summary["issuesByStatus"]["closed_complete"]
+    assert 1155 in summary["issuesByStatus"]["closed_complete"]
+    assert 1222 in summary["issuesByStatus"]["open_blocked"]
+    assert 675 not in summary["issuesByStatus"]["open_tracker"]
+    assert 1248 in summary["issuesBySlice"]["slice-18"]
+    assert summary["recordedLedgerSnapshot"]["asOfDate"] == ledger_payload["asOfDate"]
+    assert summary["recordedLedgerSnapshot"]["counts"]["total"] == len(ledger_issues)
     assert summary["sourceOfTruth"]["liveGitHubAudit"] == (
         "make rfc0002-github-issue-execution-state-audit"
     )
@@ -258,11 +273,9 @@ def test_issue_681_ledger_records_latest_exact_main_evidence() -> None:
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
-    ledger_issues = _ledger_issues(ledger_payload)
-    issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
-    issue_681_section = STATUS_SECTION_TITLES[issue_681["executionStatus"]]
+    github_issues = _live_github_states(module, ledger_payload)
 
-    summary = module.build_issue_execution_summary()
+    summary = module.build_issue_execution_summary(github_issues=github_issues)
     rendered = module.render_markdown(summary)
     ai_attestation_pattern = next(
         pattern
@@ -280,38 +293,28 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"- Open issues: {summary['counts']['open']}" in rendered
     assert f"- Closed issues: {summary['counts']['closed']}" in rendered
     assert "## In-Progress Issues" in rendered
-    assert f"{issue_681_section}\n\n" in rendered
     assert "#681" in rendered
-    assert "#681, #782" not in rendered
-    assert "#681, #685, #686, #1142" in rendered
-    assert "#756" not in rendered
-    for execution_status in (
-        "open_in_progress",
-        "open_fixed_local",
-        "open_pr_raised",
-        "open_merged_main_qa_pending",
-        "open_ready",
-    ):
-        _assert_rendered_status_section(rendered, ledger_issues, execution_status)
-    assert "#681, #874" not in rendered
-    assert "#379, #690" not in rendered
-    assert "#340, #379" not in rendered
-    assert "## Pending Final Closure Issues\n\n#683" in rendered
-    assert "## Pending Post-Completion Issues\n\n#684" in rendered
+    assert "#379" in rendered
+    assert "#1248" in rendered
+    assert "## In-Progress Issues\n\n#379, #681, #685, #686, #1142, #1248" in rendered
+    assert "## Pending Final Closure Issues\n\n_None._" in rendered
+    assert "## Pending Post-Completion Issues\n\n_None._" in rendered
     assert "## Blocked Issues" in rendered
-    assert ("#343, #344, #345, #375, #379, #380, #687, #691, #692, #693, #699, #814") in rendered
-    assert "Current issues: #340, #782" not in rendered
-    assert "Current issues: #673, #681, #683, #684" in rendered
-    assert "Current issues: #673, #681, #683, #684, #874" not in rendered
+    assert "#343, #344, #345, #375, #380" in rendered
+    assert "#1222" in rendered
+    assert (
+        "#675"
+        not in rendered.split("## Tracker Issues", maxsplit=1)[1].split(
+            "## Learning Patterns", maxsplit=1
+        )[0]
+    )
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert f"Current issues: {ai_attestation_current_rendering}" in rendered
-    assert "Current issues: #343, #344, #345, #375, #678, #693, #814, #1142" in rendered
-    assert "Current issues: #343, #344, #345, #375, #678, #693, #814, #886" not in rendered
-    assert "Current issues: #679, #699" in rendered
-    assert "Current issues: #679, #699, #880" not in rendered
-    assert "Current issues: #679, #696, #697, #699" not in rendered
+    assert ai_attestation_current_issues == []
     assert "_None._" in rendered
-    assert "Run the live GitHub state audit" in rendered
+    assert (
+        "Current counts, lifecycle status and issue lists are derived from live GitHub" in rendered
+    )
 
 
 def test_github_issue_execution_summary_fails_when_ledger_gate_fails(tmp_path: Path) -> None:
@@ -331,3 +334,18 @@ def test_github_issue_execution_summary_fails_when_ledger_gate_fails(tmp_path: P
         assert "Missing RFC-0002 execution issue entries: #681" in str(exc)
     else:
         raise AssertionError("expected broken ledger to fail summary generation")
+
+
+def test_github_issue_execution_summary_reports_live_fetch_failure(
+    monkeypatch: Any,
+    capsys: Any,
+) -> None:
+    module = _load_summary()
+
+    def fail_live_fetch(**kwargs: Any) -> dict[str, Any]:
+        raise RuntimeError("GitHub unavailable")
+
+    monkeypatch.setattr(module, "build_issue_execution_summary", fail_live_fetch)
+
+    assert module.main([]) == 1
+    assert capsys.readouterr().out == "GitHub unavailable\n"
