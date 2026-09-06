@@ -132,7 +132,7 @@ class ConflictingReportReader(CapturingReportReader):
         raise DownstreamRealizationReadConflict("owner identity conflict")
 
 
-def test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_owner_read() -> None:
+def test_recovers_uncertain_report_receipt_and_exactly_replays_after_owner_read() -> None:
     repository, evidence_pack, support_reference, submit_client = _uncertain_submission()
     receipt = _authoritative_receipt(evidence_pack)
     reader = CapturingReportReader(receipt)
@@ -154,7 +154,7 @@ def test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_o
     assert accepted.owner_receipt.owner_realization_id == receipt.owner_realization_id
     assert replayed.status is ReportMaterializationReconciliationStatus.REPLAYED
     assert replayed.owner_receipt == accepted.owner_receipt
-    assert reader.call_count == 1
+    assert reader.call_count == 2
     assert reader.idempotency_key == "submission-report-recovery-001"
     assert reader.access_scope == evidence_pack_scope()
     assert submit_client.call_count == 1
@@ -165,6 +165,106 @@ def test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_o
     assert len(persisted.audit_history) == 3
     assert persisted.updated_at_utc == ACCEPTED_AT
     assert persisted.audit_history[-1].occurred_at_utc == ACCEPTED_AT
+
+
+def test_report_owner_version_advances_and_exact_replay_adds_no_local_mutation() -> None:
+    repository, evidence_pack, support_reference, submit_client = _uncertain_submission()
+    reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
+    command = _command(support_reference)
+
+    first = reconcile_report_materialization_receipt(
+        command,
+        repository=repository,
+        report_reader=reader,
+    )
+    assert first.owner_receipt is not None
+    first_snapshot = repository.snapshot()
+    assert first.owner_receipt.report_materialization is not None
+    reader.receipt = replace(
+        reader.receipt,
+        source_event_version=2,
+        report_materialization=replace(
+            first.owner_receipt.report_materialization,
+            status="collecting_data",
+            materialization_status="collecting_data",
+        ),
+    )
+
+    advanced = reconcile_report_materialization_receipt(
+        replace(command, accepted_at_utc=ACCEPTED_AT + timedelta(seconds=1)),
+        repository=repository,
+        report_reader=reader,
+    )
+    advanced_snapshot = repository.snapshot()
+    replayed = reconcile_report_materialization_receipt(
+        replace(command, accepted_at_utc=ACCEPTED_AT + timedelta(seconds=2)),
+        repository=repository,
+        report_reader=reader,
+    )
+
+    assert advanced.status is ReportMaterializationReconciliationStatus.ACCEPTED
+    assert advanced.owner_receipt is not None
+    assert advanced.owner_receipt.source_event_version == 2
+    assert advanced.owner_receipt.report_materialization is not None
+    assert advanced.owner_receipt.report_materialization.status == "collecting_data"
+    assert advanced_snapshot != first_snapshot
+    assert replayed.status is ReportMaterializationReconciliationStatus.REPLAYED
+    assert replayed.owner_receipt == advanced.owner_receipt
+    assert repository.snapshot() == advanced_snapshot
+    assert reader.call_count == 3
+    assert submit_client.call_count == 1
+
+
+@pytest.mark.parametrize("observed_version", (1, 2))
+def test_report_owner_regression_or_same_version_correction_fails_closed(
+    observed_version: int,
+) -> None:
+    repository, evidence_pack, support_reference, _ = _uncertain_submission()
+    reader = CapturingReportReader(_authoritative_receipt(evidence_pack))
+    command = _command(support_reference)
+    accepted = reconcile_report_materialization_receipt(
+        command,
+        repository=repository,
+        report_reader=reader,
+    )
+    assert accepted.owner_receipt is not None
+    assert accepted.owner_receipt.report_materialization is not None
+    reader.receipt = replace(
+        reader.receipt,
+        source_event_version=2,
+        report_materialization=replace(
+            accepted.owner_receipt.report_materialization,
+            status="collecting_data",
+            materialization_status="collecting_data",
+        ),
+    )
+    advanced = reconcile_report_materialization_receipt(
+        replace(command, accepted_at_utc=ACCEPTED_AT + timedelta(seconds=1)),
+        repository=repository,
+        report_reader=reader,
+    )
+    assert advanced.owner_receipt is not None
+    assert advanced.owner_receipt.report_materialization is not None
+    before_conflict = repository.snapshot()
+    reader.receipt = replace(
+        reader.receipt,
+        source_event_version=observed_version,
+        report_materialization=replace(
+            advanced.owner_receipt.report_materialization,
+            status="failed",
+            materialization_status="failed",
+        ),
+    )
+
+    conflict = reconcile_report_materialization_receipt(
+        replace(command, accepted_at_utc=ACCEPTED_AT + timedelta(seconds=2)),
+        repository=repository,
+        report_reader=reader,
+    )
+
+    assert conflict.status is ReportMaterializationReconciliationStatus.CONFLICT
+    assert conflict.blocker == "report_materialization_owner_version_conflict"
+    assert repository.snapshot() == before_conflict
 
 
 def test_report_owner_absence_preserves_uncertainty_until_a_later_exact_read() -> None:

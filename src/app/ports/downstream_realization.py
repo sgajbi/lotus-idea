@@ -60,8 +60,8 @@ class DownstreamOwnerReceipt:
         if not self.source_evidence_fingerprint.startswith("sha256:"):
             raise ValueError("source_evidence_fingerprint must use sha256")
         if self.owner_authority is SourceSystem.LOTUS_REPORT:
-            if self.source_event_version is not None or self.report_materialization is None:
-                raise ValueError("Report receipt requires unversioned materialization evidence")
+            if self.source_event_version is None or self.report_materialization is None:
+                raise ValueError("Report receipt requires versioned materialization evidence")
         elif self.source_event_version is None or self.report_materialization is not None:
             raise ValueError("evented owner receipt requires a version and no materialization")
 

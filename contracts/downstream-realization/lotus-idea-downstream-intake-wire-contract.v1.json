@@ -242,6 +242,7 @@
       "receipt_response_fields": [
         "report_request_id",
         "report_job_id",
+        "source_event_version",
         "status",
         "materialization_status",
         "status_url",
@@ -267,7 +268,11 @@
         "client_publication_authority_forbidden": true,
         "supported_feature_promotion_forbidden": true,
         "malformed_receipt_requires_reconciliation": true,
-        "persist_exact_owner_receipt": true
+        "persist_exact_owner_receipt": true,
+        "positive_owner_version_required": true,
+        "higher_owner_version_advances_existing_receipt": true,
+        "version_regression_or_same_version_mutation_forbidden": true,
+        "exact_owner_replay_is_non_mutating": true
       },
       "receipt_source_authority": {
         "idea_evidence": "lotus-idea",

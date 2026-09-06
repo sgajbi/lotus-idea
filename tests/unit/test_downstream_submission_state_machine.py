@@ -187,7 +187,7 @@ def test_report_owner_receipt_rejects_authority_or_supportability_inflation() ->
         owner_request_id="report-request-001",
         owner_realization_id="report-job-001",
         owner_work_id=None,
-        source_event_version=None,
+        source_event_version=1,
         source_evidence_fingerprint="sha256:report-evidence",
         report_materialization=evidence,
     )
@@ -211,8 +211,8 @@ def test_report_owner_receipt_rejects_authority_or_supportability_inflation() ->
         replace(evidence, remaining_blockers=())
     with pytest.raises(ValueError, match="status_url must match"):
         replace(receipt, owner_realization_id="report-job-drift")
-    with pytest.raises(ValueError, match="has no source event version"):
-        replace(receipt, source_event_version=1)
+    legacy_receipt = replace(receipt, source_event_version=None)
+    assert legacy_receipt.source_event_version is None
     with pytest.raises(ValueError, match="requires materialization evidence"):
         replace(receipt, report_materialization=None)
     with pytest.raises(ValueError, match="uses owner_realization_id"):
@@ -221,6 +221,7 @@ def test_report_owner_receipt_rejects_authority_or_supportability_inflation() ->
         replace(
             receipt,
             owner_authority=SourceSystem.LOTUS_ADVISE,
+            source_event_version=None,
             report_materialization=None,
         )
     with pytest.raises(ValueError, match="requires lotus-report authority"):

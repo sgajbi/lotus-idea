@@ -21,6 +21,10 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
 )
+from app.domain.downstream_submission import (
+    ReportOwnerReceiptProgress,
+    classify_report_owner_receipt_progress,
+)
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
     DownstreamRealizationNotObserved,
@@ -95,18 +99,15 @@ def reconcile_report_materialization_receipt(
         command.access_scope_filter,
         candidate_record.candidate.access_scope,
     )
-    if submission.owner_receipt is not None:
+    stored_receipt = submission.owner_receipt
+    if stored_receipt is not None:
         try:
-            _validate_stored_receipt(submission.owner_receipt, evidence_pack)
+            _validate_stored_receipt(stored_receipt, evidence_pack)
         except ValueError:
             return _result(
                 ReportMaterializationReconciliationStatus.CONFLICT,
                 blocker="report_materialization_persisted_receipt_invalid",
             )
-        return ReportMaterializationReconciliationResult(
-            status=ReportMaterializationReconciliationStatus.REPLAYED,
-            owner_receipt=submission.owner_receipt,
-        )
     if report_reader is None:
         return _result(
             ReportMaterializationReconciliationStatus.OWNER_UNAVAILABLE,
@@ -141,6 +142,18 @@ def reconcile_report_materialization_receipt(
             ReportMaterializationReconciliationStatus.CONFLICT,
             blocker="report_materialization_receipt_invalid",
         )
+    if stored_receipt is not None:
+        progress = classify_report_owner_receipt_progress(stored_receipt, durable_receipt)
+        if progress is ReportOwnerReceiptProgress.EXACT_REPLAY:
+            return ReportMaterializationReconciliationResult(
+                status=ReportMaterializationReconciliationStatus.REPLAYED,
+                owner_receipt=stored_receipt,
+            )
+        if progress is ReportOwnerReceiptProgress.CONFLICT:
+            return _result(
+                ReportMaterializationReconciliationStatus.CONFLICT,
+                blocker="report_materialization_owner_version_conflict",
+            )
     mutation = repository.reconcile_downstream_submission(
         support_reference=submission.support_reference,
         resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
@@ -217,7 +230,9 @@ def _validate_stored_receipt(
 
 
 def _recovery_change_reference(receipt: DownstreamSubmissionOwnerReceipt) -> str:
-    identity = f"{receipt.owner_request_id}:{receipt.owner_realization_id}"
+    identity = (
+        f"{receipt.owner_request_id}:{receipt.owner_realization_id}:{receipt.source_event_version}"
+    )
     digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:24]
     return f"report-owner-recovery-{digest}"
 

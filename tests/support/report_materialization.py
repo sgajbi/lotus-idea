@@ -19,6 +19,7 @@ def report_materialization_receipt_payload(
     return {
         "report_request_id": f"report-request-{evidence_pack.report_evidence_pack_id}",
         "report_job_id": report_job_id,
+        "source_event_version": 1,
         "status": "data_ready",
         "materialization_status": "data_ready",
         "status_url": f"/reports/jobs/{report_job_id}",
@@ -76,7 +77,7 @@ def authoritative_report_outcome(
             owner_request_id=f"report-request-{evidence_pack.report_evidence_pack_id}",
             owner_realization_id=report_job_id,
             owner_work_id=None,
-            source_event_version=None,
+            source_event_version=1,
             source_evidence_fingerprint=evidence_pack.evidence_content_hash,
             report_materialization=ReportMaterializationReceiptEvidence(
                 status="data_ready",
@@ -108,7 +109,7 @@ def report_owner_receipt_response(evidence_pack: GovernedReportEvidencePack) -> 
         "ownerRequestId": f"report-request-{evidence_pack.report_evidence_pack_id}",
         "ownerRealizationId": report_job_id,
         "ownerWorkId": None,
-        "sourceEventVersion": None,
+        "sourceEventVersion": 1,
         "sourceEvidenceFingerprint": evidence_pack.evidence_content_hash,
         "reportMaterialization": {
             "status": "data_ready",

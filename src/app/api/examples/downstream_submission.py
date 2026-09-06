@@ -343,7 +343,7 @@ def _report_materialization_outcome() -> DownstreamRealizationOutcome:
             owner_request_id="report-request-example",
             owner_realization_id="report-job-example",
             owner_work_id=None,
-            source_event_version=None,
+            source_event_version=1,
             source_evidence_fingerprint=evidence_pack.evidence_content_hash,
             report_materialization=ReportMaterializationReceiptEvidence(
                 status="data_ready",

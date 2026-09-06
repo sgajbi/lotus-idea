@@ -63,6 +63,7 @@ def test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract() -
     assert receipt.owner_authority is SourceSystem.LOTUS_REPORT
     assert receipt.owner_request_id == "report-request-report-evidence-pack-001"
     assert receipt.owner_realization_id == "report-job-report-evidence-pack-001"
+    assert receipt.source_event_version == 1
     assert captured["method"] == "GET"
     assert captured["path"] == "/reports/idea-evidence-packs/materializations"
     assert captured["query"] == {
@@ -81,6 +82,34 @@ def test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract() -
     assert headers["x-correlation-id"] == "corr-report-recovery"
     assert headers["x-trace-id"] == "trace-report-recovery"
     assert "idempotency-key" not in headers
+
+
+def test_report_recovery_rejects_unversioned_owner_snapshot() -> None:
+    payload = report_materialization_receipt_payload(
+        report_evidence_pack(),
+        idempotency_key="report-submission-idempotency-001",
+    )
+    payload.pop("source_event_version")
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            report_recovery_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="source_event_version must be a positive integer"):
+        adapter.recover_report_evidence_pack_receipt(
+            report_evidence_pack(),
+            access_scope=report_access_scope(),
+            idempotency_key="report-submission-idempotency-001",
+        )
 
 
 @pytest.mark.parametrize("status_code", (503,))

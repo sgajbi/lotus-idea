@@ -54,6 +54,12 @@ class DownstreamSubmissionResolution(StrEnum):
     QUARANTINED = "quarantined"
 
 
+class ReportOwnerReceiptProgress(StrEnum):
+    EXACT_REPLAY = "exact_replay"
+    ADVANCED = "advanced"
+    CONFLICT = "conflict"
+
+
 @dataclass(frozen=True)
 class ReportMaterializationReceiptEvidence:
     """Report-owned materialization facts returned with an accepted submission."""
@@ -130,8 +136,6 @@ class DownstreamSubmissionOwnerReceipt:
         if not self.source_evidence_fingerprint.startswith("sha256:"):
             raise ValueError("source_evidence_fingerprint must use sha256")
         if self.owner_authority is SourceSystem.LOTUS_REPORT:
-            if self.source_event_version is not None:
-                raise ValueError("Report materialization receipt has no source event version")
             if self.report_materialization is None:
                 raise ValueError("Report owner receipt requires materialization evidence")
             if self.owner_work_id is not None:
@@ -146,6 +150,60 @@ class DownstreamSubmissionOwnerReceipt:
             raise ValueError("evented owner receipt requires source_event_version")
         elif self.report_materialization is not None:
             raise ValueError("report materialization evidence requires lotus-report authority")
+
+
+def classify_report_owner_receipt_progress(
+    current: DownstreamSubmissionOwnerReceipt,
+    proposed: DownstreamSubmissionOwnerReceipt,
+) -> ReportOwnerReceiptProgress:
+    """Compare two exact Report snapshots without inventing missing owner chronology."""
+    if (
+        current.owner_authority is not SourceSystem.LOTUS_REPORT
+        or proposed.owner_authority is not SourceSystem.LOTUS_REPORT
+        or current.report_materialization is None
+        or proposed.report_materialization is None
+        or proposed.source_event_version is None
+    ):
+        return ReportOwnerReceiptProgress.CONFLICT
+    current_evidence = current.report_materialization
+    proposed_evidence = proposed.report_materialization
+    current_identity = (
+        current.owner_authority,
+        current.owner_request_id,
+        current.owner_realization_id,
+        current.owner_work_id,
+        current.source_evidence_fingerprint,
+        current_evidence.status_url,
+        current_evidence.report_evidence_pack_id,
+        current_evidence.conversion_intent_id,
+        current_evidence.candidate_id,
+        current_evidence.evidence_packet_id,
+    )
+    proposed_identity = (
+        proposed.owner_authority,
+        proposed.owner_request_id,
+        proposed.owner_realization_id,
+        proposed.owner_work_id,
+        proposed.source_evidence_fingerprint,
+        proposed_evidence.status_url,
+        proposed_evidence.report_evidence_pack_id,
+        proposed_evidence.conversion_intent_id,
+        proposed_evidence.candidate_id,
+        proposed_evidence.evidence_packet_id,
+    )
+    if current_identity != proposed_identity:
+        return ReportOwnerReceiptProgress.CONFLICT
+    if current.source_event_version is None:
+        return ReportOwnerReceiptProgress.ADVANCED
+    if proposed.source_event_version < current.source_event_version:
+        return ReportOwnerReceiptProgress.CONFLICT
+    if proposed.source_event_version == current.source_event_version:
+        return (
+            ReportOwnerReceiptProgress.EXACT_REPLAY
+            if proposed == current
+            else ReportOwnerReceiptProgress.CONFLICT
+        )
+    return ReportOwnerReceiptProgress.ADVANCED
 
 
 @dataclass(frozen=True)
@@ -379,11 +437,31 @@ def reconcile_downstream_submission(
     _require_text(change_reference, "change_reference")
     _require_aware_utc(reconciled_at_utc, "reconciled_at_utc")
     posture = DownstreamSubmissionPosture(resolution.value)
+    report_progress: ReportOwnerReceiptProgress | None = None
     if owner_receipt is not None:
         if resolution is DownstreamSubmissionResolution.QUARANTINED:
             raise ValueError("quarantined reconciliation forbids an owner receipt")
         if owner_receipt.owner_authority is not record.source_authority:
             raise ValueError("owner_receipt authority must match source_authority")
+        if (
+            record.owner_receipt is not None
+            and record.source_authority is SourceSystem.LOTUS_REPORT
+        ):
+            report_progress = classify_report_owner_receipt_progress(
+                record.owner_receipt,
+                owner_receipt,
+            )
+            if report_progress is ReportOwnerReceiptProgress.EXACT_REPLAY:
+                return DownstreamSubmissionMutationResult(
+                    decision=DownstreamSubmissionMutationDecision.REPLAYED,
+                    record=record,
+                )
+            if report_progress is ReportOwnerReceiptProgress.CONFLICT:
+                return DownstreamSubmissionMutationResult(
+                    decision=DownstreamSubmissionMutationDecision.INVALID_STATE,
+                    record=record,
+                    blocker="downstream_submission_owner_version_conflict",
+                )
     last_audit = record.audit_history[-1]
     if last_audit.change_reference == change_reference:
         if (
@@ -404,7 +482,11 @@ def reconcile_downstream_submission(
     if record.status not in {
         DownstreamSubmissionPosture.IN_FLIGHT,
         DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
-    }:
+    } and not (
+        record.status is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+        and posture is DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM
+        and report_progress is ReportOwnerReceiptProgress.ADVANCED
+    ):
         return DownstreamSubmissionMutationResult(
             decision=DownstreamSubmissionMutationDecision.INVALID_STATE,
             record=record,

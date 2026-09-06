@@ -137,7 +137,7 @@ def test_report_materialization_receipt_survives_postgres_restart_exactly() -> N
         owner_request_id="report-request-001",
         owner_realization_id="report-job-001",
         owner_work_id=None,
-        source_event_version=None,
+        source_event_version=1,
         source_evidence_fingerprint="sha256:report-evidence",
         report_materialization=ReportMaterializationReceiptEvidence(
             status="archived",

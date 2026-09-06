@@ -169,6 +169,7 @@ def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
     assert set(contract["receipt_response_fields"]) == {
         "report_request_id",
         "report_job_id",
+        "source_event_version",
         "status",
         "materialization_status",
         "status_url",
