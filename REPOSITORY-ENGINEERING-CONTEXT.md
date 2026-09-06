@@ -2444,10 +2444,11 @@ and gated by `make advise-intake-runtime-execution-proof-gate`. A valid
 aggregate-current artifact may clear `advise_live_contract_proof_missing`,
 `advise_timeout_uncertainty_certification_missing`,
 `advise_owner_correction_certification_missing`, and
-`advise_concurrent_owner_advancement_certification_missing`
+`advise_concurrent_owner_advancement_certification_missing`, and
+`advise_restart_replay_certification_missing`
 after observing the Advise owner route's accepted, replayed, rejected,
 idempotency-conflict, authorization-denied, and tenant-scoped idempotency
-receipt behavior. The v4 artifact also proves identical concurrent duplicate
+receipt behavior. The v5 artifact also proves identical concurrent duplicate
 convergence and exact owner-history readback bound through source-safe source
 intent, trusted-scope, and owner-identity digests plus the evidence fingerprint,
 status, and source-event version. Its controlled timeout-before-owner-commit
@@ -2458,9 +2459,17 @@ point-in-time absence; it does not authorize retry or advance business
 authority. The same artifact links an Advise-owned proposal through the owned
 reconciliation command, refuses a stale source version without mutation, then
 races two corrected calls and requires both to converge on one contiguous
-version-three terminal owner outcome. This clears the owner-correction and
-concurrent-owner-advancement blockers while retaining explicit restart and
-`suitability_policy_authority_remains_lotus_advise` blockers. The controlled
+version-three terminal owner outcome. Source-digest-bound `test_execution` then
+reconstructs the owner over the same disposable migrated PostgreSQL state and
+proves one accepted claim, one exact replay, stable owner history and identities,
+no duplicate owner work, and retained versions one through three across two
+repository instances. A separate source-digest-bound Idea PostgreSQL execution
+reconciles the three-version owner posture once, reconstructs the Idea repository,
+and proves exact replay appends zero outcomes, preserves the single submission
+attempt and owner receipt identities, and leaves governed table counts unchanged.
+Neither DSN is retained. This clears
+the owner-correction, concurrent-owner-advancement, and restart blockers while
+retaining `suitability_policy_authority_remains_lotus_advise`. The controlled
 scenario may observe an Advise-owned proposal, but it must not treat that as
 suitability, execution, order, or publication authority and must not claim production
 identity, client-publication authority, Workbench/Gateway behavior, support, or
