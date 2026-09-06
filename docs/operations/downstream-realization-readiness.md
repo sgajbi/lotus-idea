@@ -94,25 +94,30 @@ rejected-before-work responses. Idea persists that bounded receipt and uses it
 as the only owner lookup key; HTTP success alone never becomes proposal or
 business-outcome truth.
 
-An accepted Report submission must carry a typed owner receipt. Idea validates
+An accepted Report submission must carry a typed owner receipt with a positive
+Report lifecycle version. Idea validates
 the exact evidence-pack identity and content fingerprint, idempotency key,
 Report job identity, source-authority partition, Render/Archive creation flags
 and identifiers, and the explicit publication/supportability blockers before
-persisting it. Exact retries return the persisted receipt without another owner
-call. Receipt validation failure is uncertain delivery requiring reconciliation;
+persisting it. Submission retries return the persisted receipt without another
+POST. Receipt validation failure is uncertain delivery requiring reconciliation;
 it is never converted into Report completion or publication truth.
 
 For an uncertain Report handoff, the Report reconciliation route authorizes
 complete caller scope before owner I/O and performs one read-only lookup using
 the persisted idempotency key plus exact evidence-pack, conversion-intent,
 candidate, evidence fingerprint, and portfolio identity. Only an exact typed
-receipt advances the existing submission. A stored receipt replays locally
-without another owner read. An exact owner `404` returns the source-safe `409
+receipt advances the existing submission. Every explicit reconciliation performs
+the exact read-only owner lookup: an unchanged version is a non-mutating replay,
+a higher version advances the existing receipt transactionally, and a lower
+version or same-version mutation fails closed. An exact owner `404` returns the source-safe `409
 report_materialization_owner_acceptance_not_observed`; owner configuration or
 transport failure returns `503`, and contradictory evidence returns `409`.
 Every refusal leaves the uncertain record, receipt, attempt count, and audit
 history unchanged. The route never repeats the materialization `POST` and does
-not create a second submission registry.
+not create a second submission registry. Legacy stored receipts without a
+version remain explicit unknown until a current authoritative read supplies a
+positive version; Idea never fabricates a backfill.
 
 The Advise reconciliation route authorizes complete caller scope before owner
 I/O, reads the owner history through the typed port, validates source and

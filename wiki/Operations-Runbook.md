@@ -613,12 +613,17 @@ For an uncertain Report submission, call the Idea Report reconciliation route
 with the opaque support reference and the same operator reconciliation
 capability and complete entitlement scope used by the Advise/Manage owner-read
 flows. Idea looks up current Report state by the stored idempotency key and
-exact source identity, then persists only a fully matching receipt. Owner `404`
+exact source identity, then validates a positive Report lifecycle version and
+persists only a fully matching receipt. Every explicit reconciliation performs
+this read-only lookup. An unchanged owner version is a non-mutating replay; a
+higher version advances the stored receipt transactionally; regression or
+same-version mutation fails closed. Owner `404`
 returns `409 report_materialization_owner_acceptance_not_observed`;
 configuration or transport outage returns 503. Neither changes local evidence
 or authorizes a second POST. Malformed data or identity conflict also fails
-closed. Exact replay is satisfied from PostgreSQL and makes no further Report
-request.
+closed. Reconciliation never issues another Report POST. A legacy stored receipt
+without an owner version remains explicit unknown until a current authoritative
+GET supplies one; never synthesize or silently backfill owner chronology.
 
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`

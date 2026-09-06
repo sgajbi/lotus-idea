@@ -78,7 +78,10 @@ conversion tracking, source-authority mapping, and no-authority conversion
 boundaries. Internal report evidence-pack request governance also exists for
 reviewed report conversion intents, with safe source summaries, retention refs,
 Report/Render/Archive authority refs, idempotency, audit, and a certified
-internal API foundation. Real PostgreSQL runtime proof exists for high-cash
+internal API foundation. Its read-only Report reconciliation consumes a positive
+owner lifecycle version, persists only higher versions, rejects regression or
+same-version contradiction, and leaves exact replay non-mutating without issuing
+another materialization request. Real PostgreSQL runtime proof exists for high-cash
 persistence/replay plus the first internal advisor queue, lifecycle, review,
 feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
