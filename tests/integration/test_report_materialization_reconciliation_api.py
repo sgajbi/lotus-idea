@@ -168,6 +168,7 @@ def test_report_recovery_api_preserves_uncertainty_when_acceptance_is_not_observ
     repository = get_idea_repository()
     before = repository.downstream_submission_by_support_reference(support_reference)
     assert before is not None
+    before_snapshot = repository.snapshot()
 
     absent = client.post(
         _recovery_path(support_reference),
@@ -178,6 +179,7 @@ def test_report_recovery_api_preserves_uncertainty_when_acceptance_is_not_observ
     assert absent.json()["code"] == "report_materialization_owner_acceptance_not_observed"
     unchanged = repository.downstream_submission_by_support_reference(support_reference)
     assert unchanged == before
+    assert repository.snapshot() == before_snapshot
     assert unchanged.status.value == "reconciliation_required"
     assert unchanged.owner_receipt is None
     assert report_client.submission_calls == 1
