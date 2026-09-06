@@ -1002,15 +1002,14 @@ evidence-consumption work cannot accidentally close live runtime, downstream,
 publication, support, or supported-feature proof issues.
 
 `make rfc0002-github-issue-execution-state-audit` is the GitHub-backed
-companion audit. It calls the GitHub CLI and compares current GitHub issue
-state, lifecycle labels, and `rfc/RFC-0002` labels for every historical row in
-the repository ledger. It fails if a ledger issue loses the RFC label, has
-inconsistent state/status labels, or an `open_tracker` parent lacks
-`status/tracker`. Additional RFC-labeled GitHub issues remain GitHub-owned and
-do not require source-ledger transcription. Use the live posture command for
-current issue counts; use the ledger audit only for its governed legacy set.
-The audit is not part of offline CI because it depends on GitHub state, but its
-parsing and failure modes are unit-tested.
+companion audit. It validates the complete set of current `rfc/RFC-0002` issues:
+each open issue must have exactly one governed `status/*` lifecycle label, and
+unknown or conflicting lifecycle labels fail closed. Historical ledger rows
+must still resolve to RFC-labelled GitHub issues; closed tracked issues retain
+`status/merged-main`, and declared current external blockers must remain open.
+Additional RFC-labelled issues remain GitHub-owned and require no ledger
+transcription. The audit is not part of offline CI because it depends on GitHub
+state, but its parsing and failure modes are unit-tested.
 
 `make rfc0002-github-issue-pr-text-gate` prevents partial RFC PR title/body text
 from mixing `Keep #<issue> open` with standalone GitHub auto-close keywords.
@@ -1034,14 +1033,13 @@ failure; do not group the gate with a later GitHub mutation in a command block
 that can continue after unsafe keep-open wording is rejected. This mirrors the
 platform-wide guardrail from `sgajbi/lotus-platform#653` / PR #654.
 
-`make rfc0002-github-issue-execution-summary` renders the source-controlled
-RFC-0002 issue execution summary after the ledger and learning-pattern gates
-pass. It summarizes the governed legacy set; it is not a current issue-count
-authority. Use GitHub and `make rfc0002-cross-repo-issue-posture` for current
-execution posture. The Markdown summary lists final-closure-pending and post-completion-pending issues
-separately from ready, blocked, active, QA-pending, and tracker issues so
-status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
-bucket.
+`make rfc0002-github-issue-execution-summary` renders current counts, lifecycle
+groups, slice membership, and active learning-pattern references from complete
+live GitHub state after the source-contract gates pass. It identifies the dated
+ledger snapshot separately as historical coverage and closure evidence. Use the
+generated result for current Idea posture and
+`make rfc0002-cross-repo-issue-posture` for cross-repository posture; do not
+transcribe volatile counts or lifecycle changes into a source-sync PR.
 
 
 

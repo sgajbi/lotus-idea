@@ -1849,9 +1849,12 @@ current regression cases these gates prevent. When current GitHub state itself
 is being used as delivery truth,
 run
 `make rfc0002-github-issue-execution-state-audit`; it compares the ledger with
-GitHub open/closed state and lifecycle labels so reopened, blocked,
-in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
-drift silently.
+complete GitHub RFC-0002 lifecycle state. Every open RFC issue requires exactly
+one governed `status/*` label; unknown or conflicting labels fail closed.
+Historical ledger rows must remain resolvable and closed rows retain
+`status/merged-main`, but current state need not equal the dated snapshot.
+Generate current counts and grouping with
+`make rfc0002-github-issue-execution-summary`.
 Do not update source after each merge merely to transcribe exact PR, SHA, run,
 wiki-publication, branch-cleanup, count, digest, or label evidence. Put those
 facts on the owning GitHub issue or PR. Treat the pinned rollup below as
@@ -3076,12 +3079,12 @@ Recent issue-derived patterns to preserve:
     group.
 50. When issue state, labels, or fixed counts are used as RFC execution truth,
     run `make rfc0002-github-issue-execution-state-audit` after any manual
-    reopen, close, or label correction. The audit catches ledger/GitHub state
-    drift such as active execution issues missing `status/in-progress`, blocked
-    issues missing `status/blocked`, parent tracker issues missing
-    `status/tracker`, merged-main-QA-pending issues missing
-    `status/merged-main`, or closed-complete issues losing terminal evidence
-    labels.
+    reopen, close, or label correction. The audit requires exactly one governed
+    lifecycle label on every open RFC-0002 issue, rejects unknown or conflicting
+    labels, preserves terminal `status/merged-main` evidence for closed tracked
+    issues, and validates current blocker references. Use the generated summary
+    for current counts; do not synchronize normal lifecycle movement into the
+    dated source ledger.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
