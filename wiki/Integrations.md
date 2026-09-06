@@ -283,10 +283,18 @@ point-in-time absence only; it neither authorizes retry nor advances business
 authority. The accepted readback must bind source-safe digests of the source
 intent, trusted scope, and owner work plus the evidence fingerprint, status,
 and source-event version. Raw governed identifiers are not retained in the
-artifact. The v4 proof also links an Advise-owned proposal, refuses a stale
+artifact. The v5 proof also links an Advise-owned proposal, refuses a stale
 source version without mutation, and requires two corrected concurrent calls
-to converge on one contiguous version-three owner history. Storage-backed
-Advise restart remains tracked by #1254. Suitability,
+to converge on one contiguous version-three owner history. It then executes
+the source-digest-bound Advise PostgreSQL restart/replay tests across two owner
+repository instances, using an explicitly disposable database without retaining
+its DSN. It proves stable owner history and identities plus no duplicate owner
+work. A separate source-digest-bound Idea PostgreSQL test reconciles the retained
+three-version history once and, after Idea repository reconstruction, proves an
+exact replay appends zero outcomes, preserves one submission attempt and owner
+receipt identity, and changes no governed table count. Neither database DSN is
+retained. The owner recovery contract remains `sgajbi/lotus-advise#615`.
+Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked. The separate Manage action-intake

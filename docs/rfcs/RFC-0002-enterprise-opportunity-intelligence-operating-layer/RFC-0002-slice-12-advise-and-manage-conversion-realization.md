@@ -226,7 +226,7 @@ Implemented in this slice:
     bounded outcome history needed to prove causal identity. Exactly one
     concurrent call must be accepted and one replayed, both must converge on
     the same owner work, and the readback must match the original candidate and
-    conversion intent. The v4 proof also executes a controlled
+    conversion intent. The v5 proof also executes a controlled
     timeout-before-owner-commit window: no downstream POST is made, two exact
     owner reads return `IDEA_PROPOSAL_REALIZATION_NOT_FOUND`, no automatic
     resubmission occurs, and no owner state is asserted. Aggregate and
@@ -235,8 +235,17 @@ Implemented in this slice:
     proposal-reconciliation route to link a proposal, refuses a stale source
     version without mutation, and requires two corrected concurrent calls to
     converge on one contiguous version-three terminal owner history. This
-    clears the owner-correction and concurrent-owner-advancement blockers;
-    restart reconciliation and suitability authority remain explicit.
+    clears the owner-correction and concurrent-owner-advancement blockers. It
+    additionally runs the source-digest-bound Advise PostgreSQL restart tests
+    against an explicitly disposable migrated database, proving retained
+    version-three history, stable owner identities, exact claim replay, and no
+    duplicate owner work across two owner repository instances. A second
+    source-digest-bound Idea PostgreSQL test reconciles that three-version
+    posture once, reconstructs the Idea repository, and proves exact replay
+    appends zero outcomes, leaves governed table counts unchanged, and preserves
+    one submission attempt. Neither DSN is retained. Suitability authority remains explicit.
+    The owner recovery dependency remains `sgajbi/lotus-advise#615`; Idea
+    consumes its exact PostgreSQL behavior rather than recreating it.
 30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/unit/test_implementation_proof_readiness.py`,
@@ -390,11 +399,9 @@ This slice is not yet a supported conversion product. Remaining work includes:
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-5. cross-repository exact-main/runtime acceptance of the remaining Advise
-   restart window; timeout-before-owner-commit is certified by #1251, while
-   bounded owner correction and concurrent version advancement are certified
-   by #1253 without authorizing suitability, execution, or publication; #1254
-   owns the remaining storage-backed Advise restart proof,
+5. cross-repository runtime acceptance beyond the completed Advise timeout,
+   owner progression, and PostgreSQL restart proofs (#1251, #1253, #1254),
+   without authorizing suitability, execution, or publication,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
@@ -414,9 +421,11 @@ and corrected concurrent owner advancement. The timeout scenario
 proves no owner POST, two exact owner not-found reads, no automatic
 resubmission, and no authority advance. The owner progression scenario observes
 an Advise-owned proposal and a terminal rejection but grants no Idea-side
-proposal or suitability authority. It is not restart, broader proposal-lifecycle
-certification, production identity, client-publication,
-Workbench/Gateway, or supported-feature proof.
+proposal or suitability authority. The v5 proof adds restart/replay
+certification for the bounded owner and Idea
+reconciliation paths only; it is not broader proposal-lifecycle certification,
+production identity, client-publication, Workbench/Gateway, or supported-feature
+proof.
 
 ## Required Work
 

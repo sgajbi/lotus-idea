@@ -258,26 +258,31 @@ or route-fit posture. Both artifacts deliberately keep these blockers:
 
 `scripts/downstream_realization/generate_advise_intake_runtime_execution.py`
 can execute the Advise owner route through a sibling local ASGI TestClient or
-an explicitly configured HTTP service and produce a source-safe
-`runtime_execution` artifact:
+run the owner repository's source-digest-bound restart tests against a migrated,
+disposable PostgreSQL database. It also executes Idea's source-digest-bound
+PostgreSQL reconciliation test against a disposable Idea database. The
+database-reset flag is mandatory; use only dedicated test databases. The
+resulting composite artifact is source-safe and does not retain either DSN:
 
 ```powershell
 python scripts/downstream_realization/generate_advise_intake_runtime_execution.py `
   --generated-at-utc 2026-07-22T00:00:00Z `
   --advise-root ..\lotus-advise `
-  --advise-python ..\lotus-advise\.venv-codex\Scripts\python.exe `
+  --advise-python <python-with-advise-and-psycopg-installed> `
+  --advise-postgres-dsn $env:PROPOSAL_POSTGRES_INTEGRATION_DSN `
+  --idea-postgres-dsn $env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL `
+  --allow-destructive-test-database-reset `
   --output output\downstream\advise-intake-runtime-execution-proof.json
 
 make advise-intake-runtime-execution-proof-gate
 ```
 
-`make implementation-proof-readiness-check` generates and consumes this proof
-by default from `LOTUS_ADVISE_ROOT=../lotus-advise` and
-`LOTUS_ADVISE_PYTHON=../lotus-advise/.venv-codex/Scripts/python.exe`. Set
+`make implementation-proof-readiness-check` consumes the generated proof by
+default. Set
 `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only when an already
 generated artifact should be consumed instead.
 
-The v4 artifact validates closed receipt posture for accepted, replayed,
+The v5 artifact validates closed receipt posture for accepted, replayed,
 rejected, idempotency-conflict, authorization-denied, and tenant-scoped
 idempotency calls. It requires an identical concurrent duplicate pair to
 converge on one accepted receipt and one exact replay, then binds the accepted
@@ -292,13 +297,23 @@ two corrected version-two calls. Both calls must return the same contiguous
 version-three `ADVISORY_REJECTED` history, with one append-only owner outcome
 and no suitability, order, or publication authority.
 
-A valid aggregate-current proof clears `advise_live_contract_proof_missing`
-and `advise_timeout_uncertainty_certification_missing`, plus the bounded
-owner-correction and concurrent-owner-advancement blockers. It deliberately
-preserves restart, suitability, broader proposal lifecycle, client-publication, production-identity,
-production-certification, and supported-feature blockers. A point-in-time owner
+A valid aggregate-current proof clears `advise_live_contract_proof_missing`,
+`advise_timeout_uncertainty_certification_missing`, and the bounded
+owner-correction, concurrent-owner-advancement, and PostgreSQL restart/replay
+blockers. The restart evidence executes the two source-digest-bound Advise
+integration tests against an explicitly disposable, migrated PostgreSQL database;
+it proves unchanged owner history and identities across repository reconstruction,
+one accepted intake, one exact replay, and no duplicate owner work. A separate
+source-digest-bound Idea PostgreSQL test reconciles the retained three-version
+owner history exactly once, reconstructs the Idea repository, and proves an
+exact second reconciliation appends zero outcomes, preserves one submission
+attempt and owner receipt identities, and changes none of the governed table
+counts. Neither DSN is retained. The proof deliberately preserves suitability, broader
+proposal lifecycle, client-publication, production-identity, production-certification,
+and supported-feature blockers. A point-in-time owner
 absence remains uncertainty: it does not authorize retry or advance business
-state. #1254 owns the remaining storage-backed Advise restart proof.
+state. The proof consumes the owner recovery contract tracked by
+`sgajbi/lotus-advise#615`; it does not duplicate that contract in Idea.
 
 ## Manage Action-Intake Runtime Execution Proof
 
