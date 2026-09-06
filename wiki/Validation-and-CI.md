@@ -111,12 +111,13 @@ flowchart LR
 ## Wiki Publication Control
 
 Repo-local `wiki/` is the authored source. The live GitHub wiki is a publication
-target and must not carry durable truth that is absent from `main`.
+target and must not carry durable truth that is absent from `main`. Run the
+Platform-owned commands below from `<workspace-root>/lotus-platform`.
 
 | Step | Command | Expected result |
 | --- | --- | --- |
-| Pre-merge wiki check | `C:\Users\Sandeep\projects\lotus-platform\automation\Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-idea` | Local source and publish target are compared without mutation. |
-| Post-merge publish | `C:\Users\Sandeep\projects\lotus-platform\automation\Sync-RepoWikis.ps1 -Publish -Repository lotus-idea` | Published wiki matches the repo-local source from merged `main`. |
+| Pre-merge wiki check | `powershell -ExecutionPolicy Bypass -File automation/Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-idea` | Local source and publish target are compared without mutation. |
+| Post-merge publish | `powershell -ExecutionPolicy Bypass -File automation/Sync-RepoWikis.ps1 -Publish -Repository lotus-idea` | Published wiki matches the repo-local source from merged `main`. |
 | Documentation gate | `make documentation-contract-gate` | Same-wiki links omit `.md`, required wiki surfaces exist, and governed anti-claim language remains present. |
 
 ## Command Groups
