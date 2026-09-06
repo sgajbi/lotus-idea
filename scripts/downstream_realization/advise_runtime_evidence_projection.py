@@ -37,8 +37,43 @@ def source_safe_execution_evidence(
         if name == "ownerRealization":
             evidence[name] = _owner_realization(response, body)
             continue
+        if name == "preCommitTimeout":
+            evidence[name] = _pre_commit_timeout(response)
+            continue
         evidence[name] = _receipt(response, body)
     return evidence
+
+
+def _pre_commit_timeout(value: object) -> dict[str, Any]:
+    raw = value if isinstance(value, Mapping) else {}
+    owner_lookup = raw.get("ownerLookup")
+    repeated_owner_lookup = raw.get("repeatedOwnerLookup")
+    owner_lookup_body = owner_lookup.get("body") if isinstance(owner_lookup, Mapping) else None
+    repeated_owner_lookup_body = (
+        repeated_owner_lookup.get("body") if isinstance(repeated_owner_lookup, Mapping) else None
+    )
+    return {
+        "failureStage": raw.get("failureStage"),
+        "sourceIntentDigest": source_safe_binding_digest(
+            raw.get("ideaCandidateId"), raw.get("conversionIntentId")
+        ),
+        "scopeDigest": source_safe_binding_digest(
+            raw.get("tenantId"), raw.get("legalEntityCode"), raw.get("portfolioId")
+        ),
+        "ownerLookupStatusCode": (
+            owner_lookup.get("statusCode") if isinstance(owner_lookup, Mapping) else None
+        ),
+        "ownerLookupReasonCodes": reason_codes(owner_lookup_body),
+        "repeatedOwnerLookupStatusCode": (
+            repeated_owner_lookup.get("statusCode")
+            if isinstance(repeated_owner_lookup, Mapping)
+            else None
+        ),
+        "repeatedOwnerLookupReasonCodes": reason_codes(repeated_owner_lookup_body),
+        "downstreamPostAttemptCount": raw.get("downstreamPostAttemptCount"),
+        "automaticResubmissionAttemptCount": raw.get("automaticResubmissionAttemptCount"),
+        "ownerStateObserved": raw.get("ownerStateObserved"),
+    }
 
 
 def _receipt(response: object, body: object) -> dict[str, Any]:

@@ -549,6 +549,7 @@ def test_advise_source_and_runtime_proofs_compose_without_cross_clearing() -> No
     )
 
     assert "advise_live_contract_proof_missing" not in snapshot.blockers
+    assert "advise_timeout_uncertainty_certification_missing" not in snapshot.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
     assert "manage_live_contract_proof_missing" in snapshot.blockers
     assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
@@ -565,7 +566,7 @@ def test_advise_source_and_runtime_proofs_compose_without_cross_clearing() -> No
     assert "suitability_policy_authority_remains_lotus_advise" in advise_contract.blockers
 
 
-def test_advise_intake_runtime_execution_clears_only_advise_live_blocker() -> None:
+def test_advise_intake_runtime_execution_closes_bounded_live_and_timeout_blockers() -> None:
     proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=InMemoryIdeaRepository(),
@@ -579,6 +580,7 @@ def test_advise_intake_runtime_execution_clears_only_advise_live_blocker() -> No
     )
 
     assert "advise_live_contract_proof_missing" not in snapshot.blockers
+    assert "advise_timeout_uncertainty_certification_missing" not in snapshot.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
     assert "manage_live_contract_proof_missing" in snapshot.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers

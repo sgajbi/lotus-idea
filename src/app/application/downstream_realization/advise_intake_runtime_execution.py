@@ -29,19 +29,26 @@ from app.application.source_runtime_evidence import is_sha256
 from app.domain.proof_evidence import EvidenceClass
 
 ADVISE_INTAKE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF"
-ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v2"
-ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED = ("advise_live_contract_proof_missing",)
-REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = (
+ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.advise-intake.runtime-execution.v3"
+ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED = (
+    "advise_live_contract_proof_missing",
     "advise_timeout_uncertainty_certification_missing",
+)
+REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS = (
     "advise_restart_replay_certification_missing",
     "advise_owner_correction_certification_missing",
     "advise_concurrent_owner_advancement_certification_missing",
     "suitability_policy_authority_remains_lotus_advise",
 )
 ADVISE_REALIZATION_READ_ROUTE = "GET /advisory/proposals/idea-intake/{intake_id}/realization"
+ADVISE_REALIZATION_RECOVERY_ROUTE = (
+    "GET /advisory/proposals/idea-intake/realization?conversion_intent_id={id}"
+)
 ADVISE_INTAKE_RUNTIME_SOURCE_REFS = (
     *ADVISE_ROUTE_PROFILE.source_refs,
+    "src/api/proposals/router.py",
     "src/core/proposals/idea_realization_read_model.py",
+    "src/infrastructure/proposals/in_memory.py",
 )
 ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS = (
     "../lotus-advise/contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
@@ -50,6 +57,8 @@ ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS = (
     "../lotus-advise/src/core/proposals/idea_intake_authority.py",
     "../lotus-advise/src/core/proposals/idea_proposal_intake.py",
     "../lotus-advise/src/core/proposals/idea_realization_read_model.py",
+    "../lotus-advise/src/api/proposals/router.py",
+    "../lotus-advise/src/infrastructure/proposals/in_memory.py",
     "../lotus-advise/tests/unit/advisory/api/test_idea_proposal_intake_api.py",
     "src/app/application/downstream_realization/advise_intake_runtime_execution.py",
     "scripts/downstream_realization/advise_runtime_evidence_projection.py",
@@ -72,12 +81,14 @@ _PAYLOAD_FIELDS = frozenset(
         "downstreamAuthority",
         "targetRoute",
         "ownerReadRoute",
+        "ownerRecoveryRoute",
         "runtimeMode",
         "sourceAuthority",
         "evidenceRefs",
         "receiptEvidence",
         "submittedIntentEvidence",
         "ownerRealizationEvidence",
+        "preCommitTimeoutEvidence",
         "runtimeChecks",
         "aggregateBlockersSatisfied",
         "remainingCertificationBlockers",
@@ -154,6 +165,8 @@ _RUNTIME_CHECK_FIELDS = frozenset(
         "idempotencyConflictObserved",
         "concurrentDuplicateConvergenceObserved",
         "ownerRealizationReadbackObserved",
+        "timeoutBeforeOwnerCommitObserved",
+        "automaticResubmissionPrevented",
         "proposalAuthorityRetained",
         "suitabilityAuthorityRetained",
         "clientPublicationAuthorityRetained",
@@ -177,6 +190,21 @@ _EXPECTED_PROOF_TYPE = "lotus_advise_idea_proposal_intake_runtime_execution"
 _EXPECTED_PROOF_SCOPE = "advise_intake_route_serving_and_receipt_behavior"
 _EXPECTED_DOWNSTREAM_AUTHORITY = "lotus-advise"
 _EXPECTED_SOURCE_REPOSITORY = "lotus-idea"
+_PRE_COMMIT_TIMEOUT_EVIDENCE_FIELDS = frozenset(
+    {
+        "failureStage",
+        "sourceIntentDigest",
+        "scopeDigest",
+        "ownerLookupStatusCode",
+        "ownerLookupReasonCodes",
+        "repeatedOwnerLookupStatusCode",
+        "repeatedOwnerLookupReasonCodes",
+        "downstreamPostAttemptCount",
+        "automaticResubmissionAttemptCount",
+        "ownerStateObserved",
+    }
+)
+_OWNER_REALIZATION_NOT_FOUND_REASON = "IDEA_PROPOSAL_REALIZATION_NOT_FOUND"
 
 
 def build_advise_intake_runtime_execution_payload(
@@ -188,6 +216,7 @@ def build_advise_intake_runtime_execution_payload(
     receipt_evidence: Mapping[str, Mapping[str, Any]],
     submitted_intent_evidence: Mapping[str, Any],
     owner_realization_evidence: Mapping[str, Any],
+    pre_commit_timeout_evidence: Mapping[str, Any],
 ) -> dict[str, Any]:
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
@@ -199,6 +228,7 @@ def build_advise_intake_runtime_execution_payload(
         receipt_evidence=receipt_evidence,
         submitted_intent_evidence=submitted_intent_evidence,
         owner_realization_evidence=owner_realization_evidence,
+        pre_commit_timeout_evidence=pre_commit_timeout_evidence,
     )
     return {
         "schemaVersion": ADVISE_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -212,6 +242,7 @@ def build_advise_intake_runtime_execution_payload(
         "downstreamAuthority": _EXPECTED_DOWNSTREAM_AUTHORITY,
         "targetRoute": ADVISE_PROPOSAL_ROUTE,
         "ownerReadRoute": ADVISE_REALIZATION_READ_ROUTE,
+        "ownerRecoveryRoute": ADVISE_REALIZATION_RECOVERY_ROUTE,
         "runtimeMode": runtime_mode,
         "sourceAuthority": source_authority,
         "evidenceRefs": ADVISE_INTAKE_RUNTIME_EVIDENCE_REFS,
@@ -220,6 +251,7 @@ def build_advise_intake_runtime_execution_payload(
         },
         "submittedIntentEvidence": dict(submitted_intent_evidence),
         "ownerRealizationEvidence": dict(owner_realization_evidence),
+        "preCommitTimeoutEvidence": dict(pre_commit_timeout_evidence),
         "runtimeChecks": runtime_checks,
         "aggregateBlockersSatisfied": ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
         "remainingCertificationBlockers": REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
@@ -251,6 +283,7 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         "downstreamAuthority": _EXPECTED_DOWNSTREAM_AUTHORITY,
         "targetRoute": ADVISE_PROPOSAL_ROUTE,
         "ownerReadRoute": ADVISE_REALIZATION_READ_ROUTE,
+        "ownerRecoveryRoute": ADVISE_REALIZATION_RECOVERY_ROUTE,
     }
     if any(payload.get(key) != value for key, value in expected.items()):
         return False
@@ -292,6 +325,7 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
     receipt_evidence = payload.get("receiptEvidence")
     submitted_intent = payload.get("submittedIntentEvidence")
     owner_realization = payload.get("ownerRealizationEvidence")
+    pre_commit_timeout = payload.get("preCommitTimeoutEvidence")
     return (
         isinstance(receipt_evidence, Mapping)
         and intake_receipt_evidence_is_valid(
@@ -311,6 +345,7 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         and _owner_realization_matches(
             owner_realization, receipt_evidence.get("accepted"), submitted_intent
         )
+        and _pre_commit_timeout_evidence_is_valid(pre_commit_timeout)
     )
 
 
@@ -341,6 +376,7 @@ def _runtime_checks(
     receipt_evidence: Mapping[str, Mapping[str, Any]],
     submitted_intent_evidence: Mapping[str, Any],
     owner_realization_evidence: Mapping[str, Any],
+    pre_commit_timeout_evidence: Mapping[str, Any],
 ) -> dict[str, bool]:
     return {
         "timezoneAwareGeneratedAtUtc": (
@@ -372,11 +408,35 @@ def _runtime_checks(
             receipt_evidence.get("accepted"),
             submitted_intent_evidence,
         ),
+        "timeoutBeforeOwnerCommitObserved": _pre_commit_timeout_evidence_is_valid(
+            pre_commit_timeout_evidence
+        ),
+        "automaticResubmissionPrevented": _pre_commit_timeout_evidence_is_valid(
+            pre_commit_timeout_evidence
+        ),
         "proposalAuthorityRetained": True,
         "suitabilityAuthorityRetained": True,
         "clientPublicationAuthorityRetained": True,
         "supportedFeatureNotPromoted": True,
     }
+
+
+def _pre_commit_timeout_evidence_is_valid(value: object) -> bool:
+    if not isinstance(value, Mapping) or set(value) != _PRE_COMMIT_TIMEOUT_EVIDENCE_FIELDS:
+        return False
+    expected_reason_codes = (_OWNER_REALIZATION_NOT_FOUND_REASON,)
+    return (
+        value.get("failureStage") == "before_owner_request_dispatch"
+        and is_sha256(value.get("sourceIntentDigest"))
+        and is_sha256(value.get("scopeDigest"))
+        and value.get("ownerLookupStatusCode") == 404
+        and tuple(value.get("ownerLookupReasonCodes") or ()) == expected_reason_codes
+        and value.get("repeatedOwnerLookupStatusCode") == 404
+        and tuple(value.get("repeatedOwnerLookupReasonCodes") or ()) == expected_reason_codes
+        and value.get("downstreamPostAttemptCount") == 0
+        and value.get("automaticResubmissionAttemptCount") == 0
+        and value.get("ownerStateObserved") is False
+    )
 
 
 def _accepted_receipt_is_valid(value: object) -> bool:
