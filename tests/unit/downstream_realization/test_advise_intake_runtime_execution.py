@@ -9,7 +9,10 @@ import pytest
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
     REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
+    _idea_reconciliation_source_digest_matches,
+    _owner_advancement_matches,
     _owner_realization_matches,
+    _owner_restart_source_digest_matches,
     _same_owner_identity,
     advise_intake_runtime_execution_is_valid,
     build_advise_intake_runtime_execution_payload,
@@ -360,6 +363,22 @@ def test_owner_realization_comparison_rejects_non_object_accepted_receipt() -> N
 
 def test_owner_identity_comparison_rejects_non_object_evidence() -> None:
     assert _same_owner_identity({}, None) is False
+
+
+def test_source_digest_comparison_rejects_non_object_evidence() -> None:
+    assert _owner_restart_source_digest_matches(None, ()) is False
+    assert _owner_restart_source_digest_matches({}, None) is False
+    assert _idea_reconciliation_source_digest_matches(None, ()) is False
+    assert _idea_reconciliation_source_digest_matches({}, None) is False
+
+
+def test_owner_advancement_comparison_requires_receipt_and_intent_objects() -> None:
+    baseline = valid_advise_intake_runtime_execution()
+    advancement = nested_payload_section(baseline, "ownerAdvancementEvidence")
+    accepted = receipt_evidence_for_builder(baseline)["accepted"]
+
+    assert not _owner_advancement_matches(advancement, None, {})
+    assert not _owner_advancement_matches(advancement, accepted, None)
 
 
 def test_load_advise_intake_runtime_execution_from_env_returns_payload_and_relative_ref(
