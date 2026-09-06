@@ -35,6 +35,7 @@ from app.domain import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadConflict,
     DownstreamRealizationOutcome,
     DownstreamRealizationReadError,
@@ -103,6 +104,20 @@ class UnavailableReportReader(CapturingReportReader):
         raise DownstreamRealizationReadError("owner unavailable")
 
 
+class NotObservedReportReader(CapturingReportReader):
+    def recover_report_evidence_pack_receipt(
+        self,
+        evidence_pack: GovernedReportEvidencePack,
+        *,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str,
+    ) -> DownstreamOwnerReceipt:
+        self.call_count += 1
+        raise DownstreamRealizationNotObserved("owner acceptance not observed")
+
+
 class ConflictingReportReader(CapturingReportReader):
     def recover_report_evidence_pack_receipt(
         self,
@@ -150,6 +165,38 @@ def test_recovers_uncertain_report_receipt_and_exactly_replays_without_another_o
     assert len(persisted.audit_history) == 3
     assert persisted.updated_at_utc == ACCEPTED_AT
     assert persisted.audit_history[-1].occurred_at_utc == ACCEPTED_AT
+
+
+def test_report_owner_absence_preserves_uncertainty_until_a_later_exact_read() -> None:
+    repository, evidence_pack, support_reference, submit_client = _uncertain_submission()
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    reader = NotObservedReportReader(_authoritative_receipt(evidence_pack))
+
+    not_observed = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=repository,
+        report_reader=reader,
+    )
+
+    assert (
+        not_observed.status
+        is ReportMaterializationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+    )
+    assert not_observed.blocker == "report_materialization_owner_acceptance_not_observed"
+    assert repository.downstream_submission_by_support_reference(support_reference) == before
+    assert reader.call_count == 1
+    assert submit_client.call_count == 1
+
+    recovered = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=repository,
+        report_reader=CapturingReportReader(_authoritative_receipt(evidence_pack)),
+    )
+    assert recovered.status is ReportMaterializationReconciliationStatus.ACCEPTED
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.attempt_count == 1
+    assert persisted.owner_receipt is not None
 
 
 @pytest.mark.parametrize(

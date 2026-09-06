@@ -43,6 +43,7 @@ from app.domain import (
 from app.domain.persistence_manage_realization import manage_realization_submission_blocker
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationOutcome,
     DownstreamRealizationReadError,
 )
@@ -92,6 +93,19 @@ class StubManageReader:
         assert conversion_intent_id == "conversion-manage_review-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         return self.history
+
+
+class NotObservedManageReader(StubManageReader):
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> ManageActionRealizationHistory:
+        self.recovery_calls += 1
+        raise DownstreamRealizationNotObserved("owner acceptance not observed")
 
 
 @dataclass
@@ -204,6 +218,36 @@ def test_expired_manage_submission_recovers_owner_history_without_reposting() ->
     assert stored.audit_history[-1].occurred_at_utc == RECORDED_AT
     assert stored.owner_receipt is not None
     assert stored.owner_receipt.source_evidence_fingerprint == "sha256:aabbccddeeff"
+
+
+def test_manage_owner_absence_preserves_uncertainty_until_a_later_exact_read() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=True)
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    reader = NotObservedManageReader(_history(version=2))
+
+    not_observed = reconcile_manage_realization_history(
+        _command(support_reference),
+        repository=repository,
+        manage_reader=reader,
+    )
+
+    assert (
+        not_observed.status is ManageRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+    )
+    assert not_observed.blocker == "manage_realization_owner_acceptance_not_observed"
+    assert repository.downstream_submission_by_support_reference(support_reference) == before
+    assert reader.recovery_calls == 1
+
+    recovered = reconcile_manage_realization_history(
+        _command(support_reference),
+        repository=repository,
+        manage_reader=StubManageReader(_history(version=2)),
+    )
+    assert recovered.status is ManageRealizationReconciliationStatus.ACCEPTED
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.attempt_count == 1
+    assert persisted.owner_receipt is not None
 
 
 def test_reconcile_manage_history_persists_append_only_owner_evidence() -> None:

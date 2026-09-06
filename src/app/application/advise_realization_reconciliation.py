@@ -21,6 +21,7 @@ from app.domain import (
 )
 from app.ports.downstream_realization import (
     AdviseProposalRealizationReader,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadError,
 )
 from app.ports.idea_repository import DownstreamSubmissionRepository
@@ -32,6 +33,7 @@ class AdviseRealizationReconciliationStatus(StrEnum):
     NOT_FOUND = "not_found"
     NOT_ELIGIBLE = "not_eligible"
     CONFLICT = "conflict"
+    OWNER_ACCEPTANCE_NOT_OBSERVED = "owner_acceptance_not_observed"
     OWNER_UNAVAILABLE = "owner_unavailable"
 
 
@@ -103,6 +105,11 @@ def reconcile_advise_realization_history(
             access_scope=access_scope,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
+        )
+    except DownstreamRealizationNotObserved:
+        return _result(
+            AdviseRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED,
+            blocker="advise_realization_owner_acceptance_not_observed",
         )
     except DownstreamRealizationReadError:
         return _result(

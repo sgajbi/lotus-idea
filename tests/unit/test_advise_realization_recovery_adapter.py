@@ -11,6 +11,7 @@ from app.infrastructure.downstream_realization import (
     DownstreamRealizationConfigurationError,
     HttpAdviseProposalRealizationClient,
 )
+from app.ports.downstream_realization import DownstreamRealizationNotObserved
 from tests.unit.test_downstream_realization_adapters import (
     _advise_history_payload,
     advise_service_context,
@@ -155,5 +156,27 @@ def test_advise_recovery_reader_requires_configured_route_and_printable_identity
     with pytest.raises(ValueError, match="conversion_intent_id is required"):
         configured.load_realization_by_conversion_intent(
             conversion_intent_id=" ",
+            access_scope=report_access_scope(),
+        )
+
+
+def test_advise_recovery_preserves_exact_owner_absence() -> None:
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/proposals/idea-intake",
+            recovery_history_path=RECOVERY_PATH,
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(404, json={})),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationNotObserved):
+        adapter.load_realization_by_conversion_intent(
+            conversion_intent_id="conversion-001",
             access_scope=report_access_scope(),
         )

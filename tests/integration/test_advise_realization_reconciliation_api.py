@@ -18,6 +18,7 @@ from app.domain import (
 from app.main import app
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationOutcome,
 )
 from app.runtime.downstream_realization_state import ConversionRealizationClients
@@ -142,6 +143,7 @@ class OwnerLifecycleClient:
 @dataclass
 class LostResponseOwnerLifecycleClient(OwnerLifecycleClient):
     submission_calls: int = 0
+    acceptance_observed: bool = True
 
     def submit_proposal_intent(
         self,
@@ -155,6 +157,26 @@ class LostResponseOwnerLifecycleClient(OwnerLifecycleClient):
         self.intent = intent
         self.submission_calls += 1
         raise TimeoutError("response lost after Advise committed")
+
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        if not self.acceptance_observed:
+            self.recovery_calls += 1
+            raise DownstreamRealizationNotObserved(
+                "Advise has no realization for this conversion intent"
+            )
+        return super().load_realization_by_conversion_intent(
+            conversion_intent_id=conversion_intent_id,
+            access_scope=access_scope,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
 
 
 def test_advise_realization_reconciliation_api_persists_exact_owner_history(
@@ -292,6 +314,76 @@ def test_advise_reconciliation_api_recovers_lost_owner_response_without_resubmis
     assert replayed.json()["reconciliationStatus"] == "replayed"
     assert advise_client.submission_calls == 1
     assert advise_client.recovery_calls == 1
+
+
+def test_advise_recovery_api_preserves_uncertainty_when_acceptance_is_not_observed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    advise_client = LostResponseOwnerLifecycleClient(acceptance_observed=False)
+    clients = ConversionRealizationClients(
+        advise_client=advise_client,
+        manage_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-acceptance-not-observed",
+        idempotency_prefix="advise-acceptance-not-observed",
+    )
+    conversion_intent_id = "conversion-advise-acceptance-not-observed-001"
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        target="advise_proposal",
+        idempotency_key=conversion_intent_id,
+    )
+    submitted = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=downstream_submission_headers("submission-advise-not-observed-001"),
+    )
+    support_reference = submitted.json()["downstreamSubmission"]["supportReference"]
+    repository = get_idea_repository()
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    assert before is not None
+
+    absent = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert absent.status_code == 409
+    assert absent.json()["code"] == "advise_realization_owner_acceptance_not_observed"
+    unchanged = repository.downstream_submission_by_support_reference(support_reference)
+    assert unchanged == before
+    assert unchanged.status.value == "reconciliation_required"
+    assert unchanged.owner_receipt is None
+    assert advise_client.submission_calls == 1
+    assert advise_client.recovery_calls == 1
+
+    advise_client.acceptance_observed = True
+    recovered = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/advise-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert advise_client.submission_calls == 1
+    assert advise_client.recovery_calls == 2
 
 
 def test_advise_recovery_api_waits_for_expired_lease_after_local_commit_failure(

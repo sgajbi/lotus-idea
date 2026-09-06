@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.11.0",
+  "contract_version": "1.12.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -80,6 +80,15 @@
           "client_id"
         ],
         "client_id_exposed": false
+      },
+      "uncertain_recovery_semantics": {
+        "owner_absence_http_status": 404,
+        "idea_api_status": 409,
+        "owner_absence_posture": "acceptance_not_observed",
+        "owner_unavailability_posture": "owner_unavailable",
+        "preserve_reconciliation_required": true,
+        "automatic_resubmission_forbidden": true,
+        "attempt_increment_forbidden": true
       },
       "required_server_headers": [
         "X-Actor-Id",
@@ -161,6 +170,15 @@
           "client_id"
         ],
         "client_id_exposed": false
+      },
+      "uncertain_recovery_semantics": {
+        "owner_absence_http_status": 404,
+        "idea_api_status": 409,
+        "owner_absence_posture": "acceptance_not_observed",
+        "owner_unavailability_posture": "owner_unavailable",
+        "preserve_reconciliation_required": true,
+        "automatic_resubmission_forbidden": true,
+        "attempt_increment_forbidden": true
       }
     },
     {
@@ -261,7 +279,16 @@
       "receipt_required_blockers": [
         "client_publication_authority_blocked",
         "supported_feature_promotion_missing"
-      ]
+      ],
+      "uncertain_recovery_semantics": {
+        "owner_absence_http_status": 404,
+        "idea_api_status": 409,
+        "owner_absence_posture": "acceptance_not_observed",
+        "owner_unavailability_posture": "owner_unavailable",
+        "preserve_reconciliation_required": true,
+        "automatic_resubmission_forbidden": true,
+        "attempt_increment_forbidden": true
+      }
     }
   ],
   "security_boundary": {

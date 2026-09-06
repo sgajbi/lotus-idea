@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
 )
 from app.api.problem_details import (
     conflict_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
     problem_details_response,
@@ -203,6 +204,17 @@ def _response(
             title="Manage realization reconciliation conflict",
             detail="The owner history failed eligibility or evidence validation.",
         )
+    if result.status is ManageRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED:
+        emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
+        return problem_details_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code=result.blocker or "manage_realization_owner_acceptance_not_observed",
+            title="Manage acceptance not observed",
+            detail=(
+                "The exact Manage lookup currently observes no matching acceptance; "
+                "the uncertain submission remains unchanged and is not authorized for retry."
+            ),
+        )
     if result.status is ManageRealizationReconciliationStatus.OWNER_UNAVAILABLE:
         emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
         return problem_details_response(
@@ -243,7 +255,8 @@ MANAGE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
         "HTTP transport acceptance is never treated as review, rebalance-execution, order, "
         "fill, settlement, or client-publication evidence. Active leases, scope drift, identity "
         "or request-fingerprint drift, conversion causation drift, version gaps, chain defects, "
-        "and unsupported authority claims fail closed."
+        "and unsupported authority claims fail closed. A point-in-time owner absence returns "
+        "409 and preserves uncertainty, while owner unavailability returns 503."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ManageRealizationReconciliationResponse,
@@ -311,11 +324,26 @@ MANAGE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
             detail="No downstream submission matches the supplied support reference.",
             description="The source submission does not exist.",
         ),
-        **conflict_metadata(
-            code="manage_realization_reconciliation_conflict",
-            title="Manage realization reconciliation conflict",
-            detail="The owner history failed eligibility or evidence validation.",
-            description="Receipt, scope, identity, version, chain, or authority conflict.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Reconciliation is unsafe or owner acceptance is not yet observed.",
+            responses=(
+                conflict_metadata(
+                    code="manage_realization_reconciliation_conflict",
+                    title="Manage realization reconciliation conflict",
+                    detail="The owner history failed eligibility or evidence validation.",
+                    description="Receipt, scope, identity, version, chain, or authority conflict.",
+                ),
+                conflict_metadata(
+                    code="manage_realization_owner_acceptance_not_observed",
+                    title="Manage acceptance not observed",
+                    detail=(
+                        "The exact Manage lookup currently observes no matching acceptance; "
+                        "the uncertain submission remains unchanged and is not authorized for retry."
+                    ),
+                    description="The exact owner lookup completed but found no matching acceptance.",
+                ),
+            ),
         ),
         **service_unavailable_metadata(
             code="manage_realization_owner_unavailable",

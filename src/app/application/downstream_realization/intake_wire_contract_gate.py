@@ -122,6 +122,15 @@ _TRUSTED_SERVICE_HEADERS = {
     "X-Capabilities",
     "X-Principal-Status",
 }
+_UNCERTAIN_RECOVERY_SEMANTICS = {
+    "owner_absence_http_status": 404,
+    "idea_api_status": 409,
+    "owner_absence_posture": "acceptance_not_observed",
+    "owner_unavailability_posture": "owner_unavailable",
+    "preserve_reconciliation_required": True,
+    "automatic_resubmission_forbidden": True,
+    "attempt_increment_forbidden": True,
+}
 _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
     "advise_proposal": {
         "owner_repository": "lotus-advise",
@@ -152,6 +161,7 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
             ],
             "client_id_exposed": False,
         },
+        "uncertain_recovery_semantics": _UNCERTAIN_RECOVERY_SEMANTICS,
     },
     "manage_review": {
         "owner_repository": "lotus-manage",
@@ -181,6 +191,7 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
             ],
             "client_id_exposed": False,
         },
+        "uncertain_recovery_semantics": _UNCERTAIN_RECOVERY_SEMANTICS,
     },
     "report_evidence": {
         "owner_repository": "lotus-report",
@@ -227,6 +238,7 @@ _EXPECTED_INTAKE_CONSUMERS: dict[str, dict[str, object]] = {
             "client_publication_authority_blocked",
             "supported_feature_promotion_missing",
         ],
+        "uncertain_recovery_semantics": _UNCERTAIN_RECOVERY_SEMANTICS,
     },
 }
 _INTAKE_SECURITY_BOUNDARY_REQUIRED_TRUE_FIELDS = (
@@ -285,8 +297,8 @@ def _validate_downstream_intake_contract_envelope(payload: dict[str, object]) ->
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.11.0":
-        errors.append("downstream intake wire contract must be version 1.11.0")
+    if payload.get("contract_version") != "1.12.0":
+        errors.append("downstream intake wire contract must be version 1.12.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -344,6 +356,8 @@ def _validate_downstream_intake_consumer_contracts(
             errors.extend(_validate_advise_manage_intake_consumer(target, consumer, expected))
         errors.extend(_validate_downstream_intake_request_fields(target, consumer, expected))
         errors.extend(_validate_downstream_intake_server_headers(target, consumer, expected))
+        if consumer.get("uncertain_recovery_semantics") != expected["uncertain_recovery_semantics"]:
+            errors.append(f"{target} intake wire contract uncertain_recovery_semantics drifted")
     return errors
 
 
@@ -380,7 +394,11 @@ def _validate_advise_manage_intake_consumer(
     ):
         errors.append(f"{target} intake wire contract scope_boundary drifted")
     if "owner_history_route" in expected:
-        for field in ("owner_history_route", "history_principal_capability"):
+        for field in (
+            "owner_history_route",
+            "owner_recovery_history_route",
+            "history_principal_capability",
+        ):
             if consumer.get(field) != expected[field]:
                 errors.append(f"{target} intake wire contract {field} drifted")
         for field in ("history_response_fields", "history_required_server_headers"):

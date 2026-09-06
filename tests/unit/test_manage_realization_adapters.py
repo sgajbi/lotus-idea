@@ -23,6 +23,7 @@ from app.infrastructure.downstream_realization import (
     HttpManageActionRealizationClient,
 )
 from app.ports.downstream_realization import (
+    DownstreamRealizationNotObserved,
     DownstreamRealizationOutcomePosture,
     DownstreamRealizationReadError,
 )
@@ -367,6 +368,19 @@ def test_manage_recovery_adapter_maps_owner_unavailability() -> None:
     )
 
     with pytest.raises(DownstreamRealizationReadError):
+        adapter.load_realization_by_conversion_intent(
+            conversion_intent_id="conversion-001",
+            access_scope=report_access_scope(),
+        )
+
+
+def test_manage_recovery_adapter_preserves_exact_owner_absence() -> None:
+    adapter = _manage_adapter(
+        lambda _request: httpx.Response(404, json={}),
+        recovery_history_path="/outcomes/by-conversion-intent",
+    )
+
+    with pytest.raises(DownstreamRealizationNotObserved):
         adapter.load_realization_by_conversion_intent(
             conversion_intent_id="conversion-001",
             access_scope=report_access_scope(),

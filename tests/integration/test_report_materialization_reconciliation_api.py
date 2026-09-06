@@ -10,7 +10,11 @@ import app.api.downstream_realization as downstream_realization_api
 import app.api.report_materialization_reconciliation as reconciliation_api
 from app.domain import GovernedReportEvidencePack
 from app.main import app
-from app.ports.downstream_realization import DownstreamOwnerReceipt, DownstreamRealizationOutcome
+from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
+    DownstreamRealizationOutcome,
+)
 from app.runtime.downstream_realization_state import DownstreamRealizationClientsUnavailableError
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from tests.integration.test_downstream_realization_api import (
@@ -30,6 +34,7 @@ class LostResponseReportClient:
     submission_calls: int = 0
     recovery_calls: int = 0
     contradictory_candidate: bool = False
+    acceptance_observed: bool = True
 
     def submit_report_evidence_pack_request(
         self,
@@ -54,6 +59,10 @@ class LostResponseReportClient:
         idempotency_key: str,
     ) -> DownstreamOwnerReceipt:
         self.recovery_calls += 1
+        if not self.acceptance_observed:
+            raise DownstreamRealizationNotObserved(
+                "Report has no materialization for this evidence pack"
+            )
         assert self.evidence_pack == evidence_pack
         assert access_scope.tenant_id == "tenant-private-bank-sg"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
@@ -137,6 +146,53 @@ def test_report_recovery_api_closes_lost_response_without_second_post(
     assert persisted is not None
     assert persisted.status.value == "accepted_by_downstream"
     assert persisted.owner_receipt is not None
+
+
+def test_report_recovery_api_preserves_uncertainty_when_acceptance_is_not_observed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = LostResponseReportClient(acceptance_observed=False)
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    support_reference = _create_uncertain_report_submission(client)
+    repository = get_idea_repository()
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    assert before is not None
+
+    absent = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+
+    assert absent.status_code == 409
+    assert absent.json()["code"] == "report_materialization_owner_acceptance_not_observed"
+    unchanged = repository.downstream_submission_by_support_reference(support_reference)
+    assert unchanged == before
+    assert unchanged.status.value == "reconciliation_required"
+    assert unchanged.owner_receipt is None
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 1
+
+    report_client.acceptance_observed = True
+    recovered = client.post(
+        _recovery_path(support_reference),
+        headers=_reconciliation_headers(),
+    )
+
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert report_client.submission_calls == 1
+    assert report_client.recovery_calls == 2
 
 
 def test_report_recovery_api_waits_for_expired_lease_after_local_commit_failure(
@@ -311,6 +367,27 @@ def test_report_recovery_openapi_publishes_named_failure_modes() -> None:
     example = operation["responses"]["200"]["content"]["application/json"]["example"]
     assert example["grantsClientPublicationAuthority"] is False
     assert example["supportedFeaturePromoted"] is False
+
+    expected_owner_absence_codes = {
+        "/api/v1/downstream-submissions/{supportReference}/advise-realization-reconciliation": (
+            "advise_realization_reconciliation_conflict",
+            "advise_realization_owner_acceptance_not_observed",
+        ),
+        "/api/v1/downstream-submissions/{supportReference}/manage-realization-reconciliation": (
+            "manage_realization_reconciliation_conflict",
+            "manage_realization_owner_acceptance_not_observed",
+        ),
+        "/api/v1/downstream-submissions/{supportReference}/report-materialization-reconciliation": (
+            "report_materialization_reconciliation_conflict",
+            "report_materialization_owner_acceptance_not_observed",
+        ),
+    }
+    schema = app.openapi()
+    for path, expected_codes in expected_owner_absence_codes.items():
+        examples = schema["paths"][path]["post"]["responses"]["409"]["content"][
+            "application/problem+json"
+        ]["examples"]
+        assert set(examples) == set(expected_codes)
 
 
 def test_report_recovery_api_denial_emits_bounded_operation_event(
