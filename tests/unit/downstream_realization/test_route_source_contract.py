@@ -200,6 +200,30 @@ def test_advise_contract_requires_current_intake_receipt_boundary(
     assert advise_route_source_contract_is_valid(payload) is False
 
 
+def test_advise_contract_accepts_current_explicit_lifecycle_boundary_wording(
+    tmp_path: Path,
+) -> None:
+    root = _write_fixture(tmp_path, "advise")
+    contract_path = root / ADVISE_ROUTE_PROFILE.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["non_proof_boundaries"] = [
+        "Proves a live executable intake receipt and retained owner history.",
+        "Does not grant suitability, recommendation, approval, or consent authority.",
+        "Does not automatically create proposals and does not create orders or fills.",
+        "Does not promote a supported feature or client-ready workflow.",
+    ]
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    payload = build_advise_route_source_contract_payload(
+        generated_at_utc=GENERATED_AT,
+        repository_root=ROOT,
+        advise_root=root,
+    )
+
+    assert payload["sourceContractValid"] is True
+    assert advise_route_source_contract_is_valid(payload) is True
+
+
 @pytest.mark.parametrize(
     "field",
     ["runtime_action_receipt_proven", "receipt_outcomes", "principal_capability"],
@@ -219,6 +243,30 @@ def test_manage_contract_requires_current_action_intake_receipt_boundary(
 
     assert payload["sourceContractValid"] is False
     assert manage_route_source_contract_is_valid(payload) is False
+
+
+def test_manage_contract_accepts_current_non_execution_boundary_wording(
+    tmp_path: Path,
+) -> None:
+    root = _write_fixture(tmp_path, "manage")
+    contract_path = root / MANAGE_ROUTE_PROFILE.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["non_proof_boundaries"] = [
+        "Proves a live executable action-intake receipt and retained review history.",
+        "Does not grant suitability, mandate, rebalance, order, or settlement authority.",
+        "An APPROVED outcome does not prove rebalance execution, create orders or fills.",
+        "Does not promote a supported feature or client-ready workflow.",
+    ]
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    payload = build_manage_route_source_contract_payload(
+        generated_at_utc=GENERATED_AT,
+        repository_root=ROOT,
+        manage_root=root,
+    )
+
+    assert payload["sourceContractValid"] is True
+    assert manage_route_source_contract_is_valid(payload) is True
 
 
 @pytest.mark.parametrize("family", ["advise", "manage"])

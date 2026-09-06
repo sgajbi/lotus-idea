@@ -187,8 +187,9 @@ def valid_advise_intake_runtime_execution() -> dict[str, object]:
         "remainingCertificationBlockers": REMAINING_ADVISE_INTAKE_RUNTIME_BLOCKERS,
         "producerCertificationBlockersRetained": (
             "suitability_policy_authority_remains_lotus_advise",
-            "advisory_proposal_creation_not_certified",
-            "proposal_lifecycle_persistence_not_certified",
+            "proposal_requires_explicit_advise_lifecycle_creation",
+            "idea_outcome_consumer_reconciliation_not_certified",
+            "production_identity_binding_not_certified",
             "client_publication_authority_blocked",
         ),
         "nonProofClaims": {
@@ -247,8 +248,8 @@ def valid_manage_intake_runtime_execution() -> dict[str, object]:
         "aggregateBlockersSatisfied": MANAGE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
         "remainingCertificationBlockers": REMAINING_MANAGE_INTAKE_RUNTIME_BLOCKERS,
         "producerCertificationBlockersRetained": (
-            "rebalance_execution_authority_remains_lotus_manage",
-            "action_register_persistence_not_certified",
+            "production_idp_caller_scope_not_certified",
+            "rebalance_execution_not_certified",
             "oms_execution_not_certified",
             "client_publication_authority_blocked",
         ),
@@ -505,14 +506,14 @@ def _valid_manage_intake_receipt_evidence() -> dict[str, dict[str, object]]:
             intake_status="ACCEPTED",
             accepted=True,
             replay=False,
-            reason_codes=("idea_action_intake_receipt_accepted",),
+            reason_codes=("idea_action_created_for_management_review",),
         ),
         "acceptedReplay": _manage_receipt(
             status_code=202,
             intake_status="ACCEPTED_REPLAYED",
             accepted=True,
             replay=True,
-            reason_codes=("idea_action_intake_receipt_replayed",),
+            reason_codes=("idea_action_replayed_for_management_review",),
         ),
         "rejected": _manage_receipt(
             status_code=202,
@@ -520,8 +521,8 @@ def _valid_manage_intake_receipt_evidence() -> dict[str, dict[str, object]]:
             accepted=False,
             replay=False,
             reason_codes=(
-                "action_register_persistence_not_certified",
-                "idea_action_intake_receipt_rejected_no_action_created",
+                "idea_action_intent_type_not_supported",
+                "idea_action_intake_rejected_no_management_work_created",
             ),
         ),
         "idempotencyConflict": _manage_receipt(
@@ -543,9 +544,11 @@ def _valid_manage_intake_receipt_evidence() -> dict[str, dict[str, object]]:
             intake_status="ACCEPTED",
             accepted=True,
             replay=False,
-            reason_codes=("idea_action_intake_receipt_accepted",),
+            reason_codes=("idea_action_created_for_management_review",),
         ),
     }
+    for name in ("accepted", "acceptedReplay", "tenantScopedIdempotency"):
+        receipts[name]["actionRegisterCreated"] = True
     for receipt in receipts.values():
         receipt["receiptDigest"] = source_safe_manage_receipt_digest(receipt)
     return receipts

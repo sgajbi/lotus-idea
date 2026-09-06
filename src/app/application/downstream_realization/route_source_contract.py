@@ -36,13 +36,14 @@ REMAINING_MANAGE_ROUTE_BLOCKERS = (
 )
 REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS = (
     "suitability_policy_authority_remains_lotus_advise",
-    "advisory_proposal_creation_not_certified",
-    "proposal_lifecycle_persistence_not_certified",
+    "proposal_requires_explicit_advise_lifecycle_creation",
+    "idea_outcome_consumer_reconciliation_not_certified",
+    "production_identity_binding_not_certified",
     "client_publication_authority_blocked",
 )
 REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS = (
-    "rebalance_execution_authority_remains_lotus_manage",
-    "action_register_persistence_not_certified",
+    "production_idp_caller_scope_not_certified",
+    "rebalance_execution_not_certified",
     "oms_execution_not_certified",
     "client_publication_authority_blocked",
 )
@@ -403,9 +404,11 @@ def _contract_declares_runtime_receipt_boundary(
 
 
 def _contract_preserves_boundaries(payload: dict[str, Any] | None) -> bool:
-    boundaries = " ".join(str(value) for value in (payload or {}).get("non_proof_boundaries", ()))
+    boundaries = " ".join(
+        str(value) for value in (payload or {}).get("non_proof_boundaries", ())
+    ).casefold()
     route_or_receipt_boundary = any(
-        fragment in boundaries
+        fragment.casefold() in boundaries
         for fragment in (
             "Proves only a live route foundation",
             "Proves a live executable intake receipt",
@@ -415,9 +418,15 @@ def _contract_preserves_boundaries(payload: dict[str, Any] | None) -> bool:
     return all(
         (
             route_or_receipt_boundary,
-            "Does not grant suitability" in boundaries,
-            "Does not create orders" in boundaries,
-            "Does not promote a supported feature" in boundaries,
+            "does not grant suitability" in boundaries,
+            any(
+                phrase in boundaries
+                for phrase in (
+                    "does not create orders",
+                    "does not prove rebalance execution, create orders",
+                )
+            ),
+            "does not promote a supported feature" in boundaries,
         )
     )
 

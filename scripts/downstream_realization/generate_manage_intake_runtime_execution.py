@@ -39,8 +39,8 @@ ROUTE_PATH = "/api/v1/rebalance/idea-action-intake"
 MANAGE_TESTCLIENT_SCRIPT = r"""
 import json
 from fastapi.testclient import TestClient
+from src.api.dependencies import reset_idea_management_action_repository_for_tests
 from src.api.main import app
-from src.core.rebalance_runs import reset_idea_action_intake_idempotency_for_tests
 
 ROUTE = "/api/v1/rebalance/idea-action-intake"
 
@@ -48,6 +48,7 @@ def payload(intent_type="REVIEW_FOR_REBALANCE", conversion_intent_id="conversion
     return {
         "source_system": "lotus-idea",
         "source_product": "lotus-idea:IdeaCandidate:v1",
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "idea_candidate_id": "idea_candidate_001",
         "conversion_intent_id": conversion_intent_id,
         "intent_type": intent_type,
@@ -68,11 +69,12 @@ def headers(idempotency_key="idea-action-intake-proof-001", tenant_id="tenant-pr
         "X-Legal-Entity-Code": legal_entity_code,
         "X-Service-Identity": "lotus-idea",
         "X-Capabilities": capabilities,
+        "X-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Correlation-Id": "corr-idea-manage-runtime-proof",
         "X-Principal-Status": "ACTIVE",
     }
 
-reset_idea_action_intake_idempotency_for_tests()
+reset_idea_management_action_repository_for_tests()
 client = TestClient(app)
 accepted = client.post(ROUTE, json=payload(), headers=headers())
 accepted_replay = client.post(ROUTE, json=payload(), headers=headers())

@@ -48,6 +48,9 @@ def reason_codes(body: object) -> list[str]:
     outcome_reason_codes = body.get("outcome_reason_codes")
     if isinstance(outcome_reason_codes, list):
         return [str(item) for item in outcome_reason_codes]
+    problem_reason_code = body.get("reasonCode") or body.get("reason_code")
+    if isinstance(problem_reason_code, str):
+        return [problem_reason_code]
     detail = body.get("detail")
     if isinstance(detail, str):
         return [detail]
