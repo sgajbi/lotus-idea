@@ -208,18 +208,15 @@
       "Do not claim production migration certification"
     ],
     "379": [
-      "Keep #379 open and status/blocked",
-      "sgajbi/lotus-advise#461",
-      "sgajbi/lotus-manage#621",
-      "sgajbi/lotus-report#152",
-      "sgajbi/lotus-report#136 is closed for Report-owned Idea evidence retention-policy conformance",
-      "30898036781",
-      "consumes sgajbi/lotus-manage#620 Manage temporal receipt identity",
-      "closed v3 Manage mandate runtime proof contract",
-      "sgajbi/lotus-manage#624",
+      "Keep #379 open and status/in-progress",
+      "sgajbi/lotus-report#331",
+      "positive Report source_event_version contract",
+      "persists only a higher version",
+      "refuses regression or same-version mutation",
+      "sgajbi/lotus-advise#557",
+      "sgajbi/lotus-workbench#140",
       "sgajbi/lotus-archive#55",
-      "production/certification evidence",
-      "Archive production legal/privacy lifecycle conformance"
+      "does not grant suitability"
     ],
     "380": [
       "PR #746 corrected stale ready posture",

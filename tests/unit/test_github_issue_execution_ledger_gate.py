@@ -419,7 +419,7 @@ def test_rfc0002_github_issue_execution_ledger_closes_advise_live_proof_after_ma
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification_evidence() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_issue_379_owner_reconciliation() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_379 = next(
@@ -429,28 +429,17 @@ def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification
     )
 
     assert issue_379["githubState"] == "open"
-    assert issue_379["executionStatus"] == "open_blocked"
+    assert issue_379["executionStatus"] == "open_in_progress"
     assert issue_379["allowPullRequestAutoClose"] is False
-    assert "Keep #379 open and status/blocked" in issue_379["closureInstruction"]
-    assert "sgajbi/lotus-advise#461" in issue_379["closureInstruction"]
-    assert "sgajbi/lotus-manage#621" in issue_379["closureInstruction"]
-    assert "sgajbi/lotus-report#152" in issue_379["closureInstruction"]
-    assert (
-        "sgajbi/lotus-report#136 is closed for Report-owned Idea evidence retention-policy conformance"
-        in issue_379["closureInstruction"]
-    )
-    assert "30898036781" in issue_379["closureInstruction"]
-    assert (
-        "consumes sgajbi/lotus-manage#620 Manage temporal receipt identity"
-        in issue_379["closureInstruction"]
-    )
-    assert "closed v3 Manage mandate runtime proof contract" in issue_379["closureInstruction"]
-    assert "sgajbi/lotus-manage#624" in issue_379["closureInstruction"]
+    assert "Keep #379 open and status/in-progress" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-report#331" in issue_379["closureInstruction"]
+    assert "positive Report source_event_version contract" in issue_379["closureInstruction"]
+    assert "persists only a higher version" in issue_379["closureInstruction"]
+    assert "refuses regression or same-version mutation" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-advise#557" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-workbench#140" in issue_379["closureInstruction"]
     assert "sgajbi/lotus-archive#55" in issue_379["closureInstruction"]
-    assert "production/certification evidence" in issue_379["closureInstruction"]
-    assert (
-        "Archive production legal/privacy lifecycle conformance" in issue_379["closureInstruction"]
-    )
+    assert "does not grant suitability" in issue_379["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence() -> None:

@@ -3064,10 +3064,14 @@ Recent issue-derived patterns to preserve:
     `POST`. Authorize complete tenant/book/portfolio/client scope before the
     owner read. Query Report with the persisted idempotency key plus exact pack,
     conversion-intent, candidate, evidence packet, evidence fingerprint, and
-    portfolio identity. Validate the typed receipt before persisting it with
-    trusted local acceptance time. Missing, unavailable, malformed, or
-    contradictory owner evidence leaves local posture uncertain; exact
-    persisted replay performs no owner read. Report/Render/Archive remain
+    portfolio identity. Require a positive Report lifecycle version and validate
+    the typed receipt before persisting it with trusted local acceptance time.
+    Every explicit reconciliation performs that exact read-only lookup. Persist
+    only a higher version; treat an unchanged version as non-mutating replay and
+    reject regression or same-version mutation. Missing, unavailable, malformed,
+    or contradictory owner evidence leaves local posture unchanged. Legacy
+    unversioned receipts remain unknown until upgraded from owner evidence; never
+    fabricate a version. Report/Render/Archive remain
     authoritative for materialization, rendering, archive, and publication.
 47. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
