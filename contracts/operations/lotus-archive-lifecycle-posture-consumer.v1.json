@@ -5,6 +5,39 @@
   "producer_product_id": "lotus-archive:IdeaEvidenceLifecycleDecision:v1",
   "consumer_boundary": "linked_report_evidence_lifecycle_posture",
   "trust_bundle_environment": "LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON",
+  "trust_bundle_contract": {
+    "producer_response_model": "LifecycleVerificationKeys",
+    "producer_endpoint": "GET /documents/idea-lifecycle-decisions/verification-keys",
+    "transport": "authenticated_out_of_band_configuration",
+    "key_fields": [
+      "key_id",
+      "algorithm",
+      "public_key_base64",
+      "provenance",
+      "status",
+      "not_before_utc",
+      "not_after_utc"
+    ],
+    "algorithm": "ed25519",
+    "accepted_verification_statuses": [
+      "active",
+      "retired"
+    ],
+    "unique_key_ids_required": true,
+    "raw_public_key_bytes": 32,
+    "managed_provenance_required_profiles": [
+      "demo",
+      "staging",
+      "production"
+    ],
+    "ephemeral_development_allowed_profiles": [
+      "local",
+      "test"
+    ],
+    "active_key_requires_open_window": true,
+    "retired_key_requires_not_after": true,
+    "discovery_endpoint_establishes_trust": false
+  },
   "required_bindings": [
     "tenant_id",
     "candidate_id",
@@ -17,7 +50,7 @@
     "signature_algorithm": "Ed25519",
     "digest_algorithm": "sha256",
     "maximum_ttl_seconds": 300,
-    "active_or_rotated_trusted_key_required": true,
+    "active_or_retired_trusted_key_required": true,
     "exact_linked_evidence_pack_required": true,
     "disposal_authorized_must_be_false": true
   },

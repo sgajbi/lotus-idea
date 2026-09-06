@@ -4,11 +4,15 @@ import json
 import os
 
 from app.application.ed25519_key_trust import Ed25519SignatureVerifier as SignatureVerifierPort
-from app.domain.data_lifecycle.archive_posture import ArchiveLifecycleTrustedKey
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLifecycleKeyProvenance,
+    ArchiveLifecycleTrustedKey,
+)
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
 from app.integration.data_lifecycle.archive_posture_contract import (
     map_archive_lifecycle_trust_bundle,
 )
+from app.runtime.settings import RuntimeProfile, load_runtime_settings
 
 
 ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV = "LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON"
@@ -32,6 +36,13 @@ def get_archive_lifecycle_dependencies() -> tuple[
     try:
         payload = json.loads(raw)
         keys = map_archive_lifecycle_trust_bundle(payload)
+        runtime_profile = load_runtime_settings().runtime_profile
+        if runtime_profile not in {RuntimeProfile.LOCAL, RuntimeProfile.TEST} and any(
+            key.provenance is not ArchiveLifecycleKeyProvenance.MANAGED for key in keys
+        ):
+            raise ValueError(
+                "ephemeral Archive lifecycle keys are restricted to local and test profiles"
+            )
     except (ValueError, TypeError, json.JSONDecodeError) as exc:
         raise ArchiveLifecycleTrustUnavailableError(
             "Archive lifecycle trust bundle is invalid"

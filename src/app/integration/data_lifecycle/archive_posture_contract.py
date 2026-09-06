@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Mapping
+from typing import Any, Mapping, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLegalHoldStatus,
     ArchiveLifecycleAction,
     ArchiveLifecycleDecisionClaims,
     ArchiveLifecycleDecisionEnvelope,
+    ArchiveLifecycleKeyAlgorithm,
+    ArchiveLifecycleKeyProvenance,
+    ArchiveLifecycleKeyStatus,
     ArchiveLifecycleTrustedKey,
     ArchivePurgeStatus,
 )
@@ -68,20 +71,32 @@ class ArchiveLifecycleTrustedKeyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     key_id: str
-    public_key_base64url: str
-    status: str
+    algorithm: ArchiveLifecycleKeyAlgorithm
+    public_key_base64: str
+    provenance: ArchiveLifecycleKeyProvenance
+    status: ArchiveLifecycleKeyStatus
     not_before_utc: datetime
     not_after_utc: datetime | None = None
 
     def to_domain(self) -> ArchiveLifecycleTrustedKey:
-        return ArchiveLifecycleTrustedKey(**self.model_dump())
+        values = self.model_dump(exclude={"public_key_base64"})
+        return ArchiveLifecycleTrustedKey(
+            **values,
+            public_key_base64url=self.public_key_base64,
+        )
 
 
 class ArchiveLifecycleTrustBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal["lotus-idea.archive-lifecycle-trust-bundle.v1"]
     keys: tuple[ArchiveLifecycleTrustedKeyConfig, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def require_unique_key_ids(self) -> Self:
+        key_ids = tuple(key.key_id for key in self.keys)
+        if len(key_ids) != len(set(key_ids)):
+            raise ValueError("Archive lifecycle trust bundle key IDs must be unique")
+        return self
 
     def to_domain(self) -> tuple[ArchiveLifecycleTrustedKey, ...]:
         return tuple(key.to_domain() for key in self.keys)
