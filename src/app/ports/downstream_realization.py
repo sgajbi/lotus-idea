@@ -29,6 +29,10 @@ class DownstreamRealizationReadConflict(DownstreamRealizationReadError):
     """Raised when an owner read rejects the supplied exact resource identity."""
 
 
+class DownstreamRealizationNotObserved(DownstreamRealizationReadError):
+    """Raised when an exact owner lookup observes no matching acceptance yet."""
+
+
 @dataclass(frozen=True)
 class DownstreamOwnerReceipt:
     """Source-safe identity returned by the service that accepted durable work."""

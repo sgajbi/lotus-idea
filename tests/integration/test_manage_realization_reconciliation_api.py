@@ -18,6 +18,7 @@ from app.domain import (
 from app.main import app
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationOutcome,
 )
 from app.runtime.downstream_realization_state import ConversionRealizationClients
@@ -46,6 +47,7 @@ class OwnerLifecycleClient:
     submission_calls: int = 0
     history_calls: int = 0
     recovery_calls: int = 0
+    acceptance_observed: bool = True
 
     def submit_action_intent(
         self,
@@ -90,6 +92,10 @@ class OwnerLifecycleClient:
         trace_id: str | None = None,
     ) -> ManageActionRealizationHistory:
         self.recovery_calls += 1
+        if not self.acceptance_observed:
+            raise DownstreamRealizationNotObserved(
+                "Manage has no realization for this conversion intent"
+            )
         assert self.intent is not None
         assert conversion_intent_id == self.intent.intent.conversion_intent_id
         return self._owner_history(access_scope)
@@ -141,6 +147,22 @@ class OwnerLifecycleClient:
             client_publication_proven=False,
             events=events,
         )
+
+
+@dataclass
+class LostResponseOwnerLifecycleClient(OwnerLifecycleClient):
+    def submit_action_intent(
+        self,
+        intent: Any,
+        *,
+        access_scope: Any,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> DownstreamRealizationOutcome:
+        self.submission_calls += 1
+        self.intent = intent
+        raise TimeoutError("response lost after Manage committed")
 
 
 def _owner_event(
@@ -363,6 +385,76 @@ def test_manage_recovery_waits_for_lease_and_exact_submission_replay_has_no_owne
         "reconciled",
     ]
     assert final_record.audit_history[-1].occurred_at_utc == persisted.lease_expires_at_utc
+
+
+def test_manage_recovery_api_preserves_uncertainty_when_acceptance_is_not_observed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    manage_client = LostResponseOwnerLifecycleClient(acceptance_observed=False)
+    clients = ConversionRealizationClients(
+        advise_client=CapturingConversionClient(
+            DownstreamRealizationOutcome.accepted_by_downstream()
+        ),
+        manage_client=manage_client,
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    monkeypatch.setattr(
+        reconciliation_api,
+        "get_conversion_realization_clients",
+        lambda: clients,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-manage-acceptance-not-observed",
+        idempotency_prefix="manage-acceptance-not-observed",
+    )
+    conversion_intent_id = "conversion-manage-acceptance-not-observed-001"
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id=conversion_intent_id,
+        target="manage_review",
+        idempotency_key=conversion_intent_id,
+    )
+    submitted = client.post(
+        f"/api/v1/conversion-intents/{conversion_intent_id}/downstream-submissions",
+        headers=downstream_submission_headers("submission-manage-not-observed-001"),
+    )
+    support_reference = submitted.json()["downstreamSubmission"]["supportReference"]
+    repository = get_idea_repository()
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    assert before is not None
+
+    absent = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/manage-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert absent.status_code == 409
+    assert absent.json()["code"] == "manage_realization_owner_acceptance_not_observed"
+    unchanged = repository.downstream_submission_by_support_reference(support_reference)
+    assert unchanged == before
+    assert unchanged.status.value == "reconciliation_required"
+    assert unchanged.owner_receipt is None
+    assert manage_client.submission_calls == 1
+    assert manage_client.recovery_calls == 1
+
+    manage_client.acceptance_observed = True
+    recovered = client.post(
+        f"/api/v1/downstream-submissions/{support_reference}/manage-realization-reconciliation",
+        headers=_reconciliation_headers(),
+    )
+
+    assert recovered.status_code == 200
+    assert recovered.json()["reconciliationStatus"] == "accepted"
+    assert manage_client.submission_calls == 1
+    assert manage_client.recovery_calls == 2
 
 
 def test_manage_realization_reconciliation_api_reports_unconfigured_owner_reader(

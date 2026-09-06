@@ -23,6 +23,7 @@ from app.domain import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadConflict,
     DownstreamRealizationReadError,
     ReportEvidencePackMaterializationReader,
@@ -36,6 +37,7 @@ class ReportMaterializationReconciliationStatus(StrEnum):
     NOT_FOUND = "not_found"
     NOT_ELIGIBLE = "not_eligible"
     CONFLICT = "conflict"
+    OWNER_ACCEPTANCE_NOT_OBSERVED = "owner_acceptance_not_observed"
     OWNER_UNAVAILABLE = "owner_unavailable"
 
 
@@ -119,6 +121,11 @@ def reconcile_report_materialization_receipt(
             idempotency_key=submission.idempotency_key,
         )
         durable_receipt = validated_report_submission_receipt(owner_receipt, evidence_pack)
+    except DownstreamRealizationNotObserved:
+        return _result(
+            ReportMaterializationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED,
+            blocker="report_materialization_owner_acceptance_not_observed",
+        )
     except DownstreamRealizationReadConflict:
         return _result(
             ReportMaterializationReconciliationStatus.CONFLICT,

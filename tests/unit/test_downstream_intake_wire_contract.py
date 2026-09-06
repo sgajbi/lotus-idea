@@ -205,6 +205,26 @@ def test_report_service_context_matches_versioned_wire_contract() -> None:
     assert set(context.request_headers()) == set(contract["required_server_headers"])
 
 
+@pytest.mark.parametrize(
+    "target",
+    ["advise_proposal", "manage_review", "report_evidence"],
+)
+def test_uncertain_recovery_contract_distinguishes_owner_absence_from_outage(
+    target: str,
+) -> None:
+    semantics = _consumer_contract(target)["uncertain_recovery_semantics"]
+
+    assert semantics == {
+        "owner_absence_http_status": 404,
+        "idea_api_status": 409,
+        "owner_absence_posture": "acceptance_not_observed",
+        "owner_unavailability_posture": "owner_unavailable",
+        "preserve_reconciliation_required": True,
+        "automatic_resubmission_forbidden": True,
+        "attempt_increment_forbidden": True,
+    }
+
+
 def _consumer_contract(target: str) -> dict[str, Any]:
     payload = json.loads(WIRE_CONTRACT_PATH.read_text(encoding="utf-8"))
     consumers = payload.get("consumer_contracts")

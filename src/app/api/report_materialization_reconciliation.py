@@ -15,6 +15,7 @@ from app.api.durable_write_guard import (
 )
 from app.api.problem_details import (
     conflict_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
     problem_details_response,
@@ -138,6 +139,17 @@ def _response(
             title="Report materialization reconciliation conflict",
             detail="The submission or recovered owner receipt failed exact validation.",
         )
+    if result.status is ReportMaterializationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED:
+        emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
+        return problem_details_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code=result.blocker or "report_materialization_owner_acceptance_not_observed",
+            title="Report acceptance not observed",
+            detail=(
+                "The exact Report lookup currently observes no matching acceptance; "
+                "the uncertain submission remains unchanged and is not authorized for retry."
+            ),
+        )
     if result.status is ReportMaterializationReconciliationStatus.OWNER_UNAVAILABLE:
         emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
         return problem_details_response(
@@ -174,7 +186,8 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
         "tenant, portfolio, candidate, conversion-intent, evidence and idempotency identity "
         "validation. Active submission leases fail closed; an expired in-flight lease may be "
         "recovered using trusted server acceptance time. It never repeats materialization POST "
-        "and grants no client-publication or supported-feature authority."
+        "and grants no client-publication or supported-feature authority. A point-in-time owner "
+        "absence returns 409 and preserves uncertainty, while owner unavailability returns 503."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ReportMaterializationReconciliationResponse,
@@ -230,17 +243,32 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
             detail="No downstream submission matches the supplied support reference.",
             description="The source submission does not exist.",
         ),
-        **conflict_metadata(
-            code="report_materialization_reconciliation_conflict",
-            title="Report materialization reconciliation conflict",
-            detail="The submission or recovered owner receipt failed exact validation.",
-            description="Scope, identity, posture or persistence conflict.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Reconciliation is unsafe or owner acceptance is not yet observed.",
+            responses=(
+                conflict_metadata(
+                    code="report_materialization_reconciliation_conflict",
+                    title="Report materialization reconciliation conflict",
+                    detail="The submission or recovered owner receipt failed exact validation.",
+                    description="Scope, identity, posture or persistence conflict.",
+                ),
+                conflict_metadata(
+                    code="report_materialization_owner_acceptance_not_observed",
+                    title="Report acceptance not observed",
+                    detail=(
+                        "The exact Report lookup currently observes no matching acceptance; "
+                        "the uncertain submission remains unchanged and is not authorized for retry."
+                    ),
+                    description="The exact owner lookup completed but found no matching acceptance.",
+                ),
+            ),
         ),
         **service_unavailable_metadata(
             code="report_materialization_owner_unavailable",
             title="Report materialization owner unavailable",
             detail="The authoritative Report receipt could not be read; no evidence changed.",
-            description="Report read configuration, availability or exact match prevented recovery.",
+            description="Report read configuration or availability prevented recovery.",
         ),
         **durable_repository_write_unavailable_metadata(),
     },

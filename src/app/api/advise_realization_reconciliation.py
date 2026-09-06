@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
 )
 from app.api.problem_details import (
     conflict_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
     problem_details_response,
@@ -207,6 +208,17 @@ def _response(
             title="Advise realization reconciliation conflict",
             detail="The owner history failed eligibility or evidence validation.",
         )
+    if result.status is AdviseRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED:
+        emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
+        return problem_details_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code=result.blocker or "advise_realization_owner_acceptance_not_observed",
+            title="Advise acceptance not observed",
+            detail=(
+                "The exact Advise lookup currently observes no matching acceptance; "
+                "the uncertain submission remains unchanged and is not authorized for retry."
+            ),
+        )
     if result.status is AdviseRealizationReconciliationStatus.OWNER_UNAVAILABLE:
         emit_reconciliation_event(OperationOutcome.BLOCKED, result.blocker)
         return problem_details_response(
@@ -245,7 +257,9 @@ ADVISE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
         "settlement, or client-publication evidence. Missing receipts, scope drift, identity "
         "drift, version gaps, chronology defects, active submission leases, and unsupported "
         "authority claims fail closed. An expired in-flight lease may be recovered read-only "
-        "using trusted server acceptance time; the mutating owner request is never repeated."
+        "using trusted server acceptance time; the mutating owner request is never repeated. "
+        "A point-in-time owner absence returns 409 and preserves uncertainty, while owner "
+        "unavailability returns 503."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AdviseRealizationReconciliationResponse,
@@ -313,11 +327,26 @@ ADVISE_REALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
             detail="No downstream submission matches the supplied support reference.",
             description="The source submission does not exist.",
         ),
-        **conflict_metadata(
-            code="advise_realization_reconciliation_conflict",
-            title="Advise realization reconciliation conflict",
-            detail="The owner history failed eligibility or evidence validation.",
-            description="Receipt, scope, identity, version, chronology, or authority conflict.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Reconciliation is unsafe or owner acceptance is not yet observed.",
+            responses=(
+                conflict_metadata(
+                    code="advise_realization_reconciliation_conflict",
+                    title="Advise realization reconciliation conflict",
+                    detail="The owner history failed eligibility or evidence validation.",
+                    description="Receipt, scope, identity, version, chronology, or authority conflict.",
+                ),
+                conflict_metadata(
+                    code="advise_realization_owner_acceptance_not_observed",
+                    title="Advise acceptance not observed",
+                    detail=(
+                        "The exact Advise lookup currently observes no matching acceptance; "
+                        "the uncertain submission remains unchanged and is not authorized for retry."
+                    ),
+                    description="The exact owner lookup completed but found no matching acceptance.",
+                ),
+            ),
         ),
         **service_unavailable_metadata(
             code="advise_realization_owner_unavailable",

@@ -19,6 +19,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.ports.downstream_realization import (
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadError,
     ManageActionRealizationReader,
 )
@@ -31,6 +32,7 @@ class ManageRealizationReconciliationStatus(StrEnum):
     NOT_FOUND = "not_found"
     NOT_ELIGIBLE = "not_eligible"
     CONFLICT = "conflict"
+    OWNER_ACCEPTANCE_NOT_OBSERVED = "owner_acceptance_not_observed"
     OWNER_UNAVAILABLE = "owner_unavailable"
 
 
@@ -102,6 +104,11 @@ def reconcile_manage_realization_history(
             access_scope=access_scope,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
+        )
+    except DownstreamRealizationNotObserved:
+        return _result(
+            ManageRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED,
+            blocker="manage_realization_owner_acceptance_not_observed",
         )
     except DownstreamRealizationReadError:
         return _result(

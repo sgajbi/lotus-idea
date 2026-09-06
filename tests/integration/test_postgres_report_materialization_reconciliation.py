@@ -20,7 +20,11 @@ from app.application.report_materialization_reconciliation import (
 )
 from app.domain import GovernedReportEvidencePack, ReviewAccessScope
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
-from app.ports.downstream_realization import DownstreamOwnerReceipt, DownstreamRealizationOutcome
+from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
+    DownstreamRealizationOutcome,
+)
 from tests.support.report_materialization import authoritative_report_outcome
 from tests.unit.test_downstream_realization_application import (
     AUTHORIZED_SCOPE_FILTER,
@@ -70,6 +74,7 @@ class _CountingReader:
     receipt: DownstreamOwnerReceipt
     expected_idempotency_key: str
     call_count: int = 0
+    acceptance_observed: bool = True
 
     def recover_report_evidence_pack_receipt(
         self,
@@ -84,6 +89,10 @@ class _CountingReader:
         assert evidence_pack.report_evidence_pack_id == "report-evidence-pack-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         assert idempotency_key == self.expected_idempotency_key
+        if not self.acceptance_observed:
+            raise DownstreamRealizationNotObserved(
+                "Report has no materialization for this evidence pack"
+            )
         return self.receipt
 
 
@@ -118,6 +127,7 @@ def test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays(
     reader = _CountingReader(
         owner_outcome.owner_receipt,
         expected_idempotency_key="postgres-report-recovery-001",
+        acceptance_observed=False,
     )
     command = ReconcileReportMaterializationCommand(
         support_reference=support_reference,
@@ -126,6 +136,22 @@ def test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays(
         accepted_at_utc=RECORDED_AT,
     )
 
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        before = restarted.downstream_submission_by_support_reference(support_reference)
+        not_observed = reconcile_report_materialization_receipt(
+            command,
+            repository=restarted,
+            report_reader=reader,
+        )
+        unchanged = restarted.downstream_submission_by_support_reference(support_reference)
+        assert (
+            not_observed.status
+            is ReportMaterializationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+        )
+        assert unchanged == before
+
+    reader.acceptance_observed = True
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
         accepted = reconcile_report_materialization_receipt(
@@ -159,7 +185,7 @@ def test_postgres_report_receipt_recovery_survives_restart_and_exactly_replays(
         assert persisted.audit_history[-1].occurred_at_utc == RECORDED_AT
 
     assert submit_client.call_count == 1
-    assert reader.call_count == 1
+    assert reader.call_count == 2
 
 
 def test_postgres_recovers_owner_acceptance_after_local_finalize_failure_and_restart(

@@ -29,6 +29,7 @@ from app.infrastructure.downstream_client import (
 )
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadConflict,
     DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
@@ -321,6 +322,7 @@ class HttpAdviseProposalRealizationClient:
         return self._load_realization_history(
             recovery_path,
             query_params={"conversion_intent_id": normalized_conversion_intent_id},
+            absence_is_not_observed=True,
             access_scope=access_scope,
             correlation_id=correlation_id,
             trace_id=trace_id,
@@ -331,6 +333,7 @@ class HttpAdviseProposalRealizationClient:
         path: str,
         *,
         query_params: dict[str, str] | None = None,
+        absence_is_not_observed: bool = False,
         access_scope: ReviewAccessScope,
         correlation_id: str | None,
         trace_id: str | None,
@@ -351,6 +354,10 @@ class HttpAdviseProposalRealizationClient:
                 additional_headers=headers,
             )
         except DownstreamServiceError as exc:
+            if absence_is_not_observed and exc.status_code == 404:
+                raise DownstreamRealizationNotObserved(
+                    "authoritative Advise acceptance was not observed"
+                ) from exc
             raise DownstreamRealizationReadError(
                 "authoritative Advise realization history is unavailable"
             ) from exc
@@ -470,6 +477,10 @@ class HttpManageActionRealizationClient:
                 additional_headers=self._manage_scoped_headers(access_scope),
             )
         except DownstreamServiceError as exc:
+            if exc.status_code == 404:
+                raise DownstreamRealizationNotObserved(
+                    "authoritative Manage acceptance was not observed"
+                ) from exc
             raise DownstreamRealizationReadError(
                 "authoritative Manage realization history is unavailable"
             ) from exc
@@ -567,6 +578,10 @@ class HttpReportEvidencePackMaterializationClient:
                 additional_headers=headers,
             )
         except DownstreamServiceError as exc:
+            if exc.status_code == 404:
+                raise DownstreamRealizationNotObserved(
+                    "authoritative Report acceptance was not observed"
+                ) from exc
             if exc.status_code == 409:
                 raise DownstreamRealizationReadConflict(
                     "authoritative Report materialization identity conflicts"

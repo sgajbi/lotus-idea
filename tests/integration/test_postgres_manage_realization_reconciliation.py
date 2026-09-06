@@ -24,7 +24,11 @@ from app.domain import (
     SourceSystem,
 )
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
-from app.ports.downstream_realization import DownstreamOwnerReceipt, DownstreamRealizationOutcome
+from app.ports.downstream_realization import (
+    DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
+    DownstreamRealizationOutcome,
+)
 from tests.unit.test_downstream_realization_application import (
     AUTHORIZED_SCOPE_FILTER,
     CapturingManageClient,
@@ -38,6 +42,7 @@ class _CountingManageReader:
     history: ManageActionRealizationHistory
     recovery_calls: int = 0
     history_calls: int = 0
+    acceptance_observed: bool = True
 
     def load_realization_by_conversion_intent(
         self,
@@ -50,6 +55,10 @@ class _CountingManageReader:
         self.recovery_calls += 1
         assert conversion_intent_id == "conversion-manage_review-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+        if not self.acceptance_observed:
+            raise DownstreamRealizationNotObserved(
+                "Manage has no realization for this conversion intent"
+            )
         return self.history
 
     def load_action_realization(
@@ -115,7 +124,27 @@ def test_postgres_recovers_manage_acceptance_after_finalize_failure_and_restart(
         assert pending.lease_expires_at_utc is not None
         accepted_at_utc = pending.lease_expires_at_utc
 
-    reader = _CountingManageReader(_history(version=2))
+    reader = _CountingManageReader(_history(version=2), acceptance_observed=False)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        not_observed = reconcile_manage_realization_history(
+            ReconcileManageRealizationCommand(
+                support_reference=support_reference,
+                actor_subject="operator-redacted",
+                access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+                accepted_at_utc=accepted_at_utc,
+            ),
+            repository=restarted,
+            manage_reader=reader,
+        )
+        unchanged = restarted.downstream_submission_by_support_reference(support_reference)
+        assert (
+            not_observed.status
+            is ManageRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+        )
+        assert unchanged == pending
+
+    reader.acceptance_observed = True
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
         recovered = reconcile_manage_realization_history(
@@ -160,5 +189,5 @@ def test_postgres_recovers_manage_acceptance_after_finalize_failure_and_restart(
         assert history == _history(version=2)
 
     assert len(accepted_client.submitted) == 1
-    assert reader.recovery_calls == 1
+    assert reader.recovery_calls == 2
     assert reader.history_calls == 0

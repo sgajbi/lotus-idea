@@ -208,7 +208,7 @@ def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
 
     errors = validate_downstream_intake_wire_contract(tmp_path)
 
-    assert "downstream intake wire contract must be version 1.11.0" in errors
+    assert "downstream intake wire contract must be version 1.12.0" in errors
     assert "downstream intake wire contract repository must be lotus-idea" in errors
     assert "downstream intake wire contract must remain development_only" in errors
     assert "downstream intake wire contract must remain not_certified" in errors
@@ -273,6 +273,8 @@ def test_downstream_intake_wire_contract_rejects_advise_manage_field_drift(
     manage_contract["receipt_outcomes"] = []
     manage_contract["principal_capability"] = "wrong"
     manage_contract["local_dev_principal_source"] = "browser"
+    manage_contract["owner_recovery_history_route"] = "GET /unsafe"
+    manage_contract["uncertain_recovery_semantics"] = {"automatic_resubmission_forbidden": False}
     payload["consumer_contracts"][1] = manage_contract
     _write_intake_wire_contract(tmp_path, payload)
 
@@ -282,6 +284,8 @@ def test_downstream_intake_wire_contract_rejects_advise_manage_field_drift(
     assert "manage_review intake wire contract receipt_outcomes drifted" in errors
     assert "manage_review intake wire contract principal_capability drifted" in errors
     assert "manage_review intake wire contract local_dev_principal_source drifted" in errors
+    assert "manage_review intake wire contract owner_recovery_history_route drifted" in errors
+    assert "manage_review intake wire contract uncertain_recovery_semantics drifted" in errors
 
 
 def test_downstream_intake_wire_contract_rejects_advise_scope_boundary_drift(

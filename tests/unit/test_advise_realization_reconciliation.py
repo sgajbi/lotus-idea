@@ -48,6 +48,7 @@ from app.domain import (
 from app.domain.persistence_advise_realization import advise_realization_submission_blocker
 from app.ports.downstream_realization import (
     DownstreamOwnerReceipt,
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadError,
     DownstreamRealizationOutcome,
 )
@@ -102,6 +103,19 @@ class StubAdviseReader:
         assert conversion_intent_id == "conversion-advise_proposal-001"
         assert access_scope.portfolio_id == "PB_SG_GLOBAL_BAL_001"
         return self.history
+
+
+class NotObservedAdviseReader(StubAdviseReader):
+    def load_realization_by_conversion_intent(
+        self,
+        *,
+        conversion_intent_id: str,
+        access_scope: ReviewAccessScope,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> AdviseProposalRealizationHistory:
+        self.recovery_calls += 1
+        raise DownstreamRealizationNotObserved("owner acceptance not observed")
 
 
 def test_reconcile_advise_history_persists_append_only_owner_evidence() -> None:
@@ -226,6 +240,36 @@ def test_expired_advise_submission_recovers_owner_history_without_reposting() ->
     assert persisted.owner_receipt is not None
     assert persisted.attempt_count == 1
     assert [entry.action.value for entry in persisted.audit_history] == ["claimed", "reconciled"]
+
+
+def test_advise_owner_absence_preserves_uncertainty_until_a_later_exact_read() -> None:
+    repository, support_reference = _repository_with_in_flight_submission(expired=True)
+    before = repository.downstream_submission_by_support_reference(support_reference)
+    reader = NotObservedAdviseReader(_history(version=2))
+
+    not_observed = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=reader,
+    )
+
+    assert (
+        not_observed.status is AdviseRealizationReconciliationStatus.OWNER_ACCEPTANCE_NOT_OBSERVED
+    )
+    assert not_observed.blocker == "advise_realization_owner_acceptance_not_observed"
+    assert repository.downstream_submission_by_support_reference(support_reference) == before
+    assert reader.recovery_calls == 1
+
+    recovered = reconcile_advise_realization_history(
+        _command(support_reference),
+        repository=repository,
+        advise_reader=StubAdviseReader(_history(version=2)),
+    )
+    assert recovered.status is AdviseRealizationReconciliationStatus.ACCEPTED
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert persisted.attempt_count == 1
+    assert persisted.owner_receipt is not None
 
 
 def test_reconcile_advise_history_recovers_lost_rejection_without_false_acceptance() -> None:

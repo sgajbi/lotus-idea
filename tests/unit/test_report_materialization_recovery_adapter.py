@@ -12,6 +12,7 @@ from app.infrastructure.downstream_realization import (
     HttpReportEvidencePackMaterializationClient,
 )
 from app.ports.downstream_realization import (
+    DownstreamRealizationNotObserved,
     DownstreamRealizationReadConflict,
     DownstreamRealizationReadError,
 )
@@ -82,7 +83,7 @@ def test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract() -
     assert "idempotency-key" not in headers
 
 
-@pytest.mark.parametrize("status_code", (404, 503))
+@pytest.mark.parametrize("status_code", (503,))
 def test_report_recovery_http_failure_exposes_no_untrusted_receipt(status_code: int) -> None:
     adapter = HttpReportEvidencePackMaterializationClient(
         DownstreamRealizationAdapterConfig(
@@ -99,6 +100,29 @@ def test_report_recovery_http_failure_exposes_no_untrusted_receipt(status_code: 
     )
 
     with pytest.raises(DownstreamRealizationReadError, match="Report materialization receipt"):
+        adapter.recover_report_evidence_pack_receipt(
+            report_evidence_pack(),
+            access_scope=report_access_scope(),
+            idempotency_key="report-submission-idempotency-001",
+        )
+
+
+def test_report_recovery_preserves_exact_owner_absence() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            report_recovery_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(lambda _request: httpx.Response(404, json={})),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationNotObserved):
         adapter.recover_report_evidence_pack_receipt(
             report_evidence_pack(),
             access_scope=report_access_scope(),
