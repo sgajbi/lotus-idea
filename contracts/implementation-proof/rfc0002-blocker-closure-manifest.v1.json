@@ -184,6 +184,37 @@
       ]
     },
     {
+      "groupId": "advise-owner-realization-failure-window-proof",
+      "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-13"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "no_promotion_until_owner_restart_and_remaining_advise_certification_pass",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 379,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/379"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-idea",
+          "number": 1253,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/1253",
+          "dependencyRole": "Bounded stale-version correction and concurrent owner advancement proof"
+        },
+        {
+          "repository": "sgajbi/lotus-idea",
+          "number": 1254,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/1254",
+          "dependencyRole": "Storage-backed Advise owner restart and replay proof"
+        }
+      ],
+      "blockers": [
+        "advise_restart_replay_certification_missing",
+        "advise_owner_correction_certification_missing",
+        "advise_concurrent_owner_advancement_certification_missing"
+      ]
+    },
+    {
       "groupId": "advise-source-product-contract-proof",
       "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "source_contract",
