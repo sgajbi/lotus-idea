@@ -80,10 +80,13 @@ These routes are API-certified internal foundations. They propagate
 correlation, trace, and idempotency headers to configured adapters after a
 local idempotency precheck. The repository stores source authority, target,
 resource id, bounded posture, bounded failure reason, correlation id, trace id,
-and timestamp by idempotency key without storing sensitive request payloads.
-The same key and request fingerprint replays the stored posture without another
-adapter call; the same key with a different resource/target/source-authority
-fingerprint returns `409 idempotency_conflict`. Missing adapter configuration
+and timestamp by authoritative tenant plus caller idempotency key without
+storing sensitive request payloads. The same tenant, key, and request
+fingerprint replays the stored posture without another adapter call; reuse with
+a different resource, target, or source authority in that tenant returns `409
+idempotency_conflict`. A different tenant may use the same ordinary caller key
+without colliding, sharing a support reference, or observing the first tenant's
+claim. Missing adapter configuration
 is recorded as a replayable `downstream_realization_not_configured` posture and
 returns `503`. The routes emit
 `downstream_realization_submission` operation events with
@@ -93,6 +96,14 @@ to return a durable receipt on both accepted-for-review and
 rejected-before-work responses. Idea persists that bounded receipt and uses it
 as the only owner lookup key; HTTP success alone never becomes proposal or
 business-outcome truth.
+
+Migration `027_tenant_scoped_downstream_submission_identity` attributes every
+existing claim through its conversion-intent or report-evidence-pack candidate,
+retains its existing opaque support reference as `legacy_unscoped_v1`, and uses
+the composite `(tenant_id, idempotency_key)` identity for new
+`tenant_scoped_v2` claims. Migration fails closed if an existing claim cannot be
+attributed to authoritative candidate scope. Downgrade is refused once v2
+claims exist because collapsing the composite identity could lose tenant truth.
 
 An accepted Report submission must carry a typed owner receipt with a positive
 Report lifecycle version. Idea validates
