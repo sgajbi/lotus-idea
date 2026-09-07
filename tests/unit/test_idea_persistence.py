@@ -149,6 +149,7 @@ def high_cash_candidate(
     *,
     cash_weight: Decimal = Decimal("0.18"),
     cashflow_hash: str | None = None,
+    tenant_id: str = "tenant-sg-001",
 ) -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
     refs = high_cash_candidate_source_refs(cashflow_hash=cashflow_hash)
     result = evaluate_high_cash_signal(
@@ -160,7 +161,7 @@ def high_cash_candidate(
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=EVALUATED_AT,
-            access_scope=review_access_scope(),
+            access_scope=review_access_scope(tenant_id=tenant_id),
         ),
         HighCashSignalPolicy(
             policy_version="idle-liquidity-v2",
@@ -195,9 +196,9 @@ def review_ready_high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, 
     )
 
 
-def review_access_scope() -> ReviewAccessScope:
+def review_access_scope(*, tenant_id: str = "tenant-sg-001") -> ReviewAccessScope:
     return ReviewAccessScope(
-        tenant_id="tenant-sg-001",
+        tenant_id=tenant_id,
         book_id="book-private-bank-sg",
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         client_id="client-001",

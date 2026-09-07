@@ -341,6 +341,7 @@ class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
     def precheck_review_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: dict[str, Any],
         identity: ReviewMutationIdentity,
@@ -369,6 +370,7 @@ class ConversionIntentWorkflowRepository(CandidateSnapshotRepository, Protocol):
     def precheck_conversion_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: dict[str, Any],
     ) -> ConversionPersistenceResult | None: ...
@@ -384,6 +386,11 @@ class ConversionIntentWorkflowRepository(CandidateSnapshotRepository, Protocol):
 
 
 class ConversionOutcomeWorkflowRepository(Protocol):
+    def candidate_record_for_conversion_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> CandidatePersistenceRecord | None: ...
+
     def conversion_intent_by_id(
         self,
         conversion_intent_id: str,
@@ -397,6 +404,7 @@ class ConversionOutcomeWorkflowRepository(Protocol):
     def precheck_conversion_outcome_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: dict[str, Any],
         identity: ConversionOutcomeIdentity,
@@ -424,6 +432,7 @@ class ReportEvidenceWorkflowRepository(Protocol):
     def precheck_evidence_pack_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: dict[str, Any],
     ) -> EvidencePackPersistenceResult | None: ...

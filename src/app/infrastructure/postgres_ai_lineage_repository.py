@@ -26,9 +26,13 @@ class PostgresAIExplanationWriteMixin:
         candidate_ids: tuple[str, ...],
         operation: Callable[[InMemoryIdeaRepository], _ResultT],
         idempotency_key: str | None = None,
+        tenant_id: str | None = None,
         identity_keys: tuple[str, ...] = (),
         related_candidate_ids_loader: RelatedCandidateIdsLoader | None = None,
     ) -> _ResultT:
+        raise NotImplementedError
+
+    def _persisted_candidate_tenant_id(self, candidate_id: str) -> str | None:
         raise NotImplementedError
 
     def record_ai_explanation_lineage(
@@ -80,6 +84,7 @@ class PostgresAIExplanationWriteMixin:
         return self._mutate_candidate(
             candidate_ids=(candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=self._persisted_candidate_tenant_id(candidate_id),
             identity_keys=_ai_lineage_identity_keys(
                 request_id=request_id,
                 attestation_receipt=attestation_receipt,

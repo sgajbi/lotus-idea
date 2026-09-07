@@ -3,7 +3,12 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Callable, Mapping
 
-from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
+from app.domain.idempotency import (
+    IdempotencyDecision,
+    IdempotencyRecord,
+    evaluate_idempotency,
+    tenant_scoped_idempotency_identity,
+)
 from app.domain.outbox.events import EventLineageContext
 from app.domain.persistence_models import (
     CandidatePersistenceRecord,
@@ -25,7 +30,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
     _candidate_records: dict[str, CandidatePersistenceRecord]
     _idempotency_records: dict[str, IdempotencyRecord]
     _idempotency_candidates: dict[str, str]
-    _record_for_idempotency_key: Callable[[str], CandidatePersistenceRecord | None]
+    _record_for_idempotency_key: Callable[[str, str], CandidatePersistenceRecord | None]
     _append_outbox_event: Callable[..., None]
 
     def record_review_action(
@@ -39,7 +44,15 @@ class InMemoryReviewWorkflowRepositoryMixin:
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.decision.candidate_id
         _require_text(candidate_id, "candidate_id")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -48,28 +61,23 @@ class InMemoryReviewWorkflowRepositoryMixin:
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
         identity_result = self._review_identity_result(
             identity=review_mutation_identity_from_decision(result.decision),
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
+            tenant_id=tenant_id,
         )
         if identity_result is not None:
             return identity_result
 
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return ReviewPersistenceResult(
-                decision=ReviewPersistenceDecision.NOT_FOUND,
-                record=None,
-            )
         if record.candidate != result.source_candidate:
             raise InvalidReviewAction(
                 result.decision.action,
@@ -97,8 +105,8 @@ class InMemoryReviewWorkflowRepositoryMixin:
             review_decisions=(*record.review_decisions, result.decision),
         )
         self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._append_outbox_event(
             event_type="idea.review.decision_recorded.v1",
             aggregate_id=candidate_id,
@@ -128,12 +136,14 @@ class InMemoryReviewWorkflowRepositoryMixin:
     def precheck_review_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
         identity: ReviewMutationIdentity,
     ) -> ReviewPersistenceResult | None:
         _require_text(idempotency_key, "idempotency_key")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -144,15 +154,16 @@ class InMemoryReviewWorkflowRepositoryMixin:
                 identity=identity,
                 idempotency_key=idempotency_key,
                 idempotency_record=idempotency_record,
+                tenant_id=tenant_id,
             )
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         return ReviewPersistenceResult(
             decision=ReviewPersistenceDecision.REPLAYED,
-            record=self._record_for_idempotency_key(idempotency_key),
+            record=self._record_for_idempotency_key(tenant_id, idempotency_key),
         )
 
     def record_feedback_event(
@@ -166,7 +177,15 @@ class InMemoryReviewWorkflowRepositoryMixin:
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.feedback_event.candidate_id
         _require_text(candidate_id, "candidate_id")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -175,28 +194,22 @@ class InMemoryReviewWorkflowRepositoryMixin:
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
         identity_result = self._review_identity_result(
             identity=feedback_mutation_identity_from_event(result.feedback_event),
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
+            tenant_id=tenant_id,
         )
         if identity_result is not None:
             return identity_result
-
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return ReviewPersistenceResult(
-                decision=ReviewPersistenceDecision.NOT_FOUND,
-                record=None,
-            )
 
         updated = replace(
             record,
@@ -204,8 +217,8 @@ class InMemoryReviewWorkflowRepositoryMixin:
             feedback_events=(*record.feedback_events, result.feedback_event),
         )
         self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._append_outbox_event(
             event_type="idea.feedback.recorded.v2",
             aggregate_id=candidate_id,
@@ -232,6 +245,7 @@ class InMemoryReviewWorkflowRepositoryMixin:
         identity: ReviewMutationIdentity,
         idempotency_key: str,
         idempotency_record: IdempotencyRecord,
+        tenant_id: str,
     ) -> ReviewPersistenceResult | None:
         existing = self._review_identity_record(identity)
         if existing is None:
@@ -242,8 +256,9 @@ class InMemoryReviewWorkflowRepositoryMixin:
                 decision=ReviewPersistenceDecision.IDENTITY_CONFLICT,
                 record=record,
             )
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = record.candidate.candidate_id
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = record.candidate.candidate_id
         return ReviewPersistenceResult(
             decision=ReviewPersistenceDecision.REPLAYED,
             record=record,
@@ -272,3 +287,10 @@ class InMemoryReviewWorkflowRepositoryMixin:
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _candidate_tenant_id(record: CandidatePersistenceRecord) -> str:
+    access_scope = record.candidate.access_scope
+    if access_scope is None:
+        raise ValueError("persisted candidate tenant scope is unavailable")
+    return access_scope.tenant_id

@@ -8,6 +8,8 @@ from app.infrastructure.postgres_protocols import PostgresConnection
 def load_idempotency_record_by_key(
     connection: PostgresConnection,
     idempotency_key: str,
+    *,
+    tenant_id: str | None,
 ) -> tuple[IdempotencyRecord, str | None] | None:
     with connection.cursor() as cursor:
         cursor.execute(
@@ -16,8 +18,9 @@ def load_idempotency_record_by_key(
             SELECT idempotency_key, payload_hash, candidate_id
             FROM idea_idempotency_record
             WHERE idempotency_key = %s
+              AND tenant_id IS NOT DISTINCT FROM %s
             """,
-            (idempotency_key,),
+            (idempotency_key, tenant_id),
         )
         rows = cursor.fetchall()
     if not rows:

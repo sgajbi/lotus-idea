@@ -34,6 +34,7 @@ class PostgresBoundedMutationRepositoryMixin:
         candidate_ids: tuple[str, ...],
         operation: Callable[[InMemoryIdeaRepository], _ResultT],
         idempotency_key: str | None = None,
+        tenant_id: str | None = None,
         identity_keys: tuple[str, ...] = (),
         related_candidate_ids_loader: RelatedCandidateIdsLoader | None = None,
     ) -> _ResultT:
@@ -42,6 +43,7 @@ class PostgresBoundedMutationRepositoryMixin:
                 self._connection,
                 candidate_ids=candidate_ids,
                 idempotency_key=idempotency_key,
+                tenant_id=tenant_id,
                 identity_keys=identity_keys,
                 related_candidate_ids_loader=related_candidate_ids_loader,
             )

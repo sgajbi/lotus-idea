@@ -30,7 +30,7 @@ class InMemoryAIExplanationRepositoryMixin:
     _ai_provider_retention_replay: AIProviderRetentionReplayIndex
 
     def _record_for_idempotency_key(
-        self, idempotency_key: str
+        self, tenant_id: str, idempotency_key: str
     ) -> CandidatePersistenceRecord | None:
         raise NotImplementedError
 
@@ -130,12 +130,24 @@ class InMemoryAIExplanationRepositoryMixin:
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
         provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
+        candidate_id = result.request.redacted_evidence.candidate_id
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return AIExplanationLineagePersistenceResult(
+                decision=AIExplanationLineagePersistenceDecision.NOT_FOUND,
+                record=None,
+                lineage_record=None,
+            )
+        access_scope = record.candidate.access_scope
+        if access_scope is None:
+            raise ValueError("persisted candidate tenant scope is unavailable")
         return record_ai_explanation_lineage_request_with_idempotency(
             result,
             idempotency_key=idempotency_key,
             payload=payload,
             idempotency_records=self._idempotency_records,
             idempotency_candidates=self._idempotency_candidates,
+            tenant_id=access_scope.tenant_id,
             record_for_idempotency_key=self._record_for_idempotency_key,
             record_lineage=self.record_ai_explanation_lineage,
             attestation_receipt=attestation_receipt,

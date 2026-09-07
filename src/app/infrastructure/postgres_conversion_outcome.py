@@ -90,11 +90,14 @@ def load_postgres_conversion_outcomes_for_intent(
 def precheck_postgres_conversion_outcome_mutation(
     connection: PostgresConnection,
     *,
+    tenant_id: str,
     idempotency_key: str,
     payload: Mapping[str, Any],
     identity: ConversionOutcomeIdentity,
 ) -> ConversionPersistenceResult | None:
-    idempotency_row = load_idempotency_record_by_key(connection, idempotency_key)
+    idempotency_row = load_idempotency_record_by_key(
+        connection, idempotency_key, tenant_id=tenant_id
+    )
     if idempotency_row is not None:
         existing_idempotency, candidate_id = idempotency_row
         decision, _ = evaluate_idempotency(
@@ -140,6 +143,7 @@ def precheck_postgres_conversion_outcome_mutation(
         reservation = reserve_replayed_idempotency(
             connection,
             record=idempotency_record,
+            tenant_id=tenant_id,
             candidate_id=record.candidate.candidate_id,
             occurred_at_utc=identity.recorded_at_utc,
         )

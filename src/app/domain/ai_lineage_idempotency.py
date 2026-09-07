@@ -9,7 +9,12 @@ from app.domain.ai_lineage_persistence import (
     AIExplanationLineagePersistenceDecision,
     AIExplanationLineagePersistenceResult,
 )
-from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
+from app.domain.idempotency import (
+    IdempotencyDecision,
+    IdempotencyRecord,
+    evaluate_idempotency,
+    tenant_scoped_idempotency_identity,
+)
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
 
@@ -36,27 +41,29 @@ def record_ai_explanation_lineage_request_with_idempotency(
     payload: Mapping[str, Any],
     idempotency_records: MutableMapping[str, IdempotencyRecord],
     idempotency_candidates: MutableMapping[str, str],
-    record_for_idempotency_key: Callable[[str], Any],
+    tenant_id: str,
+    record_for_idempotency_key: Callable[[str, str], Any],
     record_lineage: AIExplanationLineageRecorder,
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
 ) -> AIExplanationLineagePersistenceResult:
     if not idempotency_key.strip():
         raise ValueError("idempotency_key is required")
+    storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
     idempotency_decision, idempotency_record = evaluate_idempotency(
         key=idempotency_key,
         payload=dict(payload),
-        existing=idempotency_records.get(idempotency_key),
+        existing=idempotency_records.get(storage_key),
     )
     if idempotency_decision is IdempotencyDecision.CONFLICT:
         return AIExplanationLineagePersistenceResult(
             decision=AIExplanationLineagePersistenceDecision.CONFLICT,
-            record=record_for_idempotency_key(idempotency_key),
+            record=record_for_idempotency_key(tenant_id, idempotency_key),
             lineage_record=None,
             audit_event=None,
         )
     if idempotency_decision is IdempotencyDecision.REPLAYED:
-        existing_record = record_for_idempotency_key(idempotency_key)
+        existing_record = record_for_idempotency_key(tenant_id, idempotency_key)
         existing_lineage = (
             ai_explanation_lineage_by_request_id(existing_record, result.request.request_id)
             if existing_record is not None
@@ -76,8 +83,8 @@ def record_ai_explanation_lineage_request_with_idempotency(
     if idempotency_decision is IdempotencyDecision.ACCEPTED and (
         lineage_result.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
     ):
-        idempotency_records[idempotency_key] = idempotency_record
-        idempotency_candidates[idempotency_key] = (
+        idempotency_records[storage_key] = idempotency_record
+        idempotency_candidates[storage_key] = (
             lineage_result.lineage_record.candidate_id
             if lineage_result.lineage_record is not None
             else result.request.redacted_evidence.candidate_id

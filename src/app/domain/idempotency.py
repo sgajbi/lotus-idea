@@ -31,7 +31,16 @@ def tenant_scoped_idempotency_identity(tenant_id: str, idempotency_key: str) -> 
         raise ValueError("tenant_id must be non-empty")
     if not idempotency_key or not idempotency_key.strip():
         raise ValueError("idempotency_key must be non-empty")
-    return f"{tenant_id}\0{idempotency_key}"
+    # Length-prefixing is injective without using NUL, which PostgreSQL text
+    # parameters reject even when the identity is used only for advisory locks.
+    return f"tenant:{len(tenant_id)}:{tenant_id}{idempotency_key}"
+
+
+def system_scoped_idempotency_identity(idempotency_key: str) -> str:
+    """Keep system-only operations disjoint from every tenant namespace."""
+    if not idempotency_key or not idempotency_key.strip():
+        raise ValueError("idempotency_key must be non-empty")
+    return f"system:{idempotency_key}"
 
 
 def payload_fingerprint(payload: dict[str, Any]) -> str:

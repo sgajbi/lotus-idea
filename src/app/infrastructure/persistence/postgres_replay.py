@@ -38,13 +38,15 @@ class PostgresEvidenceReplayRepositoryMixin:
     def precheck_evidence_pack_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> EvidencePackPersistenceResult | None:
         repository = InMemoryIdeaRepository(
-            load_idempotency_replay_snapshot(self._connection, idempotency_key)
+            load_idempotency_replay_snapshot(self._connection, tenant_id, idempotency_key)
         )
         return repository.precheck_evidence_pack_mutation(
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             payload=payload,
         )

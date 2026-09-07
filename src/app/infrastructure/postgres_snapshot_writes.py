@@ -104,16 +104,23 @@ class PostgresSnapshotWriteRepositoryMixin:
         candidate_id: str | None,
         snapshot: IdeaRepositorySnapshot,
     ) -> None:
+        tenant_id = _snapshot_candidate_tenant_id(snapshot, candidate_id)
+        conflict_target = (
+            "(tenant_id, idempotency_key) WHERE tenant_id IS NOT NULL"
+            if tenant_id is not None
+            else "(idempotency_key) WHERE tenant_id IS NULL"
+        )
         cursor.execute(
-            """
+            f"""
             INSERT INTO idea_idempotency_record (
-                idempotency_key, operation_name, payload_hash, candidate_id,
+                tenant_id, idempotency_key, operation_name, payload_hash, candidate_id,
                 created_at_utc
-            ) VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (idempotency_key) DO NOTHING
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT {conflict_target} DO NOTHING
             RETURNING idempotency_key
             """,
             (
+                tenant_id,
                 record.key,
                 operation_name(record.key),
                 record.payload_hash,
@@ -427,3 +434,15 @@ class PostgresSnapshotWriteRepositoryMixin:
                 evidence_pack.requested_at_utc,
             ),
         )
+
+
+def _snapshot_candidate_tenant_id(
+    snapshot: IdeaRepositorySnapshot,
+    candidate_id: str | None,
+) -> str | None:
+    if candidate_id is None:
+        return None
+    record = snapshot.candidate_records.get(candidate_id)
+    if record is None or record.candidate.access_scope is None:
+        raise ValueError("candidate-bound idempotency requires persisted tenant scope")
+    return record.candidate.access_scope.tenant_id

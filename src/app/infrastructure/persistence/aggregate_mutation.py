@@ -6,6 +6,10 @@ from app.domain.persistence import IdeaRepositorySnapshot
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_for_mutation
 from app.infrastructure.postgres_idempotency_lookup import load_idempotency_record_by_key
 from app.infrastructure.postgres_protocols import PostgresConnection
+from app.domain.idempotency import (
+    system_scoped_idempotency_identity,
+    tenant_scoped_idempotency_identity,
+)
 
 
 RelatedCandidateIdsLoader = Callable[[], Iterable[str]]
@@ -16,6 +20,7 @@ def load_candidate_mutation_snapshot(
     *,
     candidate_ids: Iterable[str],
     idempotency_key: str | None = None,
+    tenant_id: str | None = None,
     identity_keys: Iterable[str] = (),
     related_candidate_ids_loader: RelatedCandidateIdsLoader | None = None,
 ) -> IdeaRepositorySnapshot:
@@ -32,17 +37,22 @@ def load_candidate_mutation_snapshot(
         sorted(set(requested_candidate_ids) | set(related_before) | set(related_after))
     )
     _acquire_advisory_locks(connection, bounded_candidate_ids, seed=1201, label="candidate")
-    if idempotency_key is not None:
+    if idempotency_key is not None and tenant_id is not None:
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
         _acquire_advisory_locks(
             connection,
-            (idempotency_key,),
+            (storage_key,),
             seed=1202,
             label="idempotency",
         )
 
     idempotency_row = (
-        load_idempotency_record_by_key(connection, idempotency_key)
-        if idempotency_key is not None
+        load_idempotency_record_by_key(
+            connection,
+            idempotency_key,
+            tenant_id=tenant_id,
+        )
+        if idempotency_key is not None and tenant_id is not None
         else None
     )
     candidate_ids_to_load = set(bounded_candidate_ids)
@@ -57,11 +67,12 @@ def load_candidate_mutation_snapshot(
 
     idempotency_records = {}
     idempotency_candidates = {}
-    if idempotency_row is not None and idempotency_key is not None:
+    if idempotency_row is not None and idempotency_key is not None and tenant_id is not None:
         idempotency_record, linked_candidate_id = idempotency_row
-        idempotency_records[idempotency_key] = idempotency_record
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        idempotency_records[storage_key] = idempotency_record
         if linked_candidate_id is not None:
-            idempotency_candidates[idempotency_key] = linked_candidate_id
+            idempotency_candidates[storage_key] = linked_candidate_id
 
     return IdeaRepositorySnapshot(
         candidate_records=candidate_records,
@@ -95,24 +106,35 @@ def load_idempotency_mutation_snapshot(
         seed=1202,
         label="idempotency",
     )
-    idempotency_row = load_idempotency_record_by_key(connection, idempotency_key)
+    idempotency_row = load_idempotency_record_by_key(
+        connection,
+        idempotency_key,
+        tenant_id=None,
+    )
     if idempotency_row is None:
         return IdeaRepositorySnapshot({}, {}, {})
     record, linked_candidate_id = idempotency_row
+    storage_key = system_scoped_idempotency_identity(idempotency_key)
     return IdeaRepositorySnapshot(
         candidate_records={},
-        idempotency_records={idempotency_key: record},
+        idempotency_records={storage_key: record},
         idempotency_candidates=(
-            {idempotency_key: linked_candidate_id} if linked_candidate_id is not None else {}
+            {storage_key: linked_candidate_id} if linked_candidate_id is not None else {}
         ),
     )
 
 
 def load_idempotency_replay_snapshot(
     connection: PostgresConnection,
+    tenant_id: str,
     idempotency_key: str,
 ) -> IdeaRepositorySnapshot:
-    idempotency_row = load_idempotency_record_by_key(connection, idempotency_key)
+    storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+    idempotency_row = load_idempotency_record_by_key(
+        connection,
+        idempotency_key,
+        tenant_id=tenant_id,
+    )
     if idempotency_row is None:
         return IdeaRepositorySnapshot({}, {}, {})
     idempotency_record, candidate_id = idempotency_row
@@ -127,10 +149,8 @@ def load_idempotency_replay_snapshot(
             if candidate_id is not None and candidate_record is not None
             else {}
         ),
-        idempotency_records={idempotency_key: idempotency_record},
-        idempotency_candidates=(
-            {idempotency_key: candidate_id} if candidate_id is not None else {}
-        ),
+        idempotency_records={storage_key: idempotency_record},
+        idempotency_candidates=({storage_key: candidate_id} if candidate_id is not None else {}),
     )
 
 

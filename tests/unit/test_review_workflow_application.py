@@ -577,7 +577,10 @@ def test_review_resource_identity_replays_with_a_new_transport_key_without_side_
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert after_replay.candidate_records == before_replay.candidate_records
     assert after_replay.outbox_events == before_replay.outbox_events
-    assert "review-action:identity:retry" in after_replay.idempotency_records
+    assert (
+        "tenant:22:tenant-private-bank-sgreview-action:identity:retry"
+        in after_replay.idempotency_records
+    )
 
 
 def test_review_resource_identity_conflicts_before_terminal_state_validation() -> None:

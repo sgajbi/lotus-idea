@@ -103,6 +103,7 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
 
     connection.executed_sql.clear()
     review_replay = repository.precheck_review_mutation(
+        tenant_id="tenant-001",
         idempotency_key="review:bounded-precheck",
         payload={"reviewId": review_result.decision.review_id},
         identity=review_result.decision.mutation_identity,
@@ -110,6 +111,7 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     review_replay_sql = tuple(connection.executed_sql)
     connection.executed_sql.clear()
     review_conflict = repository.precheck_review_mutation(
+        tenant_id="tenant-001",
         idempotency_key="review:bounded-precheck",
         payload={"reviewId": "different-review-payload"},
         identity=review_result.decision.mutation_identity,
@@ -117,6 +119,7 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     review_conflict_sql = tuple(connection.executed_sql)
     connection.executed_sql.clear()
     conversion_replay = repository.precheck_conversion_mutation(
+        tenant_id="tenant-001",
         idempotency_key="conversion:intent",
         payload={
             "conversionIntentId": (conversion_result.conversion_intent.intent.conversion_intent_id)
@@ -125,6 +128,7 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     conversion_replay_sql = tuple(connection.executed_sql)
     connection.executed_sql.clear()
     conversion_conflict = repository.precheck_conversion_mutation(
+        tenant_id="tenant-001",
         idempotency_key="conversion:intent",
         payload={"conversionIntentId": "different-conversion-intent"},
     )
@@ -185,12 +189,14 @@ def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_
 
     connection.executed_sql.clear()
     replayed = repository.precheck_review_mutation(
+        tenant_id="tenant-001",
         idempotency_key="review:resource-precheck:retry",
         payload={"reviewId": review_result.decision.review_id},
         identity=review_result.decision.mutation_identity,
     )
     replay_sql = tuple(connection.executed_sql)
     conflict = repository.precheck_review_mutation(
+        tenant_id="tenant-001",
         idempotency_key="review:resource-precheck:changed",
         payload={"reviewId": review_result.decision.review_id, "action": "reject"},
         identity=replace(
@@ -230,18 +236,21 @@ def test_replay_reservation_revalidates_the_durable_winner() -> None:
     accepted = reserve_replayed_idempotency(
         connection,
         record=winner,
+        tenant_id="tenant-001",
         candidate_id="candidate-001",
         occurred_at_utc=EVALUATED_AT,
     )
     replayed = reserve_replayed_idempotency(
         connection,
         record=winner,
+        tenant_id="tenant-001",
         candidate_id="candidate-001",
         occurred_at_utc=EVALUATED_AT,
     )
     conflict = reserve_replayed_idempotency(
         connection,
         record=conflicting,
+        tenant_id="tenant-001",
         candidate_id="candidate-001",
         occurred_at_utc=EVALUATED_AT,
     )

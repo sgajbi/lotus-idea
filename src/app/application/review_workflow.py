@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.application.candidate_lookup import candidate_record_by_id
+from app.application.candidate_lookup import candidate_record_by_id, candidate_tenant_id
 from app.application.persisted_action_evidence import (
     PersistedActionEvidenceUnavailable,
     require_single_persisted_action,
@@ -107,6 +107,7 @@ def apply_review_action_to_repository(
     authorize_review_action(record.candidate, command.review, policy=policy)
     payload = _review_payload(command)
     prechecked = repository.precheck_review_mutation(
+        tenant_id=candidate_tenant_id(record),
         idempotency_key=command.idempotency_key,
         payload=payload,
         identity=review_mutation_identity_from_command(record.candidate, command.review),
@@ -172,6 +173,7 @@ def record_feedback_to_repository(
 
     payload = _feedback_payload(command)
     prechecked = repository.precheck_review_mutation(
+        tenant_id=candidate_tenant_id(record),
         idempotency_key=command.idempotency_key,
         payload=payload,
         identity=feedback_mutation_identity_from_command(record.candidate, command.feedback),

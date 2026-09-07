@@ -85,6 +85,7 @@ def _candidate_presentation_receipt_row(values: Sequence[Any]) -> dict[str, Any]
 def _idempotency_record_row(values: Sequence[Any]) -> dict[str, Any]:
     return _row_from_columns(
         (
+            "tenant_id",
             "idempotency_key",
             "operation_name",
             "payload_hash",

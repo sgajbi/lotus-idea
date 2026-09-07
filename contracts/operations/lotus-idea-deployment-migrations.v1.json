@@ -7,9 +7,9 @@
   "migrationHistorySchemaVersion": "lotus-idea.schema-migration-history.v1",
   "evidenceSchemaVersion": "lotus-idea.deployment-migration-evidence.v1",
   "postgresMajorVersion": 18,
-  "migrationCount": 27,
-  "currentMigrationVersion": "027",
-  "migrationBundleSha256": "sha256:81c8f807671b9ce42b67845eff0e82987294f8a6e1ea02ebd2d64eecbe33926a",
+  "migrationCount": 28,
+  "currentMigrationVersion": "028",
+  "migrationBundleSha256": "sha256:21fe4694b15d713a899335934ef2281ed2f5786b9047215da86104eaf68c922a",
   "legacyAdoption": {
     "allowedOnlyWhenHistoryIsAbsent": true,
     "schemaFingerprintAlgorithm": "postgresql-structural-inventory-v1",
