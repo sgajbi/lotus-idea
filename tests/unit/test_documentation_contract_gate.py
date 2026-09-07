@@ -215,6 +215,52 @@ def test_documentation_contract_gate_blocks_bloated_surface(tmp_path: Path) -> N
     assert errors == ["README.md: has 4 non-empty lines; maximum is 3"]
 
 
+def test_documentation_contract_gate_blocks_noncanonical_context_sections(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    context = tmp_path / "REPOSITORY-ENGINEERING-CONTEXT.md"
+    context.write_text(
+        "# Repository Engineering Context\n\n## Repository Role\n\n## Execution Diary\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(),
+        polished_surfaces=(),
+    )
+
+    assert errors == [
+        "REPOSITORY-ENGINEERING-CONTEXT.md: headings must match the progressive "
+        "repository-context contract in order"
+    ]
+
+
+def test_documentation_contract_gate_requires_thin_claude_adapter(tmp_path: Path) -> None:
+    module = _load_gate()
+    adapter = tmp_path / "CLAUDE.md"
+    adapter.write_text("# Claude Entry Point\n", encoding="utf-8")
+    surface = next(
+        surface for surface in module.REQUIRED_SURFACES if surface.relative_path == "CLAUDE.md"
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(surface,),
+        polished_surfaces=(),
+    )
+
+    assert errors == [
+        "CLAUDE.md: has 1 non-empty lines; minimum is 8",
+        "CLAUDE.md: missing required fragment `thin adapter, not a second policy source`",
+        "CLAUDE.md: missing required fragment `AGENTS.md`",
+        "CLAUDE.md: missing required fragment `REPOSITORY-ENGINEERING-CONTEXT.md`",
+        "CLAUDE.md: missing required fragment `LOTUS-SKILL-ROUTING-MAP.md`",
+        "CLAUDE.md: missing required fragment `Without it, use the canonical links above`",
+    ]
+
+
 def test_documentation_contract_gate_blocks_missing_anchor(tmp_path: Path) -> None:
     module = _load_gate()
     readme = tmp_path / "README.md"

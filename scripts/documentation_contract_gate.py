@@ -7,7 +7,12 @@ try:
     from documentation import codebase_review_ledger as review_ledger
     from documentation import evidence_classification_inventory as evidence_inventory
     from documentation import implementation_proof_artifact_registry as artifact_registry
-    from documentation.surfaces import DocumentationSurface, PolishedDocumentationSurface
+    from documentation.surfaces import (
+        PROGRESSIVE_CONTEXT_SURFACES,
+        DocumentationSurface,
+        PolishedDocumentationSurface,
+        repository_context_heading_errors,
+    )
     from documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -25,7 +30,12 @@ except ModuleNotFoundError:
     from scripts.documentation import codebase_review_ledger as review_ledger
     from scripts.documentation import evidence_classification_inventory as evidence_inventory
     from scripts.documentation import implementation_proof_artifact_registry as artifact_registry
-    from scripts.documentation.surfaces import DocumentationSurface, PolishedDocumentationSurface
+    from scripts.documentation.surfaces import (
+        PROGRESSIVE_CONTEXT_SURFACES,
+        DocumentationSurface,
+        PolishedDocumentationSurface,
+        repository_context_heading_errors,
+    )
     from scripts.documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -47,7 +57,7 @@ REQUIRED_SURFACES = (
         "AGENTS.md",
         80,
         (
-            "Mandatory Reading Order",
+            "Progressive Context Discovery",
             "Wiki Publication Rule",
             "Context Maintenance Rule",
         ),
@@ -64,17 +74,7 @@ REQUIRED_SURFACES = (
         ),
         260,
     ),
-    DocumentationSurface(
-        "REPOSITORY-ENGINEERING-CONTEXT.md",
-        250,
-        (
-            "Current-State Summary",
-            "Repo-Native Commands",
-            "Validation And CI Expectations",
-            "make documentation-contract-gate",
-            "Context Maintenance Rule",
-        ),
-    ),
+    *PROGRESSIVE_CONTEXT_SURFACES,
     DocumentationSurface("docs/rfcs/README.md", 25, ("RFC-0002 Slice Evidence Files", "RFC Rules")),
     DocumentationSurface(
         "docs/standards/enterprise-readiness.md",
@@ -469,6 +469,7 @@ def validate_documentation_contract(
                 f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
                 f"maximum is {surface.max_mermaid_fences}"
             )
+    errors.extend(repository_context_heading_errors(root))
     errors.extend(same_wiki_page_link_errors(root=root))
     errors.extend(evidence_inventory.evidence_classification_inventory_errors(root=root))
     errors.extend(artifact_registry.implementation_proof_artifact_registry_errors(root=root))
