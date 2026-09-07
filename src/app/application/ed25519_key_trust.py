@@ -63,6 +63,7 @@ def select_trusted_ed25519_key(
     require(len(matches) == 1, "known unique signing key")
     key = matches[0]
     require(key.algorithm == "EdDSA" and key.curve == "Ed25519", "signing key algorithm")
+    require(key.status != "revoked", "signing key revoked")
     require(key.status in {"active", "rotated"}, "signing key status")
     require(key.rotation_epoch == signature.rotation_epoch, "rotation epoch")
     require(key.not_before_utc <= issued_at_utc, "key validity start")

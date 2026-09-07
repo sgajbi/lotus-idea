@@ -41,7 +41,8 @@ class ArchiveLifecycleKeyAlgorithm(StrEnum):
 
 class ArchiveLifecycleKeyStatus(StrEnum):
     ACTIVE = "active"
-    RETIRED = "retired"
+    ROTATED = "rotated"
+    REVOKED = "revoked"
 
 
 class ArchiveLifecycleKeyProvenance(StrEnum):
@@ -148,8 +149,8 @@ class ArchiveLifecycleTrustedKey:
                 raise ValueError("Archive trusted key validity window is invalid")
         if self.status is ArchiveLifecycleKeyStatus.ACTIVE and self.not_after_utc is not None:
             raise ValueError("active Archive trusted key must have an open validity window")
-        if self.status is ArchiveLifecycleKeyStatus.RETIRED and self.not_after_utc is None:
-            raise ValueError("retired Archive trusted key requires not_after_utc")
+        if self.status is ArchiveLifecycleKeyStatus.ROTATED and self.not_after_utc is None:
+            raise ValueError("rotated Archive trusted key requires not_after_utc")
 
 
 @dataclass(frozen=True)

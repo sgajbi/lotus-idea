@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Mapping, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLegalHoldStatus,
@@ -77,6 +77,13 @@ class ArchiveLifecycleTrustedKeyConfig(BaseModel):
     status: ArchiveLifecycleKeyStatus
     not_before_utc: datetime
     not_after_utc: datetime | None = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def map_legacy_retired_status(cls, value: object) -> object:
+        # Temporary consumer-first bridge for lotus-archive#147. Internal truth
+        # and all newly published contracts use the governed `rotated` value.
+        return ArchiveLifecycleKeyStatus.ROTATED if value == "retired" else value
 
     def to_domain(self) -> ArchiveLifecycleTrustedKey:
         values = self.model_dump(exclude={"public_key_base64"})

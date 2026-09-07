@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from app.domain.data_lifecycle.archive_posture import ArchiveLifecycleKeyStatus
 from app.runtime.data_lifecycle.archive_posture_state import (
     ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV,
     ArchiveLifecycleTrustUnavailableError,
@@ -31,6 +32,14 @@ def _trust_bundle() -> dict[str, Any]:
                 "not_after_utc": None,
             }
         ],
+    }
+
+
+def test_archive_key_status_domain_uses_governed_vocabulary() -> None:
+    assert {status.value for status in ArchiveLifecycleKeyStatus} == {
+        "active",
+        "rotated",
+        "revoked",
     }
 
 
@@ -120,7 +129,7 @@ def test_runtime_rejects_incomplete_legacy_archive_key_envelope(
         ({"algorithm": "rsa"}, "invalid"),
         ({"provenance": "self_asserted"}, "invalid"),
         ({"status": "unknown"}, "invalid"),
-        ({"status": "revoked"}, "invalid"),
+        ({"status": ""}, "invalid"),
         ({"public_key_base64": "dG9vLXNob3J0"}, "invalid"),
         ({"public_key_base64": base64.b64encode(bytes([255]) * 32).decode("ascii")}, "invalid"),
         ({"public_key_base64": _PUBLIC_KEY.rstrip("=")}, "invalid"),
@@ -153,6 +162,43 @@ def test_runtime_rejects_duplicate_archive_key_identity(
         get_archive_lifecycle_dependencies()
 
 
+def test_runtime_maps_legacy_retired_wire_status_to_governed_rotated_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = _trust_bundle()
+    payload["keys"].append(
+        {
+            **payload["keys"][0],
+            "key_id": "archive-key-rotated",
+            "status": "retired",
+            "not_after_utc": "2026-08-01T00:00:00Z",
+        }
+    )
+    monkeypatch.setenv(ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV, json.dumps(payload))
+
+    keys, _ = get_archive_lifecycle_dependencies()
+
+    assert keys[1].status.value == "rotated"
+
+
+def test_runtime_preserves_governed_revoked_status_for_explicit_refusal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = _trust_bundle()
+    payload["keys"].append(
+        {
+            **payload["keys"][0],
+            "key_id": "archive-key-revoked",
+            "status": "revoked",
+        }
+    )
+    monkeypatch.setenv(ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV, json.dumps(payload))
+
+    keys, _ = get_archive_lifecycle_dependencies()
+
+    assert keys[1].status.value == "revoked"
+
+
 @pytest.mark.parametrize("active_key_count", [0, 2])
 def test_runtime_requires_exactly_one_active_archive_key(
     monkeypatch: pytest.MonkeyPatch,
@@ -162,7 +208,7 @@ def test_runtime_requires_exactly_one_active_archive_key(
     if active_key_count == 0:
         payload["keys"][0].update(
             {
-                "status": "retired",
+                "status": "rotated",
                 "not_after_utc": "2026-08-01T00:00:00Z",
             }
         )

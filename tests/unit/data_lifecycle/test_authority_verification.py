@@ -182,7 +182,7 @@ def test_lifecycle_authority_verification_rejects_untrusted_claims(
     ("key_changes", "message"),
     [
         ({"algorithm": "RS256"}, "signing key algorithm"),
-        ({"status": "revoked"}, "signing key status"),
+        ({"status": "revoked"}, "signing key revoked"),
         ({"rotation_epoch": 4}, "rotation epoch"),
         ({"not_before_utc": NOW}, "key validity start"),
         ({"not_after_utc": NOW - timedelta(minutes=3)}, "key validity end"),
