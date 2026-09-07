@@ -65,6 +65,7 @@ Implemented foundations include:
 - persisted presentation receipts, review decisions, feedback, and conversion intents;
 - exact replay, concurrency fencing, PostgreSQL persistence, and transactional outbox behavior;
 - durable intent-before-I/O for downstream submission;
+- tenant-scoped downstream submission identity with opaque recovery references;
 - exact read-only reconciliation after uncertain downstream submission;
 - trusted local acceptance chronology while preserving source-observed time separately;
 - governed AI explanation evidence and completion fencing;

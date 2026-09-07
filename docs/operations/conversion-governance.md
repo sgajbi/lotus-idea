@@ -38,7 +38,10 @@ Current implemented scope:
     and client entitlement scope that covers the persisted source candidate.
     Missing or mismatched scope fails closed before a local submission claim or
     downstream call. The claim fingerprint binds all four scope dimensions so
-    a retry key cannot replay work across scope.
+    a retry key cannot replay work across scope. Durable submission identity is
+    `(tenant_id, idempotency_key)`: exact reuse within one tenant replays or
+    conflicts according to the request fingerprint, while another tenant may
+    use the same ordinary key with a distinct opaque recovery reference.
 11. the Advise intake envelope carries the candidate's canonical
     `portfolio_id`; it never derives portfolio identity from an opaque candidate
     or conversion-intent identifier. The Manage envelope remains unchanged

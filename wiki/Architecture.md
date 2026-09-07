@@ -1086,6 +1086,13 @@ Timeout, 5xx, malformed response, transport ambiguity, lease loss, or local
 finalization failure becomes `reconciliation_required` or retains the durable
 `in_flight` claim. Same-key retries never make another external call.
 
+Migration `027_tenant_scoped_downstream_submission_identity` makes the durable
+claim key `(tenant_id, idempotency_key)` and derives new opaque support and
+lease identities from that scoped value. Existing claims retain their support
+references and are explicitly classified as `legacy_unscoped_v1` only after
+authoritative candidate-scope attribution; unattributable rows stop migration.
+The rollback refuses to collapse any `tenant_scoped_v2` claim.
+
 Migration `008_downstream_submission_state_machine` persists an opaque support
 reference, attempt count, lease identity and expiry, update time, and append-only
 audit history. PostgreSQL uses exact locked lookup and lease-fenced updates.
