@@ -12,6 +12,7 @@ from app.domain.outbox.events import (
 )
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.downstream_submission import DownstreamSubmissionRecord
+from app.domain.downstream_submission import downstream_submission_identity
 from app.domain.advise_realization import AdviseProposalRealizationHistory
 from app.domain.manage_realization import ManageActionRealizationHistory
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
@@ -118,7 +119,12 @@ class InMemoryIdeaRepository(
                 snapshot.ai_explanation_lineage_candidates
             )
             self._outbox_events.update(snapshot.outbox_events)
-            self._downstream_submission_records.update(snapshot.downstream_submission_records)
+            self._downstream_submission_records.update(
+                {
+                    downstream_submission_identity(record.tenant_id, record.idempotency_key): record
+                    for record in snapshot.downstream_submission_records.values()
+                }
+            )
             self._advise_realization_histories.update(snapshot.advise_realization_histories)
             self._manage_realization_histories.update(snapshot.manage_realization_histories)
             self._presentation_receipts.update(snapshot.presentation_receipts)

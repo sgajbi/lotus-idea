@@ -11,6 +11,7 @@ from app.domain import (
     DownstreamSubmissionAuditEntry,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionClaimResult,
+    DownstreamSubmissionIdentityVersion,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
     DownstreamSubmissionOwnerReceipt,
@@ -30,7 +31,7 @@ from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCu
 
 
 DOWNSTREAM_SUBMISSION_COLUMNS = """
-idempotency_key, request_fingerprint, resource_type, resource_id, target,
+tenant_id, identity_version, idempotency_key, request_fingerprint, resource_type, resource_id, target,
 source_authority, status, downstream_failure_reason, correlation_id, trace_id,
 submitted_at_utc, support_reference, attempt_count, updated_at_utc, lease_owner,
 lease_attempt_id, lease_expires_at_utc, audit_json, owner_receipt_json
@@ -54,8 +55,9 @@ def claim_postgres_downstream_submission(
                 INSERT INTO idea_downstream_submission (
                     {DOWNSTREAM_SUBMISSION_COLUMNS}
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s
                 )
                 ON CONFLICT DO NOTHING
                 RETURNING {DOWNSTREAM_SUBMISSION_COLUMNS}
@@ -69,7 +71,12 @@ def claim_postgres_downstream_submission(
                     decision=DownstreamSubmissionClaimDecision.ACCEPTED,
                     record=downstream_submission_from_row(inserted[0]),
                 )
-            existing = _load_by_idempotency_key(cursor, record.idempotency_key, for_update=True)
+            existing = _load_by_idempotency_key(
+                cursor,
+                record.tenant_id,
+                record.idempotency_key,
+                for_update=True,
+            )
             if existing is None:
                 support_collision = _load_by_support_reference(
                     cursor,
@@ -128,6 +135,7 @@ def _lock_active_resource_lifecycle(
 def finalize_postgres_downstream_submission(
     connection: PostgresConnection,
     *,
+    tenant_id: str,
     idempotency_key: str,
     lease_owner: str,
     lease_attempt_id: str,
@@ -138,7 +146,12 @@ def finalize_postgres_downstream_submission(
 ) -> DownstreamSubmissionMutationResult:
     try:
         with connection.cursor() as cursor:
-            existing = _load_by_idempotency_key(cursor, idempotency_key, for_update=True)
+            existing = _load_by_idempotency_key(
+                cursor,
+                tenant_id,
+                idempotency_key,
+                for_update=True,
+            )
             if existing is None:
                 connection.commit()
                 return DownstreamSubmissionMutationResult(
@@ -167,10 +180,11 @@ def finalize_postgres_downstream_submission(
 
 def load_postgres_downstream_submission_by_idempotency_key(
     connection: PostgresConnection,
+    tenant_id: str,
     idempotency_key: str,
 ) -> DownstreamSubmissionRecord | None:
     with connection.cursor() as cursor:
-        return _load_by_idempotency_key(cursor, idempotency_key, for_update=False)
+        return _load_by_idempotency_key(cursor, tenant_id, idempotency_key, for_update=False)
 
 
 def load_postgres_downstream_submission_by_support_reference(
@@ -273,6 +287,8 @@ def reconcile_postgres_downstream_submission(
 
 def downstream_submission_values(record: DownstreamSubmissionRecord) -> tuple[Any, ...]:
     return (
+        record.tenant_id,
+        record.identity_version.value,
         record.idempotency_key,
         record.request_fingerprint,
         record.resource_type.value,
@@ -297,6 +313,10 @@ def downstream_submission_values(record: DownstreamSubmissionRecord) -> tuple[An
 
 def downstream_submission_from_row(row: object) -> DownstreamSubmissionRecord:
     return DownstreamSubmissionRecord(
+        tenant_id=read_row_value(row, "tenant_id"),
+        identity_version=DownstreamSubmissionIdentityVersion(
+            read_row_value(row, "identity_version")
+        ),
         idempotency_key=read_row_value(row, "idempotency_key"),
         request_fingerprint=read_row_value(row, "request_fingerprint"),
         resource_type=DownstreamSubmissionResourceType(read_row_value(row, "resource_type")),
@@ -353,6 +373,7 @@ def downstream_submission_audit_from_json(
 
 def _load_by_idempotency_key(
     cursor: PostgresCursor,
+    tenant_id: str,
     idempotency_key: str,
     *,
     for_update: bool,
@@ -360,8 +381,8 @@ def _load_by_idempotency_key(
     return _load_one(
         cursor,
         marker="downstream-submission-by-idempotency",
-        predicate="idempotency_key = %s",
-        value=idempotency_key,
+        predicate="tenant_id = %s AND idempotency_key = %s",
+        values=(tenant_id, idempotency_key),
         for_update=for_update,
     )
 
@@ -376,7 +397,7 @@ def _load_by_support_reference(
         cursor,
         marker="downstream-submission-by-support-reference",
         predicate="support_reference = %s",
-        value=support_reference,
+        values=(support_reference,),
         for_update=for_update,
     )
 
@@ -386,7 +407,7 @@ def _load_one(
     *,
     marker: str,
     predicate: str,
-    value: str,
+    values: tuple[str, ...],
     for_update: bool,
 ) -> DownstreamSubmissionRecord | None:
     lock = "FOR UPDATE" if for_update else ""
@@ -398,7 +419,7 @@ def _load_one(
         WHERE {predicate}
         {lock}
         """,
-        (value,),
+        values,
     )
     rows = cursor.fetchall()
     return downstream_submission_from_row(rows[0]) if rows else None
@@ -418,6 +439,7 @@ def _update_mutable_submission_state(
             audit_json = %s
             , owner_receipt_json = %s
         WHERE idempotency_key = %s
+          AND tenant_id = %s
           AND lease_attempt_id IS NOT DISTINCT FROM %s
         RETURNING {DOWNSTREAM_SUBMISSION_COLUMNS}
         """,
@@ -428,6 +450,7 @@ def _update_mutable_submission_state(
             Jsonb([downstream_submission_audit_to_json(entry) for entry in record.audit_history]),
             Jsonb(_owner_receipt_to_json(record.owner_receipt)) if record.owner_receipt else None,
             record.idempotency_key,
+            record.tenant_id,
             record.lease_attempt_id,
         ),
     )

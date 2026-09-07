@@ -54,6 +54,7 @@ from app.domain import (
     UnscopedCandidatePersistenceError,
     build_ai_explanation_request,
     deterministic_ai_fallback,
+    downstream_submission_identity,
     evaluate_high_cash_signal,
 )
 from app.domain.persistence import (
@@ -771,6 +772,7 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
 
     repository.claim_downstream_submission(claim)
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",
@@ -788,16 +790,15 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
     assert finalized.record is not None
     record = finalized.record
     reloaded = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
-        "downstream-submit-postgres-001"
+        "tenant-private-bank-sg", "downstream-submit-postgres-001"
     )
     missing = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
-        "missing-submission"
+        "tenant-private-bank-sg", "missing-submission"
     )
-    snapshot_record = (
-        PostgresIdeaRepository(connection)
-        .snapshot()
-        .downstream_submission_records[claim.idempotency_key]
-    )
+    snapshot = PostgresIdeaRepository(connection).snapshot()
+    snapshot_record = snapshot.downstream_submission_records[
+        downstream_submission_identity(claim.tenant_id, claim.idempotency_key)
+    ]
 
     assert reloaded == record
     assert snapshot_record == record

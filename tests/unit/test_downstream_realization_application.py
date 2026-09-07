@@ -50,6 +50,7 @@ from app.domain import (
     SourceSystem,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
+    downstream_submission_support_reference,
     request_conversion_intent as _request_conversion_intent,
     request_report_evidence_pack,
 )
@@ -226,6 +227,9 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     assert result.records_downstream_outcome is False
     assert result.grants_downstream_authority is False
     assert result.supported_feature_promoted is False
+    assert result.support_reference == downstream_submission_support_reference(
+        "tenant-sg", "submission-advise-001"
+    )
     assert (
         advise_client.submitted[0].intent.conversion_intent_id == "conversion-advise_proposal-001"
     )
@@ -234,7 +238,9 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     assert advise_client.idempotency_key == "submission-advise-001"
     assert advise_client.access_scope == candidate().access_scope
     assert manage_client.submitted == ()
-    submission = repository.downstream_submission_by_idempotency_key("submission-advise-001")
+    submission = repository.downstream_submission_by_idempotency_key(
+        "tenant-sg", "submission-advise-001"
+    )
     assert submission is not None
     assert submission.owner_receipt is not None
     assert submission.owner_receipt.owner_realization_id == "ipr_submission_001"
@@ -266,7 +272,9 @@ def test_submit_conversion_intent_rejects_cross_portfolio_scope_before_claim_or_
 
     assert advise_client.submitted == ()
     assert (
-        repository.downstream_submission_by_idempotency_key("submission-cross-portfolio-denied")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-sg", "submission-cross-portfolio-denied"
+        )
         is None
     )
 
@@ -338,7 +346,9 @@ def test_downstream_acceptance_with_failed_local_finalize_requires_reconciliatio
         manage_client=None,
     )
 
-    persisted = repository.downstream_submission_by_idempotency_key(command.idempotency_key)
+    persisted = repository.downstream_submission_by_idempotency_key(
+        "tenant-sg", command.idempotency_key
+    )
     assert first.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
     assert first.downstream_failure_reason == "downstream_submission_finalization_failed"
     assert first.grants_downstream_authority is False
@@ -625,6 +635,9 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     assert result.source_authority is SourceSystem.LOTUS_MANAGE
     assert result.target is ConversionTarget.MANAGE_REVIEW
     assert result.downstream_failure_reason == "downstream_rejected"
+    assert result.support_reference == downstream_submission_support_reference(
+        "tenant-sg", "submission-manage-001"
+    )
     assert advise_client.submitted == ()
     assert manage_client.submitted[0].target_source_authority is SourceSystem.LOTUS_MANAGE
     assert manage_client.correlation_id == "corr-manage-realization"
@@ -674,6 +687,9 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
     assert result.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
     assert result.source_authority is SourceSystem.LOTUS_REPORT
     assert result.target is ConversionTarget.REPORT_EVIDENCE
+    assert result.support_reference == downstream_submission_support_reference(
+        "tenant-sg", "submission-report-pack-001"
+    )
     assert result.records_downstream_outcome is False
     assert report_client.submitted[0].report_evidence_pack_id == "report-evidence-pack-001"
     assert report_client.correlation_id == "corr-report-realization"

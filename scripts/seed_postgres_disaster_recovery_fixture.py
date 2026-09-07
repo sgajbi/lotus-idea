@@ -31,16 +31,11 @@ from app.domain import (  # noqa: E402
     AIExplanationCommand,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
-    ConversionTarget,
-    DownstreamSubmissionPosture,
-    DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
     ReviewPosture,
-    SourceSystem,
     apply_review_action,
     build_ai_explanation_request,
-    create_downstream_submission_claim,
     deterministic_ai_fallback,
     outbox_dead_letter_support_reference,
     outbox_recovery_request_payload,
@@ -71,11 +66,8 @@ from scripts.postgres_disaster_recovery_fixture_data import (  # noqa: E402
 from scripts.postgres_disaster_recovery_presentation_seed import (  # noqa: E402
     seed_presentation_receipt,
 )
-from scripts.downstream_realization.advise_recovery_fixture import (  # noqa: E402
-    seed_advise_realization_recovery_fixture,
-)
-from scripts.downstream_realization.manage_recovery_fixture import (  # noqa: E402
-    seed_manage_realization_recovery_fixture,
+from scripts.downstream_realization.disaster_recovery_fixture import (  # noqa: E402
+    seed_downstream_recovery_fixtures,
 )
 
 DATABASE_URL_ENV = "LOTUS_IDEA_DR_SOURCE_DATABASE_URL"
@@ -98,7 +90,11 @@ def seed_disaster_recovery_fixture(
         seed_presentation_receipt(repository, review_ready)
         _seed_data_lifecycle_operation(repository, review_ready)
         _seed_ai_lineage(repository, review_ready)
-        _seed_downstream_submissions(repository)
+        seed_downstream_recovery_fixtures(
+            repository,
+            fixture_time=FIXTURE_TIME,
+            candidate_prefix=FIXTURE_CANDIDATE_PREFIX,
+        )
         recovery_event_id = _seed_outbox_delivery_states(typed_connection)
         _seed_outbox_recovery(repository, recovery_event_id)
         _validate_runtime_rehydration(repository)
@@ -305,65 +301,6 @@ def _seed_ai_lineage(repository: PostgresIdeaRepository, candidate: IdeaCandidat
         occurred_at_utc=FIXTURE_TIME + timedelta(minutes=10),
     )
     repository.record_ai_explanation_lineage(result)
-
-
-def _seed_downstream_submissions(repository: PostgresIdeaRepository) -> None:
-    conversion_claim = create_downstream_submission_claim(
-        idempotency_key="dr-fixture-downstream-conversion",
-        request_fingerprint="sha256:dr-fixture-downstream-conversion",
-        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
-        resource_id="dr-fixture-conversion-intent-001",
-        target=ConversionTarget.REPORT_EVIDENCE,
-        source_authority=SourceSystem.LOTUS_REPORT,
-        actor_subject="dr-fixture-realization-worker",
-        claimed_at_utc=FIXTURE_TIME + timedelta(minutes=12),
-        lease_owner="dr-fixture-realization-worker",
-        lease_attempt_id="dr-fixture-downstream-attempt-001",
-        lease_expires_at_utc=FIXTURE_TIME + timedelta(minutes=17),
-        correlation_id="corr-dr-fixture-downstream-001",
-        trace_id="trace-dr-fixture-downstream-001",
-    )
-    repository.claim_downstream_submission(conversion_claim)
-
-    report_claim = create_downstream_submission_claim(
-        idempotency_key="dr-fixture-downstream-report",
-        request_fingerprint="sha256:dr-fixture-downstream-report",
-        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
-        resource_id="dr-fixture-report-pack-001",
-        target=ConversionTarget.REPORT_EVIDENCE,
-        source_authority=SourceSystem.LOTUS_REPORT,
-        actor_subject="dr-fixture-realization-worker",
-        claimed_at_utc=FIXTURE_TIME + timedelta(minutes=13),
-        lease_owner="dr-fixture-realization-worker",
-        lease_attempt_id="dr-fixture-downstream-attempt-002",
-        lease_expires_at_utc=FIXTURE_TIME + timedelta(minutes=18),
-        correlation_id="corr-dr-fixture-downstream-002",
-        trace_id="trace-dr-fixture-downstream-002",
-    )
-    repository.claim_downstream_submission(report_claim)
-    repository.finalize_downstream_submission(
-        idempotency_key=report_claim.idempotency_key,
-        lease_owner=report_claim.lease_owner or "",
-        lease_attempt_id=report_claim.lease_attempt_id or "",
-        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
-        finalized_at_utc=FIXTURE_TIME + timedelta(minutes=14),
-        failure_reason="dr_fixture_commit_outcome_unknown",
-    )
-
-    seed_advise_realization_recovery_fixture(
-        repository,
-        fixture_time=FIXTURE_TIME,
-        candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
-        conversion_intent_id="dr-fixture-conversion-intent-001",
-        portfolio_id="portfolio-dr-fixture-conversion",
-    )
-    seed_manage_realization_recovery_fixture(
-        repository,
-        fixture_time=FIXTURE_TIME,
-        candidate_id=f"{FIXTURE_CANDIDATE_PREFIX}_conversion",
-        conversion_intent_id="dr-fixture-conversion-intent-001",
-        portfolio_id="portfolio-dr-fixture-conversion",
-    )
 
 
 def _seed_outbox_delivery_states(connection: PostgresConnection) -> str:

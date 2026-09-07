@@ -491,6 +491,7 @@ class DownstreamSubmissionRepository(Protocol):
 
     def downstream_submission_by_idempotency_key(
         self,
+        tenant_id: str,
         idempotency_key: str,
     ) -> DownstreamSubmissionRecord | None: ...
 
@@ -502,6 +503,7 @@ class DownstreamSubmissionRepository(Protocol):
     def finalize_downstream_submission(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         lease_owner: str,
         lease_attempt_id: str,

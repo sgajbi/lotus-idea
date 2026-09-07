@@ -16,6 +16,11 @@ class DownstreamSubmissionResourceType(StrEnum):
     REPORT_EVIDENCE_PACK = "report_evidence_pack"
 
 
+class DownstreamSubmissionIdentityVersion(StrEnum):
+    LEGACY_UNSCOPED_V1 = "legacy_unscoped_v1"
+    TENANT_SCOPED_V2 = "tenant_scoped_v2"
+
+
 class DownstreamSubmissionPosture(StrEnum):
     IN_FLIGHT = "in_flight"
     ACCEPTED_BY_DOWNSTREAM = "accepted_by_downstream"
@@ -229,6 +234,8 @@ class DownstreamSubmissionAuditEntry:
 
 @dataclass(frozen=True)
 class DownstreamSubmissionRecord:
+    tenant_id: str
+    identity_version: DownstreamSubmissionIdentityVersion
     idempotency_key: str
     request_fingerprint: str
     resource_type: DownstreamSubmissionResourceType
@@ -250,12 +257,18 @@ class DownstreamSubmissionRecord:
     owner_receipt: DownstreamSubmissionOwnerReceipt | None = None
 
     def __post_init__(self) -> None:
+        _require_text(self.tenant_id, "tenant_id")
         _require_text(self.idempotency_key, "idempotency_key")
         _require_text(self.request_fingerprint, "request_fingerprint")
         _require_text(self.resource_id, "resource_id")
         _require_text(self.support_reference, "support_reference")
-        if self.support_reference != downstream_submission_support_reference(self.idempotency_key):
-            raise ValueError("support_reference must match idempotency_key")
+        expected_support_reference = (
+            legacy_downstream_submission_support_reference(self.idempotency_key)
+            if self.identity_version is DownstreamSubmissionIdentityVersion.LEGACY_UNSCOPED_V1
+            else downstream_submission_support_reference(self.tenant_id, self.idempotency_key)
+        )
+        if self.support_reference != expected_support_reference:
+            raise ValueError("support_reference must match the declared submission identity")
         _require_aware_utc(self.submitted_at_utc, "submitted_at_utc")
         _require_aware_utc(self.updated_at_utc, "updated_at_utc")
         if self.attempt_count <= 0:
@@ -294,7 +307,27 @@ def downstream_submission_sort_key(
     )
 
 
-def downstream_submission_support_reference(idempotency_key: str) -> str:
+def downstream_submission_identity(tenant_id: str, idempotency_key: str) -> str:
+    _require_text(tenant_id, "tenant_id")
+    _require_text(idempotency_key, "idempotency_key")
+    return f"{tenant_id}\x00{idempotency_key}"
+
+
+def downstream_submission_support_reference(tenant_id: str, idempotency_key: str) -> str:
+    digest = hashlib.sha256(
+        downstream_submission_identity(tenant_id, idempotency_key).encode("utf-8")
+    ).hexdigest()[:24]
+    return f"{DOWNSTREAM_SUBMISSION_SUPPORT_PREFIX}{digest}"
+
+
+def downstream_submission_lease_attempt_id(tenant_id: str, idempotency_key: str) -> str:
+    digest = hashlib.sha256(
+        downstream_submission_identity(tenant_id, idempotency_key).encode("utf-8")
+    ).hexdigest()[:24]
+    return f"downstream-attempt-{digest}"
+
+
+def legacy_downstream_submission_support_reference(idempotency_key: str) -> str:
     _require_text(idempotency_key, "idempotency_key")
     digest = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()[:24]
     return f"{DOWNSTREAM_SUBMISSION_SUPPORT_PREFIX}{digest}"
@@ -302,6 +335,7 @@ def downstream_submission_support_reference(idempotency_key: str) -> str:
 
 def create_downstream_submission_claim(
     *,
+    tenant_id: str,
     idempotency_key: str,
     request_fingerprint: str,
     resource_type: DownstreamSubmissionResourceType,
@@ -317,6 +351,7 @@ def create_downstream_submission_claim(
     trace_id: str | None = None,
 ) -> DownstreamSubmissionRecord:
     audit = _audit_entry(
+        tenant_id=tenant_id,
         idempotency_key=idempotency_key,
         sequence=1,
         action=DownstreamSubmissionAuditAction.CLAIMED,
@@ -325,6 +360,8 @@ def create_downstream_submission_claim(
         occurred_at_utc=claimed_at_utc,
     )
     return DownstreamSubmissionRecord(
+        tenant_id=tenant_id,
+        identity_version=DownstreamSubmissionIdentityVersion.TENANT_SCOPED_V2,
         idempotency_key=idempotency_key,
         request_fingerprint=request_fingerprint,
         resource_type=resource_type,
@@ -333,7 +370,7 @@ def create_downstream_submission_claim(
         source_authority=source_authority,
         status=DownstreamSubmissionPosture.IN_FLIGHT,
         submitted_at_utc=claimed_at_utc,
-        support_reference=downstream_submission_support_reference(idempotency_key),
+        support_reference=downstream_submission_support_reference(tenant_id, idempotency_key),
         attempt_count=1,
         updated_at_utc=claimed_at_utc,
         audit_history=(audit,),
@@ -529,6 +566,7 @@ def _transition_record(
     owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
 ) -> DownstreamSubmissionRecord:
     audit = _audit_entry(
+        tenant_id=record.tenant_id,
         idempotency_key=record.idempotency_key,
         sequence=len(record.audit_history) + 1,
         action=action,
@@ -551,6 +589,7 @@ def _transition_record(
 
 def _audit_entry(
     *,
+    tenant_id: str,
     idempotency_key: str,
     sequence: int,
     action: DownstreamSubmissionAuditAction,
@@ -562,7 +601,9 @@ def _audit_entry(
     change_reference: str | None = None,
 ) -> DownstreamSubmissionAuditEntry:
     identity = hashlib.sha256(
-        f"{idempotency_key}:{sequence}:{action.value}".encode("utf-8")
+        f"{downstream_submission_identity(tenant_id, idempotency_key)}:{sequence}:{action.value}".encode(
+            "utf-8"
+        )
     ).hexdigest()[:24]
     return DownstreamSubmissionAuditEntry(
         audit_id=f"downstream-audit-{identity}",

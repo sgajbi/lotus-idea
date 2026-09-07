@@ -35,6 +35,7 @@ def seed_advise_realization_recovery_fixture(
 ) -> None:
     """Persist one receipt-bound Advise history for backup/restore validation."""
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-advise",
         request_fingerprint="sha256:dr-fixture-downstream-advise",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -59,6 +60,7 @@ def seed_advise_realization_recovery_fixture(
         source_evidence_fingerprint="sha256:dr-fixture-owner-evidence",
     )
     repository.finalize_downstream_submission(
+        tenant_id=claim.tenant_id,
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",

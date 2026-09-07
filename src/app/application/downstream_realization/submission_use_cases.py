@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import hashlib
 
 from app.domain import (
     ConversionTarget,
@@ -20,6 +19,7 @@ from app.domain import (
     ReviewAccessScope,
     SourceSystem,
     create_downstream_submission_claim,
+    downstream_submission_lease_attempt_id,
 )
 from app.domain.idempotency import payload_fingerprint
 from app.ports.downstream_realization import (
@@ -99,6 +99,7 @@ class DownstreamRealizationAccessScopeDenied(Exception):
 
 @dataclass(frozen=True)
 class _SubmissionRequest:
+    tenant_id: str
     idempotency_key: str
     actor_subject: str
     resource_type: DownstreamSubmissionResourceType
@@ -112,8 +113,7 @@ class _SubmissionRequest:
 
     @property
     def lease_attempt_id(self) -> str:
-        digest = hashlib.sha256(self.idempotency_key.encode("utf-8")).hexdigest()[:24]
-        return f"downstream-attempt-{digest}"
+        return downstream_submission_lease_attempt_id(self.tenant_id, self.idempotency_key)
 
 
 def submit_conversion_intent_to_downstream(
@@ -274,6 +274,7 @@ def _finalize_submission(
 ) -> DownstreamRealizationSubmissionResult:
     try:
         result = repository.finalize_downstream_submission(
+            tenant_id=request.tenant_id,
             idempotency_key=request.idempotency_key,
             lease_owner=_LEASE_OWNER,
             lease_attempt_id=request.lease_attempt_id,
@@ -386,6 +387,7 @@ def _validate_report_owner_outcome(
 
 def _claim_record(request: _SubmissionRequest) -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id=request.tenant_id,
         idempotency_key=request.idempotency_key,
         request_fingerprint=request.request_fingerprint,
         resource_type=request.resource_type,
@@ -444,6 +446,7 @@ def _submission_request(
     access_scope: ReviewAccessScope,
 ) -> _SubmissionRequest:
     return _SubmissionRequest(
+        tenant_id=access_scope.tenant_id,
         idempotency_key=command.idempotency_key,
         actor_subject=command.actor_subject,
         resource_type=resource_type,

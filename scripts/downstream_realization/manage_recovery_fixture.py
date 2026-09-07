@@ -35,6 +35,7 @@ def seed_manage_realization_recovery_fixture(
 ) -> None:
     """Persist one receipt-bound Manage action history for backup/restore validation."""
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-manage",
         request_fingerprint="sha256:dr-fixture-downstream-manage",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -59,6 +60,7 @@ def seed_manage_realization_recovery_fixture(
         source_evidence_fingerprint="sha256:aabbccddeeff",
     )
     repository.finalize_downstream_submission(
+        tenant_id=claim.tenant_id,
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",

@@ -76,6 +76,7 @@ def _repository_with_uncertain_submission() -> InMemoryIdeaRepository:
     )
     repository.claim_downstream_submission(claim)
     repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",

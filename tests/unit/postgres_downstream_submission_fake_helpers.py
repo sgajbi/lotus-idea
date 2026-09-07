@@ -18,7 +18,11 @@ def execute_downstream_submission_query(
         connection.begin_write()
         if connection.fail_on_insert == "idea_downstream_submission":
             raise RuntimeError("insert failed for idea_downstream_submission")
-        if any(row["idempotency_key"] == params[0] for row in rows):
+        tenant_id, _, idempotency_key, *_ = params
+        if any(
+            row["tenant_id"] == tenant_id and row["idempotency_key"] == idempotency_key
+            for row in rows
+        ):
             cursor._rows = []
             return True
         row = row_for_insert("idea_downstream_submission", params)
@@ -28,7 +32,12 @@ def execute_downstream_submission_query(
 
     if query.startswith("/* lotus-idea downstream-submission-by-idempotency */"):
         assert params is not None
-        cursor._rows = [dict(row) for row in rows if row["idempotency_key"] == params[0]]
+        tenant_id, idempotency_key = params
+        cursor._rows = [
+            dict(row)
+            for row in rows
+            if row["tenant_id"] == tenant_id and row["idempotency_key"] == idempotency_key
+        ]
         return True
 
     if query.startswith("/* lotus-idea downstream-submission-by-support-reference */"):
@@ -56,10 +65,11 @@ def execute_downstream_submission_query(
             audit_json,
             owner_receipt_json,
             key,
+            tenant_id,
             lease_attempt_id,
         ) = params
         for row in rows:
-            if row["idempotency_key"] != key:
+            if row["tenant_id"] != tenant_id or row["idempotency_key"] != key:
                 continue
             if row["lease_attempt_id"] != lease_attempt_id:
                 cursor._rows = []

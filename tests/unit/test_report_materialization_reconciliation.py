@@ -410,6 +410,7 @@ def test_active_in_flight_submission_cannot_be_reconciled_while_post_may_still_r
     evidence_pack = repository.report_evidence_pack_by_id("report-evidence-pack-001")
     assert evidence_pack is not None
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="active-report-submission",
         request_fingerprint="sha256:active-report-submission",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
@@ -441,6 +442,7 @@ def test_expired_in_flight_submission_recovers_owner_receipt_without_reposting()
     evidence_pack = repository.report_evidence_pack_by_id("report-evidence-pack-001")
     assert evidence_pack is not None
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="expired-report-submission",
         request_fingerprint="sha256:expired-report-submission",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,

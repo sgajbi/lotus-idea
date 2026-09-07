@@ -328,6 +328,7 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     repository = get_idea_repository()
     submitted_at = datetime(2026, 6, 21, 10, 30, tzinfo=UTC)
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="detail-report-submission-sensitive-key",
         request_fingerprint="sha256:detail-report-submission-sensitive",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
@@ -344,6 +345,7 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     )
     assert repository.claim_downstream_submission(claim).record == claim
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",

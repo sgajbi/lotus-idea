@@ -59,6 +59,8 @@ def test_row_for_insert_builds_downstream_submission_operability_row() -> None:
     row = row_for_insert(
         "idea_downstream_submission",
         (
+            "tenant-private-bank-sg",
+            "tenant_scoped_v2",
             "idem-1",
             "fingerprint-1",
             "conversion_intent",
@@ -82,6 +84,8 @@ def test_row_for_insert_builds_downstream_submission_operability_row() -> None:
     )
 
     assert row["idempotency_key"] == "idem-1"
+    assert row["tenant_id"] == "tenant-private-bank-sg"
+    assert row["identity_version"] == "tenant_scoped_v2"
     assert row["target"] == "lotus-manage"
     assert row["source_authority"] == "lotus-idea"
     assert row["audit_json"] == {"operator": "advisor-desk"}

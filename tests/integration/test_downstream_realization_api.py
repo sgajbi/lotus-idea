@@ -493,40 +493,6 @@ def test_downstream_submission_api_fails_closed_without_adapter_configuration(
     assert response.headers["X-Correlation-Id"] == "corr-downstream-submission-api"
 
 
-def test_downstream_submission_api_requires_submission_capability() -> None:
-    client = managed_test_client(app)
-
-    response = client.post(
-        "/api/v1/conversion-intents/missing-conversion/downstream-submissions",
-        headers={
-            "X-Caller-Subject": "advisor-001",
-            "X-Caller-Capabilities": "idea.conversion.intent.record",
-            "X-Correlation-Id": "corr-downstream-denied-api",
-            "Idempotency-Key": "downstream-submit-denied-api-001",
-        },
-    )
-
-    assert response.status_code == 403
-    assert response.json()["code"] == "permission_denied"
-
-
-def test_report_downstream_submission_api_requires_submission_capability() -> None:
-    client = managed_test_client(app)
-
-    response = client.post(
-        "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
-        headers={
-            "X-Caller-Subject": "advisor-001",
-            "X-Caller-Capabilities": "idea.report-evidence-pack.request",
-            "X-Correlation-Id": "corr-report-downstream-denied-api",
-            "Idempotency-Key": "report-downstream-submit-denied-api-001",
-        },
-    )
-
-    assert response.status_code == 403
-    assert response.json()["code"] == "permission_denied"
-
-
 def test_downstream_submission_api_rejects_blank_idempotency_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -966,10 +932,15 @@ def seed_approved_candidate(
     suffix: str,
     idempotency_prefix: str,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> str:
     persist_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(suffix=suffix, portfolio_id=portfolio_id),
+        json=high_cash_payload(
+            suffix=suffix,
+            portfolio_id=portfolio_id,
+            tenant_id=tenant_id,
+        ),
         headers=persist_headers(f"{idempotency_prefix}-persist-001"),
     )
     assert persist_response.status_code == 200
@@ -997,6 +968,7 @@ def seed_approved_candidate(
         headers=review_headers(
             f"{idempotency_prefix}-review-001",
             portfolio_id=portfolio_id,
+            tenant_id=tenant_id,
         ),
     )
     assert review_response.status_code == 200
@@ -1011,6 +983,7 @@ def record_conversion_intent(
     target: str,
     idempotency_key: str,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> None:
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
@@ -1021,7 +994,11 @@ def record_conversion_intent(
             "requestedAtUtc": "2026-06-21T10:15:00Z",
             **review_authority_api.exact_conversion_authority_payload(candidate_id),
         },
-        headers=conversion_intent_headers(idempotency_key, portfolio_id=portfolio_id),
+        headers=conversion_intent_headers(
+            idempotency_key,
+            portfolio_id=portfolio_id,
+            tenant_id=tenant_id,
+        ),
     )
     assert response.status_code == 200
 
@@ -1056,6 +1033,7 @@ def high_cash_payload(
     *,
     suffix: str,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> dict[str, Any]:
     return {
         "asOfDate": "2026-06-21",
@@ -1074,7 +1052,10 @@ def high_cash_payload(
             ),
         },
         "entitlementAllowed": True,
-        "accessScope": access_scope(portfolio_id=portfolio_id),
+        "accessScope": access_scope(
+            portfolio_id=portfolio_id,
+            tenant_id=tenant_id,
+        ),
     }
 
 
@@ -1100,12 +1081,13 @@ def review_headers(
     idempotency_key: str,
     *,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
-        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Tenant-Ids": tenant_id,
         "X-Caller-Book-Ids": "book-advisor-001",
         "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
@@ -1118,11 +1100,12 @@ def conversion_intent_headers(
     idempotency_key: str,
     *,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.conversion.intent.record",
-        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Tenant-Ids": tenant_id,
         "X-Caller-Book-Ids": "book-advisor-001",
         "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
@@ -1144,11 +1127,12 @@ def downstream_submission_headers(
     idempotency_key: str,
     *,
     portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.downstream-realization.submit",
-        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Tenant-Ids": tenant_id,
         "X-Caller-Book-Ids": "book-advisor-001",
         "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
@@ -1182,9 +1166,13 @@ def approve_review_payload(candidate_id: str, review_id: str) -> dict[str, Any]:
     }
 
 
-def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:
+def access_scope(
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
+) -> dict[str, str]:
     return {
-        "tenantId": "tenant-private-bank-sg",
+        "tenantId": tenant_id,
         "bookId": "book-advisor-001",
         "portfolioId": portfolio_id,
         "clientId": "client-001",

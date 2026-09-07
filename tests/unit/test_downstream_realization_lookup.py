@@ -59,7 +59,9 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
     assert result.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
     assert repository.requested_conversion_intent_ids == ["conversion-advise_proposal-001"]
     assert (
-        repository.downstream_submission_by_idempotency_key("downstream-lookup-conversion")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-sg", "downstream-lookup-conversion"
+        )
         is not None
     )
 
@@ -93,7 +95,9 @@ def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> Non
     assert repository.requested_report_evidence_pack_ids == ["report-evidence-pack-001"]
     assert repository.requested_report_evidence_pack_candidate_ids == ["report-evidence-pack-001"]
     assert (
-        repository.downstream_submission_by_idempotency_key("downstream-lookup-report-pack")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-sg", "downstream-lookup-report-pack"
+        )
         is not None
     )
 

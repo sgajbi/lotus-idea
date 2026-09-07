@@ -825,6 +825,7 @@ def _repository_with_in_flight_submission(
         RECORDED_AT - timedelta(minutes=1) if expired else RECORDED_AT + timedelta(minutes=1)
     )
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=f"submission-advise-in-flight-{'expired' if expired else 'active'}",
         request_fingerprint="sha256:advise-in-flight-recovery",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,

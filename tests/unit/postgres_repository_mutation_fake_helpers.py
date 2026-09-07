@@ -242,6 +242,8 @@ def _report_evidence_pack_request_row(values: Sequence[Any]) -> dict[str, Any]:
 def _downstream_submission_row(values: Sequence[Any]) -> dict[str, Any]:
     return _row_from_columns(
         (
+            "tenant_id",
+            "identity_version",
             "idempotency_key",
             "request_fingerprint",
             "resource_type",
