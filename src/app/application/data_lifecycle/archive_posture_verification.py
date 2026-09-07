@@ -118,7 +118,11 @@ def _select_key(
     _require(len(matches) == 1, "known unique signing key")
     key = matches[0]
     _require(
-        key.status in {ArchiveLifecycleKeyStatus.ACTIVE, ArchiveLifecycleKeyStatus.RETIRED},
+        key.status is not ArchiveLifecycleKeyStatus.REVOKED,
+        "signing key revoked",
+    )
+    _require(
+        key.status in {ArchiveLifecycleKeyStatus.ACTIVE, ArchiveLifecycleKeyStatus.ROTATED},
         "signing key status",
     )
     _require(key.not_before_utc <= issued_at_utc, "key validity start")

@@ -191,17 +191,17 @@ def test_archive_posture_domain_rejects_malformed_claim_envelope_and_key_state()
     with pytest.raises(ValueError, match="validity window is invalid"):
         replace(
             key,
-            status=ArchiveLifecycleKeyStatus.RETIRED,
+            status=ArchiveLifecycleKeyStatus.ROTATED,
             not_after_utc=key.not_before_utc,
         )
     with pytest.raises(ValueError, match="requires not_after_utc"):
-        replace(key, status=ArchiveLifecycleKeyStatus.RETIRED, not_after_utc=None)
+        replace(key, status=ArchiveLifecycleKeyStatus.ROTATED, not_after_utc=None)
 
     with pytest.raises(ValueError, match="active Archive trusted key must have an open"):
         replace(key, not_after_utc=NOW + timedelta(days=1))
 
 
-def test_verifies_historical_decision_with_retained_key() -> None:
+def test_verifies_historical_decision_with_rotated_key() -> None:
     incoming_key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     keys = (
         ArchiveLifecycleTrustedKey(
@@ -217,7 +217,7 @@ def test_verifies_historical_decision_with_retained_key() -> None:
             algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
             public_key_base64url=_public_key(PRIVATE_KEY),
             provenance=ArchiveLifecycleKeyProvenance.MANAGED,
-            status=ArchiveLifecycleKeyStatus.RETIRED,
+            status=ArchiveLifecycleKeyStatus.ROTATED,
             not_before_utc=NOW - timedelta(days=30),
             not_after_utc=NOW + timedelta(minutes=1),
         ),
@@ -233,18 +233,38 @@ def test_verifies_historical_decision_with_retained_key() -> None:
     assert receipt.key_id == "archive-lifecycle-2026-07"
 
 
-def test_rejects_retained_key_outside_declared_rotation_window() -> None:
+def test_rejects_rotated_key_outside_declared_rotation_window() -> None:
     key = ArchiveLifecycleTrustedKey(
         key_id="archive-lifecycle-2026-07",
         algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
         public_key_base64url=_public_key(PRIVATE_KEY),
         provenance=ArchiveLifecycleKeyProvenance.MANAGED,
-        status=ArchiveLifecycleKeyStatus.RETIRED,
+        status=ArchiveLifecycleKeyStatus.ROTATED,
         not_before_utc=NOW - timedelta(days=30),
         not_after_utc=NOW,
     )
 
     with pytest.raises(ValueError, match="key validity end"):
+        verify_archive_lifecycle_decision(
+            envelope=map_archive_lifecycle_decision(_signed_payload()),
+            trusted_keys=(key,),
+            expected=_expected_posture(),
+            signature_verifier=Ed25519SignatureVerifier(),
+        )
+
+
+def test_rejects_revoked_key_inside_declared_validity_window() -> None:
+    key = ArchiveLifecycleTrustedKey(
+        key_id="archive-lifecycle-2026-07",
+        algorithm=ArchiveLifecycleKeyAlgorithm.ED25519,
+        public_key_base64url=_public_key(PRIVATE_KEY),
+        provenance=ArchiveLifecycleKeyProvenance.MANAGED,
+        status=ArchiveLifecycleKeyStatus.REVOKED,
+        not_before_utc=NOW - timedelta(days=30),
+        not_after_utc=NOW + timedelta(days=30),
+    )
+
+    with pytest.raises(ValueError, match="signing key revoked"):
         verify_archive_lifecycle_decision(
             envelope=map_archive_lifecycle_decision(_signed_payload()),
             trusted_keys=(key,),

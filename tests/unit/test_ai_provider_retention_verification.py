@@ -85,7 +85,7 @@ def test_provider_failure_cannot_be_presented_as_deletion_proof() -> None:
 def test_rejects_expired_revoked_and_canonically_tampered_confirmation() -> None:
     with pytest.raises(ValueError, match="validity window"):
         _verify(_signed_payload(), verified_at=NOW + timedelta(minutes=6))
-    with pytest.raises(ValueError, match="signing key status"):
+    with pytest.raises(ValueError, match="signing key revoked"):
         _verify(_signed_payload(), key_status="revoked")
 
     envelope = map_lotus_ai_provider_retention_confirmation(_signed_payload())
