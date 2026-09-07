@@ -21,6 +21,7 @@ from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus
 from app.domain.idempotency import (
     IdempotencyDecision,
     IdempotencyRecord,
+    system_scoped_idempotency_identity,
     tenant_scoped_idempotency_identity,
 )
 from app.domain.outbox.delivery import OutboxDeliveryResult
@@ -688,7 +689,7 @@ class PostgresIdeaRepository(
             storage_key = (
                 tenant_scoped_idempotency_identity(tenant_id, raw_key)
                 if tenant_id is not None
-                else raw_key
+                else system_scoped_idempotency_identity(raw_key)
             )
             records[storage_key] = IdempotencyRecord(
                 key=raw_key,

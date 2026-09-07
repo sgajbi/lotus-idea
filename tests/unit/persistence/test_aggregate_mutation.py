@@ -10,6 +10,7 @@ from app.domain.idempotency import IdempotencyRecord
 from app.domain.persistence import CandidatePersistenceRecord
 from app.infrastructure.persistence.aggregate_mutation import (
     load_candidate_mutation_snapshot,
+    load_idempotency_mutation_snapshot,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
@@ -110,6 +111,41 @@ def test_outbox_run_idempotency_does_not_load_candidate_or_event_state() -> None
     assert any("idempotency-lookup" in sql for sql in connection.executed_sql)
     assert not any("candidate-detail" in sql for sql in connection.executed_sql)
     assert not any("from idea_outbox_event" in sql for sql in connection.executed_sql)
+
+
+def test_system_idempotency_uses_a_disjoint_advisory_lock_namespace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    acquired: list[tuple[tuple[str, ...], int, str]] = []
+
+    def capture_locks(
+        connection: object,
+        values: tuple[str, ...],
+        *,
+        seed: int,
+        label: str,
+    ) -> None:
+        del connection
+        acquired.append((values, seed, label))
+
+    monkeypatch.setattr(
+        "app.infrastructure.persistence.aggregate_mutation._acquire_advisory_locks",
+        capture_locks,
+    )
+
+    snapshot = load_idempotency_mutation_snapshot(
+        FakePostgresConnection(),
+        "tenant:10:tenant-001candidate:shared-key",
+    )
+
+    assert snapshot.idempotency_records == {}
+    assert acquired == [
+        (
+            ("system:tenant:10:tenant-001candidate:shared-key",),
+            1202,
+            "idempotency",
+        )
+    ]
 
 
 def test_replay_and_idempotency_precheck_use_exact_candidate_state() -> None:

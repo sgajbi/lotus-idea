@@ -100,9 +100,10 @@ def load_idempotency_mutation_snapshot(
     connection: PostgresConnection,
     idempotency_key: str,
 ) -> IdeaRepositorySnapshot:
+    storage_key = system_scoped_idempotency_identity(idempotency_key)
     _acquire_advisory_locks(
         connection,
-        (idempotency_key,),
+        (storage_key,),
         seed=1202,
         label="idempotency",
     )
@@ -114,7 +115,6 @@ def load_idempotency_mutation_snapshot(
     if idempotency_row is None:
         return IdeaRepositorySnapshot({}, {}, {})
     record, linked_candidate_id = idempotency_row
-    storage_key = system_scoped_idempotency_identity(idempotency_key)
     return IdeaRepositorySnapshot(
         candidate_records={},
         idempotency_records={storage_key: record},
