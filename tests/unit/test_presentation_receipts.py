@@ -133,6 +133,60 @@ def test_in_memory_repository_records_and_replays_exact_receipt() -> None:
     assert replayed.receipt == receipt
 
 
+def test_receipt_lookup_refuses_a_receipt_belonging_to_another_candidate() -> None:
+    """The receipt id alone must not be enough to read a receipt.
+
+    Identity is (tenant_id, receipt_id), so a caller naming the right tenant
+    and receipt still reaches a stored receipt that belongs to a different
+    candidate. This guard is what stops that being a read, and until #1281 it
+    had no test at all.
+    """
+
+    repository = _repository()
+    receipt = _receipt()
+    repository.record_presentation_receipt(receipt)
+
+    assert (
+        repository.presentation_receipt_by_id(
+            receipt.receipt_id,
+            candidate_id=receipt.candidate_id,
+            tenant_id=receipt.tenant_id,
+        )
+        == receipt
+    )
+    assert (
+        repository.presentation_receipt_by_id(
+            receipt.receipt_id,
+            candidate_id="candidate-not-this-one",
+            tenant_id=receipt.tenant_id,
+        )
+        is None
+    )
+
+
+def test_recording_over_another_candidates_receipt_identity_is_refused() -> None:
+    """A held identity is never silently rebound to a different candidate.
+
+    Replay and refusal both return the stored receipt's own truth, so the
+    dangerous case is the one that would quietly overwrite it. It raises
+    instead, and the stored receipt is unchanged afterwards.
+    """
+
+    repository = _repository()
+    stored = _receipt()
+    repository.record_presentation_receipt(stored)
+
+    with pytest.raises(PresentationReceiptCandidateStateError):
+        repository.record_presentation_receipt(_receipt(candidate_id="candidate-0002"))
+
+    survivor = repository.presentation_receipt_by_id(
+        stored.receipt_id,
+        candidate_id=stored.candidate_id,
+        tenant_id=stored.tenant_id,
+    )
+    assert survivor == stored
+
+
 def test_presentation_replay_retains_original_server_acceptance_time() -> None:
     repository = _repository()
     receipt = _receipt()
@@ -153,7 +207,9 @@ def test_in_memory_repository_snapshot_preserves_presentation_receipts_across_re
     restarted = InMemoryIdeaRepository(repository.snapshot())
     replayed = restarted.record_presentation_receipt(receipt)
 
-    assert restarted.snapshot().presentation_receipts == {receipt.receipt_id: receipt}
+    assert restarted.snapshot().presentation_receipts == {
+        (receipt.tenant_id, receipt.receipt_id): receipt
+    }
     assert replayed.decision is PresentationReceiptDecision.REPLAYED
     assert replayed.receipt == receipt
 
@@ -169,6 +225,49 @@ def test_in_memory_repository_reports_identity_conflict_without_overwrite() -> N
     assert conflict.decision is PresentationReceiptDecision.CONFLICT
     assert conflict.receipt == receipt
     assert replay.decision is PresentationReceiptDecision.REPLAYED
+
+
+def test_in_memory_repository_scopes_same_raw_receipt_key_by_trusted_tenant() -> None:
+    candidate_a = _candidate()
+    candidate_b = candidate_fixture(
+        "candidate-0002",
+        family=OpportunityFamily.HIGH_CASH,
+        score=Decimal("87"),
+        created_at=datetime(2026, 8, 30, 12, tzinfo=UTC),
+        tenant_id="tenant-0002",
+    )
+    repository = InMemoryIdeaRepository(
+        snapshot_fixture(record_fixture(candidate_a), record_fixture(candidate_b))
+    )
+    receipt_a = _receipt()
+    receipt_b = _receipt(
+        candidate_id=candidate_b.candidate_id,
+        tenant_id="tenant-0002",
+        source_revision_vector_digest=(candidate_b.evidence_packet.source_revision_vector_digest),
+        source_cut_posture=candidate_b.evidence_packet.source_cut_posture,
+    )
+
+    accepted_a = repository.record_presentation_receipt(receipt_a)
+    accepted_b = repository.record_presentation_receipt(receipt_b)
+
+    assert accepted_a.decision is PresentationReceiptDecision.ACCEPTED
+    assert accepted_b.decision is PresentationReceiptDecision.ACCEPTED
+    assert (
+        repository.presentation_receipt_by_id(
+            receipt_a.receipt_id,
+            candidate_id=receipt_a.candidate_id,
+            tenant_id=receipt_a.tenant_id,
+        )
+        == receipt_a
+    )
+    assert (
+        repository.presentation_receipt_by_id(
+            receipt_b.receipt_id,
+            candidate_id=receipt_b.candidate_id,
+            tenant_id=receipt_b.tenant_id,
+        )
+        == receipt_b
+    )
 
 
 def test_in_memory_repository_does_not_disclose_receipt_across_candidate_scope() -> None:

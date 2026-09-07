@@ -8,9 +8,11 @@ from app.domain.control_time import (
 )
 from app.domain.presentation_receipts import (
     CandidatePresentationReceipt,
+    PresentationReceiptIdentity,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
     PresentationReceiptResult,
+    presentation_receipt_identity,
 )
 from app.domain.source_revision import SourceCutPosture
 from app.infrastructure.postgres_codecs import read_row_value
@@ -120,7 +122,7 @@ def _insert_receipt(
           AND candidate_json->'evidence_packet'->>'source_revision_vector_digest' = %s
           AND candidate_json->'evidence_packet'->>'source_cut_posture' = %s
           AND updated_at_utc <= %s
-        ON CONFLICT (receipt_id) DO NOTHING
+        ON CONFLICT (tenant_id, receipt_id) DO NOTHING
         RETURNING receipt_id
         """,
         (
@@ -207,7 +209,7 @@ def _load_receipt_by_scope(
 
 def load_presentation_receipts(
     cursor: PostgresCursor,
-) -> dict[str, CandidatePresentationReceipt]:
+) -> dict[PresentationReceiptIdentity, CandidatePresentationReceipt]:
     cursor.execute(
         """
         SELECT receipt.receipt_id, receipt.candidate_id, receipt.tenant_id,
@@ -226,10 +228,10 @@ def load_presentation_receipts(
         ORDER BY receipt.presented_at_utc, receipt.receipt_id
         """
     )
-    receipts: dict[str, CandidatePresentationReceipt] = {}
+    receipts: dict[PresentationReceiptIdentity, CandidatePresentationReceipt] = {}
     for row in cursor.fetchall():
         receipt = _receipt_from_row(row)
-        receipts[receipt.receipt_id] = receipt
+        receipts[presentation_receipt_identity(receipt)] = receipt
     return receipts
 
 

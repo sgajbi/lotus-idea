@@ -216,7 +216,7 @@ def test_postgres_effectiveness_attributes_rank_one_acceptance_to_presented_vers
     )
     persisted = replace(
         snapshot_fixture(record),
-        presentation_receipts={receipt.receipt_id: receipt},
+        presentation_receipts={(receipt.tenant_id, receipt.receipt_id): receipt},
     )
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
@@ -337,7 +337,9 @@ def test_postgres_ranked_queue_quality_matches_exact_version_in_memory_projectio
     all_receipts = (*receipts, *reordered_receipts)
     persisted = replace(
         snapshot_fixture(*records),
-        presentation_receipts={receipt.receipt_id: receipt for receipt in all_receipts},
+        presentation_receipts={
+            (receipt.tenant_id, receipt.receipt_id): receipt for receipt in all_receipts
+        },
     )
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:

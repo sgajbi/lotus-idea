@@ -13,7 +13,10 @@ from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.advise_realization import AdviseProposalRealizationHistory
 from app.domain.manage_realization import ManageActionRealizationHistory
 from app.domain.outbox.events import OutboxEventRecord
-from app.domain.presentation_receipts import CandidatePresentationReceipt
+from app.domain.presentation_receipts import (
+    CandidatePresentationReceipt,
+    PresentationReceiptIdentity,
+)
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.ideas import (
     CandidateChangeReason,
@@ -224,7 +227,9 @@ class IdeaRepositorySnapshot:
     manage_realization_histories: Mapping[str, ManageActionRealizationHistory] = field(
         default_factory=dict
     )
-    presentation_receipts: Mapping[str, CandidatePresentationReceipt] = field(default_factory=dict)
+    presentation_receipts: Mapping[PresentationReceiptIdentity, CandidatePresentationReceipt] = (
+        field(default_factory=dict)
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(
