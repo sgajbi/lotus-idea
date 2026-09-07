@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-31",
+  "asOfDate": "2026-09-07",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -37,6 +37,13 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "protected_migration_execution",
       "remainingAuthority": "environment-scoped database secrets, governed PostgreSQL target, approved connectivity, workflow runs, and same-digest promotion evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 379,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "canonical_downstream_outcome_certification",
+      "remainingAuthority": "Advise canonical Core-to-proposal outcome proof, coherent Gateway/Workbench consumer evidence, protected Archive lifecycle and client-publication authority, and supported-feature promotion"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -93,6 +100,13 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "full_live_journey_certification",
       "remainingAuthority": "API, Gateway, Workbench, downstream handoff, Core, identity, publication, data-product, and supported-feature prerequisites"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 1156,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "canonical_effectiveness_consumer_certification",
+      "remainingAuthority": "exact-main Advise, Gateway, and Workbench canonical consumer evidence proving visible presentation receipts, replay and conflict behavior, and the resulting Idea effectiveness projection"
     },
     {
       "repository": "sgajbi/lotus-idea",
