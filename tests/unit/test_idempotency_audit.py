@@ -6,6 +6,7 @@ from app.domain.audit import AuditEvent
 from app.domain.idempotency import (
     IdempotencyDecision,
     evaluate_idempotency,
+    tenant_scoped_idempotency_identity,
 )
 
 
@@ -38,6 +39,24 @@ def test_same_key_different_payload_conflicts() -> None:
         existing=record,
     )
     assert decision == IdempotencyDecision.CONFLICT
+
+
+def test_tenant_scoped_idempotency_identity_separates_equal_raw_keys() -> None:
+    assert tenant_scoped_idempotency_identity("tenant-a", "shared-key") != (
+        tenant_scoped_idempotency_identity("tenant-b", "shared-key")
+    )
+    assert tenant_scoped_idempotency_identity("tenant-a", "shared-key") == (
+        tenant_scoped_idempotency_identity("tenant-a", "shared-key")
+    )
+
+
+@pytest.mark.parametrize("tenant_id,idempotency_key", [("", "key"), ("tenant", " ")])
+def test_tenant_scoped_idempotency_identity_rejects_missing_scope(
+    tenant_id: str,
+    idempotency_key: str,
+) -> None:
+    with pytest.raises(ValueError):
+        tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
 
 
 def test_audit_event_rejects_sensitive_attributes() -> None:
