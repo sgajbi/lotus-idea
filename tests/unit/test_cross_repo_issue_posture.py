@@ -526,7 +526,7 @@ def test_default_blocker_classification_excludes_closed_manage_tax_lot_seed_issu
     assert matching_rows == []
 
 
-def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker() -> None:
+def test_default_blocker_classification_excludes_closed_idea_capacity_blocker() -> None:
     contract_path = (
         ROOT
         / "contracts"
@@ -541,18 +541,34 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
         if (row["repository"] == "sgajbi/lotus-idea" and row["issueNumber"] == 814)
     ]
 
+    assert matching_rows == []
+
+
+def test_default_blocker_classification_tracks_protected_historical_data_audit() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if (row["repository"] == "sgajbi/lotus-idea" and row["issueNumber"] == 1226)
+    ]
+
     assert matching_rows == [
         {
             "repository": "sgajbi/lotus-idea",
-            "issueNumber": 814,
+            "issueNumber": 1226,
             "actionability": "external_or_protected_evidence",
-            "blockerClass": "canonical_front_office_qa_evidence",
+            "blockerClass": "protected_historical_data_audit",
             "remainingAuthority": (
-                "Fresh canonical front-office QA evidence for PB_SG_GLOBAL_BAL_001 "
-                "after Core DPM candidate source-batch fingerprint repair landed in "
-                "sgajbi/lotus-core#882; the next closure proof must show the governed "
-                "stack reaches Idea capacity seed, Gateway-backed Workbench queue/detail "
-                "reads, and browser validation without stale or partial artifacts"
+                "approved protected Lotus Idea PostgreSQL target, read-only audit identity "
+                "and network access, governed audit query revision, authorized execution "
+                "window, findings, and approved remediation evidence"
             ),
         }
     ]
