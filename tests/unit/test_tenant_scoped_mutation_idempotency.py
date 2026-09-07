@@ -1,5 +1,8 @@
 from dataclasses import replace
 
+import pytest
+
+from app.application.candidate_lookup import candidate_tenant_id
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
     apply_review_action_to_repository,
@@ -14,9 +17,16 @@ from app.domain import (
     ReviewAction,
     ReviewPersistenceDecision,
     ReviewPosture,
+    UnscopedCandidatePersistenceError,
     request_report_evidence_pack,
 )
-from app.domain.idempotency import IdempotencyDecision, tenant_scoped_idempotency_identity
+from app.domain.idempotency import (
+    IdempotencyDecision,
+    system_scoped_idempotency_identity,
+    tenant_scoped_idempotency_identity,
+)
+from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_idea_persistence import (
     EVALUATED_AT,
     conversion_intent_command,
@@ -112,6 +122,70 @@ def test_system_and_tenant_idempotency_namespaces_cannot_collide() -> None:
     assert accepted_system is IdempotencyDecision.ACCEPTED
     assert replayed_system is IdempotencyDecision.REPLAYED
     assert len(repository.snapshot().idempotency_records) == 2
+
+
+def test_postgres_snapshot_preserves_system_idempotency_replay_identity() -> None:
+    source = PostgresIdeaRepository(FakePostgresConnection())
+    raw_key = "outbox-delivery-run:shared-client-key"
+    payload = {"maxEvents": 25}
+
+    accepted = source.record_outbox_delivery_run_request(
+        idempotency_key=raw_key,
+        payload=payload,
+    )
+    snapshot = source.snapshot()
+    restored = InMemoryIdeaRepository(snapshot)
+    replayed = restored.record_outbox_delivery_run_request(
+        idempotency_key=raw_key,
+        payload=payload,
+    )
+
+    assert accepted is IdempotencyDecision.ACCEPTED
+    assert set(snapshot.idempotency_records) == {system_scoped_idempotency_identity(raw_key)}
+    assert replayed is IdempotencyDecision.REPLAYED
+
+
+def test_idempotency_namespaces_refuse_missing_authority_and_raw_keys() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate, _ = high_cash_candidate(tenant_id="tenant-a")
+    accepted = repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:retained-scope",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert accepted.record is not None
+    unscoped_record = replace(
+        accepted.record,
+        candidate=replace(accepted.record.candidate, access_scope=None),
+    )
+
+    with pytest.raises(ValueError, match="persisted candidate tenant scope is unavailable"):
+        candidate_tenant_id(unscoped_record)
+    with pytest.raises(ValueError, match="idempotency_key is required"):
+        repository.record_outbox_delivery_run_request(idempotency_key=" ", payload={})
+    with pytest.raises(ValueError, match="idempotency_key must be non-empty"):
+        system_scoped_idempotency_identity(" ")
+
+    retained = InMemoryIdeaRepository(
+        replace(
+            repository.snapshot(),
+            candidate_records={candidate.candidate_id: unscoped_record},
+        )
+    )
+    with pytest.raises(
+        UnscopedCandidatePersistenceError,
+        match="persisted candidate tenant scope is unavailable",
+    ):
+        retained.record_lifecycle_transition(
+            candidate.candidate_id,
+            IdeaLifecycleStatus.ENRICHED,
+            idempotency_key="lifecycle:retained-unscoped",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="lifecycle-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
 
 
 def test_conversion_and_report_mutations_reuse_raw_key_independently_by_tenant() -> None:

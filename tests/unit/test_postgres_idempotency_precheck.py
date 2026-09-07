@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from app.domain import (
     CandidateEvidenceIdentity,
     IdeaLifecycleStatus,
@@ -57,6 +59,23 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
             accepted_at_utc=EVALUATED_AT,
             receipt_id="receipt-postgres-review-001",
         ),
+    )
+    assert (
+        repository.precheck_review_mutation(
+            tenant_id="tenant-001",
+            idempotency_key="review:first-write",
+            payload={"reviewId": review_result.decision.review_id},
+            identity=review_result.decision.mutation_identity,
+        )
+        is None
+    )
+    assert (
+        repository.precheck_conversion_mutation(
+            tenant_id="tenant-001",
+            idempotency_key="conversion:first-write",
+            payload={"conversionIntentId": "conversion-first-write"},
+        )
+        is None
     )
     repository.record_review_action(
         review_result,
@@ -258,6 +277,43 @@ def test_replay_reservation_revalidates_the_durable_winner() -> None:
     assert accepted is IdempotencyDecision.ACCEPTED
     assert replayed is IdempotencyDecision.REPLAYED
     assert conflict is IdempotencyDecision.CONFLICT
+
+
+def test_replay_reservation_fails_closed_when_collision_winner_disappears(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = FakePostgresConnection()
+    _, record = evaluate_idempotency(
+        key="review:disappearing-winner",
+        payload={"reviewId": "review-001"},
+        existing=None,
+    )
+    assert (
+        reserve_replayed_idempotency(
+            connection,
+            record=record,
+            tenant_id="tenant-001",
+            candidate_id="candidate-001",
+            occurred_at_utc=EVALUATED_AT,
+        )
+        is IdempotencyDecision.ACCEPTED
+    )
+    monkeypatch.setattr(
+        "app.infrastructure.postgres_idempotency_reservation.load_idempotency_record_by_key",
+        lambda *_args, **_kwargs: None,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="idempotency reservation collision has no durable winner",
+    ):
+        reserve_replayed_idempotency(
+            connection,
+            record=record,
+            tenant_id="tenant-001",
+            candidate_id="candidate-001",
+            occurred_at_utc=EVALUATED_AT,
+        )
 
 
 def assert_bounded_idempotency_precheck_sql(executed_sql: tuple[str, ...]) -> None:

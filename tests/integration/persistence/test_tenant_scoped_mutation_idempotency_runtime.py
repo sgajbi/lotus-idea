@@ -1,9 +1,18 @@
 from __future__ import annotations
 
-import psycopg
+from typing import cast
 
-from app.domain import CandidatePersistenceDecision, CandidatePersistenceResult
+import psycopg
+from psycopg.rows import dict_row
+
+from app.domain import (
+    CandidatePersistenceDecision,
+    CandidatePersistenceResult,
+    InMemoryIdeaRepository,
+)
+from app.domain.idempotency import IdempotencyDecision
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_protocols import PostgresConnection
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.integration.postgres_runtime_support import (
@@ -131,3 +140,26 @@ def test_postgres_concurrent_tenants_reserve_the_same_raw_key_independently(
             ("tenant-concurrent-a", candidate_a.candidate_id),
             ("tenant-concurrent-b", candidate_b.candidate_id),
         ]
+
+
+def test_postgres_snapshot_preserves_system_idempotency_replay(
+    postgres_database_url: str,
+) -> None:
+    raw_key = "outbox-delivery-run:postgres-snapshot"
+    payload = {"maxEvents": 25}
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        accepted = repository.record_outbox_delivery_run_request(
+            idempotency_key=raw_key,
+            payload=payload,
+        )
+        snapshot = repository.snapshot()
+
+    restored = InMemoryIdeaRepository(snapshot)
+    replayed = restored.record_outbox_delivery_run_request(
+        idempotency_key=raw_key,
+        payload=payload,
+    )
+
+    assert accepted is IdempotencyDecision.ACCEPTED
+    assert replayed is IdempotencyDecision.REPLAYED
