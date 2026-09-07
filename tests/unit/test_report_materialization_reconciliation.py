@@ -24,6 +24,8 @@ from app.domain import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionPosture,
     DownstreamSubmissionResourceType,
+    DownstreamSubmissionOwnerReceipt,
+    DownstreamSubmissionResolution,
     ConversionTarget,
     GovernedReportEvidencePack,
     InMemoryIdeaRepository,
@@ -212,6 +214,44 @@ def test_report_owner_version_advances_and_exact_replay_adds_no_local_mutation()
     assert replayed.owner_receipt == advanced.owner_receipt
     assert repository.snapshot() == advanced_snapshot
     assert reader.call_count == 3
+    assert submit_client.call_count == 1
+
+
+def test_retained_unversioned_report_receipt_advances_from_versioned_owner_read() -> None:
+    repository, evidence_pack, support_reference, submit_client = _uncertain_submission()
+    current = _authoritative_receipt(evidence_pack)
+    legacy = DownstreamSubmissionOwnerReceipt(
+        owner_authority=current.owner_authority,
+        owner_request_id=current.owner_request_id,
+        owner_realization_id=current.owner_realization_id,
+        owner_work_id=current.owner_work_id,
+        source_event_version=None,
+        source_evidence_fingerprint=current.source_evidence_fingerprint,
+        report_materialization=current.report_materialization,
+    )
+    seeded = repository.reconcile_downstream_submission(
+        support_reference=support_reference,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="legacy-migration",
+        reason="retained_pre_version_report_receipt",
+        change_reference="retained-report-receipt",
+        reconciled_at_utc=ACCEPTED_AT - timedelta(seconds=1),
+        owner_receipt=legacy,
+    )
+    assert seeded.record is not None
+
+    recovered = reconcile_report_materialization_receipt(
+        _command(support_reference),
+        repository=repository,
+        report_reader=CapturingReportReader(current),
+    )
+
+    assert recovered.status is ReportMaterializationReconciliationStatus.ACCEPTED
+    assert recovered.owner_receipt is not None
+    assert recovered.owner_receipt.source_event_version == 1
+    persisted = repository.downstream_submission_by_support_reference(support_reference)
+    assert persisted is not None
+    assert len(persisted.audit_history) == len(seeded.record.audit_history) + 1
     assert submit_client.call_count == 1
 
 
