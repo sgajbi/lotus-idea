@@ -22,6 +22,7 @@ PRESENTATION_PRODUCER = "lotus-workbench"
 MAX_PRESENTED_CANDIDATE_COUNT = 100
 _REFERENCE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{2,255}$")
 _DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+PresentationReceiptIdentity = tuple[str, str]
 
 
 class PresentationReceiptDecision(StrEnum):
@@ -156,6 +157,14 @@ class CandidatePresentationReceipt:
         )
 
 
+def presentation_receipt_identity(
+    receipt: CandidatePresentationReceipt,
+) -> PresentationReceiptIdentity:
+    """Return the trusted tenant-scoped identity for a producer receipt."""
+
+    return (receipt.tenant_id, receipt.receipt_id)
+
+
 @dataclass(frozen=True)
 class PresentationReceiptResult:
     decision: PresentationReceiptDecision
@@ -209,8 +218,10 @@ __all__ = [
     "PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_SURFACE",
     "CandidatePresentationReceipt",
+    "PresentationReceiptIdentity",
     "PresentationReceiptCandidateStateError",
     "PresentationReceiptDecision",
     "PresentationReceiptResult",
+    "presentation_receipt_identity",
     "validate_presentation_receipt_candidate",
 ]

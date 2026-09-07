@@ -6,14 +6,16 @@ from app.domain.presentation_receipts import (
     CandidatePresentationReceipt,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
+    PresentationReceiptIdentity,
     PresentationReceiptResult,
+    presentation_receipt_identity,
     validate_presentation_receipt_candidate,
 )
 
 
 class InMemoryPresentationReceiptRepositoryMixin:
     _candidate_records: Mapping[str, Any]
-    _presentation_receipts: dict[str, CandidatePresentationReceipt]
+    _presentation_receipts: dict[PresentationReceiptIdentity, CandidatePresentationReceipt]
 
     def presentation_receipt_by_id(
         self,
@@ -22,7 +24,7 @@ class InMemoryPresentationReceiptRepositoryMixin:
         candidate_id: str,
         tenant_id: str,
     ) -> CandidatePresentationReceipt | None:
-        receipt = self._presentation_receipts.get(receipt_id)
+        receipt = self._presentation_receipts.get((tenant_id, receipt_id))
         if receipt is None:
             return None
         if receipt.candidate_id != candidate_id or receipt.tenant_id != tenant_id:
@@ -33,7 +35,8 @@ class InMemoryPresentationReceiptRepositoryMixin:
         self,
         receipt: CandidatePresentationReceipt,
     ) -> PresentationReceiptResult:
-        existing = self._presentation_receipts.get(receipt.receipt_id)
+        identity = presentation_receipt_identity(receipt)
+        existing = self._presentation_receipts.get(identity)
         if existing is not None:
             if (
                 existing.tenant_id != receipt.tenant_id
@@ -55,7 +58,7 @@ class InMemoryPresentationReceiptRepositoryMixin:
         if record is None:
             raise PresentationReceiptCandidateStateError("candidate is unavailable")
         validate_presentation_receipt_candidate(receipt, record.candidate)
-        self._presentation_receipts[receipt.receipt_id] = receipt
+        self._presentation_receipts[identity] = receipt
         return PresentationReceiptResult(
             decision=PresentationReceiptDecision.ACCEPTED,
             receipt=receipt,

@@ -1177,5 +1177,7 @@ def _snapshot(
         candidate_records={record.candidate.candidate_id: record for record in records},
         idempotency_records={},
         idempotency_candidates={},
-        presentation_receipts={receipt.receipt_id: receipt for receipt in receipts},
+        presentation_receipts={
+            (receipt.tenant_id, receipt.receipt_id): receipt for receipt in receipts
+        },
     )

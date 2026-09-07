@@ -80,9 +80,11 @@ from app.domain.presentation_receipts import (
     PRESENTATION_RECEIPT_SCHEMA_VERSION,
     PRESENTATION_SURFACE,
     CandidatePresentationReceipt,
+    PresentationReceiptIdentity,
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
     PresentationReceiptResult,
+    presentation_receipt_identity,
     validate_presentation_receipt_candidate,
 )
 from app.domain.review_authority import (
@@ -448,9 +450,11 @@ __all__ = [
     "PRESENTATION_RECEIPT_SCHEMA_VERSION",
     "PRESENTATION_SURFACE",
     "CandidatePresentationReceipt",
+    "PresentationReceiptIdentity",
     "PresentationReceiptCandidateStateError",
     "PresentationReceiptDecision",
     "PresentationReceiptResult",
+    "presentation_receipt_identity",
     "validate_presentation_receipt_candidate",
     "REVIEW_AUTHORITY_POLICY_VERSION",
     "WORKBENCH_REVIEW_WINDOW",

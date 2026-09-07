@@ -11,6 +11,7 @@ from app.domain import (
     PresentationReceiptDecision,
     SourceCutPosture,
 )
+from app.domain.control_time import ObservedTimeSkewError
 from app.infrastructure.postgres_presentation_receipts import _record_presentation_receipt
 from app.infrastructure.postgres_presentation_receipts import (
     PostgresPresentationReceiptRepositoryMixin,
@@ -30,7 +31,7 @@ def test_postgres_receipt_insert_is_candidate_tenant_and_version_fenced() -> Non
     assert "candidate_json->'identity'->>'material_version'" in sql
     assert "candidate_json->'identity'->>'evidence_version'" in sql
     assert "updated_at_utc <= %s" in sql
-    assert "ON CONFLICT (receipt_id) DO NOTHING" in sql
+    assert "ON CONFLICT (tenant_id, receipt_id) DO NOTHING" in sql
 
 
 def test_postgres_receipt_replay_lookup_is_candidate_and_tenant_scoped() -> None:
@@ -66,6 +67,26 @@ def test_postgres_receipt_exact_replay_survives_observed_time_skew() -> None:
     assert result.receipt == receipt
     assert connection.commits == 1
     assert connection.rollbacks == 0
+
+
+def test_postgres_receipt_time_skew_without_a_matching_prior_receipt_is_refused() -> None:
+    """Skew is forgiven only for a receipt that is genuinely the same one.
+
+    The replay-on-skew path exists so a retry of an already-accepted receipt is
+    not rejected for arriving late. With no stored receipt to match, there is
+    nothing to replay and the skew must surface - otherwise the time policy
+    could be bypassed simply by presenting a skewed receipt that had never been
+    seen before.
+    """
+
+    skewed = _receipt(presented_at_utc=datetime(2000, 1, 1, tzinfo=UTC))
+    connection = _Connection([[]])
+
+    with pytest.raises(ObservedTimeSkewError):
+        _record_presentation_receipt(connection, skewed)
+
+    assert connection.commits == 0
+    assert connection.rollbacks == 1
 
 
 def test_postgres_receipt_identity_conflict_returns_existing_immutable_receipt() -> None:

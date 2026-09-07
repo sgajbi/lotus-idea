@@ -79,7 +79,10 @@ from app.domain.conversion_outcome_policy import (
     validate_conversion_outcome_progression,
 )
 from app.domain.report_evidence import ReportEvidencePackResult
-from app.domain.presentation_receipts import CandidatePresentationReceipt
+from app.domain.presentation_receipts import (
+    CandidatePresentationReceipt,
+    PresentationReceiptIdentity,
+)
 from app.domain.lotus_ai_attestation_replay import LotusAIAttestationReplayIndex
 from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 
@@ -114,7 +117,9 @@ class InMemoryIdeaRepository(
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
         self._advise_realization_histories: dict[str, AdviseProposalRealizationHistory] = {}
         self._manage_realization_histories: dict[str, ManageActionRealizationHistory] = {}
-        self._presentation_receipts: dict[str, CandidatePresentationReceipt] = {}
+        self._presentation_receipts: dict[
+            PresentationReceiptIdentity, CandidatePresentationReceipt
+        ] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)

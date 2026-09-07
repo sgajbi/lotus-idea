@@ -281,14 +281,14 @@ def test_postgres_repository_snapshot_round_trip_preserves_presentation_receipts
     )
     snapshot = replace(
         source.snapshot(),
-        presentation_receipts={receipt.receipt_id: receipt},
+        presentation_receipts={(receipt.tenant_id, receipt.receipt_id): receipt},
     )
     target = PostgresIdeaRepository(FakePostgresConnection())
 
     target.replace_snapshot(snapshot)
     restored = target.snapshot()
 
-    assert restored.presentation_receipts == {receipt.receipt_id: receipt}
+    assert restored.presentation_receipts == {(receipt.tenant_id, receipt.receipt_id): receipt}
 
 
 def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() -> None:
