@@ -434,7 +434,7 @@ Protected `main` uses strict branch protection. Required PR Merge Gate status ch
 8. `PR Merge Gate / Validate Docker Build`
 
 The PostgreSQL runtime proof is required explicitly, not only as a Docker-build dependency, because
-it proves durable repository behavior, migration rollback/reapply, idempotency replay,
+it proves durable repository behavior, migration rollback/reapply, tenant-scoped idempotency replay,
 source-ingestion recovery, concurrent review/feedback resource-identity
 serialization, and source-safe AI explanation lineage persistence against real
 `postgres:18-alpine` state.
@@ -451,17 +451,25 @@ Persistence adapter validation:
     identity conflict, and atomic rollback of failed mutation attempts.
 2. `tests/unit/test_postgres_idempotency_precheck.py` proves durable review,
    feedback, and conversion-intent replay/conflict prechecks read
-   `idea_idempotency_record` by key plus candidate-detail projection without
+   `idea_idempotency_record` by trusted tenant plus raw key and then use the
+   candidate-detail projection without
    hydrating unrelated outbox or downstream state. Review and feedback also use
    bounded primary-key identity reads and reserve a new transport key only for
    equivalent resource content.
-3. `tests/unit/test_repository_state.py` proves repository provider selection,
+3. `tests/unit/test_tenant_scoped_mutation_idempotency.py` and
+   `tests/integration/persistence/test_tenant_scoped_mutation_idempotency_runtime.py`
+   prove independent same-key candidate, review, conversion, and report
+   mutations across tenants, exact replay after reconstruction, disjoint
+   system-only keys, and real PostgreSQL concurrent reservation. The migration
+   runtime proof verifies attributable backfill, refusal of unscoped history,
+   and non-lossy rollback refusal.
+4. `tests/unit/test_repository_state.py` proves repository provider selection,
    runtime profile semantics, local/test process-local write allowance,
    production-like durable-write blockers, `PostgresIdeaRepository` when
    `LOTUS_IDEA_DATABASE_URL` is configured, psycopg mapping-row configuration,
    provider caching, durable-storage status, and connection close/reset
    behavior.
-3. `tests/unit/test_security_caller_context.py` and
+5. `tests/unit/test_security_caller_context.py` and
    `tests/integration/test_caller_context_boundary_api.py` prove that
    production-like profiles reject self-asserted `X-Caller-*` authorization
    headers without trusted-ingress provenance, while valid
@@ -472,10 +480,10 @@ Persistence adapter validation:
    and source-safe diagnostic categories without raw header or scope values.
    `make caller-context-contract-gate` blocks exception, handler, protected
    route, OpenAPI, media-type, and route-local parser drift.
-4. `tests/integration/test_high_cash_signal_api.py` pins route-level
+6. `tests/integration/test_high_cash_signal_api.py` pins route-level
    `durableStorageBacked` derivation with an injected durable repository so
    future changes cannot hardcode repository-backed API posture to `false`.
-5. `tests/integration/test_postgres_runtime_integration.py` is the first real
+7. `tests/integration/test_postgres_runtime_integration.py` is the first real
    PostgreSQL runtime proof. GitHub PR Merge Gate and Main Releasability run it
    against `postgres:18-alpine` with
    `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`; local runs skip unless

@@ -1097,3 +1097,31 @@ publication commit `8386705` has zero source drift. Issues `#363` and `#364`
 are closed with `status/merged-main`; the implementation branch is absent
 locally and remotely. Slice 06 remains partially implemented only because the
 external certification blockers listed in this RFC are still unresolved.
+
+## Tenant-Scoped General Mutation Idempotency
+
+Issue `#1277` corrects the general mutation ledger so a raw client-generated
+key is unique within the authoritative candidate tenant rather than across the
+whole service. Candidate persistence, review, feedback, conversion intent and
+outcome, report evidence, AI lineage, replay, reservation, aggregate locking,
+and snapshot reconstruction all use the same tenant-bound internal identity.
+Tenant comes from persisted candidate scope or the candidate being admitted;
+it is never accepted as a caller-selected fallback. The external
+`Idempotency-Key` API contract is unchanged.
+
+Migration `028_tenant_scoped_mutation_idempotency` adds and backfills
+`tenant_id`, rejects candidate-bound rows that cannot be attributed to a
+non-blank candidate tenant, and replaces global raw-key uniqueness with
+partial tenant and system indexes. Old writers must be drained before the
+migration. Rollback is intentionally non-lossy: once two tenants legitimately
+reuse a raw key, downgrade refuses rather than deleting or merging their audit
+evidence. System-only outbox delivery-run requests remain globally unique and
+use a disjoint process-local namespace.
+
+Behavioral proof covers independent same-key candidate, review, conversion,
+and report mutations; same-tenant replay/conflict; exact reconstruction;
+system/tenant namespace separation; PostgreSQL restart and concurrent tenant
+reservation; attributable legacy backfill; unscoped-history refusal; and
+rollback refusal after cross-tenant reuse. The change does not alter OpenAPI,
+downstream-submission identity, runtime topology, source authority, or
+supported-feature posture.

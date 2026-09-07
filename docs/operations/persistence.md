@@ -393,12 +393,17 @@ versions or presentation receipts. See
     duplicate downstream submission requests no longer hydrate candidate,
     outbox, conversion, report evidence-pack, or AI-lineage state before
     adapter execution.
-    Review, feedback, and conversion-intent idempotency prechecks use the same
-    bounded PostgreSQL posture: a direct `idea_idempotency_record` lookup by
-    key followed by the candidate-detail projection for the associated
-    candidate only. They avoid whole-store candidate, outbox,
+    Review, feedback, conversion-intent, conversion-outcome, report-evidence,
+    and AI-lineage idempotency prechecks use the same bounded PostgreSQL
+    posture: a direct `idea_idempotency_record` lookup by trusted candidate
+    tenant plus the raw `Idempotency-Key`, followed by the candidate-detail
+    projection for the associated candidate only. They avoid whole-store candidate, outbox,
     downstream-submission, and unrelated workflow hydration before returning
-    replay or conflict decisions.
+    replay or conflict decisions. The API key remains unchanged; tenant scope
+    is an internal storage and locking identity derived from persisted
+    candidate scope. System-only outbox delivery-run requests retain a separate
+    global namespace and cannot collide with a tenant mutation in the
+    process-local reference repository.
     Runtime trust telemetry preview and snapshot diagnostics also use a
     repository-side PostgreSQL aggregate projection over candidate and workflow
     tables, so ordinary operator reads avoid hydrating audit, outbox,
@@ -422,6 +427,14 @@ make source-ingestion-worker-check
 ```
 
 These gates are also part of `make lint`, `make check`, and `make ci`.
+
+Migration `028_tenant_scoped_mutation_idempotency` backfills candidate-bound
+rows from the authoritative candidate JSON scope and fails if a referenced
+candidate cannot supply a non-blank tenant. Deploy it only after draining the
+previous writer, whose raw-key conflict target is incompatible with the new
+partial unique indexes. Rollback refuses to collapse records after different
+tenants have reused the same raw key; it never deletes or coalesces evidence to
+make the downgrade succeed.
 
 Run the run-once worker contract check without calling Core or writing state:
 

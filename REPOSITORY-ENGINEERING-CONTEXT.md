@@ -243,6 +243,10 @@ before choosing overlapping workflows. Repository-local documents own Idea-speci
   rewrite accepted history.
 - PostgreSQL is the durable runtime. In-memory components are test fixtures or explicitly ephemeral
   alternatives, never production evidence.
+- Candidate-bound mutation idempotency is scoped by the trusted tenant stored on the candidate;
+  callers continue to send an unchanged raw `Idempotency-Key`. Migration `028` fails closed on
+  unattributable history and refuses a rollback that would collapse legitimate cross-tenant reuse.
+  System-only outbox delivery runs retain a separate global namespace.
 - GitHub is the durable execution system. Search current issues and PRs before treating this summary
   as execution posture.
 
