@@ -25,6 +25,15 @@ class IdempotencyRecord:
     payload_hash: str
 
 
+def tenant_scoped_idempotency_identity(tenant_id: str, idempotency_key: str) -> str:
+    """Build an internal tenant/key identity without changing the caller's raw key."""
+    if not tenant_id or not tenant_id.strip():
+        raise ValueError("tenant_id must be non-empty")
+    if not idempotency_key or not idempotency_key.strip():
+        raise ValueError("idempotency_key must be non-empty")
+    return f"{tenant_id}\0{idempotency_key}"
+
+
 def payload_fingerprint(payload: dict[str, Any]) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
