@@ -21,8 +21,16 @@
     "algorithm": "ed25519",
     "accepted_verification_statuses": [
       "active",
-      "retired"
+      "rotated"
     ],
+    "published_status_vocabulary": [
+      "active",
+      "rotated",
+      "revoked"
+    ],
+    "temporary_wire_status_aliases": {
+      "retired": "rotated"
+    },
     "active_key_count": 1,
     "unique_key_ids_required": true,
     "raw_public_key_bytes": 32,
@@ -36,7 +44,8 @@
       "test"
     ],
     "active_key_requires_open_window": true,
-    "retired_key_requires_not_after": true,
+    "rotated_key_requires_not_after": true,
+    "revoked_key_refused": true,
     "discovery_endpoint_establishes_trust": false
   },
   "required_bindings": [
@@ -51,7 +60,8 @@
     "signature_algorithm": "Ed25519",
     "digest_algorithm": "sha256",
     "maximum_ttl_seconds": 300,
-    "active_or_retired_trusted_key_required": true,
+    "active_or_rotated_trusted_key_required": true,
+    "revoked_key_refused": true,
     "exact_linked_evidence_pack_required": true,
     "disposal_authorized_must_be_false": true
   },

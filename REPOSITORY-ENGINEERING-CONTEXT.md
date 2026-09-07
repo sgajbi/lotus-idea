@@ -236,6 +236,9 @@ before choosing overlapping workflows. Repository-local documents own Idea-speci
   its intent and reconciliation behavior but cannot self-certify an owner's business outcome.
 - Archive trust, legal retention, client publication, and canonical consumer acceptance remain
   separately governed.
+- Archive lifecycle key trust uses the governed `active`/`rotated`/`revoked` vocabulary. Revoked
+  keys are intentionally refused; key windows are evaluated at decision issue time. A temporary
+  `retired` wire alias exists only for the coordinated consumer-first Archive #147 cutover.
 - Historical authority is immutable. Corrections add reconciled evidence; they do not silently
   rewrite accepted history.
 - PostgreSQL is the durable runtime. In-memory components are test fixtures or explicitly ephemeral
