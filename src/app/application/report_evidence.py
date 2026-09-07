@@ -7,6 +7,7 @@ from app.application.persisted_action_evidence import (
     PersistedActionEvidenceUnavailable,
     require_single_persisted_action,
 )
+from app.application.candidate_lookup import candidate_tenant_id
 from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
@@ -52,17 +53,6 @@ def request_report_evidence_pack_to_repository(
     *,
     repository: ReportEvidenceWorkflowRepository,
 ) -> ReportEvidencePackWorkflowResult:
-    payload = _report_evidence_pack_payload(command)
-    prechecked = repository.precheck_evidence_pack_mutation(
-        idempotency_key=command.idempotency_key,
-        payload=payload,
-    )
-    if prechecked is not None:
-        return ReportEvidencePackWorkflowResult(
-            report_evidence_pack=_persisted_report_evidence_pack(command, prechecked),
-            persistence=prechecked,
-        )
-
     conversion_intent = repository.conversion_intent_by_id(command.conversion_intent_id)
     record = repository.candidate_record_for_conversion_intent(command.conversion_intent_id)
     if conversion_intent is None or record is None:
@@ -72,6 +62,18 @@ def request_report_evidence_pack_to_repository(
                 decision=EvidencePackPersistenceDecision.NOT_FOUND,
                 record=None,
             ),
+        )
+
+    payload = _report_evidence_pack_payload(command)
+    prechecked = repository.precheck_evidence_pack_mutation(
+        tenant_id=candidate_tenant_id(record),
+        idempotency_key=command.idempotency_key,
+        payload=payload,
+    )
+    if prechecked is not None:
+        return ReportEvidencePackWorkflowResult(
+            report_evidence_pack=_persisted_report_evidence_pack(command, prechecked),
+            persistence=prechecked,
         )
 
     evidence_pack_result = request_report_evidence_pack(

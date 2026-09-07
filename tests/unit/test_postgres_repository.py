@@ -142,7 +142,8 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
     assert connection.rows["idea_outbox_event"][0]["event_type"] == ("idea.candidate.persisted.v1")
     assert connection.rows["idea_outbox_event"][0]["status"] == OutboxEventStatus.PENDING.value
     assert (
-        snapshot.idempotency_candidates["signal-ingestion:high-cash:001"] == candidate.candidate_id
+        snapshot.idempotency_candidates["tenant:10:tenant-001signal-ingestion:high-cash:001"]
+        == candidate.candidate_id
     )
     assert tuple(snapshot.outbox_events.values())[0].event_type == "idea.candidate.persisted.v1"
     assert connection.commits == 2

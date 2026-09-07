@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.application.candidate_lookup import candidate_record_by_id
+from app.application.candidate_lookup import candidate_record_by_id, candidate_tenant_id
 from app.application.persisted_action_evidence import (
     PersistedActionEvidenceUnavailable,
     require_single_persisted_action,
@@ -114,6 +114,7 @@ def request_conversion_intent_to_repository(
 
     payload = _conversion_intent_payload(command)
     prechecked = repository.precheck_conversion_mutation(
+        tenant_id=candidate_tenant_id(record),
         idempotency_key=command.idempotency_key,
         payload=payload,
     )
@@ -206,9 +207,20 @@ def record_conversion_outcome_to_repository(
             ),
         )
 
+    record = repository.candidate_record_for_conversion_intent(command.conversion_intent_id)
+    if record is None:
+        return ConversionOutcomeWorkflowResult(
+            conversion_outcome=None,
+            persistence=ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            ),
+        )
+
     payload = _conversion_outcome_payload(command)
     identity = conversion_outcome_identity_from_command(conversion_intent, command.outcome)
     prechecked = repository.precheck_conversion_outcome_mutation(
+        tenant_id=candidate_tenant_id(record),
         idempotency_key=command.idempotency_key,
         payload=payload,
         identity=identity,

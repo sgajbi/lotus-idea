@@ -55,7 +55,7 @@ def test_candidate_persistence_snapshot_loads_idempotency_linked_candidate(
 
     monkeypatch.setattr(
         "app.infrastructure.persistence.aggregate_mutation.load_idempotency_record_by_key",
-        lambda connection, key: (
+        lambda connection, key, *, tenant_id: (
             IdempotencyRecord(key=key, payload_hash="hash"),
             linked.candidate_id,
         ),
@@ -81,11 +81,14 @@ def test_candidate_persistence_snapshot_loads_idempotency_linked_candidate(
         FakePostgresConnection(),
         candidate_ids=(candidate.candidate_id,),
         idempotency_key="candidate:linked-replay",
+        tenant_id="tenant-001",
     )
 
     assert loaded_candidate_ids == sorted((candidate.candidate_id, linked.candidate_id))
     assert tuple(snapshot.candidate_records) == (linked.candidate_id,)
-    assert snapshot.idempotency_candidates == {"candidate:linked-replay": linked.candidate_id}
+    assert snapshot.idempotency_candidates == {
+        "tenant:10:tenant-001candidate:linked-replay": linked.candidate_id
+    }
 
 
 def test_outbox_run_idempotency_does_not_load_candidate_or_event_state() -> None:
@@ -124,6 +127,7 @@ def test_replay_and_idempotency_precheck_use_exact_candidate_state() -> None:
     connection.executed_sql.clear()
 
     absent_precheck = repository.precheck_evidence_pack_mutation(
+        tenant_id="tenant-001",
         idempotency_key="report-pack:absent",
         payload={"reportEvidencePackId": "missing"},
     )
@@ -133,6 +137,7 @@ def test_replay_and_idempotency_precheck_use_exact_candidate_state() -> None:
         evaluated_at_utc=EVALUATED_AT,
     )
     precheck = repository.precheck_evidence_pack_mutation(
+        tenant_id="tenant-001",
         idempotency_key="candidate:bounded-replay",
         payload=payload,
     )

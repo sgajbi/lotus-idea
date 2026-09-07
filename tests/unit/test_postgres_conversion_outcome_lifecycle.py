@@ -181,11 +181,13 @@ def test_postgres_conversion_outcome_read_and_precheck_are_restart_safe() -> Non
 
     history = restarted.conversion_outcomes_for_intent(intent.intent.conversion_intent_id)
     replay = restarted.precheck_conversion_outcome_mutation(
+        tenant_id="tenant-001",
         idempotency_key="outcome:postgres-precheck:recovered",
         payload=payload,
         identity=outcome.conversion_outcome.identity,
     )
     changed_payload = restarted.precheck_conversion_outcome_mutation(
+        tenant_id="tenant-001",
         idempotency_key="outcome:postgres-precheck:recovered",
         payload={**payload, "status": "rejected"},
         identity=outcome.conversion_outcome.identity,
@@ -211,6 +213,7 @@ def test_postgres_conversion_outcome_precheck_distinguishes_absent_and_changed_i
     restarted = PostgresIdeaRepository(connection)
 
     absent = restarted.precheck_conversion_outcome_mutation(
+        tenant_id="tenant-001",
         idempotency_key="outcome:postgres-identity:absent",
         payload={"status": "accepted"},
         identity=replace(
@@ -219,6 +222,7 @@ def test_postgres_conversion_outcome_precheck_distinguishes_absent_and_changed_i
         ),
     )
     conflict = restarted.precheck_conversion_outcome_mutation(
+        tenant_id="tenant-001",
         idempotency_key="outcome:postgres-identity:conflict",
         payload={"status": "rejected"},
         identity=replace(

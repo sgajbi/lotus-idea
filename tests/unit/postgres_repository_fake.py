@@ -400,8 +400,11 @@ def _execute_idempotency_insert(
 ) -> bool:
     if table_name != "idea_idempotency_record" or "on conflict" not in normalized:
         return False
-    idempotency_key = params[0]
-    if any(row["idempotency_key"] == idempotency_key for row in cursor.connection.rows[table_name]):
+    tenant_id, idempotency_key = params[:2]
+    if any(
+        row["tenant_id"] == tenant_id and row["idempotency_key"] == idempotency_key
+        for row in cursor.connection.rows[table_name]
+    ):
         cursor._rows = []
         return True
     row = row_for_insert(table_name, params)

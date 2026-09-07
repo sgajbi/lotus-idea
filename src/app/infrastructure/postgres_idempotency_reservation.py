@@ -11,6 +11,7 @@ def reserve_replayed_idempotency(
     connection: PostgresConnection,
     *,
     record: IdempotencyRecord,
+    tenant_id: str,
     candidate_id: str,
     occurred_at_utc: datetime,
 ) -> IdempotencyDecision:
@@ -18,13 +19,14 @@ def reserve_replayed_idempotency(
         cursor.execute(
             """
             INSERT INTO idea_idempotency_record (
-                idempotency_key, operation_name, payload_hash, candidate_id,
+                tenant_id, idempotency_key, operation_name, payload_hash, candidate_id,
                 created_at_utc
-            ) VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (idempotency_key) DO NOTHING
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (tenant_id, idempotency_key) WHERE tenant_id IS NOT NULL DO NOTHING
             RETURNING idempotency_key
             """,
             (
+                tenant_id,
                 record.key,
                 record.key.split(":", 1)[0],
                 record.payload_hash,
@@ -37,7 +39,11 @@ def reserve_replayed_idempotency(
         connection.commit()
         return IdempotencyDecision.ACCEPTED
     connection.rollback()
-    existing = load_idempotency_record_by_key(connection, record.key)
+    existing = load_idempotency_record_by_key(
+        connection,
+        record.key,
+        tenant_id=tenant_id,
+    )
     if existing is None:
         raise RuntimeError("idempotency reservation collision has no durable winner")
     existing_record, existing_candidate_id = existing

@@ -22,11 +22,14 @@ from app.infrastructure.postgres_review_identity import (
 def precheck_postgres_review_mutation(
     connection: PostgresConnection,
     *,
+    tenant_id: str,
     idempotency_key: str,
     payload: Mapping[str, Any],
     identity: ReviewMutationIdentity,
 ) -> ReviewPersistenceResult | None:
-    idempotency_row = load_idempotency_record_by_key(connection, idempotency_key)
+    idempotency_row = load_idempotency_record_by_key(
+        connection, idempotency_key, tenant_id=tenant_id
+    )
     if idempotency_row is not None:
         existing_idempotency, candidate_id = idempotency_row
         idempotency_decision, _ = evaluate_idempotency(
@@ -66,6 +69,7 @@ def precheck_postgres_review_mutation(
     reservation = reserve_replayed_idempotency(
         connection,
         record=idempotency_record,
+        tenant_id=tenant_id,
         candidate_id=identity.candidate_id,
         occurred_at_utc=identity.occurred_at_utc,
     )
@@ -83,10 +87,13 @@ def precheck_postgres_review_mutation(
 def precheck_postgres_conversion_mutation(
     connection: PostgresConnection,
     *,
+    tenant_id: str,
     idempotency_key: str,
     payload: Mapping[str, Any],
 ) -> ConversionPersistenceResult | None:
-    idempotency_row = load_idempotency_record_by_key(connection, idempotency_key)
+    idempotency_row = load_idempotency_record_by_key(
+        connection, idempotency_key, tenant_id=tenant_id
+    )
     if idempotency_row is None:
         return None
     existing_idempotency, candidate_id = idempotency_row

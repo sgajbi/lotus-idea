@@ -324,15 +324,18 @@ def _record_replay_and_idempotency_prechecks(
         evaluated_at_utc=EVALUATED_AT + timedelta(minutes=7),
     )
     review_precheck = repository.precheck_review_mutation(
+        tenant_id="tenant-001",
         idempotency_key="review:approve",
         payload={"reviewId": review_command().review_id},
         identity=review_identity,
     )
     conversion_precheck = repository.precheck_conversion_mutation(
+        tenant_id="tenant-001",
         idempotency_key="conversion:intent",
         payload={"conversionIntentId": conversion_intent_id},
     )
     evidence_pack_precheck = repository.precheck_evidence_pack_mutation(
+        tenant_id="tenant-001",
         idempotency_key="report:evidence-pack",
         payload={"reportEvidencePackId": report_evidence_pack_id},
     )

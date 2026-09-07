@@ -8,7 +8,6 @@ from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
 MIGRATIONS_DIR = ROOT / "migrations"
-
 REQUIRED_TABLES = (
     "idea_candidate_record",
     "idea_idempotency_record",
@@ -22,7 +21,6 @@ REQUIRED_TABLES = (
     "idea_report_evidence_pack_request",
     "idea_downstream_submission",
 )
-
 REQUIRED_INDEXES = (
     "idx_idea_candidate_record_family_status",
     "idx_idea_candidate_record_review_queue_order",
@@ -46,7 +44,6 @@ REQUIRED_INDEXES = (
     "idx_idea_report_evidence_pack_candidate_time",
     "idx_idea_downstream_submission_resource",
 )
-
 REQUIRED_FORWARD_FRAGMENTS = (
     "JSONB NOT NULL",
     "TIMESTAMPTZ NOT NULL",
@@ -359,6 +356,26 @@ REQUIRED_MIGRATIONS = (
             "PRIMARY KEY (idempotency_key)",
             "DROP COLUMN identity_version",
             "DROP COLUMN tenant_id",
+        ),
+    ),
+    MigrationContract(
+        version="028",
+        forward_path=MIGRATIONS_DIR / "028_tenant_scoped_mutation_idempotency.sql",
+        rollback_path=(MIGRATIONS_DIR / "028_tenant_scoped_mutation_idempotency.rollback.sql"),
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "tenant_id TEXT",
+            "candidate.candidate_json->'access_scope'->>'tenant_id'",
+            "candidate-bound idempotency rows require a source candidate tenant",
+            "ck_idea_idempotency_record_tenant_scope",
+            "uq_idea_idempotency_record_tenant_key",
+            "uq_idea_idempotency_record_system_key",
+        ),
+        required_rollback_fragments=(
+            "cannot roll back tenant-scoped idempotency while duplicate raw keys exist",
+            "DROP COLUMN IF EXISTS tenant_id",
+            "ADD PRIMARY KEY (idempotency_key)",
         ),
     ),
 )

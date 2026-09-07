@@ -115,10 +115,11 @@ def idempotency_lookup_rows(
     table_name = _table_from_select(query)
     idempotency_key = params[0]
     if "where idempotency_key = %s" in query:
+        tenant_id = params[1] if "tenant_id is not distinct from %s" in query else None
         return [
             dict(row)
             for row in connection.rows[table_name]
-            if row["idempotency_key"] == idempotency_key
+            if row["idempotency_key"] == idempotency_key and row.get("tenant_id") == tenant_id
         ]
     raise AssertionError(f"unexpected idempotency lookup query: {query}")
 

@@ -50,6 +50,7 @@ def test_persistence_public_prechecks_treat_missing_idempotency_as_absent() -> N
 
     assert (
         repository.precheck_review_mutation(
+            tenant_id="tenant-001",
             idempotency_key="missing-review-idempotency",
             payload={"reviewId": "review-001"},
             identity=ReviewMutationIdentity(
@@ -74,6 +75,7 @@ def test_persistence_public_prechecks_treat_missing_idempotency_as_absent() -> N
     )
     assert (
         repository.precheck_conversion_mutation(
+            tenant_id="tenant-001",
             idempotency_key="missing-conversion-idempotency",
             payload={"conversionIntentId": "conversion-001"},
         )

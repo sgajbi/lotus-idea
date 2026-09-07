@@ -15,7 +15,13 @@ from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.downstream_submission import downstream_submission_identity
 from app.domain.advise_realization import AdviseProposalRealizationHistory
 from app.domain.manage_realization import ManageActionRealizationHistory
-from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
+from app.domain.idempotency import (
+    IdempotencyDecision,
+    IdempotencyRecord,
+    evaluate_idempotency,
+    system_scoped_idempotency_identity,
+    tenant_scoped_idempotency_identity,
+)
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
 from app.domain.persistence_ai_lineage import InMemoryAIExplanationRepositoryMixin
 from app.domain.outbox.persistence import InMemoryOutboxRepositoryMixin
@@ -160,7 +166,9 @@ class InMemoryIdeaRepository(
         event_time = occurred_at_utc or datetime.now(UTC)
         _require_aware_utc(event_time, "occurred_at_utc")
 
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        tenant_id = candidate.access_scope.tenant_id
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -169,12 +177,12 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return CandidatePersistenceResult(
                 decision=CandidatePersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return CandidatePersistenceResult(
                 decision=CandidatePersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         existing_record = self._candidate_records.get(candidate.candidate_id)
         if existing_record is not None:
@@ -218,6 +226,7 @@ class InMemoryIdeaRepository(
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
             candidate_id=candidate.candidate_id,
+            tenant_id=tenant_id,
         )
         self._append_outbox_event(
             event_type="idea.candidate.persisted.v1",
@@ -266,6 +275,7 @@ class InMemoryIdeaRepository(
                 idempotency_key=idempotency_key,
                 idempotency_record=idempotency_record,
                 candidate_id=incoming_candidate.candidate_id,
+                tenant_id=_candidate_tenant_id(incoming_candidate),
             )
             return CandidatePersistenceResult(
                 decision=reconciliation.decision,
@@ -302,6 +312,7 @@ class InMemoryIdeaRepository(
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
             candidate_id=incoming_candidate.candidate_id,
+            tenant_id=_candidate_tenant_id(incoming_candidate),
         )
         self._append_candidate_reconciliation_event(
             decision=reconciliation.decision,
@@ -322,9 +333,11 @@ class InMemoryIdeaRepository(
         idempotency_key: str,
         idempotency_record: IdempotencyRecord,
         candidate_id: str,
+        tenant_id: str,
     ) -> None:
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
 
     def _append_candidate_reconciliation_event(
         self,
@@ -421,7 +434,15 @@ class InMemoryIdeaRepository(
         observed_time = observed_at_utc or event_time
         _require_aware_utc(observed_time, "observed_at_utc")
 
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return LifecyclePersistenceResult(
+                decision=LifecyclePersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record.candidate)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -430,19 +451,12 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return LifecyclePersistenceResult(
                 decision=LifecyclePersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return LifecyclePersistenceResult(
                 decision=LifecyclePersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
-            )
-
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return LifecyclePersistenceResult(
-                decision=LifecyclePersistenceDecision.NOT_FOUND,
-                record=None,
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
         attributes = {
@@ -459,8 +473,8 @@ class InMemoryIdeaRepository(
             occurred_at_utc=event_time,
             attributes=attributes,
         )
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._append_outbox_event(
             event_type="idea.lifecycle.transitioned.v1",
             aggregate_id=candidate_id,
@@ -522,24 +536,27 @@ class InMemoryIdeaRepository(
         payload: dict[str, Any],
     ) -> IdempotencyDecision:
         _require_text(idempotency_key, "idempotency_key")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        storage_key = system_scoped_idempotency_identity(idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
             existing=existing_idempotency,
         )
         if idempotency_decision is IdempotencyDecision.ACCEPTED:
-            self._idempotency_records[idempotency_key] = idempotency_record
+            self._idempotency_records[storage_key] = idempotency_record
         return idempotency_decision
 
     def precheck_conversion_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> ConversionPersistenceResult | None:
         _require_text(idempotency_key, "idempotency_key")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         if existing_idempotency is None:
             return None
         idempotency_decision, _ = evaluate_idempotency(
@@ -550,11 +567,11 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         return ConversionPersistenceResult(
             decision=ConversionPersistenceDecision.REPLAYED,
-            record=self._record_for_idempotency_key(idempotency_key),
+            record=self._record_for_idempotency_key(tenant_id, idempotency_key),
         )
 
     def record_conversion_intent(
@@ -569,7 +586,15 @@ class InMemoryIdeaRepository(
         _require_matching_conversion_intent_idempotency(result, idempotency_key)
         candidate_id = result.conversion_intent.intent.candidate_id
         _require_text(candidate_id, "candidate_id")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record.candidate)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -578,20 +603,14 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.NOT_FOUND,
-                record=None,
-            )
         if record.candidate != result.source_candidate:
             raise InvalidConversionIntent(
                 candidate_id,
@@ -626,8 +645,8 @@ class InMemoryIdeaRepository(
             conversion_intents=(*record.conversion_intents, result.conversion_intent),
         )
         self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._conversion_intent_candidates[result.conversion_intent.intent.conversion_intent_id] = (
             candidate_id
         )
@@ -661,7 +680,15 @@ class InMemoryIdeaRepository(
         _require_text(idempotency_key, "idempotency_key")
         conversion_intent_id = result.conversion_outcome.conversion_intent_id
         _require_text(conversion_intent_id, "conversion_intent_id")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        candidate_id, record = self._conversion_record_for_intent(conversion_intent_id)
+        if record is None:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record.candidate)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -670,12 +697,12 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
         identity_result = conversion_outcome_identity_result(
@@ -683,18 +710,12 @@ class InMemoryIdeaRepository(
             idempotency_records=self._idempotency_records,
             idempotency_candidates=self._idempotency_candidates,
             identity=result.conversion_outcome.identity,
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
         )
         if identity_result is not None:
             return identity_result
-
-        candidate_id, record = self._conversion_record_for_intent(conversion_intent_id)
-        if record is None:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.NOT_FOUND,
-                record=None,
-            )
 
         if _conversion_outcome_progression_conflicts(record, result):
             return ConversionPersistenceResult(
@@ -708,6 +729,7 @@ class InMemoryIdeaRepository(
             result=result,
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
+            tenant_id=tenant_id,
             event_lineage=event_lineage,
         )
         return ConversionPersistenceResult(
@@ -719,6 +741,7 @@ class InMemoryIdeaRepository(
     def precheck_conversion_outcome_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
         identity: ConversionOutcomeIdentity,
@@ -731,16 +754,19 @@ class InMemoryIdeaRepository(
             idempotency_key=idempotency_key,
             payload=payload,
             identity=identity,
+            tenant_id=tenant_id,
         )
 
     def precheck_evidence_pack_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> EvidencePackPersistenceResult | None:
         _require_text(idempotency_key, "idempotency_key")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         if existing_idempotency is None:
             return None
         idempotency_decision, _ = evaluate_idempotency(
@@ -751,11 +777,11 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return EvidencePackPersistenceResult(
                 decision=EvidencePackPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         return EvidencePackPersistenceResult(
             decision=EvidencePackPersistenceDecision.REPLAYED,
-            record=self._record_for_idempotency_key(idempotency_key),
+            record=self._record_for_idempotency_key(tenant_id, idempotency_key),
         )
 
     def record_report_evidence_pack(
@@ -769,7 +795,15 @@ class InMemoryIdeaRepository(
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.evidence_pack.candidate_id
         _require_text(candidate_id, "candidate_id")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return EvidencePackPersistenceResult(
+                decision=EvidencePackPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        tenant_id = _candidate_tenant_id(record.candidate)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        existing_idempotency = self._idempotency_records.get(storage_key)
         idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
@@ -778,19 +812,12 @@ class InMemoryIdeaRepository(
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return EvidencePackPersistenceResult(
                 decision=EvidencePackPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
         if idempotency_decision is IdempotencyDecision.REPLAYED:
             return EvidencePackPersistenceResult(
                 decision=EvidencePackPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
-            )
-
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return EvidencePackPersistenceResult(
-                decision=EvidencePackPersistenceDecision.NOT_FOUND,
-                record=None,
+                record=self._record_for_idempotency_key(tenant_id, idempotency_key),
             )
 
         updated = replace(
@@ -799,8 +826,8 @@ class InMemoryIdeaRepository(
             report_evidence_packs=(*record.report_evidence_packs, result.evidence_pack),
         )
         self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._report_evidence_pack_candidates[result.evidence_pack.report_evidence_pack_id] = (
             candidate_id
         )
@@ -839,9 +866,10 @@ class InMemoryIdeaRepository(
         )
 
     def _record_for_idempotency_key(
-        self, idempotency_key: str
+        self, tenant_id: str, idempotency_key: str
     ) -> CandidatePersistenceRecord | None:
-        candidate_id = self._idempotency_candidates.get(idempotency_key)
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        candidate_id = self._idempotency_candidates.get(storage_key)
         if candidate_id is None:
             return None
         return self._candidate_records.get(candidate_id)
@@ -905,12 +933,14 @@ class InMemoryIdeaRepository(
         result: ConversionOutcomeResult,
         idempotency_key: str,
         idempotency_record: IdempotencyRecord,
+        tenant_id: str,
         event_lineage: EventLineageContext | None,
     ) -> CandidatePersistenceRecord:
         updated = _record_with_conversion_outcome(record, result)
         self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
+        storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+        self._idempotency_records[storage_key] = idempotency_record
+        self._idempotency_candidates[storage_key] = candidate_id
         self._append_outbox_event(
             event_type="idea.conversion.outcome_recorded.v1",
             aggregate_id=candidate_id,
@@ -1053,6 +1083,13 @@ def _conversion_outcome_outbox_payload(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _candidate_tenant_id(candidate: IdeaCandidate) -> str:
+    access_scope = candidate.access_scope
+    if access_scope is None:
+        raise UnscopedCandidatePersistenceError("persisted candidate tenant scope is unavailable")
+    return access_scope.tenant_id
 
 
 def _require_matching_conversion_intent_idempotency(

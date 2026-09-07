@@ -18,7 +18,11 @@ from app.domain.conversion_governance import (
 )
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
 from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus
-from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
+from app.domain.idempotency import (
+    IdempotencyDecision,
+    IdempotencyRecord,
+    tenant_scoped_idempotency_identity,
+)
 from app.domain.outbox.delivery import OutboxDeliveryResult
 from app.domain.persistence import (
     CandidatePersistenceRecord,
@@ -30,6 +34,7 @@ from app.domain.persistence import (
     LifecycleHistoryEntry,
     LifecyclePersistenceResult,
     ReviewPersistenceResult,
+    UnscopedCandidatePersistenceError,
 )
 from app.domain.report_evidence import (
     GovernedReportEvidencePack,
@@ -209,6 +214,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(candidate.candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=_candidate_tenant_id(candidate),
             operation=lambda repository: repository.persist_candidate(
                 candidate,
                 idempotency_key=idempotency_key,
@@ -250,6 +256,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=self._persisted_candidate_tenant_id(candidate_id),
             identity_keys=(f"lifecycle-transition:{transition_id or idempotency_key}",),
             operation=lambda repository: repository.record_lifecycle_transition(
                 candidate_id,
@@ -268,12 +275,14 @@ class PostgresIdeaRepository(
     def precheck_review_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
         identity: ReviewMutationIdentity,
     ) -> ReviewPersistenceResult | None:
         return precheck_postgres_review_mutation(
             self._connection,
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             payload=payload,
             identity=identity,
@@ -291,6 +300,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(result.decision.candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=_candidate_tenant_id(result.source_candidate),
             identity_keys=(f"{identity.mutation_type.value}:{identity.resource_id}",),
             related_candidate_ids_loader=lambda: self._review_identity_candidate_ids(identity),
             operation=lambda repository: repository.record_review_action(
@@ -313,6 +323,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(result.feedback_event.candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=self._persisted_candidate_tenant_id(result.feedback_event.candidate_id),
             identity_keys=(f"{identity.mutation_type.value}:{identity.resource_id}",),
             related_candidate_ids_loader=lambda: self._review_identity_candidate_ids(identity),
             operation=lambda repository: repository.record_feedback_event(
@@ -326,11 +337,13 @@ class PostgresIdeaRepository(
     def precheck_conversion_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> ConversionPersistenceResult | None:
         return precheck_postgres_conversion_mutation(
             self._connection,
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             payload=payload,
         )
@@ -348,6 +361,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=_candidate_tenant_id(result.source_candidate),
             identity_keys=(f"conversion-intent:{conversion_intent_id}",),
             related_candidate_ids_loader=lambda: self._conversion_intent_candidate_ids(
                 conversion_intent_id
@@ -378,12 +392,14 @@ class PostgresIdeaRepository(
     def precheck_conversion_outcome_mutation(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         payload: Mapping[str, Any],
         identity: ConversionOutcomeIdentity,
     ) -> ConversionPersistenceResult | None:
         return precheck_postgres_conversion_outcome_mutation(
             self._connection,
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             payload=payload,
             identity=identity,
@@ -398,9 +414,11 @@ class PostgresIdeaRepository(
         event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
         identity = result.conversion_outcome.identity
+        record = self.candidate_record_for_conversion_intent(identity.conversion_intent_id)
         return self._mutate_candidate(
             candidate_ids=(),
             idempotency_key=idempotency_key,
+            tenant_id=(_candidate_tenant_id(record.candidate) if record is not None else None),
             identity_keys=(
                 f"conversion-intent:{identity.conversion_intent_id}",
                 f"conversion-outcome:{identity.conversion_outcome_id}",
@@ -447,6 +465,7 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(candidate_id,),
             idempotency_key=idempotency_key,
+            tenant_id=self._persisted_candidate_tenant_id(candidate_id),
             identity_keys=(f"report-evidence-pack:{result.evidence_pack.report_evidence_pack_id}",),
             operation=lambda repository: repository.record_report_evidence_pack(
                 result,
@@ -455,6 +474,10 @@ class PostgresIdeaRepository(
                 event_lineage=event_lineage,
             ),
         )
+
+    def _persisted_candidate_tenant_id(self, candidate_id: str) -> str | None:
+        record = self.candidate_record_by_id(candidate_id)
+        return _candidate_tenant_id(record.candidate) if record is not None else None
 
     def claim_outbox_events_for_delivery(
         self,
@@ -652,7 +675,7 @@ class PostgresIdeaRepository(
     ) -> tuple[dict[str, IdempotencyRecord], dict[str, str]]:
         cursor.execute(
             """
-            SELECT idempotency_key, payload_hash, candidate_id
+            SELECT tenant_id, idempotency_key, payload_hash, candidate_id
             FROM idea_idempotency_record
             ORDER BY created_at_utc, idempotency_key
             """
@@ -660,14 +683,20 @@ class PostgresIdeaRepository(
         records: dict[str, IdempotencyRecord] = {}
         candidates: dict[str, str] = {}
         for row in cursor.fetchall():
-            key = read_row_value(row, "idempotency_key")
-            records[key] = IdempotencyRecord(
-                key=key,
+            raw_key = read_row_value(row, "idempotency_key")
+            tenant_id = read_row_value(row, "tenant_id")
+            storage_key = (
+                tenant_scoped_idempotency_identity(tenant_id, raw_key)
+                if tenant_id is not None
+                else raw_key
+            )
+            records[storage_key] = IdempotencyRecord(
+                key=raw_key,
                 payload_hash=read_row_value(row, "payload_hash"),
             )
             candidate_id = read_row_value(row, "candidate_id")
             if candidate_id is not None:
-                candidates[key] = candidate_id
+                candidates[storage_key] = candidate_id
         return records, candidates
 
     def _attach_lifecycle_history(
@@ -948,3 +977,9 @@ class PostgresIdeaRepository(
         record: CandidatePersistenceRecord,
     ) -> None:
         update_postgres_candidate_record(cursor, before=before, record=record)
+
+
+def _candidate_tenant_id(candidate: IdeaCandidate) -> str:
+    if candidate.access_scope is None:
+        raise UnscopedCandidatePersistenceError("persisted candidate tenant scope is unavailable")
+    return candidate.access_scope.tenant_id

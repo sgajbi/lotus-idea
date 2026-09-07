@@ -12,7 +12,7 @@ from app.domain.ai_lineage_persistence import (
     AIExplanationLineageRecord,
 )
 from app.domain.ai_governance import AIFallbackReason, AIExplanationResult
-from app.domain.idempotency import IdempotencyRecord
+from app.domain.idempotency import IdempotencyRecord, tenant_scoped_idempotency_identity
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
 from app.domain.persistence import CandidatePersistenceRecord
@@ -22,7 +22,9 @@ from app.domain import build_ai_explanation_request, deterministic_ai_fallback
 
 def test_ai_lineage_request_idempotency_returns_conflict_without_recording_lineage() -> None:
     idempotency_records = {
-        "ai-lineage-key": IdempotencyRecord(
+        tenant_scoped_idempotency_identity(
+            "tenant-private-bank-sg", "ai-lineage-key"
+        ): IdempotencyRecord(
             key="ai-lineage-key",
             payload_hash="different-payload-hash",
         )
@@ -47,7 +49,8 @@ def test_ai_lineage_request_idempotency_returns_conflict_without_recording_linea
         payload={"requestId": "changed"},
         idempotency_records=idempotency_records,
         idempotency_candidates={},
-        record_for_idempotency_key=lambda key: persisted_record,
+        tenant_id="tenant-private-bank-sg",
+        record_for_idempotency_key=lambda tenant_id, key: persisted_record,
         record_lineage=record_lineage,
     )
 
@@ -79,7 +82,8 @@ def test_ai_lineage_request_idempotency_rejects_blank_key() -> None:
             payload={"requestId": "ai-request-001"},
             idempotency_records={},
             idempotency_candidates={},
-            record_for_idempotency_key=lambda key: {"key": key},
+            tenant_id="tenant-private-bank-sg",
+            record_for_idempotency_key=lambda tenant_id, key: {"key": key},
             record_lineage=record_lineage,
         )
     except ValueError as exc:

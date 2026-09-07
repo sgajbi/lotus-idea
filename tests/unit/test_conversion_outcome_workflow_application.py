@@ -25,6 +25,7 @@ from app.domain import (
     SourceSystem,
     current_conversion_outcome,
 )
+from app.domain.idempotency import tenant_scoped_idempotency_identity
 
 from app.ports.idea_repository import ConversionOutcomeWorkflowRepository
 from tests.unit.test_conversion_governance import (
@@ -149,7 +150,10 @@ def test_conversion_outcome_identity_replays_across_transport_keys_without_side_
     assert replayed.persistence.decision is ConversionPersistenceDecision.REPLAYED
     assert after_replay.candidate_records == before_replay.candidate_records
     assert after_replay.outbox_events == before_replay.outbox_events
-    assert "outcome:retry" in after_replay.idempotency_records
+    assert (
+        tenant_scoped_idempotency_identity("tenant-a", "outcome:retry")
+        in after_replay.idempotency_records
+    )
 
 
 def test_conversion_outcome_identity_conflicts_on_changed_source_fact() -> None:
@@ -377,6 +381,9 @@ class PrecheckedConversionOutcomeRepository:
 
     def conversion_intent_by_id(self, conversion_intent_id: str) -> Any:
         return self._repository.conversion_intent_by_id(conversion_intent_id)
+
+    def candidate_record_for_conversion_intent(self, conversion_intent_id: str) -> Any:
+        return self._repository.candidate_record_for_conversion_intent(conversion_intent_id)
 
     def conversion_outcomes_for_intent(self, conversion_intent_id: str) -> Any:
         return self._repository.conversion_outcomes_for_intent(conversion_intent_id)

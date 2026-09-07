@@ -7,6 +7,7 @@ from app.domain.idempotency import (
     IdempotencyDecision,
     IdempotencyRecord,
     evaluate_idempotency,
+    tenant_scoped_idempotency_identity,
 )
 from app.domain.persistence_models import (
     CandidatePersistenceRecord,
@@ -20,18 +21,20 @@ def precheck_conversion_outcome_identity_mutation(
     candidate_records: Mapping[str, CandidatePersistenceRecord],
     idempotency_records: dict[str, IdempotencyRecord],
     idempotency_candidates: dict[str, str],
+    tenant_id: str,
     idempotency_key: str,
     payload: Mapping[str, Any],
     identity: ConversionOutcomeIdentity,
 ) -> ConversionPersistenceResult | None:
-    existing_idempotency = idempotency_records.get(idempotency_key)
+    storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+    existing_idempotency = idempotency_records.get(storage_key)
     decision, idempotency_record = evaluate_idempotency(
         key=idempotency_key,
         payload=dict(payload),
         existing=existing_idempotency,
     )
     if decision in {IdempotencyDecision.CONFLICT, IdempotencyDecision.REPLAYED}:
-        candidate_id = idempotency_candidates.get(idempotency_key)
+        candidate_id = idempotency_candidates.get(storage_key)
         return ConversionPersistenceResult(
             decision=(
                 ConversionPersistenceDecision.CONFLICT
@@ -47,6 +50,7 @@ def precheck_conversion_outcome_identity_mutation(
         identity=identity,
         idempotency_key=idempotency_key,
         idempotency_record=idempotency_record,
+        tenant_id=tenant_id,
     )
 
 
@@ -58,6 +62,7 @@ def conversion_outcome_identity_result(
     identity: ConversionOutcomeIdentity,
     idempotency_key: str,
     idempotency_record: IdempotencyRecord,
+    tenant_id: str,
 ) -> ConversionPersistenceResult | None:
     existing = _conversion_outcome_identity_record(
         candidate_records,
@@ -71,8 +76,9 @@ def conversion_outcome_identity_result(
             decision=ConversionPersistenceDecision.OUTCOME_CONFLICT,
             record=record,
         )
-    idempotency_records[idempotency_key] = idempotency_record
-    idempotency_candidates[idempotency_key] = record.candidate.candidate_id
+    storage_key = tenant_scoped_idempotency_identity(tenant_id, idempotency_key)
+    idempotency_records[storage_key] = idempotency_record
+    idempotency_candidates[storage_key] = record.candidate.candidate_id
     return ConversionPersistenceResult(
         decision=ConversionPersistenceDecision.REPLAYED,
         record=record,

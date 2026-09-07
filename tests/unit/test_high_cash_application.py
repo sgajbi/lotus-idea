@@ -397,7 +397,10 @@ def test_authoritative_non_eligible_reevaluation_expires_existing_candidate_once
     assert repeated.expiry.decision is CandidateExpiryDecision.ALREADY_EXPIRED
     snapshot = repository.snapshot()
     assert len(snapshot.candidate_records[candidate_id].lifecycle_history) == 1
-    assert f"candidate-expiry:{candidate_id}:material-version:1" in snapshot.idempotency_records
+    assert (
+        f"tenant:8:tenant-acandidate-expiry:{candidate_id}:material-version:1"
+        in snapshot.idempotency_records
+    )
 
 
 def test_non_eligible_evaluation_without_candidate_is_non_mutating() -> None:
