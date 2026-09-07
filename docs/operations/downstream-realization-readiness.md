@@ -130,6 +130,16 @@ not create a second submission registry. Legacy stored receipts without a
 version remain explicit unknown until a current authoritative read supplies a
 positive version; Idea never fabricates a backfill.
 
+The cross-service PostgreSQL proof in
+`tests/integration/test_report_lost_response_postgres_chain.py` reconstructs
+Report for each owner interaction against retained Report state. It proves one
+lost-response POST, tenant-scoped owner identity, advancement of a retained
+unversioned Idea receipt, unchanged replay, higher-version progression,
+same-version conflict refusal, concurrent convergence, and zero additional
+owner work or local mutation on final replay. Run it only with isolated Idea
+and Report databases; the test deliberately skips when the Report checkout and
+dedicated owner DSN are not supplied.
+
 The Advise reconciliation route authorizes complete caller scope before owner
 I/O, reads the owner history through the typed port, validates source and
 realization authority, scope, evidence fingerprint, exact event versions,

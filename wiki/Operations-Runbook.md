@@ -625,6 +625,14 @@ closed. Reconciliation never issues another Report POST. A legacy stored receipt
 without an owner version remains explicit unknown until a current authoritative
 GET supplies one; never synthesize or silently backfill owner chronology.
 
+For release evidence, the optional cross-service PostgreSQL test
+`tests/integration/test_report_lost_response_postgres_chain.py` must use
+dedicated Idea and Report databases plus a sibling Report checkout. It
+reconstructs Report for every read and verifies retained legacy receipt
+advancement, exact replay, higher-version progression, same-version conflict,
+concurrent recovery, one owner POST, and no duplicate Report work. Never point
+this destructive isolation test at a shared developer or protected database.
+
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`
 examples for downstream adapter configuration and durable repository

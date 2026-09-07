@@ -67,6 +67,8 @@ Implemented foundations include:
 - durable intent-before-I/O for downstream submission;
 - tenant-scoped downstream submission identity with opaque recovery references;
 - exact read-only reconciliation after uncertain downstream submission;
+- cross-process PostgreSQL proof for Report retained-receipt advancement,
+  version fencing, concurrency convergence, and no duplicate submission;
 - trusted local acceptance chronology while preserving source-observed time separately;
 - governed AI explanation evidence and completion fencing;
 - opportunity-quality golden evaluation and effectiveness evidence;
