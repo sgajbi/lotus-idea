@@ -358,7 +358,10 @@ Mainline release evidence is revision-scoped, not PR-scoped. The repository is
 configured for rebase-only merging, so the merged-PR dispatcher enumerates every
 revision added by the PR, oldest first, and starts one immutable Main
 Releasability run for each revision. The dispatcher fails closed if repository
-merge methods no longer match that assumption. Security-sensitive event
+merge methods no longer match that assumption or if any enumerated revision is
+not an ancestor of the freshly fetched `main` commit. This ancestry check occurs
+before tag creation or workflow dispatch, so stale or contradictory event/history
+evidence cannot mutate GitHub state. Security-sensitive event
 validation, revision enumeration, immutable tag creation/reconciliation, and
 workflow dispatch live in the typed, unit-tested
 `scripts/main_releasability_dispatch.py` program. The workflow supplies only the

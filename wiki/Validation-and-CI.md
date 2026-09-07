@@ -233,6 +233,10 @@ authoritative release-proof run per revision rather than duplicate trigger
 paths. The dispatcher also asserts the repository remains rebase-only before
 using the merged PR commit count to enumerate revisions; a merge-policy change
 therefore fails closed instead of silently leaving deployable commits ungated.
+Before any tag or dispatch mutation, it also verifies every enumerated revision
+is an ancestor of the commit resolved from the freshly fetched `main`. A stale
+or contradictory merged-PR event therefore fails closed instead of dispatching
+release evidence for history that is not on current `main`.
 The CI contract gate rejects embedded multiline shell, direct workflow
 dispatch, and direct Git-ref manipulation in the merged-PR workflow. This keeps
 security-sensitive parsing and exact-ref decisions in one typed implementation

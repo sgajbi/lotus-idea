@@ -145,6 +145,7 @@ class GitHubRestClient:
 
 
 RevisionSource = Callable[[str, int], Sequence[str]]
+RevisionAncestryCheck = Callable[[str], bool]
 
 
 def dispatch_merged_pull_request(
@@ -152,6 +153,7 @@ def dispatch_merged_pull_request(
     *,
     github: GitHubClient,
     revision_source: RevisionSource,
+    revision_is_on_main: RevisionAncestryCheck,
 ) -> tuple[str, ...]:
     if github.merge_methods() != (False, False, True):
         raise DispatchError(
@@ -167,6 +169,12 @@ def dispatch_merged_pull_request(
         not FULL_SHA.fullmatch(revision) for revision in revisions
     ):
         raise DispatchError("Git history yielded invalid or duplicate revisions")
+
+    for revision in revisions:
+        if not revision_is_on_main(revision):
+            raise DispatchError(
+                f"Revision {revision} is not an ancestor of fetched main; refusing to dispatch"
+            )
 
     for revision in revisions:
         dispatch_ref = f"main-releasability-{revision}"
@@ -233,6 +241,33 @@ def git_revisions(merge_commit_sha: str, commit_count: int) -> tuple[str, ...]:
     return tuple(reversed(tuple(line.strip() for line in completed.stdout.splitlines() if line)))
 
 
+def git_commit_sha(ref: str) -> str:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    sha = completed.stdout.strip()
+    if completed.returncode != 0 or not FULL_SHA.fullmatch(sha):
+        raise DispatchError(f"Unable to resolve fetched main revision from {ref}")
+    return sha
+
+
+def git_revision_is_ancestor(revision: str, main_revision: str) -> bool:
+    completed = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", revision, main_revision],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode == 0:
+        return True
+    if completed.returncode == 1:
+        return False
+    raise DispatchError("Unable to verify revision ancestry against fetched main")
+
+
 def _load_event(path: str) -> Mapping[str, Any]:
     try:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -264,10 +299,15 @@ def main() -> int:
             capture_output=True,
             text=True,
         )
+        fetched_main_revision = git_commit_sha("FETCH_HEAD")
         revisions = dispatch_merged_pull_request(
             merged_pr,
             github=github,
             revision_source=git_revisions,
+            revision_is_on_main=lambda revision: git_revision_is_ancestor(
+                revision,
+                fetched_main_revision,
+            ),
         )
     except (DispatchError, subprocess.CalledProcessError) as exc:
         print(f"::error::{exc}", file=sys.stderr)

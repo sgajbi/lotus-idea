@@ -28,6 +28,9 @@ def test_dispatch_gates_every_revision_added_by_a_rebase_merged_pr() -> None:
     assert 'dispatch_ref = f"main-releasability-{revision}"' in implementation
     assert '"expected_sha": revision' in implementation
     assert "github.merge_methods() != (False, False, True)" in implementation
+    assert '["git", "rev-parse", "--verify", f"{ref}^{{commit}}"]' in implementation
+    assert '["git", "merge-base", "--is-ancestor", revision, main_revision]' in implementation
+    assert 'git_commit_sha("FETCH_HEAD")' in implementation
 
 
 def test_evidence_workflow_cannot_cancel_a_live_revision_verdict() -> None:
