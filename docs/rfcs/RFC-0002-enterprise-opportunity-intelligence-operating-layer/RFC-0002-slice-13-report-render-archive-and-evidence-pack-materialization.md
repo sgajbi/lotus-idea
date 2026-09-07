@@ -215,6 +215,10 @@ Partially satisfied:
    remains conflict/409. Only a later exact read may advance the same uncertain
    submission. Legacy unversioned receipts remain explicit unknown until a
    current authoritative read supplies a version; Idea never invents one.
+   Cross-service PostgreSQL certification also reconstructs the Report runtime
+   between owner reads and verifies the retained-receipt, exact replay,
+   higher-version, same-version conflict, concurrent recovery, and no-duplicate-
+   POST matrix against Report's tenant-scoped intake and job state.
 9. A Report acceptance followed by Idea-local finalization failure retains the
    original `in_flight` claim. Reconciliation refuses owner I/O while that lease
    is active, then uses trusted server acceptance time to admit one read-only
