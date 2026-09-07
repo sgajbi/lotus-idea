@@ -241,7 +241,9 @@ When an API caller reports a failure, operators should start from the response
 templates rather than raw paths. Business operation events may include the same
 log-only `correlation_id` and `trace_id`, while the
 `lotus_idea_operation_events_total` metric remains bounded to the governed
-label set above.
+label set above. Candidate persistence, candidate detail, and audience-specific
+review-queue reads retain this sanitized request context on their operation
+events, including generated replacements for missing or unsafe incoming values.
 
 If a caller supplies an unsafe correlation or trace header, the value in the response and logs will
 be a generated replacement. Operators should use the response header value, not the caller-supplied

@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import Depends, Header, Query
+from fastapi import Depends, Header, Query, Request
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
 from app.application.review_queue import (
@@ -15,6 +15,8 @@ from app.application.review_queue import (
 
 @dataclass(frozen=True)
 class ReviewQueueScopeRequest:
+    correlation_id: str
+    trace_id: str
     evaluated_at_utc: datetime | None
     tenant_id: str | None
     book_id: str | None
@@ -38,6 +40,7 @@ class ReviewQueueRequest(ReviewQueueScopeRequest):
 
 
 def review_queue_scope_request_from_http(
+    request: Request,
     evaluated_at_utc: datetime | None = Query(default=None, alias="evaluatedAtUtc"),
     tenant_id: str | None = Query(default=None, alias="tenantId"),
     book_id: str | None = Query(default=None, alias="bookId"),
@@ -56,6 +59,8 @@ def review_queue_scope_request_from_http(
     ),
 ) -> ReviewQueueScopeRequest:
     return ReviewQueueScopeRequest(
+        correlation_id=str(request.state.correlation_id),
+        trace_id=str(request.state.trace_id),
         evaluated_at_utc=evaluated_at_utc,
         tenant_id=tenant_id,
         book_id=book_id,

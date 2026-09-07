@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import partial
 from typing import cast
 
 from fastapi import FastAPI, Header, Request, status
@@ -12,6 +13,7 @@ from app.api.durable_write_guard import (
     durable_write_problem,
 )
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
+from app.api.operation_events import request_context_id
 from app.api.idea_signal_models import (
     CandidatePersistenceSummaryResponse,
     EvaluateAndPersistHighCashSignalRequest,
@@ -149,8 +151,8 @@ async def evaluate_high_cash_signal_from_source(
         blocked_detail="Core source runtime is not configured for high-cash source evaluation.",
         command_factory=lambda runtime, tenant_id: signal_request.to_command(
             tenant_id=tenant_id or "",
-            correlation_id=_request_correlation_id(request),
-            trace_id=_request_trace_id(request),
+            correlation_id=request_context_id(request, "correlation_id"),
+            trace_id=request_context_id(request, "trace_id"),
         ),
         evaluator=lambda command, runtime: evaluate_high_cash_signal_from_core(
             command,
@@ -201,8 +203,8 @@ async def evaluate_mandate_restriction_signal_from_source(
         is_runtime_blocked=_is_advise_policy_runtime_blocked,
         blocked_detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
         command_factory=lambda runtime, _tenant_id: signal_request.to_command(
-            correlation_id=_request_correlation_id(request),
-            trace_id=_request_trace_id(request),
+            correlation_id=request_context_id(request, "correlation_id"),
+            trace_id=request_context_id(request, "trace_id"),
         ),
         evaluator=lambda command, runtime: evaluate_mandate_restriction_signal_from_advise(
             command,
@@ -220,11 +222,17 @@ async def evaluate_and_persist_high_cash_signal(
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_causation_id: EventCausationHeader = None,
 ) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
-    permission_problem = _high_cash_persistence_permission_problem(caller)
+    permission_problem = _high_cash_persistence_permission_problem(
+        caller,
+        http_request=http_request,
+    )
     if permission_problem is not None:
         return permission_problem
 
-    idempotency_problem = _high_cash_persistence_idempotency_problem(idempotency_key)
+    idempotency_problem = _high_cash_persistence_idempotency_problem(
+        idempotency_key,
+        http_request=http_request,
+    )
     if idempotency_problem is not None:
         return idempotency_problem
 
@@ -255,6 +263,8 @@ async def evaluate_and_persist_high_cash_signal(
 
 def _high_cash_persistence_permission_problem(
     caller: CallerContextHeaders,
+    *,
+    http_request: Request,
 ) -> JSONResponse | None:
     try:
         require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
@@ -264,6 +274,8 @@ def _high_cash_persistence_permission_problem(
             OperationOutcome.PERMISSION_DENIED,
             source_authority="lotus-core",
             error_code="permission_denied",
+            correlation_id=request_context_id(http_request, "correlation_id"),
+            trace_id=request_context_id(http_request, "trace_id"),
         )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -276,6 +288,8 @@ def _high_cash_persistence_permission_problem(
 
 def _high_cash_persistence_idempotency_problem(
     idempotency_key: str,
+    *,
+    http_request: Request,
 ) -> JSONResponse | None:
     if not idempotency_key.strip():
         emit_foundation_operation_event(
@@ -283,6 +297,8 @@ def _high_cash_persistence_idempotency_problem(
             OperationOutcome.INVALID_REQUEST,
             source_authority="lotus-core",
             error_code="invalid_request",
+            correlation_id=request_context_id(http_request, "correlation_id"),
+            trace_id=request_context_id(http_request, "trace_id"),
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -304,7 +320,11 @@ def _high_cash_persistence_context_or_problem(
     contract_problem = signal_source_ref_contract_problem_or_none(
         contracts=source_contracts,
         source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
+        emit_event=partial(
+            emit_foundation_operation_event,
+            correlation_id=request_context_id(http_request, "correlation_id"),
+            trace_id=request_context_id(http_request, "trace_id"),
+        ),
     )
     if contract_problem is not None:
         return contract_problem
@@ -318,6 +338,8 @@ def _high_cash_persistence_context_or_problem(
             source_authority=source_authority,
             durable_storage_backed=durable_storage_backed,
             error_code="durable_repository_not_configured",
+            correlation_id=request_context_id(http_request, "correlation_id"),
+            trace_id=request_context_id(http_request, "trace_id"),
         )
         return configuration_problem
     try:
@@ -374,6 +396,8 @@ def _high_cash_persistence_conflict_problem(
             source_authority=context.source_authority,
             durable_storage_backed=context.durable_storage_backed,
             error_code="idempotency_conflict",
+            correlation_id=context.event_lineage.correlation_id,
+            trace_id=context.event_lineage.trace_id,
         )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
@@ -399,6 +423,8 @@ def _emit_high_cash_persistence_outcome(
         ),
         source_authority=context.source_authority,
         durable_storage_backed=context.durable_storage_backed,
+        correlation_id=context.event_lineage.correlation_id,
+        trace_id=context.event_lineage.trace_id,
     )
 
 
@@ -444,16 +470,6 @@ def _operation_outcome_from_candidate_persistence(
     if persistence_decision is CandidatePersistenceDecision.DUPLICATE_CANDIDATE:
         return OperationOutcome.DUPLICATE
     return OperationOutcome.CONFLICT
-
-
-def _request_correlation_id(request: Request) -> str | None:
-    correlation_id = getattr(request.state, "correlation_id", None)
-    return str(correlation_id) if correlation_id else None
-
-
-def _request_trace_id(request: Request) -> str | None:
-    trace_id = getattr(request.state, "trace_id", None)
-    return str(trace_id) if trace_id else None
 
 
 def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:

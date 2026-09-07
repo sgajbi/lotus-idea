@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import (
@@ -40,6 +40,7 @@ from app.application.candidate_detail import (
     get_candidate_detail,
 )
 from app.api.problem_details import problem_details_response as problem_response
+from app.api.operation_events import request_context_id
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.ports.idea_repository import CandidateSnapshotRepository
 from app.security.caller_context import (
@@ -73,6 +74,7 @@ _READ_CANDIDATE_DETAIL_POLICY = CapabilityPolicy.for_roles(
 
 
 async def get_idea_candidate_detail(
+    request: Request,
     candidate_id: str = Path(..., alias="candidateId"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
@@ -87,6 +89,7 @@ async def get_idea_candidate_detail(
     ),
 ) -> CandidateDetailResponse | JSONResponse:
     caller = _candidate_detail_caller_from_headers(
+        request=request,
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
@@ -108,15 +111,16 @@ async def get_idea_candidate_detail(
             repository=repository,
         )
     except PermissionDeniedError:
-        return _candidate_detail_permission_denied_response()
+        return _candidate_detail_permission_denied_response(request)
     except ValueError:
-        return _candidate_detail_invalid_request_response("candidateId is required.")
+        return _candidate_detail_invalid_request_response(request, "candidateId is required.")
 
-    return _candidate_detail_result_response(result, repository=repository)
+    return _candidate_detail_result_response(result, repository=repository, request=request)
 
 
 def _candidate_detail_caller_from_headers(
     *,
+    request: Request,
     subject: str | None,
     roles: str | None,
     capabilities: str | None,
@@ -138,7 +142,7 @@ def _candidate_detail_caller_from_headers(
             trusted_caller_context=trusted_caller_context,
         )
     except ValueError:
-        return _candidate_detail_invalid_request_response(INVALID_CALLER_SCOPE_DETAIL)
+        return _candidate_detail_invalid_request_response(request, INVALID_CALLER_SCOPE_DETAIL)
 
 
 def _authorize_candidate_detail_read(caller: CallerContext) -> None:
@@ -164,17 +168,19 @@ def _candidate_detail_result_response(
     result: CandidateDetailResult,
     *,
     repository: object,
+    request: Request,
 ) -> CandidateDetailResponse | JSONResponse:
     if result.access_scope_denied:
-        return _candidate_detail_permission_denied_response()
+        return _candidate_detail_permission_denied_response(request)
 
     if result.record is None:
-        return _candidate_detail_not_found_response()
+        return _candidate_detail_not_found_response(request)
 
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     _emit_candidate_detail_operation_event(
         OperationOutcome.ACCEPTED,
         durable_storage_backed=durable_storage_backed,
+        request=request,
     )
     return CandidateDetailResponse.from_record(
         result.record,
@@ -184,10 +190,11 @@ def _candidate_detail_result_response(
     )
 
 
-def _candidate_detail_invalid_request_response(detail: str) -> JSONResponse:
+def _candidate_detail_invalid_request_response(request: Request, detail: str) -> JSONResponse:
     _emit_candidate_detail_operation_event(
         OperationOutcome.INVALID_REQUEST,
         "invalid_request",
+        request=request,
     )
     return problem_response(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -197,10 +204,11 @@ def _candidate_detail_invalid_request_response(detail: str) -> JSONResponse:
     )
 
 
-def _candidate_detail_permission_denied_response() -> JSONResponse:
+def _candidate_detail_permission_denied_response(request: Request) -> JSONResponse:
     _emit_candidate_detail_operation_event(
         OperationOutcome.PERMISSION_DENIED,
         "permission_denied",
+        request=request,
     )
     return problem_response(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -210,10 +218,11 @@ def _candidate_detail_permission_denied_response() -> JSONResponse:
     )
 
 
-def _candidate_detail_not_found_response() -> JSONResponse:
+def _candidate_detail_not_found_response(request: Request) -> JSONResponse:
     _emit_candidate_detail_operation_event(
         OperationOutcome.NOT_FOUND,
         "candidate_not_found",
+        request=request,
     )
     return problem_response(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -227,6 +236,8 @@ def _emit_candidate_detail_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
     durable_storage_backed: bool = False,
+    *,
+    request: Request,
 ) -> None:
     emit_foundation_operation_event(
         IdeaOperation.CANDIDATE_DETAIL_READ,
@@ -234,6 +245,8 @@ def _emit_candidate_detail_operation_event(
         source_authority="lotus-idea",
         error_code=error_code,
         durable_storage_backed=durable_storage_backed,
+        correlation_id=request_context_id(request, "correlation_id"),
+        trace_id=request_context_id(request, "trace_id"),
     )
 
 
