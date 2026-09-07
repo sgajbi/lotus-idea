@@ -111,6 +111,7 @@ def test_active_submission_lease_is_not_eligible() -> None:
 
     repository, _support_reference = _repository_with_accepted_submission()
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-manage-in-flight-001",
         request_fingerprint="sha256:manage-in-flight",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -256,6 +257,7 @@ def test_persistence_blocker_names_every_ineligible_submission_shape() -> None:
         == "manage_realization_requires_conversion_intent_submission"
     )
     in_flight = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-manage-blocker-in-flight",
         request_fingerprint="sha256:manage-blocker-in-flight",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,

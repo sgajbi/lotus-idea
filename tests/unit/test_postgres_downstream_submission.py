@@ -46,6 +46,43 @@ def test_postgres_claim_survives_restart_and_distinguishes_conflict() -> None:
     assert len(connection.rows["idea_downstream_submission"]) == 1
 
 
+def test_postgres_claim_scopes_same_idempotency_key_by_tenant_across_restart() -> None:
+    connection = FakePostgresConnection()
+    first = _claim("fingerprint-a")
+    second = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-hk",
+        idempotency_key=first.idempotency_key,
+        request_fingerprint="fingerprint-b",
+        resource_type=first.resource_type,
+        resource_id=first.resource_id,
+        target=first.target,
+        source_authority=first.source_authority,
+        actor_subject="downstream-submission",
+        claimed_at_utc=CLAIMED_AT,
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-hk-shared-key",
+        lease_expires_at_utc=CLAIMED_AT + timedelta(minutes=5),
+    )
+
+    first_result = PostgresIdeaRepository(connection).claim_downstream_submission(first)
+    second_result = PostgresIdeaRepository(connection).claim_downstream_submission(second)
+    restarted = PostgresIdeaRepository(connection)
+
+    assert first_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert second_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert len(connection.rows["idea_downstream_submission"]) == 2
+    assert (
+        restarted.downstream_submission_by_idempotency_key(first.tenant_id, first.idempotency_key)
+        == first
+    )
+    assert (
+        restarted.downstream_submission_by_idempotency_key(second.tenant_id, second.idempotency_key)
+        == second
+    )
+    assert first.support_reference != second.support_reference
+    assert first.lease_attempt_id != second.lease_attempt_id
+
+
 def test_postgres_claim_rejects_erased_resource_before_delivery_insert() -> None:
     connection = FakePostgresConnection()
     connection.rows["idea_conversion_intent"].append(
@@ -74,7 +111,10 @@ def test_new_downstream_submissions_resolve_candidates_for_lifecycle_fencing() -
         idempotency_key="report-submission-key",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id="report-pack-001",
-        support_reference=downstream_submission_support_reference("report-submission-key"),
+        support_reference=downstream_submission_support_reference(
+            "tenant-private-bank-sg",
+            "report-submission-key",
+        ),
     )
     before = IdeaRepositorySnapshot({}, {}, {})
     after = IdeaRepositorySnapshot(
@@ -104,6 +144,7 @@ def test_postgres_finalization_failure_preserves_durable_in_flight_claim() -> No
 
     with pytest.raises(RuntimeError, match="update failed"):
         repository.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key="submission-key",
             lease_owner="downstream-submission",
             lease_attempt_id="attempt-submission-key",
@@ -113,7 +154,9 @@ def test_postgres_finalization_failure_preserves_durable_in_flight_claim() -> No
 
     connection.fail_on_update = None
     restarted = PostgresIdeaRepository(connection)
-    persisted = restarted.downstream_submission_by_idempotency_key("submission-key")
+    persisted = restarted.downstream_submission_by_idempotency_key(
+        "tenant-private-bank-sg", "submission-key"
+    )
     retry = restarted.claim_downstream_submission(_claim("fingerprint-a"))
 
     assert persisted is not None
@@ -162,6 +205,7 @@ def test_report_materialization_receipt_survives_postgres_restart_exactly() -> N
 
     repository.claim_downstream_submission(claim)
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",
@@ -172,7 +216,9 @@ def test_report_materialization_receipt_survives_postgres_restart_exactly() -> N
     restarted = PostgresIdeaRepository(connection)
 
     assert finalized.decision is DownstreamSubmissionMutationDecision.ACCEPTED
-    persisted = restarted.downstream_submission_by_idempotency_key(claim.idempotency_key)
+    persisted = restarted.downstream_submission_by_idempotency_key(
+        "tenant-private-bank-sg", claim.idempotency_key
+    )
     assert persisted is not None
     assert persisted.owner_receipt == receipt
 
@@ -247,6 +293,7 @@ def test_postgres_reconciliation_uses_opaque_reference_and_is_audited() -> None:
     repository = PostgresIdeaRepository(connection)
     repository.claim_downstream_submission(_claim("fingerprint-a"))
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         lease_owner="downstream-submission",
         lease_attempt_id="attempt-submission-key",
@@ -282,6 +329,7 @@ def test_postgres_reconciliation_persists_recovered_owner_receipt_across_restart
     claim = _claim("fingerprint-owner-recovery")
     repository.claim_downstream_submission(claim)
     repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",
@@ -322,6 +370,7 @@ def test_postgres_submission_mutations_fail_closed_for_missing_or_competing_clai
     repository = PostgresIdeaRepository(connection)
 
     missing_finalize = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="missing-submission",
         lease_owner="downstream-submission",
         lease_attempt_id="attempt-missing",
@@ -338,6 +387,7 @@ def test_postgres_submission_mutations_fail_closed_for_missing_or_competing_clai
     )
     repository.claim_downstream_submission(_claim("fingerprint-a"))
     lease_conflict = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         lease_owner="competing-worker",
         lease_attempt_id="attempt-competing",
@@ -375,7 +425,9 @@ def test_postgres_submission_decoder_rejects_malformed_audit_history(
     connection.rows["idea_downstream_submission"][0]["audit_json"] = audit_json
 
     with pytest.raises(ValueError, match=message):
-        repository.downstream_submission_by_idempotency_key("submission-key")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "submission-key"
+        )
 
 
 def test_postgres_submission_decoder_rejects_blank_persisted_identifiers() -> None:
@@ -385,7 +437,9 @@ def test_postgres_submission_decoder_rejects_blank_persisted_identifiers() -> No
     connection.rows["idea_downstream_submission"][0]["resource_id"] = ""
 
     with pytest.raises(ValueError, match="resource_id is required"):
-        repository.downstream_submission_by_idempotency_key("submission-key")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "submission-key"
+        )
 
 
 def test_postgres_submission_decoder_rejects_blank_optional_audit_values() -> None:
@@ -397,7 +451,9 @@ def test_postgres_submission_decoder_rejects_blank_optional_audit_values() -> No
     audit_json[0]["reason"] = ""
 
     with pytest.raises(ValueError, match="reason must be a non-blank string"):
-        repository.downstream_submission_by_idempotency_key("submission-key")
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "submission-key"
+        )
 
 
 def test_postgres_submission_claim_fails_closed_for_unresolved_unique_conflicts(
@@ -436,6 +492,7 @@ def test_postgres_submission_reconciliation_rolls_back_failed_state_commit() -> 
     claim = _claim("fingerprint-a")
     repository.claim_downstream_submission(claim)
     repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",
@@ -473,6 +530,7 @@ def test_postgres_submission_state_update_is_lease_fenced() -> None:
 
 def _claim(request_fingerprint: str) -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         request_fingerprint=request_fingerprint,
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,

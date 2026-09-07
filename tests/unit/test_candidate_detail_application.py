@@ -175,6 +175,7 @@ def _submission(
     submitted_at_utc: datetime,
 ) -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=idempotency_key,
         request_fingerprint=f"sha256:{idempotency_key}",
         resource_type=resource_type,

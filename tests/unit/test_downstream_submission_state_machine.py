@@ -9,6 +9,7 @@ from app.domain import (
     ConversionTarget,
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionClaimDecision,
+    DownstreamSubmissionIdentityVersion,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionOwnerReceipt,
     DownstreamSubmissionPosture,
@@ -23,6 +24,7 @@ from app.domain import (
     finalize_downstream_submission,
     reconcile_downstream_submission,
 )
+from app.domain.downstream_submission import legacy_downstream_submission_support_reference
 
 
 CLAIMED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -33,12 +35,30 @@ def test_claim_is_lease_fenced_audited_and_opaque() -> None:
 
     assert record.status is DownstreamSubmissionPosture.IN_FLIGHT
     assert record.support_reference == downstream_submission_support_reference(
-        "downstream-secret-key"
+        "tenant-private-bank-sg", "downstream-secret-key"
     )
     assert "downstream-secret-key" not in record.support_reference
     assert record.attempt_count == 1
     assert record.audit_history[0].action is DownstreamSubmissionAuditAction.CLAIMED
     assert record.audit_history[0].current_posture is DownstreamSubmissionPosture.IN_FLIGHT
+
+
+def test_legacy_claim_retains_its_pre_migration_support_reference() -> None:
+    legacy_reference = legacy_downstream_submission_support_reference("downstream-secret-key")
+
+    migrated_record = replace(
+        _claim(),
+        identity_version=DownstreamSubmissionIdentityVersion.LEGACY_UNSCOPED_V1,
+        support_reference=legacy_reference,
+    )
+
+    assert legacy_reference == "downstream-submission-391d63dcfdfe489646945a7d"
+    assert migrated_record.support_reference == legacy_reference
+
+
+def test_legacy_support_reference_rejects_an_empty_idempotency_key() -> None:
+    with pytest.raises(ValueError, match="idempotency_key is required"):
+        legacy_downstream_submission_support_reference("")
 
 
 def test_claim_decision_never_reissues_uncertain_work() -> None:
@@ -525,6 +545,7 @@ def _claim(
     lease_expires_at_utc: datetime = CLAIMED_AT + timedelta(minutes=5),
 ) -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="downstream-secret-key",
         request_fingerprint="fingerprint-a",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -558,6 +579,7 @@ def _owner_receipt(
 
 def _report_claim() -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="report-downstream-secret-key",
         request_fingerprint="sha256:report-request-fingerprint",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,

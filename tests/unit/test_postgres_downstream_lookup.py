@@ -177,6 +177,7 @@ def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_que
     )
     repository.claim_downstream_submission(claim)
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",
@@ -187,12 +188,14 @@ def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_que
     record = finalized.record
     connection.executed_sql.clear()
 
-    loaded = repository.downstream_submission_by_idempotency_key("downstream-submit:bounded-lookup")
+    loaded = repository.downstream_submission_by_idempotency_key(
+        "tenant-private-bank-sg", "downstream-submit:bounded-lookup"
+    )
 
     assert loaded == record
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea downstream-submission-by-idempotency */" in executed_sql
-    assert "where idempotency_key = %s" in executed_sql
+    assert "where tenant_id = %s and idempotency_key = %s" in executed_sql
     assert "idea_downstream_submission" in executed_sql
     assert "idea_candidate_record" not in executed_sql
     assert "idea_outbox_event" not in executed_sql
@@ -208,7 +211,12 @@ def test_postgres_downstream_lookups_return_none_for_missing_records() -> None:
     assert repository.candidate_record_for_conversion_intent("missing-conversion") is None
     assert repository.report_evidence_pack_by_id("missing-report-pack") is None
     assert repository.candidate_record_for_report_evidence_pack("missing-report-pack") is None
-    assert repository.downstream_submission_by_idempotency_key("missing-submission") is None
+    assert (
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "missing-submission"
+        )
+        is None
+    )
 
 
 def test_postgres_downstream_lookups_hide_erased_candidate_resources() -> None:

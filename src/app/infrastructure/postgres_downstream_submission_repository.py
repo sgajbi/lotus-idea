@@ -27,10 +27,12 @@ class PostgresDownstreamSubmissionRepositoryMixin:
 
     def downstream_submission_by_idempotency_key(
         self,
+        tenant_id: str,
         idempotency_key: str,
     ) -> DownstreamSubmissionRecord | None:
         return load_postgres_downstream_submission_by_idempotency_key(
             self._connection,
+            tenant_id,
             idempotency_key,
         )
 
@@ -52,6 +54,7 @@ class PostgresDownstreamSubmissionRepositoryMixin:
     def finalize_downstream_submission(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         lease_owner: str,
         lease_attempt_id: str,
@@ -62,6 +65,7 @@ class PostgresDownstreamSubmissionRepositoryMixin:
     ) -> DownstreamSubmissionMutationResult:
         return finalize_postgres_downstream_submission(
             self._connection,
+            tenant_id=tenant_id,
             idempotency_key=idempotency_key,
             lease_owner=lease_owner,
             lease_attempt_id=lease_attempt_id,

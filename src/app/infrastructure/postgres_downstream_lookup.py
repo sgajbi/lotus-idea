@@ -132,6 +132,11 @@ def load_candidate_record_for_report_evidence_pack(
 
 def load_downstream_submission_by_idempotency_key(
     connection: PostgresConnection,
+    tenant_id: str,
     idempotency_key: str,
 ) -> DownstreamSubmissionRecord | None:
-    return load_postgres_downstream_submission_by_idempotency_key(connection, idempotency_key)
+    return load_postgres_downstream_submission_by_idempotency_key(
+        connection,
+        tenant_id,
+        idempotency_key,
+    )

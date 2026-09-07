@@ -6,7 +6,10 @@ from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
 from app.domain.outbox.events import EventLineageContext, OutboxEventRecord
-from app.domain.downstream_submission import DownstreamSubmissionRecord
+from app.domain.downstream_submission import (
+    DownstreamSubmissionRecord,
+    downstream_submission_identity,
+)
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
@@ -752,7 +755,8 @@ class PostgresIdeaRepository(
     ) -> dict[str, DownstreamSubmissionRecord]:
         cursor.execute(
             """
-            SELECT idempotency_key, request_fingerprint, resource_type, resource_id,
+            SELECT tenant_id, identity_version, idempotency_key, request_fingerprint,
+                   resource_type, resource_id,
                    target, source_authority, status, downstream_failure_reason,
                    correlation_id, trace_id, submitted_at_utc, support_reference,
                    attempt_count, updated_at_utc, lease_owner, lease_attempt_id,
@@ -764,7 +768,9 @@ class PostgresIdeaRepository(
         records: dict[str, DownstreamSubmissionRecord] = {}
         for row in cursor.fetchall():
             record = downstream_submission_from_row(row)
-            records[record.idempotency_key] = record
+            records[downstream_submission_identity(record.tenant_id, record.idempotency_key)] = (
+                record
+            )
         return records
 
     def _attach_review_decisions(

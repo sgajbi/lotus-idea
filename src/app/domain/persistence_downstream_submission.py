@@ -11,6 +11,7 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
+    downstream_submission_identity,
     downstream_submission_sort_key,
     evaluate_downstream_submission_claim,
     finalize_downstream_submission,
@@ -47,28 +48,34 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
 
     def downstream_submission_by_idempotency_key(
         self,
+        tenant_id: str,
         idempotency_key: str,
     ) -> DownstreamSubmissionRecord | None:
+        _require_text(tenant_id, "tenant_id")
         _require_text(idempotency_key, "idempotency_key")
-        return self._downstream_submission_records.get(idempotency_key)
+        return self._downstream_submission_records.get(
+            downstream_submission_identity(tenant_id, idempotency_key)
+        )
 
     def claim_downstream_submission(
         self,
         record: DownstreamSubmissionRecord,
     ) -> DownstreamSubmissionClaimResult:
-        existing = self._downstream_submission_records.get(record.idempotency_key)
+        storage_key = downstream_submission_identity(record.tenant_id, record.idempotency_key)
+        existing = self._downstream_submission_records.get(storage_key)
         decision = evaluate_downstream_submission_claim(
             existing,
             request_fingerprint=record.request_fingerprint,
         )
         if existing is None:
-            self._downstream_submission_records[record.idempotency_key] = record
+            self._downstream_submission_records[storage_key] = record
             existing = record
         return DownstreamSubmissionClaimResult(decision=decision, record=existing)
 
     def finalize_downstream_submission(
         self,
         *,
+        tenant_id: str,
         idempotency_key: str,
         lease_owner: str,
         lease_attempt_id: str,
@@ -77,7 +84,8 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
         failure_reason: str | None = None,
         owner_receipt: DownstreamSubmissionOwnerReceipt | None = None,
     ) -> DownstreamSubmissionMutationResult:
-        existing = self._downstream_submission_records.get(idempotency_key)
+        storage_key = downstream_submission_identity(tenant_id, idempotency_key)
+        existing = self._downstream_submission_records.get(storage_key)
         if existing is None:
             return DownstreamSubmissionMutationResult(
                 decision=DownstreamSubmissionMutationDecision.NOT_FOUND,
@@ -95,7 +103,7 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
         )
         if result.decision is DownstreamSubmissionMutationDecision.ACCEPTED:
             assert result.record is not None
-            self._downstream_submission_records[idempotency_key] = result.record
+            self._downstream_submission_records[storage_key] = result.record
         return result
 
     def downstream_submissions_requiring_reconciliation(
@@ -162,7 +170,11 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
         )
         if result.decision is DownstreamSubmissionMutationDecision.ACCEPTED:
             assert result.record is not None
-            self._downstream_submission_records[existing.idempotency_key] = result.record
+            storage_key = downstream_submission_identity(
+                existing.tenant_id,
+                existing.idempotency_key,
+            )
+            self._downstream_submission_records[storage_key] = result.record
         return result
 
 

@@ -9,6 +9,7 @@ from app.domain import (
     DownstreamSubmissionResourceType,
     SourceSystem,
     create_downstream_submission_claim,
+    downstream_submission_lease_attempt_id,
     finalize_downstream_submission,
 )
 
@@ -23,6 +24,7 @@ def build_downstream_submission_record(
     failure_reason: str | None = None,
     correlation_id: str | None = None,
     trace_id: str | None = None,
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> DownstreamSubmissionRecord:
     claimed = build_downstream_submission_claim(
         idempotency_key=idempotency_key,
@@ -31,6 +33,7 @@ def build_downstream_submission_record(
         submitted_at_utc=submitted_at_utc,
         correlation_id=correlation_id,
         trace_id=trace_id,
+        tenant_id=tenant_id,
     )
     finalized = finalize_downstream_submission(
         claimed,
@@ -52,10 +55,12 @@ def build_downstream_submission_claim(
     submitted_at_utc: datetime,
     correlation_id: str | None = None,
     trace_id: str | None = None,
+    tenant_id: str = "tenant-private-bank-sg",
 ) -> DownstreamSubmissionRecord:
     lease_owner = "downstream-realization-test"
-    lease_attempt_id = f"test-attempt-{idempotency_key}"
+    lease_attempt_id = downstream_submission_lease_attempt_id(tenant_id, idempotency_key)
     return create_downstream_submission_claim(
+        tenant_id=tenant_id,
         idempotency_key=idempotency_key,
         request_fingerprint=request_fingerprint,
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,

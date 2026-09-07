@@ -162,6 +162,7 @@ def _repository_with_terminal_submission(
     global _SUPPORT_REFERENCE
     repository = PostgresIdeaRepository(connection)
     claim = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key-manage",
         request_fingerprint="fingerprint-manage",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -177,6 +178,7 @@ def _repository_with_terminal_submission(
     _SUPPORT_REFERENCE = claim.support_reference
     repository.claim_downstream_submission(claim)
     repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key=claim.idempotency_key,
         lease_owner=claim.lease_owner or "",
         lease_attempt_id=claim.lease_attempt_id or "",

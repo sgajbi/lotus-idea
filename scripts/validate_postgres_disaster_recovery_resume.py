@@ -123,6 +123,7 @@ def validate_restore_resume_safety(
             record for record in records if record.status is DownstreamSubmissionPosture.IN_FLIGHT
         )
         stale_finalize = repository.finalize_downstream_submission(
+            tenant_id=in_flight.tenant_id,
             idempotency_key=in_flight.idempotency_key,
             lease_owner="stale-restore-worker",
             lease_attempt_id="stale-restore-attempt",

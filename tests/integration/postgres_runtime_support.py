@@ -110,7 +110,12 @@ def persistence_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def seed_active_conversion_resource(database_url: str, conversion_intent_id: str) -> str:
+def seed_active_conversion_resource(
+    database_url: str,
+    conversion_intent_id: str,
+    *,
+    tenant_id: str = "tenant-private-bank-sg",
+) -> str:
     candidate_id = f"candidate-{conversion_intent_id}"
     identity_digest = sha256(candidate_id.encode("utf-8")).hexdigest()
     business_identity_id = f"opportunity_test_{identity_digest}"
@@ -145,7 +150,7 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
                 material_fingerprint,
                 Jsonb(
                     {
-                        "access_scope": {"tenant_id": "tenant-private-bank-sg"},
+                        "access_scope": {"tenant_id": tenant_id},
                         "identity": identity,
                     }
                 ),
@@ -161,11 +166,11 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             INSERT INTO idea_data_lifecycle_control (
                 candidate_id, tenant_id, policy_ref, state,
                 retention_expires_at_utc, version, updated_at_utc
-            ) VALUES (%s, 'tenant-private-bank-sg',
+            ) VALUES (%s, %s,
                       'lotus-idea:regulated-advisory-evidence:seven-year:v1',
                       'active', %s, 1, %s)
             """,
-            (candidate_id, recorded_at + timedelta(days=365 * 7), recorded_at),
+            (candidate_id, tenant_id, recorded_at + timedelta(days=365 * 7), recorded_at),
         )
         cursor.execute(
             """

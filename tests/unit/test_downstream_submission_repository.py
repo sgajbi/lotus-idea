@@ -17,6 +17,7 @@ from app.domain import (
     IdeaRepositorySnapshot,
     SourceSystem,
     create_downstream_submission_claim,
+    downstream_submission_lease_attempt_id,
 )
 
 
@@ -34,14 +35,49 @@ def test_in_memory_claim_is_atomic_replay_safe_and_conflict_aware() -> None:
     assert accepted.decision is DownstreamSubmissionClaimDecision.ACCEPTED
     assert repeated.decision is DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED
     assert conflict.decision is DownstreamSubmissionClaimDecision.CONFLICT
-    assert repository.downstream_submission_by_idempotency_key("submission-key") == record
+    assert (
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "submission-key"
+        )
+        == record
+    )
+
+
+def test_in_memory_claim_allows_same_idempotency_key_in_distinct_tenants() -> None:
+    repository = InMemoryIdeaRepository()
+    first = _claim("shared-submission-key", "fingerprint-a")
+    second = _claim(
+        "shared-submission-key",
+        "fingerprint-b",
+        tenant_id="tenant-private-bank-hk",
+    )
+
+    first_result = repository.claim_downstream_submission(first)
+    second_result = repository.claim_downstream_submission(second)
+
+    assert first_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert second_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert first.support_reference != second.support_reference
+    assert first.lease_attempt_id != second.lease_attempt_id
+    assert (
+        repository.downstream_submission_by_idempotency_key(first.tenant_id, first.idempotency_key)
+        == first
+    )
+    assert (
+        repository.downstream_submission_by_idempotency_key(
+            second.tenant_id, second.idempotency_key
+        )
+        == second
+    )
 
 
 def test_in_memory_finalize_is_lease_fenced_and_terminal_replays() -> None:
     repository = InMemoryIdeaRepository()
-    repository.claim_downstream_submission(_claim("submission-key", "fingerprint-a"))
+    claim = _claim("submission-key", "fingerprint-a")
+    repository.claim_downstream_submission(claim)
 
     conflict = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         lease_owner="other-worker",
         lease_attempt_id="other-attempt",
@@ -49,9 +85,10 @@ def test_in_memory_finalize_is_lease_fenced_and_terminal_replays() -> None:
         finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
     )
     finalized = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         lease_owner="downstream-submission",
-        lease_attempt_id="attempt-submission-key",
+        lease_attempt_id=claim.lease_attempt_id or "",
         posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
     )
@@ -64,11 +101,13 @@ def test_in_memory_finalize_is_lease_fenced_and_terminal_replays() -> None:
 
 def test_in_memory_reconciliation_is_source_safe_and_audited() -> None:
     repository = InMemoryIdeaRepository()
-    repository.claim_downstream_submission(_claim("submission-key", "fingerprint-a"))
+    claim = _claim("submission-key", "fingerprint-a")
+    repository.claim_downstream_submission(claim)
     repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-key",
         lease_owner="downstream-submission",
-        lease_attempt_id="attempt-submission-key",
+        lease_attempt_id=claim.lease_attempt_id or "",
         posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
         finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
         failure_reason="downstream_timeout",
@@ -96,6 +135,7 @@ def test_in_memory_submission_repository_fails_closed_for_missing_and_blank_look
     repository = InMemoryIdeaRepository()
 
     missing_finalize = repository.finalize_downstream_submission(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="missing-submission",
         lease_owner="downstream-submission",
         lease_attempt_id="attempt-missing",
@@ -116,7 +156,7 @@ def test_in_memory_submission_repository_fails_closed_for_missing_and_blank_look
     with pytest.raises(ValueError, match="limit must be positive"):
         repository.downstream_submissions_requiring_reconciliation(limit=0)
     with pytest.raises(ValueError, match="idempotency_key is required"):
-        repository.downstream_submission_by_idempotency_key(" ")
+        repository.downstream_submission_by_idempotency_key("tenant-private-bank-sg", " ")
     with pytest.raises(ValueError, match="support_reference is required"):
         repository.downstream_submission_by_support_reference(" ")
 
@@ -124,6 +164,7 @@ def test_in_memory_submission_repository_fails_closed_for_missing_and_blank_look
 def test_in_memory_candidate_projection_covers_both_resource_types_in_stable_order() -> None:
     conversion = _claim("submission-conversion", "fingerprint-conversion")
     report = create_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-report",
         request_fingerprint="fingerprint-report",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
@@ -168,8 +209,14 @@ def test_in_memory_candidate_projection_covers_both_resource_types_in_stable_ord
     ]
 
 
-def _claim(idempotency_key: str, request_fingerprint: str) -> DownstreamSubmissionRecord:
+def _claim(
+    idempotency_key: str,
+    request_fingerprint: str,
+    *,
+    tenant_id: str = "tenant-private-bank-sg",
+) -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
+        tenant_id=tenant_id,
         idempotency_key=idempotency_key,
         request_fingerprint=request_fingerprint,
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
@@ -179,6 +226,6 @@ def _claim(idempotency_key: str, request_fingerprint: str) -> DownstreamSubmissi
         actor_subject="advisor-redacted",
         claimed_at_utc=CLAIMED_AT,
         lease_owner="downstream-submission",
-        lease_attempt_id=f"attempt-{idempotency_key}",
+        lease_attempt_id=downstream_submission_lease_attempt_id(tenant_id, idempotency_key),
         lease_expires_at_utc=CLAIMED_AT + timedelta(minutes=5),
     )

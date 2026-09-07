@@ -55,15 +55,14 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
         postgres_database_url,
         "conversion-postgres-runtime",
     )
+    concurrent_claim = _claim("concurrent-submission-key")
     barrier = Barrier(2)
 
     def claim_once() -> DownstreamSubmissionClaimDecision:
         with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
             repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
             barrier.wait(timeout=5)
-            return repository.claim_downstream_submission(
-                _claim("concurrent-submission-key")
-            ).decision
+            return repository.claim_downstream_submission(concurrent_claim).decision
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         decisions = tuple(executor.map(lambda _: claim_once(), range(2)))
@@ -78,9 +77,10 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
         finalized = repository.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key="concurrent-submission-key",
             lease_owner="downstream-realization-test",
-            lease_attempt_id="test-attempt-concurrent-submission-key",
+            lease_attempt_id=concurrent_claim.lease_attempt_id or "",
             posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
             finalized_at_utc=SUBMITTED_AT + timedelta(minutes=1),
             failure_reason="downstream_timeout",
@@ -119,24 +119,77 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
 
     connection = psycopg.connect(postgres_database_url, row_factory=dict_row)
     interrupted = PostgresIdeaRepository(cast(PostgresConnection, connection))
-    interrupted.claim_downstream_submission(_claim("interrupted-submission-key"))
+    interrupted_claim = _claim("interrupted-submission-key")
+    interrupted.claim_downstream_submission(interrupted_claim)
     connection.close()
     with pytest.raises(psycopg.Error):
         interrupted.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key="interrupted-submission-key",
             lease_owner="downstream-realization-test",
-            lease_attempt_id="test-attempt-interrupted-submission-key",
+            lease_attempt_id=interrupted_claim.lease_attempt_id or "",
             posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
             finalized_at_utc=SUBMITTED_AT + timedelta(minutes=1),
         )
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
-        persisted = restarted.downstream_submission_by_idempotency_key("interrupted-submission-key")
+        persisted = restarted.downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "interrupted-submission-key"
+        )
         retry = restarted.claim_downstream_submission(_claim("interrupted-submission-key"))
         assert persisted is not None
         assert persisted.status is DownstreamSubmissionPosture.IN_FLIGHT
         assert retry.decision is DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED
+
+
+def test_postgres_downstream_submission_identity_is_tenant_scoped(
+    postgres_database_url: str,
+) -> None:
+    shared_key = "tenant-scoped-postgres-submission-key"
+    first_resource = "conversion-tenant-scope-sg"
+    second_resource = "conversion-tenant-scope-hk"
+    seed_active_conversion_resource(postgres_database_url, first_resource)
+    seed_active_conversion_resource(
+        postgres_database_url,
+        second_resource,
+        tenant_id="tenant-private-bank-hk",
+    )
+    first = build_downstream_submission_claim(
+        tenant_id="tenant-private-bank-sg",
+        idempotency_key=shared_key,
+        request_fingerprint="sha256:tenant-scope-sg",
+        resource_id=first_resource,
+        submitted_at_utc=SUBMITTED_AT,
+    )
+    second = build_downstream_submission_claim(
+        tenant_id="tenant-private-bank-hk",
+        idempotency_key=shared_key,
+        request_fingerprint="sha256:tenant-scope-hk",
+        resource_id=second_resource,
+        submitted_at_utc=SUBMITTED_AT,
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        first_result = repository.claim_downstream_submission(first)
+        second_result = repository.claim_downstream_submission(second)
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        persisted_first = restarted.downstream_submission_by_idempotency_key(
+            first.tenant_id, shared_key
+        )
+        persisted_second = restarted.downstream_submission_by_idempotency_key(
+            second.tenant_id, shared_key
+        )
+
+    assert first_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert second_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert persisted_first == first
+    assert persisted_second == second
+    assert first.support_reference != second.support_reference
+    assert first.lease_attempt_id != second.lease_attempt_id
 
 
 def test_postgres_advise_history_race_reports_one_atomic_append_delta(
@@ -162,6 +215,7 @@ def test_postgres_advise_history_race_reports_one_atomic_append_delta(
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
         repository.claim_downstream_submission(claim)
         repository.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key=claim.idempotency_key,
             lease_owner=claim.lease_owner or "",
             lease_attempt_id=claim.lease_attempt_id or "",
@@ -233,6 +287,7 @@ def test_postgres_advise_reconciliation_is_one_time_and_exact_replay_is_zero_del
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
         repository.claim_downstream_submission(claim)
         repository.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key=claim.idempotency_key,
             lease_owner=claim.lease_owner or "",
             lease_attempt_id=claim.lease_attempt_id or "",
@@ -340,6 +395,7 @@ def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owne
         repository = PostgresIdeaRepository(cast(PostgresConnection, submission_connection))
         repository.claim_downstream_submission(claim)
         repository.finalize_downstream_submission(
+            tenant_id="tenant-private-bank-sg",
             idempotency_key=claim.idempotency_key,
             lease_owner=claim.lease_owner or "",
             lease_attempt_id=claim.lease_attempt_id or "",

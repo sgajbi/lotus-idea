@@ -337,6 +337,30 @@ REQUIRED_MIGRATIONS = (
             "DROP COLUMN source_cut_posture",
         ),
     ),
+    MigrationContract(
+        version="027",
+        forward_path=(MIGRATIONS_DIR / "027_tenant_scoped_downstream_submission_identity.sql"),
+        rollback_path=(
+            MIGRATIONS_DIR / "027_tenant_scoped_downstream_submission_identity.rollback.sql"
+        ),
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "tenant_id TEXT",
+            "identity_version TEXT",
+            "lifecycle.tenant_id = candidate.candidate_json->'access_scope'->>'tenant_id'",
+            "cannot attribute every downstream submission",
+            "PRIMARY KEY (tenant_id, idempotency_key)",
+            "legacy_unscoped_v1",
+            "tenant_scoped_v2",
+        ),
+        required_rollback_fragments=(
+            "unsafe downgrade: tenant-scoped downstream submission identities exist",
+            "PRIMARY KEY (idempotency_key)",
+            "DROP COLUMN identity_version",
+            "DROP COLUMN tenant_id",
+        ),
+    ),
 )
 
 
