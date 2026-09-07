@@ -9,13 +9,16 @@ from app.ports.downstream_realization import DownstreamOwnerReceipt
 
 
 def validated_report_submission_receipt(
-    receipt: DownstreamOwnerReceipt,
+    receipt: DownstreamOwnerReceipt | DownstreamSubmissionOwnerReceipt,
     evidence_pack: GovernedReportEvidencePack,
+    *,
+    allow_retained_unversioned: bool = False,
 ) -> DownstreamSubmissionOwnerReceipt:
     """Validate and convert one Report-owned receipt for durable Idea persistence."""
     if receipt.owner_authority is not SourceSystem.LOTUS_REPORT:
         raise ValueError("Report submission requires an authoritative owner receipt")
-    if getattr(receipt, "source_event_version", None) is None:
+    source_event_version = getattr(receipt, "source_event_version", None)
+    if source_event_version is None and not allow_retained_unversioned:
         raise ValueError("Report owner receipt requires source_event_version")
     evidence = receipt.report_materialization
     if evidence is None:
@@ -41,7 +44,7 @@ def validated_report_submission_receipt(
         owner_request_id=receipt.owner_request_id,
         owner_realization_id=receipt.owner_realization_id,
         owner_work_id=receipt.owner_work_id,
-        source_event_version=receipt.source_event_version,
+        source_event_version=source_event_version,
         source_evidence_fingerprint=receipt.source_evidence_fingerprint,
         report_materialization=evidence,
     )

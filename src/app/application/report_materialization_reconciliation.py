@@ -26,7 +26,6 @@ from app.domain.downstream_submission import (
     classify_report_owner_receipt_progress,
 )
 from app.ports.downstream_realization import (
-    DownstreamOwnerReceipt,
     DownstreamRealizationNotObserved,
     DownstreamRealizationReadConflict,
     DownstreamRealizationReadError,
@@ -216,16 +215,9 @@ def _validate_stored_receipt(
     evidence_pack: GovernedReportEvidencePack,
 ) -> None:
     validated_report_submission_receipt(
-        DownstreamOwnerReceipt(
-            owner_authority=receipt.owner_authority,
-            owner_request_id=receipt.owner_request_id,
-            owner_realization_id=receipt.owner_realization_id,
-            owner_work_id=receipt.owner_work_id,
-            source_event_version=receipt.source_event_version,
-            source_evidence_fingerprint=receipt.source_evidence_fingerprint,
-            report_materialization=receipt.report_materialization,
-        ),
+        receipt,
         evidence_pack,
+        allow_retained_unversioned=True,
     )
 
 
