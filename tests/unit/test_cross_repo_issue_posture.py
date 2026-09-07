@@ -574,6 +574,47 @@ def test_default_blocker_classification_tracks_protected_historical_data_audit()
     ]
 
 
+def test_default_blocker_classification_tracks_canonical_consumer_dependencies() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = {
+        row["issueNumber"]: row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-idea" and row["issueNumber"] in {379, 1156}
+    }
+
+    assert matching_rows == {
+        379: {
+            "repository": "sgajbi/lotus-idea",
+            "issueNumber": 379,
+            "actionability": "external_or_protected_evidence",
+            "blockerClass": "canonical_downstream_outcome_certification",
+            "remainingAuthority": (
+                "Advise canonical Core-to-proposal outcome proof, coherent "
+                "Gateway/Workbench consumer evidence, protected Archive lifecycle and "
+                "client-publication authority, and supported-feature promotion"
+            ),
+        },
+        1156: {
+            "repository": "sgajbi/lotus-idea",
+            "issueNumber": 1156,
+            "actionability": "external_or_protected_evidence",
+            "blockerClass": "canonical_effectiveness_consumer_certification",
+            "remainingAuthority": (
+                "exact-main Advise, Gateway, and Workbench canonical consumer evidence "
+                "proving visible presentation receipts, replay and conflict behavior, "
+                "and the resulting Idea effectiveness projection"
+            ),
+        },
+    }
+
+
 def test_default_blocker_classification_excludes_closed_core_dpm_source_batch_fingerprint() -> None:
     contract_path = (
         ROOT
