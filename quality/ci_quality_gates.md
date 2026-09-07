@@ -153,7 +153,10 @@ workflow is deliberately declarative: it passes the GitHub token to the typed,
 unit-tested `scripts/main_releasability_dispatch.py` entrypoint. The contract
 gate rejects embedded multiline dispatch shell, direct workflow dispatch, and
 direct Git-ref manipulation in the workflow so exact-ref safety is enforced by
-one testable implementation.
+one testable implementation. Before creating a tag or dispatching a workflow,
+that implementation verifies every enumerated revision is an ancestor of the
+commit resolved from a fresh fetch of `main`; event/history contradictions fail
+closed without GitHub mutation.
 
 GitHub Security posture is also under the CI contract gate. The repository has
 Dependabot alerts/security updates enabled, secret scanning with push

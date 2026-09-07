@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from dataclasses import replace
 from email.message import Message
+from types import SimpleNamespace
 from typing import Any
 from urllib.error import HTTPError
 from urllib.request import Request
@@ -21,6 +23,11 @@ from scripts.main_releasability_dispatch import (
 
 REVISION_ONE = "1" * 40
 REVISION_TWO = "2" * 40
+REVISION_THREE = "3" * 40
+
+
+def _all_on_main(_revision: str) -> bool:
+    return True
 
 
 class StubResponse:
@@ -93,6 +100,7 @@ def test_dispatch_creates_and_dispatches_every_revision_oldest_first() -> None:
         _merged_pr(),
         github=github,
         revision_source=lambda _sha, _count: (REVISION_ONE, REVISION_TWO),
+        revision_is_on_main=_all_on_main,
     )
 
     assert revisions == (REVISION_ONE, REVISION_TWO)
@@ -115,6 +123,7 @@ def test_dispatch_reuses_only_an_exact_existing_ref() -> None:
         replace(_merged_pr(), commit_count=1),
         github=github,
         revision_source=lambda _sha, _count: (REVISION_TWO,),
+        revision_is_on_main=_all_on_main,
     )
 
     assert github.created == []
@@ -130,6 +139,7 @@ def test_dispatch_fails_closed_for_an_existing_ref_mismatch() -> None:
             replace(_merged_pr(), commit_count=1),
             github=github,
             revision_source=lambda _sha, _count: (REVISION_TWO,),
+            revision_is_on_main=_all_on_main,
         )
 
     assert github.dispatched == []
@@ -143,6 +153,7 @@ def test_dispatch_accepts_a_same_revision_ref_creation_race() -> None:
         replace(_merged_pr(), commit_count=1),
         github=github,
         revision_source=lambda _sha, _count: (REVISION_TWO,),
+        revision_is_on_main=_all_on_main,
     )
 
     assert github.dispatched == [(f"main-releasability-{REVISION_TWO}", REVISION_TWO, 123)]
@@ -158,6 +169,7 @@ def test_dispatch_rejects_a_ref_creation_race_to_a_different_revision() -> None:
             replace(_merged_pr(), commit_count=1),
             github=github,
             revision_source=lambda _sha, _count: (REVISION_TWO,),
+            revision_is_on_main=_all_on_main,
         )
 
     assert github.dispatched == []
@@ -174,7 +186,12 @@ def test_dispatch_fails_before_git_or_api_mutation_when_merge_policy_drifts() ->
         return (REVISION_ONE, REVISION_TWO)
 
     with pytest.raises(DispatchError, match="rebase-only"):
-        dispatch_merged_pull_request(_merged_pr(), github=github, revision_source=revisions)
+        dispatch_merged_pull_request(
+            _merged_pr(),
+            github=github,
+            revision_source=revisions,
+            revision_is_on_main=_all_on_main,
+        )
 
     assert revision_source_called is False
     assert github.created == []
@@ -199,10 +216,112 @@ def test_dispatch_fails_closed_for_invalid_revision_sets(revisions: tuple[str, .
             _merged_pr(),
             github=github,
             revision_source=lambda _sha, _count: revisions,
+            revision_is_on_main=_all_on_main,
         )
 
     assert github.created == []
     assert github.dispatched == []
+
+
+@pytest.mark.parametrize("rejected_revision", [REVISION_ONE, REVISION_TWO, REVISION_THREE])
+def test_dispatch_fails_before_github_mutation_when_any_revision_is_not_on_main(
+    rejected_revision: str,
+) -> None:
+    github = FakeGitHub()
+    merged_pr = MergedPullRequest(
+        repository="sgajbi/lotus-idea",
+        merge_commit_sha=REVISION_THREE,
+        commit_count=3,
+        number=123,
+    )
+
+    with pytest.raises(DispatchError, match=f"Revision {rejected_revision} is not an ancestor"):
+        dispatch_merged_pull_request(
+            merged_pr,
+            github=github,
+            revision_source=lambda _sha, _count: (
+                REVISION_ONE,
+                REVISION_TWO,
+                REVISION_THREE,
+            ),
+            revision_is_on_main=lambda revision: revision != rejected_revision,
+        )
+
+    assert github.refs == {}
+    assert github.created == []
+    assert github.dispatched == []
+
+
+@pytest.mark.parametrize(
+    ("returncode", "expected"),
+    [(0, True), (1, False)],
+)
+def test_git_revision_ancestry_maps_git_exit_status(
+    monkeypatch: pytest.MonkeyPatch,
+    returncode: int,
+    expected: bool,
+) -> None:
+    calls: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: Any) -> SimpleNamespace:
+        calls.append(command)
+        return SimpleNamespace(returncode=returncode, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+    assert dispatch_module.git_revision_is_ancestor(REVISION_ONE, REVISION_TWO) is expected
+    assert calls == [["git", "merge-base", "--is-ancestor", REVISION_ONE, REVISION_TWO]]
+
+
+def test_git_revision_ancestry_fails_closed_when_git_cannot_decide(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=128, stdout="", stderr="fatal"),
+    )
+
+    with pytest.raises(DispatchError, match="Unable to verify revision ancestry"):
+        dispatch_module.git_revision_is_ancestor(REVISION_ONE, REVISION_TWO)
+
+
+@pytest.mark.parametrize(
+    ("returncode", "stdout"),
+    [(1, ""), (0, "short"), (0, f"{REVISION_TWO}\nextra")],
+)
+def test_fetched_main_revision_resolution_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    returncode: int,
+    stdout: str,
+) -> None:
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            returncode=returncode,
+            stdout=stdout,
+            stderr="",
+        ),
+    )
+
+    with pytest.raises(DispatchError, match="Unable to resolve fetched main revision"):
+        dispatch_module.git_commit_sha("FETCH_HEAD")
+
+
+def test_fetched_main_revision_resolution_uses_commit_peeling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: Any) -> SimpleNamespace:
+        calls.append(command)
+        return SimpleNamespace(returncode=0, stdout=f"{REVISION_TWO}\n", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+    assert dispatch_module.git_commit_sha("FETCH_HEAD") == REVISION_TWO
+    assert calls == [["git", "rev-parse", "--verify", "FETCH_HEAD^{commit}"]]
 
 
 @pytest.mark.parametrize(
