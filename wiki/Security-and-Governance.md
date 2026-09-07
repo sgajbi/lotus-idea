@@ -45,7 +45,7 @@ managed-key/production-SQL proof, and bank approvals are still required.
 
 Linked report evidence uses an independent Archive trust boundary. Idea accepts
 only a strict signed `IdeaEvidenceLifecycleDecision` bound to exact Idea-owned
-linkage, a maximum five-minute TTL, canonical SHA-256, and an active or retired
+linkage, a maximum five-minute TTL, canonical SHA-256, and an active or rotated
 Ed25519 key. Applied decision and digest replay are fenced durably. Archive hold
 can block local action, but the receipt cannot authorize that action: signed
 bank authority, tenant entitlement, dual approval, retention, and local state
@@ -56,7 +56,10 @@ The configured key set preserves Archive's `LifecycleVerificationKeys`
 response shape. Idea rejects unknown fields, duplicate IDs, non-Ed25519 or
 malformed key material, contradictory windows, and development-ephemeral
 provenance outside local/test; exactly one active key is required. It accepts a
-retained key only for decisions issued within that key's declared window. The
+rotated key only for decisions issued within that key's declared window and
+explicitly refuses a revoked key even inside that window. The legacy Archive
+wire value `retired` is temporarily normalized to `rotated` at the transport
+boundary during the coordinated Archive #147 cutover. The
 public discovery route describes keys but does not authenticate them;
 production-like trust remains an out-of-band configuration responsibility.
 

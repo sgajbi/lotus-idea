@@ -34,9 +34,12 @@ The value must preserve Archive's `LifecycleVerificationKeys` response shape
 and arrive through an authenticated out-of-band configuration path. Each key
 carries its ID, literal `ed25519` algorithm, canonical 32-byte
 `public_key_base64`, provenance, status, and authoritative validity window. Key
-IDs must be unique; an active key has an open window and a retired key has an
-end time. The response must contain exactly one active key. `demo`, `staging`,
-and `production` accept only `managed` provenance,
+IDs must be unique; an active key has an open window and a rotated key has an
+end time. Revoked keys are retained in discovery but are never trusted for a
+decision, including one issued inside the key's former window. During the
+consumer-first Archive #147 cutover, legacy wire value `retired` is decoded as
+`rotated` at the transport boundary only. The response must contain exactly
+one active key. `demo`, `staging`, and `production` accept only `managed` provenance,
 while `ephemeral_development` is limited to explicit `local` and `test`
 profiles.
 

@@ -601,6 +601,16 @@ supported feature is promoted.
 
 ## Required Work
 
+Issue `#1278` aligns Archive lifecycle verification keys with the governed
+`active`/`rotated`/`revoked` vocabulary. Idea accepts active keys and rotated
+keys only within the decision's issue-time window, and explicitly refuses a
+revoked key even inside that window. A temporary `retired`-to-`rotated` wire
+mapping at the Archive trust-bundle boundary supports the consumer-first
+cutover tracked by `lotus-archive#147`; it is not part of the domain vocabulary
+and must be removed after compatible producer rollout evidence exists. This
+does not certify trust distribution, managed key operations, protected Archive
+durability, or product support.
+
 The AI metadata boundary is now allowlist-based rather than denylist-based.
 `lotus-idea.ai-metadata-envelope.v1` admits only code-owned, purpose-scoped
 operational routing values; unknown fields, unapproved values, length abuse,
