@@ -340,6 +340,7 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "signal-ingestion-worker",
         "X-Caller-Capabilities": "idea.candidate.persist",
         "X-Correlation-Id": "corr-operation-persist-api",
+        "X-Trace-Id": "trace-operation-persist-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -350,6 +351,7 @@ def queue_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.queue.read",
         "X-Correlation-Id": "corr-operation-queue-api",
+        "X-Trace-Id": "trace-operation-queue-api",
     }
 
 
@@ -460,6 +462,7 @@ def detail_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.candidate.detail.read",
         "X-Correlation-Id": "corr-operation-detail-api",
+        "X-Trace-Id": "trace-operation-detail-api",
     }
 
 
@@ -600,8 +603,10 @@ def capture_operation_events(
         durable_storage_backed: bool = False,
         error_code: str | None = None,
         attributes: Mapping[str, str] | None = None,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
     ) -> None:
-        del attributes
+        del attributes, correlation_id, trace_id
         events.append(
             (operation.value, outcome.value, source_authority, durable_storage_backed, error_code)
         )

@@ -17,7 +17,11 @@ from app.api.problem_details import (
     invalid_request_metadata,
     permission_denied_metadata,
 )
-from app.api.review_queue.requests import ReviewQueueRequest, review_queue_request_from_http
+from app.api.review_queue.requests import (
+    ReviewQueueRequest,
+    ReviewQueueScopeRequest,
+    review_queue_request_from_http,
+)
 from app.api.review_queue.access import effective_queue_scope_filter
 from app.api.review_queue.constants import ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
 from app.api.review_queue.operator_exceptions import register_review_queue_exception_route
@@ -177,10 +181,12 @@ def _get_business_review_queue(
             error,
             audience=audience,
             durable_storage_backed=durable_storage_backed,
+            request=request,
         )
     _emit_review_queue_operation_event(
         OperationOutcome.ACCEPTED,
         durable_storage_backed=durable_storage_backed,
+        request=request,
     )
     return BusinessReviewQueueResponse.from_domain(
         queue,
@@ -209,6 +215,7 @@ def _authorized_review_queue_caller(
         _emit_review_queue_operation_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
+            request=request,
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -222,6 +229,7 @@ def _authorized_review_queue_caller(
         _emit_review_queue_operation_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
+            request=request,
         )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -237,7 +245,7 @@ def _resolved_review_queue_evaluation_time(
 ) -> datetime | JSONResponse:
     resolved_evaluated_at_utc = request.evaluated_at_utc or ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
     if not is_timezone_aware(resolved_evaluated_at_utc):
-        return _invalid_review_queue_evaluation_time_problem()
+        return _invalid_review_queue_evaluation_time_problem(request)
     return resolved_evaluated_at_utc
 
 
@@ -258,6 +266,7 @@ def _effective_review_queue_access_scope(
         _emit_review_queue_operation_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
+            request=request,
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -273,6 +282,7 @@ def _effective_review_queue_access_scope(
         _emit_review_queue_operation_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
+            request=request,
         )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -376,6 +386,7 @@ def _review_queue_snapshot_problem(
     *,
     audience: ReviewQueueAudience,
     durable_storage_backed: bool,
+    request: ReviewQueueScopeRequest,
 ) -> JSONResponse:
     if isinstance(error, ReviewQueueSnapshotTokenRequiredError):
         outcome = OperationOutcome.INVALID_REQUEST
@@ -398,7 +409,12 @@ def _review_queue_snapshot_problem(
             f"The {audience.value} queue changed after this snapshot was issued. "
             "Restart paging from offset zero."
         )
-    _emit_review_queue_operation_event(outcome, code, durable_storage_backed)
+    _emit_review_queue_operation_event(
+        outcome,
+        code,
+        durable_storage_backed,
+        request=request,
+    )
     return problem_response(
         status_code=status_code,
         code=code,
@@ -407,8 +423,14 @@ def _review_queue_snapshot_problem(
     )
 
 
-def _invalid_review_queue_evaluation_time_problem() -> JSONResponse:
-    _emit_review_queue_operation_event(OperationOutcome.INVALID_REQUEST, "invalid_request")
+def _invalid_review_queue_evaluation_time_problem(
+    request: ReviewQueueScopeRequest,
+) -> JSONResponse:
+    _emit_review_queue_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+        request=request,
+    )
     return problem_response(
         status_code=status.HTTP_400_BAD_REQUEST,
         code="invalid_request",
@@ -421,6 +443,8 @@ def _emit_review_queue_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
     durable_storage_backed: bool = False,
+    *,
+    request: ReviewQueueScopeRequest,
 ) -> None:
     emit_foundation_operation_event(
         IdeaOperation.REVIEW_QUEUE_READ,
@@ -428,6 +452,8 @@ def _emit_review_queue_operation_event(
         source_authority="lotus-idea",
         error_code=error_code,
         durable_storage_backed=durable_storage_backed,
+        correlation_id=request.correlation_id,
+        trace_id=request.trace_id,
     )
 
 

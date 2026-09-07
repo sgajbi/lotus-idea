@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from fastapi import Request
+
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+
+
+def request_context_id(request: Request, attribute: str) -> str | None:
+    value = getattr(request.state, attribute, None)
+    return str(value) if value else None
 
 
 def emit_api_foundation_operation_event(

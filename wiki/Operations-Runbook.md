@@ -896,6 +896,10 @@ diagnostics and business operation events. Operators should use the
 `X-Correlation-Id` response header to find structured service logs with the
 same `correlation_id`; do not add that value to metrics, evidence artifact
 identifiers, or generic operation attributes.
+Candidate persistence, candidate detail, and audience-specific review-queue
+reads preserve the sanitized response correlation and trace values on their
+operation events so the adviser-facing request and source-safe operator record
+can be joined exactly.
 When a caller supplied an unsafe diagnostic header, the response header contains
 the generated replacement and the raw caller value is intentionally absent from
 logs and response bodies.

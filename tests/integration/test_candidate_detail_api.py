@@ -4,6 +4,7 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from tests.support.http import ManagedTestClient, managed_test_client
 
@@ -536,6 +537,15 @@ def test_candidate_detail_api_rejects_blank_candidate_id_safely() -> None:
 
     response = asyncio.run(
         get_idea_candidate_detail(
+            request=Request(
+                {
+                    "type": "http",
+                    "state": {
+                        "correlation_id": "corr-candidate-detail-direct-test",
+                        "trace_id": "trace-candidate-detail-direct-test",
+                    },
+                }
+            ),
             candidate_id=" ",
             x_caller_subject="advisor-001",
             x_caller_roles="advisor",

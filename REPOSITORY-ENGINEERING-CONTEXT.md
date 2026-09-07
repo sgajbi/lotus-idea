@@ -669,7 +669,9 @@ Current implementation includes these bounded foundations:
 4. durable repository support with PostgreSQL migrations and source-safe
    migration rollback/reapply proof,
 5. evidence replay, idempotency, safe audit, operation events, and bounded
-   problem-details behavior,
+   problem-details behavior; request-bound candidate persistence, candidate
+   detail, and review-queue operation events retain the middleware-sanitized
+   correlation and trace response context without adding metric labels,
 6. advisor queue, candidate detail, downstream realization readiness, including
    bounded downstream submission/reconciliation workload, outbox readiness, and runtime
    trust telemetry projections that avoid whole-store snapshot hydration on
