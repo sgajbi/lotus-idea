@@ -611,6 +611,14 @@ and must be removed after compatible producer rollout evidence exists. This
 does not certify trust distribution, managed key operations, protected Archive
 durability, or product support.
 
+Issue `#1284` makes the Archive signer posture operationally unambiguous. No
+active signer, multiple active signers, and a decision signed by an explicitly
+revoked key remain fail-closed but now emit distinct source-safe reason codes.
+Zero active signers is not classified as revocation. Historical decisions may
+still verify with rotated keys only when their authoritative `issued_at_utc`
+falls inside the key's governed validity window; verification wall-clock time
+does not rewrite that historical posture.
+
 The AI metadata boundary is now allowlist-based rather than denylist-based.
 `lotus-idea.ai-metadata-envelope.v1` admits only code-owned, purpose-scoped
 operational routing values; unknown fields, unapproved values, length abuse,

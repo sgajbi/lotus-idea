@@ -39,6 +39,18 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
             "Archive trust bundle must preserve the producer response and profile fence",
         ),
         (
+            lambda payload: payload["trust_bundle_contract"]["active_key_refusal_reasons"].update(
+                {"none": "archive_lifecycle_signing_key_revoked"}
+            ),
+            "Archive trust bundle must preserve the producer response and profile fence",
+        ),
+        (
+            lambda payload: payload["trust_bundle_contract"].update(
+                {"revoked_key_refusal_reason": "archive_lifecycle_active_signer_missing"}
+            ),
+            "Archive trust bundle must preserve the producer response and profile fence",
+        ),
+        (
             lambda payload: payload["policy"].update(
                 {"purge_requires_archive_action": "DISPOSAL_ELIGIBLE"}
             ),

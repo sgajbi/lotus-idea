@@ -50,6 +50,22 @@ class ArchiveLifecycleKeyProvenance(StrEnum):
     EPHEMERAL_DEVELOPMENT = "ephemeral_development"
 
 
+class ArchiveLifecycleTrustRefusalReason(StrEnum):
+    ACTIVE_SIGNER_MISSING = "archive_lifecycle_active_signer_missing"
+    ACTIVE_SIGNER_AMBIGUOUS = "archive_lifecycle_active_signer_ambiguous"
+    SIGNING_KEY_REVOKED = "archive_lifecycle_signing_key_revoked"
+
+
+class ArchiveLifecycleTrustRefusal(ValueError):
+    def __init__(
+        self,
+        reason: ArchiveLifecycleTrustRefusalReason,
+        message: str,
+    ) -> None:
+        self.reason = reason
+        ValueError.__init__(self, message)
+
+
 @dataclass(frozen=True)
 class ArchiveLifecycleDecisionClaims:
     contract_version: str
@@ -151,6 +167,25 @@ class ArchiveLifecycleTrustedKey:
             raise ValueError("active Archive trusted key must have an open validity window")
         if self.status is ArchiveLifecycleKeyStatus.ROTATED and self.not_after_utc is None:
             raise ValueError("rotated Archive trusted key requires not_after_utc")
+
+
+def require_current_archive_signer(
+    trusted_keys: tuple[ArchiveLifecycleTrustedKey, ...],
+) -> ArchiveLifecycleTrustedKey:
+    active_keys = tuple(
+        key for key in trusted_keys if key.status is ArchiveLifecycleKeyStatus.ACTIVE
+    )
+    if not active_keys:
+        raise ArchiveLifecycleTrustRefusal(
+            ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_MISSING,
+            "Archive lifecycle trust bundle has no active signer",
+        )
+    if len(active_keys) > 1:
+        raise ArchiveLifecycleTrustRefusal(
+            ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_AMBIGUOUS,
+            "Archive lifecycle trust bundle has multiple active signers",
+        )
+    return active_keys[0]
 
 
 @dataclass(frozen=True)

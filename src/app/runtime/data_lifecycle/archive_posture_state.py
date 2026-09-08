@@ -6,6 +6,8 @@ import os
 from app.application.ed25519_key_trust import Ed25519SignatureVerifier as SignatureVerifierPort
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLifecycleKeyProvenance,
+    ArchiveLifecycleTrustRefusal,
+    ArchiveLifecycleTrustRefusalReason,
     ArchiveLifecycleTrustedKey,
 )
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
@@ -21,7 +23,14 @@ _SIGNATURE_VERIFIER = Ed25519SignatureVerifier()
 
 
 class ArchiveLifecycleTrustUnavailableError(RuntimeError):
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason: ArchiveLifecycleTrustRefusalReason | None = None,
+    ) -> None:
+        RuntimeError.__init__(self, message)
+        self.reason = reason
 
 
 def get_archive_lifecycle_dependencies() -> tuple[
@@ -43,6 +52,11 @@ def get_archive_lifecycle_dependencies() -> tuple[
             raise ValueError(
                 "ephemeral Archive lifecycle keys are restricted to local and test profiles"
             )
+    except ArchiveLifecycleTrustRefusal as exc:
+        raise ArchiveLifecycleTrustUnavailableError(
+            "Archive lifecycle trust bundle is unusable",
+            reason=exc.reason,
+        ) from exc
     except (ValueError, TypeError, json.JSONDecodeError) as exc:
         raise ArchiveLifecycleTrustUnavailableError(
             "Archive lifecycle trust bundle is invalid"

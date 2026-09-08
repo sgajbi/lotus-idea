@@ -7,7 +7,10 @@ from typing import Any
 
 import pytest
 
-from app.domain.data_lifecycle.archive_posture import ArchiveLifecycleKeyStatus
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLifecycleKeyStatus,
+    ArchiveLifecycleTrustRefusalReason,
+)
 from app.runtime.data_lifecycle.archive_posture_state import (
     ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV,
     ArchiveLifecycleTrustUnavailableError,
@@ -199,10 +202,17 @@ def test_runtime_preserves_governed_revoked_status_for_explicit_refusal(
     assert keys[1].status.value == "revoked"
 
 
-@pytest.mark.parametrize("active_key_count", [0, 2])
+@pytest.mark.parametrize(
+    ("active_key_count", "expected_reason"),
+    [
+        (0, ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_MISSING),
+        (2, ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_AMBIGUOUS),
+    ],
+)
 def test_runtime_requires_exactly_one_active_archive_key(
     monkeypatch: pytest.MonkeyPatch,
     active_key_count: int,
+    expected_reason: ArchiveLifecycleTrustRefusalReason,
 ) -> None:
     payload = _trust_bundle()
     if active_key_count == 0:
@@ -218,8 +228,11 @@ def test_runtime_requires_exactly_one_active_archive_key(
         payload["keys"].append(second_key)
     monkeypatch.setenv(ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV, json.dumps(payload))
 
-    with pytest.raises(ArchiveLifecycleTrustUnavailableError, match="invalid"):
+    with pytest.raises(ArchiveLifecycleTrustUnavailableError, match="unusable") as exc_info:
         get_archive_lifecycle_dependencies()
+
+    assert exc_info.value.reason is expected_reason
+    assert exc_info.value.reason is not ArchiveLifecycleTrustRefusalReason.SIGNING_KEY_REVOKED
 
 
 @pytest.mark.parametrize("value", ["", "not-json", '{"keys":[]}'])

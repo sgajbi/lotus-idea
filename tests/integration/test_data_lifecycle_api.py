@@ -31,6 +31,8 @@ from app.domain.data_lifecycle.authority import (
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLegalHoldStatus,
     ArchiveLifecycleAction,
+    ArchiveLifecycleTrustRefusal,
+    ArchiveLifecycleTrustRefusalReason,
     ArchivePurgeStatus,
     VerifiedArchiveLifecycleReceipt,
 )
@@ -477,6 +479,93 @@ def test_data_lifecycle_api_reports_archive_verification_failures_source_safely(
     assert unavailable.json()["code"] == "archive_lifecycle_trust_unavailable"
     assert "raw trust detail" not in unavailable.text
     assert repository.calls == 0
+
+
+@pytest.mark.parametrize(
+    ("reason", "failure_site", "expected_status", "expected_problem_code"),
+    [
+        (
+            ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_MISSING,
+            "trust_bundle",
+            503,
+            "archive_lifecycle_trust_unavailable",
+        ),
+        (
+            ArchiveLifecycleTrustRefusalReason.ACTIVE_SIGNER_AMBIGUOUS,
+            "trust_bundle",
+            503,
+            "archive_lifecycle_trust_unavailable",
+        ),
+        (
+            ArchiveLifecycleTrustRefusalReason.SIGNING_KEY_REVOKED,
+            "verification",
+            400,
+            "archive_lifecycle_posture_invalid",
+        ),
+    ],
+)
+def test_data_lifecycle_api_records_precise_archive_trust_refusal_without_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+    reason: ArchiveLifecycleTrustRefusalReason,
+    failure_site: str,
+    expected_status: int,
+    expected_problem_code: str,
+) -> None:
+    repository = ApiLifecycleRepository()
+    events: list[tuple[str, str, str | None]] = []
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        api_module,
+        "_emit_event",
+        lambda operation, outcome, error_code=None, **_: events.append(
+            (operation.value, outcome.value, error_code)
+        ),
+    )
+    if failure_site == "trust_bundle":
+        monkeypatch.setattr(
+            api_module,
+            "get_archive_lifecycle_dependencies",
+            lambda: (_ for _ in ()).throw(
+                ArchiveLifecycleTrustUnavailableError(
+                    "source-sensitive trust detail",
+                    reason=reason,
+                )
+            ),
+        )
+    else:
+        monkeypatch.setattr(
+            api_module,
+            "get_archive_lifecycle_dependencies",
+            lambda: ((object(),), object()),
+        )
+        monkeypatch.setattr(
+            api_module,
+            "verify_archive_lifecycle_decision",
+            lambda **_: (_ for _ in ()).throw(
+                ArchiveLifecycleTrustRefusal(reason, "source-sensitive verification detail")
+            ),
+        )
+
+    response = managed_test_client(app).post(
+        lifecycle_path(),
+        json={
+            **lifecycle_request(),
+            "archiveLifecycleDecision": archive_decision_for_request(),
+        },
+        headers=lifecycle_headers(f"lifecycle-api-{reason.value}-001"),
+    )
+
+    assert response.status_code == expected_status
+    assert response.json()["code"] == expected_problem_code
+    assert "source-sensitive" not in response.text
+    assert repository.calls == 0
+    assert events == [
+        (
+            "data_lifecycle_action",
+            "blocked" if expected_status == 503 else "invalid_request",
+            reason.value,
+        )
+    ]
 
 
 def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> None:

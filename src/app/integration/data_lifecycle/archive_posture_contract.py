@@ -14,6 +14,7 @@ from app.domain.data_lifecycle.archive_posture import (
     ArchiveLifecycleKeyProvenance,
     ArchiveLifecycleKeyStatus,
     ArchiveLifecycleTrustedKey,
+    require_current_archive_signer,
     ArchivePurgeStatus,
 )
 
@@ -103,13 +104,12 @@ class ArchiveLifecycleTrustBundle(BaseModel):
         key_ids = tuple(key.key_id for key in self.keys)
         if len(key_ids) != len(set(key_ids)):
             raise ValueError("Archive lifecycle trust bundle key IDs must be unique")
-        active_key_count = sum(key.status is ArchiveLifecycleKeyStatus.ACTIVE for key in self.keys)
-        if active_key_count != 1:
-            raise ValueError("Archive lifecycle trust bundle must contain exactly one active key")
         return self
 
     def to_domain(self) -> tuple[ArchiveLifecycleTrustedKey, ...]:
-        return tuple(key.to_domain() for key in self.keys)
+        trusted_keys = tuple(key.to_domain() for key in self.keys)
+        require_current_archive_signer(trusted_keys)
+        return trusted_keys
 
 
 def map_archive_lifecycle_trust_bundle(payload: object) -> tuple[ArchiveLifecycleTrustedKey, ...]:
