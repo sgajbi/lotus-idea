@@ -19,6 +19,7 @@ from app.domain import (
     SourceRevisionClaims,
     SourceSystem,
 )
+from app.domain.evidence_digest import SHA256_DIGEST_PATTERN
 
 
 class CausalInputRevisionModel(CamelModel):
@@ -133,6 +134,7 @@ class SourceRefRequest(CamelModel):
     content_hash: str = Field(
         ...,
         alias="contentHash",
+        pattern=SHA256_DIGEST_PATTERN.pattern,
         description="Source-owned content hash or lineage hash.",
         examples=["sha256:dc238a75287d8aa3ba2a8eff42e92e38c0635356cf7528195a9f3c1a186143f5"],
     )
