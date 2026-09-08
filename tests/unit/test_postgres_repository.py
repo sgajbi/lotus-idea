@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from tests.support.evidence_digest import evidence_digest
-
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -72,6 +70,7 @@ from app.infrastructure.postgres_codecs import (
     read_json_object,
     read_row_value,
 )
+from tests.support.evidence_digest import evidence_digest
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.postgres_repository_query_assertions import assert_no_whole_store_snapshot
 from tests.support.postgres_review_authority import (
