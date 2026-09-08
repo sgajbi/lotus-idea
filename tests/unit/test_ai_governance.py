@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -62,6 +63,7 @@ AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 VERIFIED_AT = datetime(2026, 6, 21, 10, 16, tzinfo=UTC)
+AI_EVIDENCE_HASH = f"sha256:{'c' * 64}"
 
 
 def source_ref(
@@ -76,7 +78,7 @@ def source_ref(
         route=route,
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}:raw-source",
+        content_hash=f"sha256:{hashlib.sha256(product_id.encode()).hexdigest()}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
@@ -100,7 +102,7 @@ def evidence_packet(
         lineage_ref=LineageRef(
             lineage_id="lineage:lotus-idea:ai:test",
             source_refs=source_refs,
-            content_hash="sha256:ai-redacted-evidence",
+            content_hash=AI_EVIDENCE_HASH,
         ),
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.CASH_SOURCE_READY),
         unsupported_reasons=(
@@ -209,7 +211,7 @@ def test_ai_request_redacts_source_routes_and_raw_source_hashes() -> None:
 
     assert request.redacted_evidence.candidate_id == "idea-ai-001"
     assert request.redacted_evidence.evidence_packet_id == "iep_ai_test"
-    assert request.redacted_evidence.evidence_content_hash == "sha256:ai-redacted-evidence"
+    assert request.redacted_evidence.evidence_content_hash == AI_EVIDENCE_HASH
     assert request.redacted_evidence.source_signal_count == 2
     assert source_candidate.score is not None
     assert request.redacted_evidence.score_contributions == source_candidate.score.contributions
@@ -232,6 +234,34 @@ def test_redacted_ai_evidence_rejects_partial_score_provenance() -> None:
         match="score policy, scalar, contributions, and conflict penalty must be provided together",
     ):
         replace(redacted, score_contributions=())
+
+
+def test_redacted_evidence_rejects_malformed_evidence_digest() -> None:
+    redacted = RedactedIdeaEvidence.from_candidate(candidate())
+
+    with pytest.raises(
+        ValueError,
+        match="evidence_content_hash must be a sha256:<64 lowercase hex>",
+    ):
+        replace(redacted, evidence_content_hash="x")
+
+
+def test_redacted_evidence_rejects_malformed_revision_vector_digest() -> None:
+    redacted = RedactedIdeaEvidence.from_candidate(candidate())
+
+    with pytest.raises(
+        ValueError,
+        match="source_revision_vector_digest must be a sha256:<64 lowercase hex>",
+    ):
+        replace(redacted, source_revision_vector_digest="legacy:other")
+
+
+def test_redacted_evidence_accepts_historical_revision_vector_sentinel() -> None:
+    redacted = RedactedIdeaEvidence.from_candidate(candidate())
+
+    historical = replace(redacted, source_revision_vector_digest="legacy:unknown")
+
+    assert historical.source_revision_vector_digest == "legacy:unknown"
 
 
 def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
@@ -665,7 +695,7 @@ def test_ai_domain_objects_validate_required_redaction_fields() -> None:
             lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
             review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
             evidence_packet_id="iep_ai_test",
-            evidence_content_hash="sha256:ai-redacted-evidence",
+            evidence_content_hash=AI_EVIDENCE_HASH,
             source_revision_vector_digest="legacy:unknown",
             source_cut_posture=SourceCutPosture.UNKNOWN,
             supportability=EvidenceSupportability.READY,
@@ -684,7 +714,7 @@ def test_ai_domain_objects_validate_required_redaction_fields() -> None:
             lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
             review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
             evidence_packet_id="iep_ai_test",
-            evidence_content_hash="sha256:ai-redacted-evidence",
+            evidence_content_hash=AI_EVIDENCE_HASH,
             source_revision_vector_digest="legacy:unknown",
             source_cut_posture=SourceCutPosture.UNKNOWN,
             supportability=EvidenceSupportability.READY,
@@ -703,7 +733,7 @@ def test_ai_domain_objects_validate_required_redaction_fields() -> None:
             lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
             review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
             evidence_packet_id="iep_ai_test",
-            evidence_content_hash="sha256:ai-redacted-evidence",
+            evidence_content_hash=AI_EVIDENCE_HASH,
             source_revision_vector_digest="legacy:unknown",
             source_cut_posture=SourceCutPosture.UNKNOWN,
             supportability=EvidenceSupportability.READY,

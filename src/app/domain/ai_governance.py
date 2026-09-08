@@ -21,6 +21,7 @@ from app.domain.ai_explanation import (
     render_grounded_claim_narrative,
 )
 from app.domain.ai_metadata_policy import validate_ai_metadata_envelope
+from app.domain.evidence_digest import require_revision_vector_digest, require_sha256_digest
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -174,8 +175,11 @@ class RedactedIdeaEvidence:
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.evidence_packet_id, "evidence_packet_id")
-        _require_text(self.evidence_content_hash, "evidence_content_hash")
-        _require_text(self.source_revision_vector_digest, "source_revision_vector_digest")
+        require_sha256_digest(self.evidence_content_hash, "evidence_content_hash")
+        require_revision_vector_digest(
+            self.source_revision_vector_digest,
+            "source_revision_vector_digest",
+        )
         if not self.source_refs:
             raise ValueError("source_refs is required")
         if not self.reason_codes:
