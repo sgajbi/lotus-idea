@@ -21,6 +21,7 @@ from app.ports.core_sources import (
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
+from tests.support.evidence_digest import evidence_digest
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -33,7 +34,7 @@ def _payload(product_name: str, *, extra: dict[str, Any] | None = None) -> dict[
         "as_of_date": "2026-06-21",
         "generated_at": "2026-06-21T10:00:00Z",
         "data_quality_status": "complete",
-        "source_batch_fingerprint": f"{product_name.lower()}-fingerprint",
+        "source_batch_fingerprint": evidence_digest(product_name, "core-source-fixture"),
         "freshness": "current",
     }
     if extra:

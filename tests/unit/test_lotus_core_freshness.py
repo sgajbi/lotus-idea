@@ -15,6 +15,7 @@ from app.ports.core_sources import (
     CoreLowIncomeEvidenceRequest,
     CorePortfolioStateEvidenceRequest,
 )
+from tests.support.evidence_digest import evidence_digest
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -29,7 +30,7 @@ def _payload_without_freshness(
         "as_of_date": "2026-06-21",
         "generated_at": "2026-06-21T10:00:00Z",
         "data_quality_status": "complete",
-        "source_batch_fingerprint": f"{product_name.lower()}-fingerprint",
+        "source_batch_fingerprint": evidence_digest(product_name, "freshness-fixture"),
     }
     if extra:
         payload.update(extra)
@@ -207,10 +208,16 @@ def test_lotus_core_adapter_maps_missing_bond_maturity_freshness_to_unavailable(
                 "PortfolioMaturitySummary",
                 extra={
                     "source_product_name": "HoldingsAsOf",
-                    "source_lineage": {"upstream_content_hash": "bond-maturity-holdings"},
+                    "source_lineage": {
+                        "upstream_content_hash": evidence_digest(
+                            "HoldingsAsOf", "bond-maturity-fixture"
+                        )
+                    },
                     "next_maturity_date": "2026-07-10",
                     "maturing_holding_count": 1,
-                    "source_batch_fingerprint": "bond-maturity-summary",
+                    "source_batch_fingerprint": evidence_digest(
+                        "PortfolioMaturitySummary", "freshness-fixture"
+                    ),
                 },
             ),
         )
