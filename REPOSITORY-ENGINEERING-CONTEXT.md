@@ -126,17 +126,19 @@ Critical invariants:
 
 1. Candidate scope must be explicit; unscoped durable candidates are rejected.
 2. Candidate identity is deterministic from economic identity and governed evidence.
-3. Known source-revision or restatement contradictions fail authority advancement. Shared cut IDs
+3. Evidence and lineage content hashes use canonical `sha256:<64 lowercase hex>` values. Only the
+   historical revision-vector boundary permits the explicit `legacy:unknown` sentinel.
+4. Known source-revision or restatement contradictions fail authority advancement. Shared cut IDs
    and time tolerance cannot override a known contradiction.
-4. Unknown comparison remains uncertain; never invent source-owner identities or coherence.
-5. Generic lifecycle mutation cannot create review, approval, or conversion authority.
-6. Review and conversion use their owned commands and exact presentation/review grants.
-7. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
-8. Outbound work records durable intent before I/O.
-9. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
-10. Exact replay does not create duplicate state, owner work, events, or outbox records.
-11. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
-12. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
+5. Unknown comparison remains uncertain; never invent source-owner identities or coherence.
+6. Generic lifecycle mutation cannot create review, approval, or conversion authority.
+7. Review and conversion use their owned commands and exact presentation/review grants.
+8. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
+9. Outbound work records durable intent before I/O.
+10. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
+11. Exact replay does not create duplicate state, owner work, events, or outbox records.
+12. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+13. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.

@@ -327,6 +327,12 @@ evidence. Source corrections preserve the business candidate and material
 version while producing a new evidence packet and lineage version; no
 effective-date window is inferred.
 
+Evidence identity is canonical at the Idea-owned boundary. `SourceRef` and
+`LineageRef` content hashes, plus redacted AI evidence content hashes, accept
+only `sha256:<64 lowercase hex>`. Revision-vector digests follow the same rule,
+with `legacy:unknown` retained solely as the explicit historical sentinel.
+Non-empty placeholder text is not valid evidence identity.
+
 ### Economic Candidate Identity
 
 `idea-opportunity-identity-v3` separates advisor-visible economic identity
