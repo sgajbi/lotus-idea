@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
-import re
 from typing import Any
 
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import score_receipt_is_valid, sha256_json
 from app.application.low_income_cashflow_runtime_evidence.runtime_execution import (
     LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS,
@@ -152,7 +152,6 @@ _CLAIM_KEYS = frozenset(
         "ideaPersistenceRequired",
     }
 )
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool:
@@ -365,4 +364,4 @@ def _evaluation_is_valid(evaluation: Mapping[str, Any], projection: Mapping[str,
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)

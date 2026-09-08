@@ -12,6 +12,7 @@ from app.application.bond_maturity_runtime_evidence.runtime_execution import (
     BOND_MATURITY_RUNTIME_EVIDENCE_REFS,
     BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
@@ -129,7 +130,6 @@ _CLAIM_KEYS = frozenset(
         "ideaPersistenceRequired",
     }
 )
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _REQUEST_FINGERPRINT_PATTERN = re.compile(r"^maturity_summary:[0-9a-f]{16}$")
 
 
@@ -385,4 +385,4 @@ def _fact_posture_is_valid(
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)

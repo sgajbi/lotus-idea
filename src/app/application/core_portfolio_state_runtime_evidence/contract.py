@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
-import re
 from typing import Any
 
 from app.application.core_portfolio_state_runtime_evidence.runtime_execution import (
@@ -13,6 +12,7 @@ from app.application.core_portfolio_state_runtime_evidence.runtime_execution imp
     CORE_PORTFOLIO_STATE_RUNTIME_EVIDENCE_REFS,
     CORE_PORTFOLIO_STATE_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
@@ -113,7 +113,6 @@ _CLAIM_KEYS = frozenset(
         "ideaPersistenceRequired",
     }
 )
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -321,4 +320,4 @@ def _execution_closure_is_valid(
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)
