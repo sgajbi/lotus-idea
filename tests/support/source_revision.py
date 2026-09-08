@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from typing import Any
 
 
@@ -32,7 +34,7 @@ def lotus_core_source_ref(
         "route": f"/source/{product_id}",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
+        "contentHash": evidence_digest(product_id, suffix),
         "dataQualityStatus": "complete",
         "freshness": freshness,
         "revisionClaims": coherent_lotus_core_revision_claims(product_id, suffix=suffix),

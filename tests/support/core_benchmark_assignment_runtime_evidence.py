@@ -26,7 +26,7 @@ class AuthoritativeCoreBenchmarkAssignmentSource:
                 route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:test-benchmark-assignment",
+                content_hash="sha256:75246c6436326aed8f673e6298f8a446bedd9bb583782702ef87d30e03fd5369",
                 data_quality_status="complete",
                 freshness=EvidenceFreshness.CURRENT,
             ),

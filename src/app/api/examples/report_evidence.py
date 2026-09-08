@@ -27,7 +27,7 @@ def build_report_evidence_pack_response_examples() -> dict[str, dict[str, Any]]:
                 "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                 "purpose": "client_review_report_section",
                 "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                "evidenceContentHash": "sha256:evidence-lineage",
+                "evidenceContentHash": "sha256:8f80198e93fc38cf94db07c4d3e2481396a7a8c001c7aa45ef41232a25128347",
                 "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
                 "sourceSummaries": [
                     {
@@ -36,7 +36,7 @@ def build_report_evidence_pack_response_examples() -> dict[str, dict[str, Any]]:
                         "productVersion": "v1",
                         "asOfDate": "2026-06-21",
                         "generatedAtUtc": "2026-06-21T10:00:00Z",
-                        "contentHash": "sha256:portfolio-state",
+                        "contentHash": "sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
                         "dataQualityStatus": "complete",
                         "freshness": "current",
                     }

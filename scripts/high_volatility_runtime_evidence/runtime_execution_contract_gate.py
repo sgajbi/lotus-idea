@@ -47,7 +47,7 @@ class _Source:
                 route="/analytics/risk/metrics",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:high-volatility-contract-gate",
+                content_hash="sha256:6559863f816a0df18a212b0a945bf6bc7a5306f2de9e8f06c3a31ee2d96eda7f",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
                 revision_claims=SourceRevisionClaims(

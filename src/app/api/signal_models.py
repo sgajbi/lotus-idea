@@ -134,7 +134,7 @@ class SourceRefRequest(CamelModel):
         ...,
         alias="contentHash",
         description="Source-owned content hash or lineage hash.",
-        examples=["sha256:portfolio-state-snapshot-demo"],
+        examples=["sha256:dc238a75287d8aa3ba2a8eff42e92e38c0635356cf7528195a9f3c1a186143f5"],
     )
     data_quality_status: str = Field(
         ...,

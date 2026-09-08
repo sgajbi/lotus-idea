@@ -295,8 +295,8 @@ def _conversion_intent(target: ConversionTarget) -> GovernedConversionIntent:
             requested_at_utc=_SUBMITTED_AT,
         ),
         evidence_packet_id="iep_example",
-        evidence_content_hash="sha256:example-evidence",
-        source_revision_vector_digest="sha256:example-source-revision-vector",
+        evidence_content_hash="sha256:75c28e116245aefd510ed8f6538ffeb26c2c759384b11097028d2dcff392a9c6",
+        source_revision_vector_digest="sha256:eb8a6de20a947892edca15c627ce7c38ac59cc1ac308ff0a992609cc4f2feb3d",
         source_cut_posture=SourceCutPosture.COHERENT,
         source_signal_ids=("signal_example",),
         actor_subject=_ACTOR,
@@ -313,7 +313,7 @@ def _report_evidence_pack() -> GovernedReportEvidencePack:
         conversion_intent_id="conversion-example-report",
         candidate_id="idea_example",
         evidence_packet_id="iep_example",
-        evidence_content_hash="sha256:example-evidence",
+        evidence_content_hash="sha256:75c28e116245aefd510ed8f6538ffeb26c2c759384b11097028d2dcff392a9c6",
         source_signal_ids=("signal_example",),
         source_summaries=(
             ReportEvidenceSourceSummary(
@@ -322,7 +322,7 @@ def _report_evidence_pack() -> GovernedReportEvidencePack:
                 product_version="v1",
                 as_of_date="2026-06-21",
                 generated_at_utc=_SUBMITTED_AT,
-                content_hash="sha256:example-source",
+                content_hash="sha256:efc1d8aca93b051ad9f065f190649548f79d06888ad63c0730b581680ec77709",
                 data_quality_status="complete",
                 freshness="current",
             ),

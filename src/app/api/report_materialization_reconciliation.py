@@ -207,7 +207,7 @@ REPORT_MATERIALIZATION_RECONCILIATION_ROUTE: RouteMetadata = {
                             "ownerRealizationId": "report-job-001",
                             "ownerWorkId": None,
                             "sourceEventVersion": 1,
-                            "sourceEvidenceFingerprint": "sha256:idea-evidence-content",
+                            "sourceEvidenceFingerprint": "sha256:df497aadc89a2583b75a9a4d8481aa342a76a0eab69f2f63866b6c8a158a7ff2",
                             "reportMaterialization": {
                                 "status": "archived",
                                 "materializationStatus": "archived",

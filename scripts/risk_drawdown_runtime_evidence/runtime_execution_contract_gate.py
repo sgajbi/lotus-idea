@@ -45,7 +45,7 @@ class _Source:
                 route="/analytics/risk/drawdown",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:risk-drawdown-contract-gate",
+                content_hash="sha256:e8c901b230f968e7036c45ece76cac2992f18356f4745b6bef95d7ae6ccb5c29",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
                 revision_claims=SourceRevisionClaims(

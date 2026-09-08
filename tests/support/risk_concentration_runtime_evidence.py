@@ -88,7 +88,7 @@ def risk_evidence(
             route="/analytics/risk/concentration",
             as_of_date=as_of_date,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:risk-concentration-report",
+            content_hash="sha256:6ef60ae726ebd283c2240ef2c35c7f40760ea5ad37e0b3d075e35025ed4d4cb6",
             data_quality_status="ready",
             freshness=freshness,
             revision_claims=SourceRevisionClaims(

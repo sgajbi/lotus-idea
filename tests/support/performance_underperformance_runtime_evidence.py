@@ -98,7 +98,7 @@ def performance_evidence(
             route="/integration/returns/series",
             as_of_date=as_of_date,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:performance-returns-series",
+            content_hash="sha256:0248e85b191b6567e94e15ccc8e2fb0a522ef414bf0a1b36d9f82e8bca817cb1",
             data_quality_status="ready",
             freshness=freshness,
             revision_claims=SourceRevisionClaims(

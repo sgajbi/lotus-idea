@@ -90,7 +90,7 @@ def risk_evidence(
             route="/analytics/risk/metrics",
             as_of_date=as_of_date,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:risk-metrics-report",
+            content_hash="sha256:25bc9301bb12f54287135fd7f868f1cdfcb1fb162145ba4e777dd61d02e916e7",
             data_quality_status="ready",
             freshness=freshness,
             revision_claims=SourceRevisionClaims(

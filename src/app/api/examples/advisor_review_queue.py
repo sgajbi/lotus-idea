@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -115,7 +116,9 @@ def _source_ref(name: str) -> SourceRef:
         route=f"/source/{name}",
         as_of_date=_AS_OF_DATE,
         generated_at_utc=_EVALUATED_AT,
-        content_hash=f"sha256:advisor-review-queue-{name.lower()}",
+        content_hash=(
+            f"sha256:{hashlib.sha256(f'advisor-review-queue-{name.lower()}'.encode()).hexdigest()}"
+        ),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

@@ -1,6 +1,7 @@
 # ruff: noqa: E402
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
@@ -179,7 +180,9 @@ def _source_refs() -> tuple[SourceRef, ...]:
             route=f"/dr-fixture/{index}",
             as_of_date=date(2026, 7, 11),
             generated_at_utc=FIXTURE_TIME,
-            content_hash=f"sha256:dr-fixture-source-{index}",
+            content_hash=(
+                f"sha256:{hashlib.sha256(f'dr-fixture-source-{index}'.encode()).hexdigest()}"
+            ),
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,
             revision_claims=SourceRevisionClaims(

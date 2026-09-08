@@ -37,7 +37,7 @@ def seed_manage_realization_recovery_fixture(
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-manage",
-        request_fingerprint="sha256:dr-fixture-downstream-manage",
+        request_fingerprint="sha256:1ad26ee970b3c98cab5ce0c90f01fa5533205e0fa5fd8fc214748c3a9a7ea6b4",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id=conversion_intent_id,
         target=ConversionTarget.MANAGE_REVIEW,
