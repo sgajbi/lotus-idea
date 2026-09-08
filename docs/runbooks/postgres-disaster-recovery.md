@@ -130,6 +130,9 @@ table inventory, primary keys, constraint/index validity, source-safe table
 hashes and row counts, referential integrity, quarantine source links,
 idempotency/outbox uniqueness, outbox status/lease/failure/publication state,
 downstream resource and lease fencing, and AI candidate lineage.
+`idea_idempotency_record` has a dedicated internal primary key for restore and
+default replica identity. Its separate partial unique indexes remain the
+authoritative tenant/system idempotency business keys.
 
 ### 4. Prove resume safety
 
