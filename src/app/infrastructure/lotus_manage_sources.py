@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-import re
 from typing import Any
 from urllib.parse import quote
 
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness, SourceRef, SourceRevisionClaims, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
@@ -27,7 +27,6 @@ ACTION_REGISTER_PRODUCT_ID = "lotus-manage:PortfolioActionRegister:v1"
 MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
 MANDATE_RISK_HEALTH_PRODUCT_ID = "lotus-risk:MandateRiskHealthContext:v1"
 ACTION_REGISTER_SUPPORTABILITY_ROUTE = "/api/v1/rebalance/supportability/summary"
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -344,7 +343,7 @@ def _action_register_runtime(
         or evidence_as_of_date != request.as_of_date
         or temporal_identity_status != "available"
         or tenant_id_hash != identity_hash(request.tenant_id)
-        or not _SHA256_PATTERN.fullmatch(fingerprint)
+        or not is_sha256_digest(fingerprint)
     ):
         return None
     correlation_id = _text_field(payload, "correlation_id") or _text_field(payload, "correlationId")

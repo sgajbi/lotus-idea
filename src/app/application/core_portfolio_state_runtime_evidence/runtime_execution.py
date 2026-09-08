@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import re
 from typing import Any
 
 from app.application.runtime_evidence import (
@@ -13,6 +12,7 @@ from app.application.runtime_evidence import (
     sha256_json,
     source_ref_receipt,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.domain import EvidenceFreshness, SourceSystem
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
@@ -57,7 +57,6 @@ _PRODUCT_VERSION = "v1"
 _SNAPSHOT_MODE = "BASELINE"
 _CONSUMER_SYSTEM = "lotus-idea"
 _COMPLETE = "COMPLETE"
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -322,7 +321,4 @@ def _source_hashes_reconcile(evidence: CorePortfolioStateEvidence) -> bool:
         evidence.response_content_hash,
         evidence.response_source_digest,
     )
-    return (
-        all(isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) for value in values)
-        and len(set(values)) == 1
-    )
+    return all(is_sha256_digest(value) for value in values) and len(set(values)) == 1

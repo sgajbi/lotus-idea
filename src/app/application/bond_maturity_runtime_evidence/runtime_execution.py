@@ -12,6 +12,7 @@ from app.application.runtime_evidence import (
     sha256_json,
     source_ref_receipt,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.domain import EvidenceFreshness, SourceSystem
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
@@ -53,7 +54,6 @@ _MATURITY_BASIS = "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
 _CONSUMER_SYSTEM = "lotus-idea"
 _COMPLETE = "COMPLETE"
 _SUPPORTED = "SUPPORTED"
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _REQUEST_FINGERPRINT_PATTERN = re.compile(r"^maturity_summary:[0-9a-f]{16}$")
 
 
@@ -523,7 +523,7 @@ def _source_hashes_reconcile(evidence: CoreBondMaturityEvidence) -> bool:
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)
 
 
 def _date_text(value: date | None) -> str | None:

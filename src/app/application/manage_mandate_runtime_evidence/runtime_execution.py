@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import re
 from typing import Any
 
 from app.application.runtime_evidence import (
@@ -27,6 +26,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.manage_sources import (
     ManageActionRegisterRuntimeEvidence,
@@ -66,7 +66,6 @@ MANAGE_MANDATE_RUNTIME_EVIDENCE_REFS = (
 _ACTION_PRODUCT_ID = "lotus-manage:PortfolioActionRegister:v1"
 _PERFORMANCE_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
 _RISK_PRODUCT_ID = "lotus-risk:MandateRiskHealthContext:v1"
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -460,4 +459,4 @@ def _evaluation_receipt(result: ManageMandateReadinessResult) -> dict[str, Any]:
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)

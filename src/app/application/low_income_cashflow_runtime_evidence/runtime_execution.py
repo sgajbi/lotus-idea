@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-import re
 from typing import Any, cast
 
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.access_scope import tenant_portfolio_scope
 from app.application.runtime_evidence import (
     format_utc,
@@ -71,7 +71,6 @@ _PROJECTION_PRODUCT_NAME = "PortfolioCashflowProjection"
 _PROJECTION_ROUTE = "/portfolios/{portfolio_id}/cashflow-projection"
 _PRODUCT_VERSION = "v1"
 _COMPLETE = "COMPLETE"
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -625,7 +624,7 @@ def _movement_direction_reconciles(amount: Decimal | None, direction: str | None
 
 
 def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256_PATTERN.fullmatch(value) is not None
+    return is_sha256_digest(value)
 
 
 def _date_text(value: date | None) -> str | None:

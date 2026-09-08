@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-import re
 from typing import Any
 
 from app.application.core_benchmark_assignment_runtime_evidence.runtime_execution import (
@@ -11,6 +10,7 @@ from app.application.core_benchmark_assignment_runtime_evidence.runtime_executio
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EVIDENCE_REFS,
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
+from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
@@ -85,7 +85,6 @@ _CLAIM_KEYS = frozenset(
         "ideaPersistenceRequired",
     }
 )
-_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 def core_benchmark_assignment_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool:
@@ -192,10 +191,7 @@ def _receipt_digest(receipt: Mapping[str, Any], digest_key: str) -> str:
 
 
 def _hash_fields_are_valid(receipt: Mapping[str, Any], keys: tuple[str, ...]) -> bool:
-    return all(
-        isinstance(receipt.get(key), str) and _SHA256_PATTERN.fullmatch(str(receipt[key]))
-        for key in keys
-    )
+    return all(is_sha256_digest(receipt.get(key)) for key in keys)
 
 
 def _currency_is_valid(currency: object) -> bool:
