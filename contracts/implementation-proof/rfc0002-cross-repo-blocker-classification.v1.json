@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-09-07",
+  "asOfDate": "2026-09-08",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -123,6 +123,13 @@
       "remainingAuthority": "approved protected Lotus Idea PostgreSQL target, read-only audit identity and network access, governed audit query revision, authorized execution window, findings, and approved remediation evidence"
     },
     {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 1287,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "archive_key_vocabulary_compatibility_retirement",
+      "remainingAuthority": "Archive deployed-producer evidence that no active deployment emits retired, plus retained-bundle inventory proving Idea will not need to verify historical retired wire values"
+    },
+    {
       "repository": "sgajbi/lotus-manage",
       "issueNumber": 624,
       "actionability": "external_or_protected_evidence",
@@ -184,13 +191,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "protected_deployment_promotion_and_cost_evidence",
       "remainingAuthority": "approved staging/production deployed-digest observation, same-digest promotion evidence, protected migration linkage, and final Idea closure linkage"
-    },
-    {
-      "repository": "sgajbi/lotus-workbench",
-      "issueNumber": 436,
-      "actionability": "external_or_protected_evidence",
-      "blockerClass": "production_identity_contract",
-      "remainingAuthority": "production Workbench BFF principal resolution from IdP-backed session/token claims, revocation/session-expiry handling, entitlement-denied proof, and canonical browser certification after browser-supplied authority stripping is merged"
     }
   ]
 }
