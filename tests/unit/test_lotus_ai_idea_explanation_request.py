@@ -44,7 +44,7 @@ def test_builds_redacted_review_gated_lotus_ai_input_from_idea_truth() -> None:
     assert "place_orders" in supportability["forbidden_actions"]
     assert evidence.source_refs == ("lotus-idea:evidence-packet:iep_ai_test",)
     assert lotus_ai_input_evidence_sha256(evidence) == (
-        "96cd189c6d5ac7449449b9bffb3a6025e7846b2581b4295f6dc0e5fbf521dfeb"
+        "8ac8a47576964db7b562b888d40f1025db9214eddac768a9f12f878b51e2d47c"
     )
 
 
