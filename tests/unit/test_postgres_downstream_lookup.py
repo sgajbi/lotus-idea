@@ -169,7 +169,7 @@ def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_que
     repository = PostgresIdeaRepository(connection)
     claim = build_downstream_submission_claim(
         idempotency_key="downstream-submit:bounded-lookup",
-        request_fingerprint="sha256:downstream-submit-bounded",
+        request_fingerprint="sha256:022151af61eee89c677388a0dd166b46119a2e6078c25aeabec97497330a73db",
         resource_id="conversion-bounded-lookup",
         submitted_at_utc=EVALUATED_AT,
         correlation_id="corr-downstream-bounded",

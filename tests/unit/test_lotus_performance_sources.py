@@ -53,8 +53,12 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         },
         "provenance": {
             "input_mode": "stateful",
-            "input_fingerprint": "returns-series-input",
-            "calculation_hash": "returns-series-calculation",
+            "input_fingerprint": (
+                "34715f9b0c186fda4f98e6277dde58ff7028fe0683f628474dc3cf7af85de649"
+            ),
+            "calculation_hash": (
+                "013a316d4370f5852f810b4c5fc71f8d22fdd8c1b1363df3555334b181551e22"
+            ),
         },
         "diagnostics": {
             "freshness": "current",
@@ -148,7 +152,10 @@ def test_lotus_performance_adapter_fetches_declared_returns_series_source_produc
     assert evidence.performance_ref is not None
     assert evidence.performance_ref.product_id == "lotus-performance:ReturnsSeriesBundle:v1"
     assert evidence.performance_ref.route == "/integration/returns/series"
-    assert evidence.performance_ref.content_hash == "sha256:returns-series-calculation"
+    assert (
+        evidence.performance_ref.content_hash
+        == "sha256:013a316d4370f5852f810b4c5fc71f8d22fdd8c1b1363df3555334b181551e22"
+    )
     assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.performance_ref.revision_claims is not None
     assert (
@@ -220,8 +227,14 @@ def test_lotus_performance_adapter_fetches_benchmark_readiness_without_active_re
     assert evidence.benchmark_return_source is None
     assert evidence.calculation_id == "2f4f3e0e-6e0e-4e0e-8e0e-2f4f3e0e6e0e"
     assert evidence.response_portfolio_id == "PB_SG_GLOBAL_BAL_001"
-    assert evidence.input_fingerprint == "sha256:returns-series-input"
-    assert evidence.calculation_hash == "sha256:returns-series-calculation"
+    assert (
+        evidence.input_fingerprint
+        == "sha256:34715f9b0c186fda4f98e6277dde58ff7028fe0683f628474dc3cf7af85de649"
+    )
+    assert (
+        evidence.calculation_hash
+        == "sha256:013a316d4370f5852f810b4c5fc71f8d22fdd8c1b1363df3555334b181551e22"
+    )
     assert evidence.requested_point_count == 120
     assert evidence.returned_point_count == 120
     assert evidence.missing_point_count == 0
@@ -342,7 +355,10 @@ def test_lotus_performance_adapter_fetches_mandate_health_source_product_ref() -
     )
     assert evidence.mandate_performance_health_ref.source_system.name == "LOTUS_PERFORMANCE"
     assert evidence.mandate_performance_health_ref.route == "/performance/mandate-health-context"
-    assert evidence.mandate_performance_health_ref.content_hash == "sha256:perf-health-request"
+    assert (
+        evidence.mandate_performance_health_ref.content_hash
+        == "sha256:c5751c162ce20317769524c7b64ddc4a2f0e2d3b536e81788fec7403b47b6078"
+    )
     assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
     assert seen == [
         (
@@ -460,7 +476,10 @@ def test_lotus_performance_adapter_follows_async_result_path_for_underperformanc
 
     assert evidence.source_reported_active_return == Decimal("-0.0125")
     assert evidence.performance_ref is not None
-    assert evidence.performance_ref.content_hash == "sha256:returns-series-calculation"
+    assert (
+        evidence.performance_ref.content_hash
+        == "sha256:013a316d4370f5852f810b4c5fc71f8d22fdd8c1b1363df3555334b181551e22"
+    )
     assert seen == [
         ("POST", "/integration/returns/series"),
         ("GET", "/integration/returns/series/results/example"),
@@ -935,7 +954,7 @@ def _mandate_health_payload(*, extra: dict[str, Any] | None = None) -> dict[str,
             "benchmark_available": True,
             "benchmark_return_source": "request_supplied_period_return",
         },
-        "request_fingerprint": "sha256:perf-health-request",
+        "request_fingerprint": "sha256:c5751c162ce20317769524c7b64ddc4a2f0e2d3b536e81788fec7403b47b6078",
         "reason_codes": [
             "MANDATE_PERFORMANCE_HEALTH_ACTIVE_RETURN_SOURCE_READY",
             "PERFORMANCE_METHODOLOGY_SOURCE_OWNED",

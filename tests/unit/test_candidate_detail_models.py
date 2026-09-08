@@ -30,7 +30,7 @@ def test_candidate_detail_response_redacts_source_routes_and_content_hashes() ->
     )
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail",
+        evidence_hash="sha256:6b85f04dd17c7eede1d0ec2e01e84aaa33c245ffa2467a8de433f08671150534",
         persisted_at_utc=candidate.created_at_utc,
     )
 
@@ -113,7 +113,7 @@ def test_candidate_detail_exposes_source_revision_posture_without_source_content
     response = CandidateDetailResponse.from_record(
         CandidatePersistenceRecord(
             candidate=candidate,
-            evidence_hash="sha256:candidate-detail-revision",
+            evidence_hash="sha256:7e238d6d7e83c5f7365ae4723220a68c5dd6c5302fc8b901c17c4ffe18190423",
             persisted_at_utc=candidate.created_at_utc,
         ),
         durable_storage_backed=True,
@@ -140,12 +140,12 @@ def test_candidate_detail_response_exposes_only_adviser_safe_submission_posture(
     candidate = high_cash_candidate(candidate_scope=access_scope())
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail-submission",
+        evidence_hash="sha256:af5d31afa5860177ab6afe08716ed05e8751dded552a54346b8edb03cc11e1f3",
         persisted_at_utc=candidate.created_at_utc,
     )
     submission = build_downstream_submission_record(
         idempotency_key="candidate-detail-sensitive-key",
-        request_fingerprint="sha256:candidate-detail-sensitive-fingerprint",
+        request_fingerprint="sha256:f4a2f1aa454f34b9f3ffbf52698c9d92064e1c371c6849cb037f9b7e40ba95d4",
         resource_id="conversion-candidate-detail-001",
         submitted_at_utc=candidate.created_at_utc,
         status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
@@ -195,7 +195,7 @@ def test_candidate_detail_recomputes_review_authority_against_current_evidence()
     current = CandidateDetailResponse.from_record(
         CandidatePersistenceRecord(
             candidate=candidate,
-            evidence_hash="sha256:candidate-detail-authority-current",
+            evidence_hash="sha256:e38c823f863f35a1e38b931673d9dd0cc688ddf1647740e3130a15c29361d103",
             persisted_at_utc=candidate.created_at_utc,
             review_decisions=(decision,),
         ),
@@ -211,7 +211,7 @@ def test_candidate_detail_recomputes_review_authority_against_current_evidence()
     superseded = CandidateDetailResponse.from_record(
         CandidatePersistenceRecord(
             candidate=superseded_candidate,
-            evidence_hash="sha256:candidate-detail-authority-superseded",
+            evidence_hash="sha256:a8dd7f50f597abfb5f97d1ad6e6be7cd50ac7aa342e074737e43abbea9e7076f",
             persisted_at_utc=candidate.created_at_utc,
             review_decisions=(decision,),
         ),
@@ -230,7 +230,7 @@ def test_candidate_detail_requires_control_time_for_review_authority_projection(
     )
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail-authority-required-time",
+        evidence_hash="sha256:1250cb291297e5f494eea2dee21d113195907e549c20276199b22b807a394ac1",
         persisted_at_utc=candidate.created_at_utc,
         review_decisions=(decision,),
     )

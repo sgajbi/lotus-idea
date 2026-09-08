@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from datetime import UTC, date, datetime
 
 from app.application.bond_maturity_signal import (
@@ -156,7 +158,7 @@ def _source_ref(product_id: str, *, suffix: str = "") -> SourceRef:
         route=route_by_product[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}{suffix}",
+        content_hash=evidence_digest(product_id, suffix),
         data_quality_status="ready",
         freshness=EvidenceFreshness.CURRENT,
     )

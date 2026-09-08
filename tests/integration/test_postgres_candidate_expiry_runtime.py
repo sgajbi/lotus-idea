@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -131,7 +133,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=f"/source/{product_id}",
         as_of_date=date(2026, 6, 21),
         generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

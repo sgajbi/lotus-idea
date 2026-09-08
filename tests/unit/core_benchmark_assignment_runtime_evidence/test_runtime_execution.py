@@ -67,7 +67,10 @@ def test_use_case_calls_port_with_exact_scope_and_builds_receipt_bound_evidence(
         (("sourceReceipt", "sourceSystem"), "lotus-performance"),
         (("sourceReceipt", "asOfDate"), "2026-06-20"),
         (("sourceReceipt", "freshness"), "stale"),
-        (("requestReceipt", "portfolioIdHash"), "sha256:tampered"),
+        (
+            ("requestReceipt", "portfolioIdHash"),
+            "sha256:c08f5d06279b35190e91e0bb284c545bf63c132d4fcd83e7f10485c607c8eed8",
+        ),
         (("requestReceipt", "reportingCurrency"), "EUR"),
     ],
 )
@@ -274,7 +277,7 @@ def _source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
         as_of_date=AS_OF,
         generated_at_utc=NOW,
-        content_hash="sha256:source",
+        content_hash="sha256:c236950bbfea4833174a1352bf57e6e36141bf951fec849d232390ce23d64d4a",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

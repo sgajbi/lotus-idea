@@ -41,7 +41,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/analytics/risk/calculate",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:risk-metrics-report",
+        content_hash="sha256:25bc9301bb12f54287135fd7f868f1cdfcb1fb162145ba4e777dd61d02e916e7",
         data_quality_status="ready",
         freshness=freshness,
     )
@@ -103,7 +103,7 @@ def test_high_volatility_source_correction_preserves_candidate_and_versions_evid
         source_input,
         risk_ref=replace(
             source_input.risk_ref,
-            content_hash="sha256:risk-metrics-report:correction-2",
+            content_hash="sha256:aa26707e5866130d427518ffae6b1d6133d8b611c9e62328b355983987f68357",
         ),
     )
 
@@ -128,7 +128,10 @@ def test_high_volatility_source_correction_preserves_candidate_and_versions_evid
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

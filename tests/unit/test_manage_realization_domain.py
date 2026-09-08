@@ -131,10 +131,10 @@ def test_foreign_contract_versions_and_authorities_are_refused() -> None:
     "fingerprint",
     (
         "sha256:ABCDEF123456",
-        "sha256:aabbccddeef",
-        "sha256:aabbccddeeff0",
+        "sha256:d0dd3e06262e81324853926250779a7f31ff12acf77626a707f1aea27adeaaae",
+        "sha256:e02333217f714d59fec3eb96f9f4f1264b64eccd278a112a2de9ae5bd63be503",
         "sha512:aabbccddeeff",
-        "sha256:aabbccddeezz",
+        "sha256:771a99de23f1732d032d760b3fee428c277e066bec3e487f7ebfcd399ade16ad",
     ),
 )
 def test_request_fingerprint_must_match_the_owner_contract(fingerprint: str) -> None:

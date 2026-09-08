@@ -28,7 +28,7 @@ def _source_ref(*, as_of_date: date, generated_at_utc: datetime) -> SourceRef:
         route="/source/portfolio-state",
         as_of_date=as_of_date,
         generated_at_utc=generated_at_utc,
-        content_hash="sha256:source-temporal-test",
+        content_hash="sha256:39b8e791ebbb819f30987c3757f0488b33f74d0be0040106780ddedc1841bd31",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

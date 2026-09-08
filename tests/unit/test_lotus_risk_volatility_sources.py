@@ -48,7 +48,9 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "contract_version": "v1",
             "methodology_version": "risk.v1",
             "generated_at": "2026-06-21T10:00:00Z",
-            "request_fingerprint": "risk-metrics-fingerprint",
+            "request_fingerprint": (
+                "43a132dfa1ddd9001fc22b40b9ee4ca4ebe7e7cabe29740d0cf06f31d5ee0692"
+            ),
             "calculation_supportability": {
                 "state": "ready",
                 "reason": "calculation_complete",
@@ -99,7 +101,10 @@ def test_lotus_risk_adapter_fetches_declared_volatility_source_product() -> None
     assert evidence.risk_ref is not None
     assert evidence.risk_ref.product_id == "lotus-risk:RiskMetricsReport:v1"
     assert evidence.risk_ref.route == "/analytics/risk/calculate"
-    assert evidence.risk_ref.content_hash == "sha256:risk-metrics-fingerprint"
+    assert (
+        evidence.risk_ref.content_hash
+        == "sha256:43a132dfa1ddd9001fc22b40b9ee4ca4ebe7e7cabe29740d0cf06f31d5ee0692"
+    )
     assert evidence.risk_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.risk_diagnostic == "risk_volatility_source_ready"
     assert seen == [

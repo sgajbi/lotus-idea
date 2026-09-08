@@ -171,7 +171,10 @@ def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
         (("eligibility", "allowed"), False),
         (("eligibility", "caller_app"), "other-app"),
         (("execution", "audit", "workflow_pack_run_id"), "wrong-run"),
-        (("execution", "result", "structured_output", "evidence_content_hash"), "sha256:bad"),
+        (
+            ("execution", "result", "structured_output", "evidence_content_hash"),
+            "sha256:eba1c663bcdd2e4db9b6503be6c07dcebb3c9d8b6ef8d80850531b2b706f5bdf",
+        ),
         (("workflow_pack_run", "pack_version"), "v2"),
         (("workflow_pack_run", "runtime_state"), "FAILED"),
     ],

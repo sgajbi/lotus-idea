@@ -42,7 +42,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/analytics/risk/concentration",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:concentration-risk-report",
+        content_hash="sha256:ce791cc084493a7a3ce8a4b4c5a0060450abba7d78ef5ab13c63e86f58d2134d",
         data_quality_status="ready",
         freshness=freshness,
     )
@@ -101,7 +101,7 @@ def test_concentration_source_correction_preserves_candidate_and_versions_eviden
         source_input,
         concentration_ref=replace(
             source_input.concentration_ref,
-            content_hash="sha256:concentration-risk-report:correction-2",
+            content_hash="sha256:e13ba7532f16a71c3f17464668fcbb917a6d9bd67540b485f9bc4837b507bb28",
         ),
     )
 
@@ -126,7 +126,10 @@ def test_concentration_source_correction_preserves_candidate_and_versions_eviden
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

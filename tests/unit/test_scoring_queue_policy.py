@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -57,7 +59,7 @@ def source_ref(product_id: str = "lotus-core:PortfolioStateSnapshot:v1") -> Sour
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
@@ -72,7 +74,7 @@ def evidence_packet(
     lineage = LineageRef(
         lineage_id="lineage:lotus-idea:high-cash:test",
         source_refs=(source,),
-        content_hash="sha256:lineage",
+        content_hash="sha256:26bb93d74af70e32c2f8b82d19307d9ff05b2fca19e7ac43886f114f001407c8",
     )
     return IdeaEvidencePacket(
         evidence_packet_id="iep_high_cash_test",

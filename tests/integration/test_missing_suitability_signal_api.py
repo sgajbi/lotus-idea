@@ -140,7 +140,7 @@ def test_missing_suitability_signal_api_rejects_wrong_source_contract(
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "sourceSystem": "lotus-core",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-missing-suitability-source",
+        "contentHash": "sha256:b952c84339e0f86291c4b274cc63bef60495d2f2b6fb739133269d6bc2491ff8",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -418,7 +418,7 @@ def missing_suitability_payload() -> dict[str, Any]:
             "route": "/advisory/policy-evaluations/pev_001/workflow",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:missing-suitability-context-review",
+            "contentHash": "sha256:928c80c474e85154c14664260af24ed545fa1c115459c7b91df22348ebe09ccc",
             "dataQualityStatus": "quality_passed",
             "freshness": "current",
         },
@@ -453,7 +453,7 @@ def _advise_policy_evidence(
             route="/advisory/policy-evaluations/pev_001/workflow",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:missing-suitability-context-review",
+            content_hash="sha256:928c80c474e85154c14664260af24ed545fa1c115459c7b91df22348ebe09ccc",
             data_quality_status="quality_passed",
             freshness=EvidenceFreshness.CURRENT,
         ),

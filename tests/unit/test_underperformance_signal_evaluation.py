@@ -41,7 +41,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/integration/returns/series",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:returns-series-bundle",
+        content_hash="sha256:7db198036a32c06ee4933c12059622e921822b95fd56f74b4fa5c262f151a86d",
         data_quality_status="ready",
         freshness=freshness,
     )
@@ -120,7 +120,7 @@ def test_underperformance_source_correction_preserves_candidate_and_versions_evi
         source_input,
         performance_ref=replace(
             source_input.performance_ref,
-            content_hash="sha256:returns-series-bundle:correction-2",
+            content_hash="sha256:4623945c484a022aff1f6c002272b85f47208fb150dece22a632a762eb016ddf",
         ),
     )
 
@@ -145,7 +145,10 @@ def test_underperformance_source_correction_preserves_candidate_and_versions_evi
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

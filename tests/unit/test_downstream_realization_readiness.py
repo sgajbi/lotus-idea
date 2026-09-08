@@ -201,13 +201,13 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
             downstream_submission_records={
                 "in-flight": build_downstream_submission_claim(
                     idempotency_key="downstream-readiness-in-flight",
-                    request_fingerprint="sha256:in-flight",
+                    request_fingerprint="sha256:e0d45494bb0597eda08d09ed9edef23ef752f93e207239461d9db905a69048a4",
                     resource_id="conversion-intent-001",
                     submitted_at_utc=submitted_at_utc,
                 ),
                 "reconciliation-required": build_downstream_submission_record(
                     idempotency_key="downstream-readiness-required",
-                    request_fingerprint="sha256:required",
+                    request_fingerprint="sha256:73d9d27786ab97886e7f6ee5f34df41beb410139705678fbc7b2cc9454149bae",
                     resource_id="conversion-intent-002",
                     submitted_at_utc=submitted_at_utc,
                     status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
@@ -215,7 +215,7 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
                 ),
                 "accepted": build_downstream_submission_record(
                     idempotency_key="downstream-readiness-accepted",
-                    request_fingerprint="sha256:accepted",
+                    request_fingerprint="sha256:f439cbfd1bac9558a0a70980b7c438ff714cc9b6e61c617b57882bcd15b42877",
                     resource_id="conversion-intent-003",
                     submitted_at_utc=submitted_at_utc,
                     status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,

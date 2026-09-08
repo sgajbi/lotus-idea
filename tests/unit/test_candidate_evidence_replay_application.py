@@ -16,7 +16,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolioRef}/core-snapshot",
         as_of_date=date(2026, 6, 21),
         generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
-        content_hash="sha256:portfolio-state-snapshot-demo",
+        content_hash="sha256:dc238a75287d8aa3ba2a8eff42e92e38c0635356cf7528195a9f3c1a186143f5",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

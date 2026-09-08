@@ -216,7 +216,7 @@ def test_lotus_manage_adapter_preserves_mandate_health_source_refs() -> None:
                     "productVersion": "v1",
                     "route": "/performance/mandate-health-context",
                     "generatedAtUtc": "2026-06-21T10:00:00Z",
-                    "contentHash": "sha256:mandate-performance-health",
+                    "contentHash": "sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
                     "dataQualityStatus": "ready",
                     "freshness": "current",
                 },
@@ -225,7 +225,7 @@ def test_lotus_manage_adapter_preserves_mandate_health_source_refs() -> None:
                     "productVersion": "v1",
                     "route": "/analytics/risk/mandate-health-context",
                     "generatedAtUtc": "2026-06-21T10:00:00Z",
-                    "contentHash": "sha256:mandate-risk-health",
+                    "contentHash": "sha256:50af6b0a4df92c3cd7abd3d10356d93a62b9783d49d653d135f1266fc148151c",
                     "dataQualityStatus": "attention",
                     "freshness": "same_day",
                 },
@@ -244,7 +244,7 @@ def test_lotus_manage_adapter_preserves_mandate_health_source_refs() -> None:
     )
     assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.mandate_performance_health_ref.content_hash == (
-        "sha256:mandate-performance-health"
+        "sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c"
     )
     assert evidence.mandate_risk_health_ref is not None
     assert evidence.mandate_risk_health_ref.product_id == "lotus-risk:MandateRiskHealthContext:v1"
@@ -256,13 +256,15 @@ def test_lotus_manage_adapter_handles_source_product_alias_and_missing_freshness
     payload = _payload(
         extra={
             "sourceRefs": [
-                {"contentHash": "sha256:ignored-missing-product"},
+                {
+                    "contentHash": "sha256:c8963c0d52845e326c94dd585a8c703d9fa7d3f46f7e257803104a4a3ee2e87f"
+                },
                 {
                     "sourceProductId": "lotus-risk:MandateRiskHealthContext:v1",
                     "productVersion": "v1",
                     "route": "/analytics/risk/mandate-health-context",
                     "generatedAtUtc": "2026-06-21T10:00:00Z",
-                    "contentHash": "sha256:mandate-risk-health-missing",
+                    "contentHash": "sha256:d79f58fbe0bf4dbbc96271cba57642c27720abda9d974ac5696f93ea43eba001",
                     "freshnessBucket": "missing",
                 },
             ],
@@ -274,7 +276,10 @@ def test_lotus_manage_adapter_handles_source_product_alias_and_missing_freshness
     ).fetch_mandate_health_evidence(_request())
 
     assert evidence.mandate_risk_health_ref is not None
-    assert evidence.mandate_risk_health_ref.content_hash == "sha256:mandate-risk-health-missing"
+    assert (
+        evidence.mandate_risk_health_ref.content_hash
+        == "sha256:d79f58fbe0bf4dbbc96271cba57642c27720abda9d974ac5696f93ea43eba001"
+    )
     assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
@@ -306,7 +311,7 @@ def test_lotus_manage_adapter_maps_source_ref_freshness_vocabulary(
                     "productVersion": "v1",
                     "route": "/performance/mandate-health-context",
                     "generatedAtUtc": "2026-06-21T10:00:00Z",
-                    "contentHash": "sha256:mandate-performance-health",
+                    "contentHash": "sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
                     freshness_key: freshness_value,
                 },
             ],
@@ -326,14 +331,14 @@ def test_lotus_manage_adapter_accepts_nested_mandate_health_refs() -> None:
     supportability = payload["supportability"]
     assert isinstance(supportability, dict)
     supportability["mandatePerformanceHealthRef"] = {
-        "content_hash": "sha256:performance-nested",
+        "content_hash": "sha256:60e3f4a80196ca23b5eaca77f84e738b11f9679f8fdd1ced611638bab2e2d232",
         "as_of_date": AS_OF_DATE.isoformat(),
         "generated_at_utc": "2026-06-21T09:59:00Z",
         "health_state": "ready",
         "freshness_bucket": "current",
     }
     supportability["mandateRiskHealthRef"] = {
-        "content_hash": "sha256:risk-nested",
+        "content_hash": "sha256:58c682e8c39ea153b9349a6405db5edb7af8da4bef01b3a89732a05123cb00ae",
         "as_of_date": AS_OF_DATE.isoformat(),
         "generated_at_utc": "2026-06-21T09:59:00Z",
         "health_state": "unavailable",
@@ -553,7 +558,7 @@ def test_lotus_manage_adapter_does_not_treat_ref_health_state_as_freshness() -> 
                     "productVersion": "v1",
                     "route": "/performance/mandate-health-context",
                     "generatedAtUtc": "2026-06-21T10:00:00Z",
-                    "contentHash": "sha256:mandate-performance-health",
+                    "contentHash": "sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
                     "dataQualityStatus": "ready",
                 },
             ],

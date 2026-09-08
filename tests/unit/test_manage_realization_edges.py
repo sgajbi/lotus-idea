@@ -113,7 +113,7 @@ def test_active_submission_lease_is_not_eligible() -> None:
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-manage-in-flight-001",
-        request_fingerprint="sha256:manage-in-flight",
+        request_fingerprint="sha256:1dc615cbe0b2520d5a6a8ca7854b8187500f36619aea92ef85ad65d42bfd4589",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-manage_review-001",
         target=ConversionTarget.MANAGE_REVIEW,
@@ -259,7 +259,7 @@ def test_persistence_blocker_names_every_ineligible_submission_shape() -> None:
     in_flight = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="submission-manage-blocker-in-flight",
-        request_fingerprint="sha256:manage-blocker-in-flight",
+        request_fingerprint="sha256:f526c492c37f9ddc65aa0ed0a9f62e3aebb6893fc24c3fbe2412d5b24dd6a6a6",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-manage_review-001",
         target=ConversionTarget.MANAGE_REVIEW,

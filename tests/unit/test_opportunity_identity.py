@@ -66,21 +66,33 @@ def _identity(
         or (
             _source_ref(
                 "portfolio-state",
-                "sha256:portfolio-state-v1",
+                "sha256:34d9cd38cf9b8d173fcdfc723b3bcd3a330ea20d8a7812377d07e6899f6f8d3e",
                 as_of_date=as_of_date,
             ),
-            _source_ref("holdings", "sha256:holdings-v1", as_of_date=as_of_date),
+            _source_ref(
+                "holdings",
+                "sha256:75e8afc9ae74ce34fb8b1663eaba12b6f8bb8ac7128528917df409c0a12fb767",
+                as_of_date=as_of_date,
+            ),
         ),
     )
 
 
 def test_source_correction_changes_evidence_version_without_changing_business_candidate() -> None:
     original_refs = (
-        _source_ref("portfolio-state", "sha256:portfolio-state-v1"),
-        _source_ref("holdings", "sha256:holdings-v1"),
+        _source_ref(
+            "portfolio-state",
+            "sha256:34d9cd38cf9b8d173fcdfc723b3bcd3a330ea20d8a7812377d07e6899f6f8d3e",
+        ),
+        _source_ref(
+            "holdings", "sha256:75e8afc9ae74ce34fb8b1663eaba12b6f8bb8ac7128528917df409c0a12fb767"
+        ),
     )
     corrected_refs = (
-        replace(original_refs[0], content_hash="sha256:portfolio-state-corrected"),
+        replace(
+            original_refs[0],
+            content_hash="sha256:bfc81e2e31f87dab622de1157637ce6aa1daba123cd22dad3cc99c0b54cbff3c",
+        ),
         original_refs[1],
     )
 
@@ -98,7 +110,9 @@ def test_source_correction_changes_evidence_version_without_changing_business_ca
 
 
 def test_same_date_restatement_changes_evidence_identity_without_new_business_identity() -> None:
-    source = _source_ref("portfolio-state", "sha256:portfolio-state-v1")
+    source = _source_ref(
+        "portfolio-state", "sha256:34d9cd38cf9b8d173fcdfc723b3bcd3a330ea20d8a7812377d07e6899f6f8d3e"
+    )
     original = replace(
         source,
         revision_claims=SourceRevisionClaims(
@@ -127,8 +141,13 @@ def test_same_date_restatement_changes_evidence_identity_without_new_business_id
 
 def test_source_order_is_not_business_or_evidence_identity() -> None:
     refs = (
-        _source_ref("portfolio-state", "sha256:portfolio-state-v1"),
-        _source_ref("holdings", "sha256:holdings-v1"),
+        _source_ref(
+            "portfolio-state",
+            "sha256:34d9cd38cf9b8d173fcdfc723b3bcd3a330ea20d8a7812377d07e6899f6f8d3e",
+        ),
+        _source_ref(
+            "holdings", "sha256:75e8afc9ae74ce34fb8b1663eaba12b6f8bb8ac7128528917df409c0a12fb767"
+        ),
     )
 
     assert _identity(source_refs=refs) == _identity(source_refs=tuple(reversed(refs)))
@@ -236,7 +255,12 @@ def test_identity_policy_rejects_ambiguous_or_noncanonical_inputs(
         "as_of_date": AS_OF_DATE,
         "access_scope": SCOPE,
         "material_facts": {"cash_weight": "0.18"},
-        "source_refs": (_source_ref("portfolio-state", "sha256:portfolio-state-v1"),),
+        "source_refs": (
+            _source_ref(
+                "portfolio-state",
+                "sha256:34d9cd38cf9b8d173fcdfc723b3bcd3a330ea20d8a7812377d07e6899f6f8d3e",
+            ),
+        ),
     }
     arguments[field] = value
 

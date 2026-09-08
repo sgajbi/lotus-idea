@@ -358,7 +358,7 @@ def approved_candidate(
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
@@ -374,7 +374,7 @@ def approved_candidate(
         lineage_ref=LineageRef(
             lineage_id="lineage:lotus-idea:conversion-workflow:test",
             source_refs=(source,),
-            content_hash="sha256:conversion-workflow-lineage",
+            content_hash="sha256:a512f59009921b932efafd2ae451da8c10e4c85b840a9abc7bcf6eb3d94220f2",
         ),
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         created_at_utc=EVALUATED_AT,

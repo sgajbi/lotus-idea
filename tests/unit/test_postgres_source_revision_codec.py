@@ -48,7 +48,7 @@ def _candidate_with_revision_claims(
     holdings = replace(
         candidate.evidence_packet.source_refs[0],
         product_id="lotus-core:HoldingsAsOf:v1",
-        content_hash="sha256:holdings-source-revision",
+        content_hash="sha256:0a8d7cf2b09a3814ca4013b259ea6e5ab22d1f809bde908577f786f5ea443b80",
         revision_claims=SourceRevisionClaims(
             source_revision="holdings-31",
             restatement_version="restatement-2",
@@ -108,7 +108,9 @@ def test_postgres_codec_decodes_pre_migration_source_refs_as_explicit_unknown() 
 
 def test_postgres_codec_rejects_tampered_derived_revision_digest() -> None:
     payload = idea_candidate_to_json(_candidate_with_revision_claims())
-    payload["evidence_packet"]["source_revision_vector_digest"] = "sha256:tampered"
+    payload["evidence_packet"]["source_revision_vector_digest"] = (
+        "sha256:c08f5d06279b35190e91e0bb284c545bf63c132d4fcd83e7f10485c607c8eed8"
+    )
 
     with pytest.raises(ValueError, match="revision vector digest does not match"):
         idea_candidate_from_json(payload)

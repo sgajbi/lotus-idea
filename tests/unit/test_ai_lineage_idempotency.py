@@ -99,7 +99,7 @@ def test_ai_lineage_lookup_returns_none_when_request_id_is_absent() -> None:
                 request_id="ai-request-present",
                 candidate_id="idea-ai-001",
                 evidence_packet_id="iep-ai-001",
-                evidence_content_hash="sha256:evidence",
+                evidence_content_hash="sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
                 source_revision_vector_digest="legacy:unknown",
                 source_cut_posture="unknown",
                 workflow_pack_id="lotus-ai:idea-explanation:v1",
@@ -147,6 +147,6 @@ def _candidate_record() -> CandidatePersistenceRecord:
     candidate_record = candidate()
     return CandidatePersistenceRecord(
         candidate=candidate_record,
-        evidence_hash="sha256:ai-lineage-candidate",
+        evidence_hash="sha256:772d64d3df14d61b19f2ddc58c4b13589aa8c7038a33b56b1dff6661649e1d73",
         persisted_at_utc=EVALUATED_AT,
     )

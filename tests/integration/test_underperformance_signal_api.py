@@ -154,7 +154,7 @@ def test_underperformance_signal_api_rejects_wrong_source_contract(
         "sourceSystem": "lotus-core",
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-underperformance-source",
+        "contentHash": "sha256:c6ffd9258772433fff72289d6229e5a5ad2770548dfdeea030d211dc1473134f",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -433,7 +433,7 @@ def underperformance_payload() -> dict[str, Any]:
             "route": "/integration/returns/series",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:returns-series-bundle",
+            "contentHash": "sha256:7db198036a32c06ee4933c12059622e921822b95fd56f74b4fa5c262f151a86d",
             "dataQualityStatus": "ready",
             "freshness": "current",
         },
@@ -464,7 +464,7 @@ def _performance_underperformance_evidence(
             route="/integration/returns/series",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:returns-series-bundle",
+            content_hash="sha256:7db198036a32c06ee4933c12059622e921822b95fd56f74b4fa5c262f151a86d",
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),

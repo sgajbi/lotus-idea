@@ -158,7 +158,7 @@ def test_drawdown_review_signal_api_rejects_wrong_source_contract(
         "sourceSystem": "lotus-core",
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-drawdown-review-source",
+        "contentHash": "sha256:d9acd5590df90a5f5a722496858cef68add3cb29c79fd453510bb0a866b9f1bd",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -414,7 +414,7 @@ def drawdown_review_payload() -> dict[str, Any]:
             "route": "/analytics/risk/drawdown",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:drawdown-analytics-report",
+            "contentHash": "sha256:c2518cc8b502485f58bc609af0d9b529e2d9ad32592a33fbdbeb779db38fca37",
             "dataQualityStatus": "ready",
             "freshness": "current",
         },
@@ -444,7 +444,7 @@ def _risk_drawdown_evidence(
             route="/analytics/risk/drawdown",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:drawdown-analytics-report",
+            content_hash="sha256:c2518cc8b502485f58bc609af0d9b529e2d9ad32592a33fbdbeb779db38fca37",
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),

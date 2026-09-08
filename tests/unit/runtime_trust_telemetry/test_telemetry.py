@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -111,13 +113,13 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
             downstream_submission_records={
                 "in-flight": build_downstream_submission_claim(
                     idempotency_key="runtime-telemetry-in-flight",
-                    request_fingerprint="sha256:runtime-telemetry-in-flight",
+                    request_fingerprint="sha256:c4bde4d50f91539c0766e95657a5afb9fa41a5cdbc0c2ec2cce3d2408a18053d",
                     resource_id="conversion-intent-001",
                     submitted_at_utc=OBSERVED_AT,
                 ),
                 "reconciliation-required": build_downstream_submission_record(
                     idempotency_key="runtime-telemetry-reconciliation-required",
-                    request_fingerprint="sha256:runtime-telemetry-required",
+                    request_fingerprint="sha256:b3e82e3c6b43cea6ece2e6f9082b4c06a20d98b74b4652c0e8c60ce9746526d2",
                     resource_id="conversion-intent-002",
                     submitted_at_utc=OBSERVED_AT,
                     status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
@@ -125,7 +127,7 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
                 ),
                 "accepted": build_downstream_submission_record(
                     idempotency_key="runtime-telemetry-accepted",
-                    request_fingerprint="sha256:runtime-telemetry-accepted",
+                    request_fingerprint="sha256:9ee926b9d20c854f7856cabd1542e43a9965f8e08f8e0d7e8ab0871d86213db9",
                     resource_id="conversion-intent-003",
                     submitted_at_utc=OBSERVED_AT,
                     status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
@@ -510,7 +512,7 @@ def _source_ref(
         route="/source-owned/{reference}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=OBSERVED_AT,
-        content_hash=f"sha256:{product_id}:{suffix}",
+        content_hash=evidence_digest(product_id, suffix),
         data_quality_status=data_quality_status,
         freshness=freshness,
     )

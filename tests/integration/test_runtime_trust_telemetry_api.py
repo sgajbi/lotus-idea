@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from typing import Any
 
 import pytest
@@ -378,7 +380,7 @@ def source_ref(product_id: str) -> dict[str, str]:
         "route": "/portfolios/{portfolioRef}/source-owned",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
+        "contentHash": evidence_digest(product_id),
         "dataQualityStatus": "complete",
         "freshness": "current",
     }

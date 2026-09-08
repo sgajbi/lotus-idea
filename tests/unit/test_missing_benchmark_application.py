@@ -194,7 +194,7 @@ def _source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:benchmark-assignment-gap",
+        content_hash="sha256:7a0a8aea31b7534c8c1f156b943954bbd820ba86b063c9629f8dd2e60b83208c",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

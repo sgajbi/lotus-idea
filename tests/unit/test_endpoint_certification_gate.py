@@ -1152,7 +1152,9 @@ def test_endpoint_certification_gate_blocks_candidate_evidence_replay_openapi_dr
     examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
         "application/json"
     ]["examples"]
-    examples["staleSource"]["value"]["currentEvidenceHash"] = "sha256:unexpected"
+    examples["staleSource"]["value"]["currentEvidenceHash"] = (
+        "sha256:5f17ef82fcd1c7f1fd55b1fb57f6782a9d5fa547e0738b12f8ab99ad4fac0f59"
+    )
 
     errors = module.validate_candidate_evidence_replay_success_contract(endpoint, openapi_spec)
 

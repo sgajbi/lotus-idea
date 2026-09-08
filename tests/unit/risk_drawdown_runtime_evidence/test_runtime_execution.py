@@ -114,7 +114,11 @@ def test_runtime_execution_rejects_authority_or_readiness_contract_substitution(
 @pytest.mark.parametrize(
     ("receipt_name", "field", "value"),
     (
-        ("sourceReceipt", "contentHash", "sha256:forged"),
+        (
+            "sourceReceipt",
+            "contentHash",
+            "sha256:b16820571762c16001d274a8486b21ed078b8a6c4772d3a3a861d1567fc86cdd",
+        ),
         ("sourceReceipt", "freshness", "stale"),
         ("persistenceReceipt", "sourceEvidenceHash", "sha256:" + "0" * 64),
         ("persistenceReceipt", "scopeFingerprint", "sha256:" + "1" * 64),

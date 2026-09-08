@@ -330,7 +330,7 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="detail-report-submission-sensitive-key",
-        request_fingerprint="sha256:detail-report-submission-sensitive",
+        request_fingerprint="sha256:c08d9aea054b8b62d275d57958b304950f374ca4cbc1af2d3c1e1384c03ce773",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id="detail-report-evidence-pack-001",
         target=ConversionTarget.REPORT_EVIDENCE,

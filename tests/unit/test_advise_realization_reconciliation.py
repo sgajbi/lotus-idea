@@ -69,7 +69,7 @@ from tests.unit.test_downstream_realization_application import (
 RECORDED_AT = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
 OWNER_EVIDENCE_FINGERPRINT = advise_source_evidence_fingerprint(
     candidate_id="idea-downstream-001",
-    evidence_content_hash="sha256:downstream-evidence",
+    evidence_content_hash="sha256:d8d9dfa4ab7450988276bc26e49c8b1776e6ef1a0460c2b22592e400174a8069",
 )
 AUTHORIZED_SCOPE = QueueAccessScopeFilter(
     tenant_id="tenant-sg",
@@ -637,7 +637,10 @@ def test_advise_reconciliation_identity_check_names_exact_evidence_drift() -> No
             "advise_realization_conversion_intent_conflict",
         ),
         (
-            replace(history, source_evidence_fingerprint="sha256:different"),
+            replace(
+                history,
+                source_evidence_fingerprint="sha256:6d66e84bdf901c2938eef0d329ed4f51b623df138534d53ab52292ea62e41608",
+            ),
             "advise_realization_evidence_conflict",
         ),
     )
@@ -827,7 +830,7 @@ def _repository_with_in_flight_submission(
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key=f"submission-advise-in-flight-{'expired' if expired else 'active'}",
-        request_fingerprint="sha256:advise-in-flight-recovery",
+        request_fingerprint="sha256:6d0cc3f6258f4749c11cf9fd53ae87dc82597c6421de332b84556fe4752cee9f",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-advise_proposal-001",
         target=ConversionTarget.ADVISE_PROPOSAL,

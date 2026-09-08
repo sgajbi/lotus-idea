@@ -70,7 +70,7 @@ def _repository_with_uncertain_submission() -> InMemoryIdeaRepository:
     repository = InMemoryIdeaRepository()
     claim = build_downstream_submission_claim(
         idempotency_key="secret-idempotency-key",
-        request_fingerprint="sha256:reconciliation-test",
+        request_fingerprint="sha256:a3e94060cc9eb1e510f8e9cffc23bad15d7de0f87f46bb61c808088e95a9fa84",
         resource_id="conversion-sensitive",
         submitted_at_utc=SUBMITTED_AT,
     )

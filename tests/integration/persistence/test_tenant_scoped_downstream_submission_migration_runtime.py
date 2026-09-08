@@ -78,7 +78,7 @@ def test_tenant_scope_migration_refuses_lossy_rollback_after_v2_claim(
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="v2-shared-key",
-        request_fingerprint="sha256:v2-shared-key",
+        request_fingerprint="sha256:c9191c49dd722105c1f2263dbab92526079963fe9398f44e9ee138d859403afd",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-v2-scope-001",
         target=ConversionTarget.ADVISE_PROPOSAL,
@@ -181,7 +181,7 @@ def _insert_legacy_claim(
                 attempt_count, updated_at_utc, lease_owner, lease_attempt_id,
                 lease_expires_at_utc, audit_json, owner_receipt_json
             ) VALUES (
-                'legacy-shared-key', 'sha256:legacy-shared-key', 'conversion_intent',
+                'legacy-shared-key', 'sha256:484ad9236fd6d1bf3c6e49f5d6b167795f3599aeeb2903edcde089c54460cbe9', 'conversion_intent',
                 'conversion-legacy-scope-001', 'advise_proposal', 'lotus-advise',
                 'in_flight', NULL, 'corr-legacy', 'trace-legacy', %s, %s, 1, %s,
                 'downstream-submission', 'downstream-attempt-legacy-shared-key', %s,

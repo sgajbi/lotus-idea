@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -74,7 +76,7 @@ def source_ref(product_id: str, freshness: str = "current") -> dict[str, str]:
         "route": f"/source/{product_id}",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
+        "contentHash": evidence_digest(product_id),
         "dataQualityStatus": "complete",
         "freshness": freshness,
     }
@@ -781,7 +783,7 @@ def _source_ref(
         route=f"/source/{product_id}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=freshness,
     )
@@ -1080,7 +1082,9 @@ def test_high_cash_persist_api_versions_corrected_evidence_without_duplicate_can
     )
     corrected_payload = high_cash_payload(scoped=True)
     projection_ref = corrected_payload["sourceEvidence"]["cashflowProjectionRef"]
-    projection_ref["contentHash"] = "sha256:corrected-cashflow-projection"
+    projection_ref["contentHash"] = (
+        "sha256:c7e61b029857242a87a0d25a497232a84d22b3f52f7e155dab8ce3f01d453e40"
+    )
 
     corrected = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",

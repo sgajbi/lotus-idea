@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -41,7 +43,9 @@ SCOPE = ReviewAccessScope(
 def test_postgres_repository_versions_corrected_evidence_on_one_candidate_aggregate() -> None:
     connection = FakePostgresConnection()
     candidate = _high_cash_candidate()
-    corrected = _high_cash_candidate(cashflow_hash="sha256:corrected-cashflow")
+    corrected = _high_cash_candidate(
+        cashflow_hash="sha256:a78e1e0fffc1502d275fc19d778fd2aed3b2affc3519dd434b7acca188c41d01"
+    )
     _persist(connection, candidate, key="high-cash:001", source_version="original")
 
     refreshed = _persist(
@@ -168,7 +172,7 @@ def _source_refs(
             content_hash=(
                 cashflow_hash
                 if product_id == products[-1] and cashflow_hash is not None
-                else f"sha256:{product_id}:{as_of_date.isoformat()}"
+                else evidence_digest(product_id, as_of_date.isoformat())
             ),
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,

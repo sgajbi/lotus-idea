@@ -33,8 +33,8 @@ CONVERSION_AUTHORITY_FIELDS = {
     "expectedMaterialVersion": 1,
     "expectedEvidenceVersion": 1,
     "expectedEvidencePacketId": "evidence-packet-001",
-    "expectedEvidenceContentHash": "sha256:evidence-001",
-    "expectedSourceRevisionVectorDigest": "sha256:source-revision-vector-001",
+    "expectedEvidenceContentHash": "sha256:130db97f723f60c45a5e85a5794d11fab3a339ffa6d17a4341ab1e15582b0a21",
+    "expectedSourceRevisionVectorDigest": "sha256:73735e44a8921cf0f0829e9a7d0d637e57a15ec43f6cf1836da0d5208cdf772d",
     "expectedSourceCutPosture": "coherent",
 }
 
@@ -142,8 +142,8 @@ def test_human_authority_requests_reject_blank_or_ambiguous_fields() -> None:
         "expectedMaterialVersion": 1,
         "expectedEvidenceVersion": 1,
         "expectedEvidencePacketId": "evidence-packet-001",
-        "expectedEvidenceContentHash": "sha256:evidence-001",
-        "expectedSourceRevisionVectorDigest": "sha256:source-revision-vector-001",
+        "expectedEvidenceContentHash": "sha256:130db97f723f60c45a5e85a5794d11fab3a339ffa6d17a4341ab1e15582b0a21",
+        "expectedSourceRevisionVectorDigest": "sha256:73735e44a8921cf0f0829e9a7d0d637e57a15ec43f6cf1836da0d5208cdf772d",
         "expectedSourceCutPosture": "coherent",
         "presentationReceiptId": "receipt-001",
         "snoozedUntilUtc": None,

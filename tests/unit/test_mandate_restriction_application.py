@@ -205,7 +205,7 @@ def _source_ref() -> SourceRef:
         route="/advisory/policy-evaluations/pev_001/restriction-posture",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:mandate-restriction-review",
+        content_hash="sha256:623d8fd6cf805c51b6e329edd4762b0c45eb803fc606bab20d1d1189e5d9c050",
         data_quality_status="quality_passed",
         freshness=EvidenceFreshness.CURRENT,
     )

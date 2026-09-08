@@ -60,12 +60,12 @@ def test_mandate_health_application_consumes_manage_source_evidence() -> None:
             mandate_performance_health_ref=_source_ref(
                 product_id="lotus-performance:MandatePerformanceHealthContext:v1",
                 source_system=SourceSystem.LOTUS_PERFORMANCE,
-                content_hash="sha256:mandate-performance-health",
+                content_hash="sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
             ),
             mandate_risk_health_ref=_source_ref(
                 product_id="lotus-risk:MandateRiskHealthContext:v1",
                 source_system=SourceSystem.LOTUS_RISK,
-                content_hash="sha256:mandate-risk-health",
+                content_hash="sha256:50af6b0a4df92c3cd7abd3d10356d93a62b9783d49d653d135f1266fc148151c",
             ),
             manage_diagnostic="manage_action_register_ready_portfolio_scope",
         )
@@ -187,7 +187,7 @@ def _source_ref(
     *,
     product_id: str = "lotus-manage:PortfolioActionRegister:v1",
     source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
-    content_hash: str = "sha256:portfolio-action-register",
+    content_hash: str = "sha256:31a0b974d949e35981f4a75f7de1019d9369a2583900fd7d7ae695281f4f8c00",
 ) -> SourceRef:
     return SourceRef(
         product_id=product_id,

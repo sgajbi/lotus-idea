@@ -75,7 +75,7 @@ def source_ref() -> SourceRef:
         route="/analytics/risk/drawdown",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:drawdown-analytics-report",
+        content_hash="sha256:c2518cc8b502485f58bc609af0d9b529e2d9ad32592a33fbdbeb779db38fca37",
         data_quality_status="ready",
         freshness=EvidenceFreshness.CURRENT,
     )

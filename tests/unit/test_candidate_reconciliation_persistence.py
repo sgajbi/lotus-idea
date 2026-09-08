@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -65,7 +67,7 @@ def _source_ref(
         route=route_by_product[product_id],
         as_of_date=as_of_date,
         generated_at_utc=evaluated_at_utc,
-        content_hash=content_hash or f"sha256:{product_id}:{as_of_date.isoformat()}",
+        content_hash=content_hash or evidence_digest(product_id, as_of_date.isoformat()),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
@@ -150,7 +152,9 @@ def test_evidence_correction_preserves_review_state_and_versions_evidence() -> N
         lifecycle_status=IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
         review_posture=ReviewPosture.ADVISOR_REVIEWED,
     )
-    corrected_candidate, corrected_refs = _candidate(cashflow_hash="sha256:corrected-cashflow")
+    corrected_candidate, corrected_refs = _candidate(
+        cashflow_hash="sha256:a78e1e0fffc1502d275fc19d778fd2aed3b2affc3519dd434b7acca188c41d01"
+    )
     repository = InMemoryIdeaRepository()
     _persist(repository, reviewed_candidate, refs, sequence=1)
 
@@ -251,7 +255,9 @@ def test_evidence_only_correction_preserves_terminal_candidate_state(
         lifecycle_status=terminal_status,
         review_posture=terminal_posture,
     )
-    corrected_candidate, corrected_refs = _candidate(cashflow_hash="sha256:corrected-cashflow")
+    corrected_candidate, corrected_refs = _candidate(
+        cashflow_hash="sha256:a78e1e0fffc1502d275fc19d778fd2aed3b2affc3519dd434b7acca188c41d01"
+    )
     repository = InMemoryIdeaRepository()
     _persist(repository, terminal_candidate, refs, sequence=1)
 
@@ -442,7 +448,11 @@ def test_candidate_id_collision_with_different_business_identity_is_rejected() -
     conflict = repository.persist_candidate(
         conflicting,
         idempotency_key="signal-ingestion:high-cash:002",
-        payload={"source_hashes": ["sha256:conflicting-scope"]},
+        payload={
+            "source_hashes": [
+                "sha256:6ed6b0a25f94e385f7d37e4d733570d2bece2edb3e298f2f9cfcb2930e718bc5"
+            ]
+        },
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
     )

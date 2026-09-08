@@ -139,7 +139,7 @@ def test_missing_risk_profile_signal_api_rejects_wrong_source_contract(
         "sourceSystem": "lotus-core",
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-missing-risk-profile-source",
+        "contentHash": "sha256:e890de31ca1fac5a57eb106347455e47beb324f2b00e54e55e809917cd3cae1f",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -427,7 +427,7 @@ def missing_risk_profile_payload() -> dict[str, Any]:
             "route": "/advisory/policy-evaluations/pev_001/risk-profile-posture",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:missing-risk-profile-review",
+            "contentHash": "sha256:452721f995592635fb63e2111145f23cb87c959b8f75ad629ab603000193660d",
             "dataQualityStatus": "quality_passed",
             "freshness": "current",
         },
@@ -456,7 +456,7 @@ def _advise_risk_profile_evidence(
             route="/advisory/policy-evaluations/pev_001/workflow",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:missing-risk-profile-review",
+            content_hash="sha256:452721f995592635fb63e2111145f23cb87c959b8f75ad629ab603000193660d",
             data_quality_status="quality_passed",
             freshness=EvidenceFreshness.CURRENT,
         ),

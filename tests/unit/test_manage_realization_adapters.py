@@ -79,7 +79,7 @@ def test_manage_adapter_posts_owner_contract_payload_and_server_context() -> Non
                 "source_system": "lotus-idea",
                 "source_type": "IdeaCandidate",
                 "source_id": "idea_high_cash_redacted",
-                "content_hash": "sha256:evidence-redacted",
+                "content_hash": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             }
         ],
     }

@@ -21,7 +21,7 @@ def test_candidate_detail_uses_projection_repository_without_snapshot() -> None:
     candidate = high_cash_candidate(candidate_scope=access_scope())
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail",
+        evidence_hash="sha256:6b85f04dd17c7eede1d0ec2e01e84aaa33c245ffa2467a8de433f08671150534",
         persisted_at_utc=candidate.created_at_utc,
     )
     repository = ProjectionOnlyCandidateDetailRepository(record)
@@ -41,7 +41,7 @@ def test_candidate_detail_projection_preserves_scope_denial() -> None:
     candidate = high_cash_candidate(candidate_scope=access_scope())
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail",
+        evidence_hash="sha256:6b85f04dd17c7eede1d0ec2e01e84aaa33c245ffa2467a8de433f08671150534",
         persisted_at_utc=candidate.created_at_utc,
     )
     repository = ProjectionOnlyCandidateDetailRepository(record)
@@ -63,7 +63,7 @@ def test_candidate_lookup_falls_back_to_snapshot_for_process_local_repository() 
     candidate = high_cash_candidate(candidate_scope=access_scope())
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-lookup",
+        evidence_hash="sha256:75863cdaa3f0d746116baaf51cd0a0ecbcc2d084d8cd0996ad7b863a4b810d39",
         persisted_at_utc=candidate.created_at_utc,
     )
     repository = SnapshotOnlyCandidateRepository(record)
@@ -77,7 +77,7 @@ def test_candidate_detail_snapshot_fallback_resolves_both_submission_resource_ty
     candidate = high_cash_candidate(candidate_scope=access_scope())
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:candidate-detail-snapshot-fallback",
+        evidence_hash="sha256:6af63a32569c36b771768a0cd06d4d3b70e0fa6f7d85783f5a3895e6a3e77b01",
         persisted_at_utc=candidate.created_at_utc,
     )
     conversion = _submission(

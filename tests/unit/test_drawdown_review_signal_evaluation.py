@@ -42,7 +42,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/analytics/risk/drawdown",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:drawdown-analytics-report",
+        content_hash="sha256:c2518cc8b502485f58bc609af0d9b529e2d9ad32592a33fbdbeb779db38fca37",
         data_quality_status="ready",
         freshness=freshness,
     )
@@ -114,7 +114,7 @@ def test_drawdown_source_correction_preserves_candidate_and_versions_evidence() 
         source_input,
         risk_ref=replace(
             source_input.risk_ref,
-            content_hash="sha256:drawdown-analytics-report:correction-2",
+            content_hash="sha256:2b43ae99c2838aab4d80b8cba935dfd0fecca54ab2654d5a8d61fd2e18901cb9",
         ),
     )
 
@@ -139,7 +139,10 @@ def test_drawdown_source_correction_preserves_candidate_and_versions_evidence() 
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

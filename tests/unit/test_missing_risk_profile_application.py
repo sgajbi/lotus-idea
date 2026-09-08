@@ -263,7 +263,7 @@ def _source_ref() -> SourceRef:
         route="/advisory/policy-evaluations/pev_001/workflow",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:advise-risk-profile-gap",
+        content_hash="sha256:31dd4c363157c371852b0825fdb8e240935fb613789dee0fc7cf400fec7dc75e",
         data_quality_status="quality_passed",
         freshness=EvidenceFreshness.CURRENT,
     )

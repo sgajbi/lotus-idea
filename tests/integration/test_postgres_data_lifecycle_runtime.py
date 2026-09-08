@@ -249,7 +249,7 @@ def test_postgres_erasure_and_delivery_claim_are_serialized(
             repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
             record = build_downstream_submission_claim(
                 idempotency_key="lifecycle-race-claim-001",
-                request_fingerprint="sha256:lifecycle-race-claim",
+                request_fingerprint="sha256:0204107580b80bf9af197ef7d85957e26051716386f029a3e04223b7fe24617e",
                 resource_id=conversion_id,
                 submitted_at_utc=evaluated_at,
             )
@@ -530,7 +530,7 @@ def _seed_report_evidence_pack(
                 evidence_pack_id,
                 candidate_id,
                 conversion_intent_id,
-                "sha256:archive-lifecycle-runtime-proof",
+                "sha256:3405fb48512ab657e45cefbb47e50c016745be6159d35d0994b05f25cb99abcc",
                 Jsonb(
                     {
                         "retention_policy_ref": "lotus-report:idea-evidence-retention:v1",

@@ -156,7 +156,7 @@ def test_high_volatility_signal_api_rejects_wrong_source_contract(
         "sourceSystem": "lotus-core",
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-high-volatility-source",
+        "contentHash": "sha256:d4ba3facab6d5b0428ea83d8108995efb5e67856fdbfbe1685ae0d9df11bd8c8",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -414,7 +414,7 @@ def high_volatility_payload() -> dict[str, Any]:
             "route": "/analytics/risk/calculate",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:risk-metrics-report",
+            "contentHash": "sha256:25bc9301bb12f54287135fd7f868f1cdfcb1fb162145ba4e777dd61d02e916e7",
             "dataQualityStatus": "ready",
             "freshness": "current",
         },
@@ -444,7 +444,7 @@ def _risk_volatility_evidence(
             route="/analytics/risk/calculate",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:risk-metrics-report",
+            content_hash="sha256:25bc9301bb12f54287135fd7f868f1cdfcb1fb162145ba4e777dd61d02e916e7",
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),

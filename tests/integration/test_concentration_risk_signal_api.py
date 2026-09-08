@@ -161,7 +161,7 @@ def test_concentration_risk_signal_api_rejects_wrong_source_contract(
         "sourceSystem": "lotus-core",
         "productId": "lotus-core:PortfolioStateSnapshot:v1",
         "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
-        "contentHash": "sha256:wrong-concentration-source",
+        "contentHash": "sha256:59ef64cfef800a59f60f095fadd0ba814a794614dd0a662e4d37bdcb9f6559d5",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -480,7 +480,7 @@ def concentration_payload() -> dict[str, Any]:
             "route": "/analytics/risk/concentration",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:concentration-risk-report",
+            "contentHash": "sha256:ce791cc084493a7a3ce8a4b4c5a0060450abba7d78ef5ab13c63e86f58d2134d",
             "dataQualityStatus": "quality_passed",
             "freshness": "current",
         },
@@ -514,7 +514,7 @@ def _risk_evidence() -> RiskConcentrationEvidence:
             route="/analytics/risk/concentration",
             as_of_date=AS_OF_DATE,
             generated_at_utc=EVALUATED_AT,
-            content_hash="sha256:risk-concentration-report",
+            content_hash="sha256:6ef60ae726ebd283c2240ef2c35c7f40760ea5ad37e0b3d075e35025ed4d4cb6",
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),

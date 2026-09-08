@@ -73,7 +73,7 @@ def source_ref() -> SourceRef:
         route="/analytics/risk/calculate",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:risk-metrics-report",
+        content_hash="sha256:25bc9301bb12f54287135fd7f868f1cdfcb1fb162145ba4e777dd61d02e916e7",
         data_quality_status="ready",
         freshness=EvidenceFreshness.CURRENT,
     )

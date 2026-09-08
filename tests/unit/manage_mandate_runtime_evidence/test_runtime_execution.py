@@ -78,6 +78,9 @@ def test_runtime_execution_preserves_supported_no_opportunity(
         lambda payload: payload["execution"]["mandatePerformanceHealthReceipt"].update(
             {"asOfDate": "2026-06-27"}
         ),
+        lambda payload: payload["execution"]["mandatePerformanceHealthReceipt"].update(
+            {"contentHash": "not-a-digest"}
+        ),
         lambda payload: payload["execution"]["mandateRiskHealthReceipt"].update(
             {"freshness": "stale"}
         ),
@@ -272,16 +275,6 @@ def test_contract_rejects_semantic_forgery_with_recomputed_digest(
                 ),
             ),
             "mandate_performance_health_future_evidence",
-        ),
-        (
-            lambda evidence: replace(
-                evidence,
-                mandate_performance_health_ref=replace(
-                    evidence.mandate_performance_health_ref,
-                    content_hash="not-a-digest",
-                ),
-            ),
-            "mandate_performance_health_content_hash_invalid",
         ),
         (
             lambda evidence: replace(evidence, workflow_decision_count=-1),

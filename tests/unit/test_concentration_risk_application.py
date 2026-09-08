@@ -57,7 +57,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/analytics/risk/concentration",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:concentration-risk-report",
+        content_hash="sha256:ce791cc084493a7a3ce8a4b4c5a0060450abba7d78ef5ab13c63e86f58d2134d",
         data_quality_status="ready",
         freshness=freshness,
     )

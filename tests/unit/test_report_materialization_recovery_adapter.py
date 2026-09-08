@@ -72,7 +72,7 @@ def test_report_adapter_recovers_exact_receipt_with_read_only_owner_contract() -
         "conversionIntentId": "conversion-report-001",
         "candidateId": "idea_high_cash_redacted",
         "evidencePacketId": "iep-redacted",
-        "evidenceContentFingerprint": "sha256:evidence-redacted",
+        "evidenceContentFingerprint": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
     }
     headers = captured["headers"]

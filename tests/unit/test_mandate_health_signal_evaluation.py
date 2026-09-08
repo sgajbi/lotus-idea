@@ -38,7 +38,7 @@ def source_ref(
     *,
     product_id: str = "lotus-manage:PortfolioActionRegister:v1",
     source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
-    content_hash: str = "sha256:portfolio-action-register",
+    content_hash: str = "sha256:31a0b974d949e35981f4a75f7de1019d9369a2583900fd7d7ae695281f4f8c00",
 ) -> SourceRef:
     return SourceRef(
         product_id=product_id,
@@ -76,7 +76,7 @@ def mandate_input(
             source_ref(
                 product_id="lotus-performance:MandatePerformanceHealthContext:v1",
                 source_system=SourceSystem.LOTUS_PERFORMANCE,
-                content_hash="sha256:mandate-performance-health",
+                content_hash="sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
             )
             if include_mandate_health_refs
             else None
@@ -85,7 +85,7 @@ def mandate_input(
             source_ref(
                 product_id="lotus-risk:MandateRiskHealthContext:v1",
                 source_system=SourceSystem.LOTUS_RISK,
-                content_hash="sha256:mandate-risk-health",
+                content_hash="sha256:50af6b0a4df92c3cd7abd3d10356d93a62b9783d49d653d135f1266fc148151c",
             )
             if include_mandate_health_refs
             else None
@@ -150,7 +150,7 @@ def test_mandate_health_source_correction_preserves_candidate_and_versions_evide
         source_input,
         mandate_risk_health_ref=replace(
             source_input.mandate_risk_health_ref,
-            content_hash="sha256:mandate-risk-health:correction-2",
+            content_hash="sha256:a6e185842c488c3b04065cc2e1d5c23e126b0f9319cbd12fd4dd7b006d857ad6",
         ),
     )
 
@@ -175,7 +175,10 @@ def test_mandate_health_source_correction_preserves_candidate_and_versions_evide
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[2].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[2].content_hash
+        != original.candidate.evidence_packet.source_refs[2].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs
