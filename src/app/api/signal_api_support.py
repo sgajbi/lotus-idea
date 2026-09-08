@@ -365,6 +365,8 @@ def required_tenant_context_or_problem(
     emit_event: Callable[..., None],
 ) -> tuple[str | None, JSONResponse | None]:
     tenant_ids = caller.entitlement_scope.tenant_ids
+    # This request has no tenant field, so scope must supply one and plural is ambiguous.
+    # When a request names its tenant, such as a presentation receipt, authorize membership.
     if len(tenant_ids) == 1:
         return tenant_ids[0], None
     emit_event(

@@ -42,7 +42,9 @@ Domain language must preserve these distinctions:
 
 - A **source observation** is evidence supplied by its owning service.
 - An **opportunity candidate** is a deterministic, scoped interpretation of that evidence.
-- A **presentation receipt** proves what an adviser was shown; it is not a decision.
+- A **presentation receipt** proves what an adviser was shown; it is not a decision. Its request
+  names the tenant and trusted caller entitlements authorize membership, so plural entitlement
+  order never selects the tenant or durable receipt identity.
 - A **review decision** is adviser-owned evidence accepted through the review command.
 - A **conversion intent** records a governed request for downstream work.
 - A **downstream outcome** is authoritative only when reconciled from the owning service.

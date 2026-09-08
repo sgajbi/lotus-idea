@@ -138,6 +138,80 @@ def test_presentation_receipt_api_accepts_and_replays_exact_visible_render_evide
     assert replayed.json()["persistenceDecision"] == "replayed"
 
 
+def test_presentation_receipt_api_keys_replay_by_named_tenant_not_entitlement_order() -> None:
+    client = managed_test_client(app)
+
+    accepted = client.post(_path(), json=_payload(), headers=_headers(tenant_ids="tenant-a"))
+    plural_replay = client.post(
+        _path(),
+        json=_payload(),
+        headers=_headers(tenant_ids="tenant-a,tenant-c"),
+    )
+    reordered_replay = client.post(
+        _path(),
+        json=_payload(),
+        headers=_headers(tenant_ids="tenant-c,tenant-a"),
+    )
+
+    assert [accepted.status_code, plural_replay.status_code, reordered_replay.status_code] == [
+        201,
+        200,
+        200,
+    ]
+    assert {
+        result.json()["receipt"]["tenantId"]
+        for result in (accepted, plural_replay, reordered_replay)
+    } == {_payload()["tenantId"]}
+    assert plural_replay.json()["persistenceDecision"] == "replayed"
+    assert reordered_replay.json()["persistenceDecision"] == "replayed"
+
+
+@pytest.mark.parametrize("tenant_ids", ("tenant-b,tenant-c", "tenant-c,tenant-b"))
+def test_presentation_receipt_api_refuses_plural_scope_without_named_tenant(
+    tenant_ids: str,
+) -> None:
+    response = managed_test_client(app).post(
+        _path(),
+        json=_payload(),
+        headers=_headers(tenant_ids=tenant_ids),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert "tenant entitlement scope" in response.json()["detail"]
+
+
+@pytest.mark.parametrize("tenant_ids", (None, "", "   "))
+def test_presentation_receipt_api_refuses_missing_or_blank_tenant_scope(
+    tenant_ids: str | None,
+) -> None:
+    headers = _headers()
+    if tenant_ids is None:
+        headers.pop("X-Caller-Tenant-Ids")
+    else:
+        headers["X-Caller-Tenant-Ids"] = tenant_ids
+
+    response = managed_test_client(app).post(_path(), json=_payload(), headers=headers)
+
+    assert response.status_code == (403 if tenant_ids is None else 400)
+    if tenant_ids is None:
+        assert "tenant entitlement scope" in response.json()["detail"]
+    else:
+        assert response.json()["detail"] == (
+            "Caller entitlement scope headers cannot contain blank values."
+        )
+
+
+def test_presentation_receipt_openapi_explains_plural_entitlement_authority() -> None:
+    operation = app.openapi()["paths"][
+        _path().replace("candidate-presentation-001", "{candidateId}")
+    ]["post"]
+
+    assert "entitlement set authorizes membership" in operation["description"]
+    assert "order never select" in operation["description"]
+    assert "entitlement" in operation["responses"]["403"]["description"].lower()
+
+
 def test_presentation_receipt_api_rejects_changed_idempotent_evidence() -> None:
     client = managed_test_client(app)
     client.post(_path(), json=_payload(), headers=_headers())

@@ -36,6 +36,8 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   privacy-safe methodology snapshot.
 - `POST /api/v1/idea-candidates/{candidateId}/presentation-receipts` stores an
   immutable visible-render receipt using `Idempotency-Key` as receipt identity.
+  Its body names the tenant; the trusted entitlement set authorizes membership,
+  while entitlement cardinality and order never choose the tenant or storage key.
 - Without qualifying receipt evidence, presentation counts remain `null` under
   `unavailable_consumer_certification_pending`; this means unavailable, not zero.
 - With qualifying stored evidence, the read model returns distinct presented
