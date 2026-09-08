@@ -55,6 +55,8 @@ from app.domain.data_lifecycle.authority import (
 )
 from app.domain.data_lifecycle.archive_posture import (
     ExpectedArchiveLifecyclePosture,
+    ArchiveLifecycleTrustRefusal,
+    ArchiveLifecycleTrustRefusalReason,
     VerifiedArchiveLifecycleReceipt,
 )
 from app.observability import IdeaOperation, OperationOutcome
@@ -75,7 +77,13 @@ _ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL = "Archive lifecycle posture could not be 
 
 
 class ArchiveLifecycleVerificationError(ValueError):
-    pass
+    def __init__(
+        self,
+        *,
+        reason: ArchiveLifecycleTrustRefusalReason | None = None,
+    ) -> None:
+        super().__init__("Archive lifecycle posture verification failed")
+        self.reason = reason
 
 
 async def post_data_lifecycle_action(
@@ -182,21 +190,23 @@ def _command_for_data_lifecycle_action(
             authority_receipt=authority_receipt,
             archive_lifecycle_receipt=archive_lifecycle_receipt,
         )
-    except ArchiveLifecycleTrustUnavailableError:
+    except ArchiveLifecycleTrustUnavailableError as exc:
         return _data_lifecycle_precondition_problem(
             outcome=OperationOutcome.BLOCKED,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             code="archive_lifecycle_trust_unavailable",
             title="Archive lifecycle trust unavailable",
             detail=_ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL,
+            operation_error_code=exc.reason.value if exc.reason is not None else None,
         )
-    except ArchiveLifecycleVerificationError:
+    except ArchiveLifecycleVerificationError as exc:
         return _data_lifecycle_precondition_problem(
             outcome=OperationOutcome.INVALID_REQUEST,
             status_code=status.HTTP_400_BAD_REQUEST,
             code="archive_lifecycle_posture_invalid",
             title="Archive lifecycle posture invalid",
             detail="The signed Archive lifecycle posture could not be accepted.",
+            operation_error_code=exc.reason.value if exc.reason is not None else None,
         )
     except RuntimeError:
         return _data_lifecycle_precondition_problem(
@@ -223,8 +233,9 @@ def _data_lifecycle_precondition_problem(
     code: str,
     title: str,
     detail: str,
+    operation_error_code: str | None = None,
 ) -> JSONResponse:
-    _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, outcome)
+    _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, outcome, operation_error_code)
     return problem_details_response(
         status_code=status_code,
         code=code,
@@ -304,6 +315,8 @@ def _verify_archive_lifecycle_decision(
             ),
             signature_verifier=signature_verifier,
         )
+    except ArchiveLifecycleTrustRefusal as exc:
+        raise ArchiveLifecycleVerificationError(reason=exc.reason) from exc
     except ValueError as exc:
         raise ArchiveLifecycleVerificationError from exc
 

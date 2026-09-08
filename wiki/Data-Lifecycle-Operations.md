@@ -35,6 +35,13 @@ discovery is not itself trust
 establishment—the producer document must arrive through the approved
 authenticated configuration channel.
 
+The consumer distinguishes three trust failures in source-safe operation
+events: `archive_lifecycle_active_signer_missing` when no current signer is
+published, `archive_lifecycle_active_signer_ambiguous` when several are active,
+and `archive_lifecycle_signing_key_revoked` when a decision names an explicitly
+revoked key. Zero active keys does not prove revocation. Public problem details
+remain bounded while operators reconcile the authoritative Archive inventory.
+
 The Idea, Report, Archive, and AI contract foundations are merged and
 mainline-proven. Production-authorized policy sources, provider-native evidence,
 managed keys/stores, bank approvals, and production purge execution remain

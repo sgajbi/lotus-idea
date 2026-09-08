@@ -32,6 +32,10 @@
       "retired": "rotated"
     },
     "active_key_count": 1,
+    "active_key_refusal_reasons": {
+      "none": "archive_lifecycle_active_signer_missing",
+      "multiple": "archive_lifecycle_active_signer_ambiguous"
+    },
     "unique_key_ids_required": true,
     "raw_public_key_bytes": 32,
     "managed_provenance_required_profiles": [
@@ -46,6 +50,7 @@
     "active_key_requires_open_window": true,
     "rotated_key_requires_not_after": true,
     "revoked_key_refused": true,
+    "revoked_key_refusal_reason": "archive_lifecycle_signing_key_revoked",
     "discovery_endpoint_establishes_trust": false
   },
   "required_bindings": [

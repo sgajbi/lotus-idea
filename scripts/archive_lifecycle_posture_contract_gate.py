@@ -39,6 +39,10 @@ REQUIRED_TRUST_BUNDLE_CONTRACT = {
     "published_status_vocabulary": ["active", "rotated", "revoked"],
     "temporary_wire_status_aliases": {"retired": "rotated"},
     "active_key_count": 1,
+    "active_key_refusal_reasons": {
+        "none": "archive_lifecycle_active_signer_missing",
+        "multiple": "archive_lifecycle_active_signer_ambiguous",
+    },
     "unique_key_ids_required": True,
     "raw_public_key_bytes": 32,
     "managed_provenance_required_profiles": ["demo", "staging", "production"],
@@ -46,6 +50,7 @@ REQUIRED_TRUST_BUNDLE_CONTRACT = {
     "active_key_requires_open_window": True,
     "rotated_key_requires_not_after": True,
     "revoked_key_refused": True,
+    "revoked_key_refusal_reason": "archive_lifecycle_signing_key_revoked",
     "discovery_endpoint_establishes_trust": False,
 }
 

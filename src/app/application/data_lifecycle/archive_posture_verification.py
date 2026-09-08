@@ -11,6 +11,8 @@ from app.domain.data_lifecycle.archive_posture import (
     ArchiveLifecycleAction,
     ArchiveLifecycleDecisionEnvelope,
     ArchiveLifecycleKeyStatus,
+    ArchiveLifecycleTrustRefusal,
+    ArchiveLifecycleTrustRefusalReason,
     ArchiveLifecycleTrustedKey,
     ArchivePurgeStatus,
     ExpectedArchiveLifecyclePosture,
@@ -117,10 +119,11 @@ def _select_key(
     matches = tuple(key for key in trusted_keys if key.key_id == key_id)
     _require(len(matches) == 1, "known unique signing key")
     key = matches[0]
-    _require(
-        key.status is not ArchiveLifecycleKeyStatus.REVOKED,
-        "signing key revoked",
-    )
+    if key.status is ArchiveLifecycleKeyStatus.REVOKED:
+        raise ArchiveLifecycleTrustRefusal(
+            ArchiveLifecycleTrustRefusalReason.SIGNING_KEY_REVOKED,
+            "lotus-archive lifecycle posture failed signing key revoked verification",
+        )
     _require(
         key.status in {ArchiveLifecycleKeyStatus.ACTIVE, ArchiveLifecycleKeyStatus.ROTATED},
         "signing key status",

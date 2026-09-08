@@ -39,9 +39,12 @@ end time. Revoked keys are retained in discovery but are never trusted for a
 decision, including one issued inside the key's former window. During the
 consumer-first Archive #147 cutover, legacy wire value `retired` is decoded as
 `rotated` at the transport boundary only. The response must contain exactly
-one active key. `demo`, `staging`, and `production` accept only `managed` provenance,
-while `ephemeral_development` is limited to explicit `local` and `test`
-profiles.
+one active key. Zero active keys is missing current-signer configuration, not
+evidence that a key was revoked; multiple active keys is ambiguous trust
+configuration. These postures fail closed with distinct source-safe operation
+event codes. `demo`, `staging`, and `production` accept only `managed`
+provenance, while `ephemeral_development` is limited to explicit `local` and
+`test` profiles.
 
 Archive's discovery endpoint can supply the envelope shape, but an
 unauthenticated response does not establish trust in the returned key. Do not
@@ -177,6 +180,9 @@ Example request body:
 | `data_lifecycle_idempotency_conflict` | The key is bound to different content. | Stop and reconcile the original operation before issuing a new key. |
 | `archive_lifecycle_posture_invalid` | Archive evidence is malformed, stale, mismatched, or cryptographically invalid. | Reconcile with Archive; do not substitute caller assertions or broaden linkage. |
 | `archive_lifecycle_trust_unavailable` | The governed Archive trust bundle is absent or unusable. | Restore approved key distribution; do not bypass verification. |
+| `archive_lifecycle_active_signer_missing` operation event | The trust bundle contains no current active signer. This does not prove revocation. | Restore a producer-authorized active key; do not infer a key state or retry a mutation. |
+| `archive_lifecycle_active_signer_ambiguous` operation event | The trust bundle contains more than one active signer. | Reconcile the producer key inventory and validity windows before retrying. |
+| `archive_lifecycle_signing_key_revoked` operation event | The decision identifies a key explicitly published as revoked. | Reject the decision and investigate the signing history; never reinterpret it as rotated. |
 | `archive_lifecycle_posture_replay_conflict` | An applied Archive decision or digest was reused under another operation key. | Stop and investigate duplicate or replay activity before any retry. |
 | `data_lifecycle_action_blocked` | Hold, delivery, expiry, authority, approval, policy, or state prerequisite failed. | Read the operation audit and resolve the governing prerequisite. |
 | `data_lifecycle_repository_unavailable` | Governed durable operations are unavailable. | Restore PostgreSQL readiness; no process-local fallback is permitted. |

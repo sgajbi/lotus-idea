@@ -19,6 +19,8 @@ from app.domain.data_lifecycle.archive_posture import (
     ArchiveLifecycleKeyAlgorithm,
     ArchiveLifecycleKeyProvenance,
     ArchiveLifecycleKeyStatus,
+    ArchiveLifecycleTrustRefusal,
+    ArchiveLifecycleTrustRefusalReason,
     ArchiveLifecycleTrustedKey,
     ExpectedArchiveLifecyclePosture,
     VerifiedArchiveLifecycleReceipt,
@@ -226,7 +228,7 @@ def test_verifies_historical_decision_with_rotated_key() -> None:
     receipt = verify_archive_lifecycle_decision(
         envelope=map_archive_lifecycle_decision(_signed_payload()),
         trusted_keys=keys,
-        expected=_expected_posture(),
+        expected=_expected_posture(verified_at=NOW + timedelta(minutes=2)),
         signature_verifier=Ed25519SignatureVerifier(),
     )
 
@@ -264,13 +266,15 @@ def test_rejects_revoked_key_inside_declared_validity_window() -> None:
         not_after_utc=NOW + timedelta(days=30),
     )
 
-    with pytest.raises(ValueError, match="signing key revoked"):
+    with pytest.raises(ArchiveLifecycleTrustRefusal, match="signing key revoked") as exc_info:
         verify_archive_lifecycle_decision(
             envelope=map_archive_lifecycle_decision(_signed_payload()),
             trusted_keys=(key,),
             expected=_expected_posture(),
             signature_verifier=Ed25519SignatureVerifier(),
         )
+
+    assert exc_info.value.reason is ArchiveLifecycleTrustRefusalReason.SIGNING_KEY_REVOKED
 
 
 def _verify(
