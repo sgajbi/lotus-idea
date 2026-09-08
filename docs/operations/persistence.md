@@ -232,7 +232,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | `local`/`test` may use process-local writes; `demo`/`staging`/`production` require PostgreSQL through `LOTUS_IDEA_DATABASE_URL` and fail closed when it is absent | Not production recovery certification |
-| Disaster recovery | Versioned 17-table contract through lifecycle migration `009`, real logical backup/restore, provider-restore validator, replay/fencing/no-mutation proof, recovery-aware write guard, and weekly attested CI drill | Logical evidence has `pitrProof=false`; managed physical base-backup/WAL topology and exercise remain required for production certification |
+| Disaster recovery | Current 21-table restore inspection, real logical backup/restore, provider-restore validation, replay/fencing/no-mutation proof, recovery-aware write guard, and weekly attested CI drill | Logical evidence has `pitrProof=false`; managed physical base-backup/WAL topology and exercise remain required for production certification |
 | Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing and due retry eligibility, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker source-contract artifact, bounded downstream consumer source-contract proof artifact, and bounded platform-mesh event source-contract proof | No observed external broker configuration/publication, downstream consumer execution, certified platform-mesh event publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
@@ -255,7 +255,7 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `025_exact_review_authority`. Migration `016`
+The current schema head is `030_idempotency_record_storage_identity`. Migration `016`
 adds tenant-scoped business identity, material/evidence version, material
 fingerprint, change-reason, and superseded-version columns. Migration `017`
 adds the versioned feedback outcome/reason taxonomy and immutable offline
@@ -276,6 +276,13 @@ null authority on legacy conversion intents, and exposes the read-only
 `idea_review_authority_migration_audit` view. It never invents historic evidence
 versions or presentation receipts. See
 `docs/architecture/exact-review-authority.md` for audit and remediation.
+Migrations `026` through `029` bind presentation evidence to source revisions,
+scope downstream submission and general mutation identities by trusted tenant,
+and scope presentation receipt identity by tenant. Migration `030` adds an
+internal identity primary key to `idea_idempotency_record` so restore inspection
+and PostgreSQL default replica identity have an unambiguous physical row key.
+The partial tenant/system indexes from migration `028` remain the business
+uniqueness contract; the new key is never accepted from an API caller.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
@@ -436,6 +443,15 @@ partial unique indexes. Rollback refuses to collapse records after different
 tenants have reused the same raw key; it never deletes or coalesces evidence to
 make the downgrade succeed.
 
+Migration `030_idempotency_record_storage_identity` adds a deterministic,
+generated primary key without replacing the tenant/system partial unique
+indexes. Its collision-safe length-prefixed encoding avoids sequence state that
+would otherwise need separate reconciliation after logical-replica promotion. Its
+rollback removes only that storage identity. Deploy through the protected
+migration workflow because adding the identity column and primary-key index
+requires a table lock; size and lock duration must be assessed on the target
+before execution.
+
 Run the run-once worker contract check without calling Core or writing state:
 
 ```powershell
@@ -464,7 +480,10 @@ $env:LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED = "1"
 make postgres-integration-gate
 ```
 
-When `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not set, the proof test skips
+The gate discovers its file set from test functions that directly request the
+`postgres_database_url` fixture; a new PostgreSQL integration file therefore
+enters the lane without a Makefile edit. When
+`LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not set, the proof tests skip
 locally. GitHub lanes set `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`, so a
 missing database URL fails instead of silently skipping release evidence.
 

@@ -1125,3 +1125,24 @@ reservation; attributable legacy backfill; unscoped-history refusal; and
 rollback refusal after cross-tenant reuse. The change does not alter OpenAPI,
 downstream-submission identity, runtime topology, source authority, or
 supported-feature posture.
+
+## Idempotency Storage And Recovery Identity
+
+Issue `#1286` reconciles the tenant/system business-key design with the disaster
+recovery requirement that every Idea-owned table have a primary key. Migration
+`030_idempotency_record_storage_identity` adds a deterministic generated primary
+key to `idea_idempotency_record`; it does not replace the partial unique indexes
+that define tenant-scoped and system-scoped idempotency. PostgreSQL therefore
+has a stable default replica identity while callers continue to supply only the
+unchanged raw `Idempotency-Key`. Length-prefixed tenant/key encoding prevents
+ambiguous concatenation without introducing sequence state that must be repaired
+after logical-replica promotion.
+
+The PostgreSQL integration gate now discovers every integration test that
+directly requests `postgres_database_url`. The disaster-recovery certification
+and lost-response restart chain can no longer be omitted by drift in a
+hand-maintained Makefile list. Focused migration proof covers existing-row
+backfill, primary-key/default-replica-identity posture, preservation of business
+indexes, and non-destructive rollback. This remains repository-owned recovery
+hardening; it does not certify protected-environment PITR or promote a supported
+feature.

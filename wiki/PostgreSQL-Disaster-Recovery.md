@@ -15,12 +15,15 @@ replay/fencing passed without content-hash mutation, provenance was attested,
 and evidence was retained. The artifact remains `not_certified`,
 `pitrProof=false`, and `supportedFeaturePromoted=false`.
 
-The current schema owns 20 tables. Its representative-state fixture includes
+The current schema owns 21 tables. Its representative-state fixture includes
 candidate presentation receipts, distinct economic opportunities, and an
 Advise-owned realization receipt/history. The restore inspector validates
 receipt-to-candidate/version lineage, tenant scope, chronology, and Advise
-receipt-to-history identity/version integrity. A new mainline drill is still required before this newer schema
-can inherit the historical drill evidence.
+receipt-to-history identity/version integrity. The mutation idempotency ledger
+has an internal primary key for restore and default PostgreSQL replica identity;
+its partial tenant/system unique indexes remain the business-key authority. A
+new mainline drill is still required before this newer schema can inherit the
+historical drill evidence.
 
 ## Operator Decision Table
 
@@ -40,7 +43,7 @@ An authorized cutover requires all of the following:
 
 1. approved backup identity, jurisdiction, operator, incident, and recovery
    point;
-2. restore validation with all 20 current owned tables, source-safe hashes, valid
+2. restore validation with all 21 current owned tables, source-safe hashes, valid
    constraints/indexes, and zero relationship/state violations;
 3. RPO no greater than 15 minutes and RTO no greater than 60 minutes;
 4. candidate and outbox recovery replay, downstream reconciliation fencing,

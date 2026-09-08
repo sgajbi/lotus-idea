@@ -27,9 +27,8 @@ RECORDED_AT = datetime(2026, 9, 7, 8, 0, tzinfo=UTC)
 def test_migration_backfills_candidate_tenant_and_preserves_raw_key(
     postgres_database_url: str,
 ) -> None:
-    migration = _migration()
-    rollback = MigrationExecutionPlan(MigrationDirection.ROLLBACK, (migration,))
-    apply = MigrationExecutionPlan(MigrationDirection.APPLY, (migration,))
+    rollback = _rollback_plan()
+    apply = _apply_plan()
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         execute_migration_plan(cast(MigrationConnection, connection), rollback)
         candidate_id = seed_active_conversion_resource(
@@ -68,9 +67,8 @@ def test_migration_backfills_candidate_tenant_and_preserves_raw_key(
 def test_migration_refuses_unscoped_candidate_history(
     postgres_database_url: str,
 ) -> None:
-    migration = _migration()
-    rollback = MigrationExecutionPlan(MigrationDirection.ROLLBACK, (migration,))
-    apply = MigrationExecutionPlan(MigrationDirection.APPLY, (migration,))
+    rollback = _rollback_plan()
+    apply = _apply_plan()
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         execute_migration_plan(cast(MigrationConnection, connection), rollback)
         candidate_id = seed_active_conversion_resource(
@@ -123,8 +121,7 @@ def test_migration_refuses_unscoped_candidate_history(
 def test_migration_refuses_lossy_rollback_after_cross_tenant_key_reuse(
     postgres_database_url: str,
 ) -> None:
-    migration = _migration()
-    rollback = MigrationExecutionPlan(MigrationDirection.ROLLBACK, (migration,))
+    rollback = _rollback_plan()
     candidate_a = seed_active_conversion_resource(
         postgres_database_url,
         "conversion-idempotency-tenant-a",
@@ -160,9 +157,20 @@ def test_migration_refuses_lossy_rollback_after_cross_tenant_key_reuse(
         connection.rollback()
 
 
-def _migration() -> MigrationStep:
-    return next(
+def _scoped_migrations() -> tuple[MigrationStep, ...]:
+    return tuple(
         step
         for step in build_migration_plan(MIGRATIONS_DIR, MigrationDirection.APPLY).steps
-        if step.version == "028"
+        if step.version in {"028", "030"}
+    )
+
+
+def _apply_plan() -> MigrationExecutionPlan:
+    return MigrationExecutionPlan(MigrationDirection.APPLY, _scoped_migrations())
+
+
+def _rollback_plan() -> MigrationExecutionPlan:
+    return MigrationExecutionPlan(
+        MigrationDirection.ROLLBACK,
+        tuple(reversed(_scoped_migrations())),
     )
