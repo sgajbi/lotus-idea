@@ -39,17 +39,71 @@ def test_evidence_workflow_cannot_cancel_a_live_revision_verdict() -> None:
     assert "cancel-in-progress: false" in workflow
 
 
+AUDIT_INVOCATION = (
+    "scripts/audit_main_gate_coverage.py --baseline-sha "
+    "abcc119ea48d286cf7336fb687a51e0b40d38404 --limit 60 --fail-on-gap"
+)
+
+
 def test_scheduled_workflow_uses_the_repo_native_fail_closed_audit() -> None:
+    """The workflow runs the same audit the Makefile defines, on a real interpreter.
+
+    This previously asserted `run: make main-gate-coverage-audit`, which
+    mandated the one invocation that could not work: that target runs
+    `$(VENV_PYTHON)`, resolving to `.venv/bin/python`, and the job creates no
+    virtualenv. Every scheduled run died with `No such file or directory` and
+    exit 127 for at least a week, so the test was enforcing a dead gate while
+    reading as though it protected a live one.
+
+    The intent behind it was sound - CI and the repo-native command must not
+    drift - so that is what is asserted now, by comparing the arguments rather
+    than the wrapper.
+    """
+
     workflow = (WORKFLOW_ROOT / "main-gate-coverage-audit.yml").read_text(encoding="utf-8")
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
     assert "schedule:" in workflow
     assert "workflow_dispatch" in workflow
-    assert "run: make main-gate-coverage-audit" in workflow
-    assert (
-        "scripts/audit_main_gate_coverage.py --baseline-sha "
-        "abcc119ea48d286cf7336fb687a51e0b40d38404 --limit 60 --fail-on-gap"
-    ) in makefile
+
+    # Same script, same arguments, in both places: the Makefile stays the
+    # canonical definition without CI having to route through it.
+    assert AUDIT_INVOCATION in makefile
+    assert AUDIT_INVOCATION in workflow
+
+    # Fail-closed, and not through a pipe - a pipe would report its own exit
+    # status and leave the step green while the audit failed.
+    assert "--fail-on-gap" in workflow
+    assert "| tee" not in workflow
+    assert "| tail" not in workflow
+
+
+def test_the_scheduled_audit_does_not_depend_on_a_virtualenv_the_job_never_creates() -> None:
+    """The specific defect that made this control dead for a week.
+
+    The job checks the repository out and runs; nothing in it creates a
+    virtualenv. Any invocation that reaches for one - `make`'s
+    `$(VENV_PYTHON)`, or `.venv` directly - exits 127 before the audit starts,
+    and a gate that cannot run is indistinguishable in the checks list from a
+    gate that ran and found something. Both are red.
+    """
+
+    workflow = (WORKFLOW_ROOT / "main-gate-coverage-audit.yml").read_text(encoding="utf-8")
+
+    # Comment lines are excluded deliberately: the comment recording *why* the
+    # venv is absent names it, and asserting on raw text would make the
+    # explanation trip the check that the explanation exists to justify. The
+    # property is about what the job executes, not what it says.
+    executed = "\n".join(
+        line for line in workflow.splitlines() if not line.lstrip().startswith("#")
+    )
+
+    assert ".venv" not in executed
+    assert "VENV_PYTHON" not in executed
+    assert "run: make " not in executed
+
+    # It must therefore provide its own interpreter.
+    assert "actions/setup-python" in executed
 
 
 def test_audit_fails_for_missing_cancelled_and_unverifiable_evidence(
