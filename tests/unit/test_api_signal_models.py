@@ -131,6 +131,36 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "content_hash",
+    (
+        "x",
+        "sha256:not-hex",
+        "sha256:" + "A" * 64,
+        "legacy:unknown",
+    ),
+)
+def test_source_ref_request_rejects_noncanonical_content_hash(content_hash: str) -> None:
+    with pytest.raises(ValidationError, match="String should match pattern"):
+        SourceRefRequest(
+            productId="lotus-core:PortfolioStateSnapshot:v1",
+            sourceSystem=SourceSystem.LOTUS_CORE,
+            productVersion="v1",
+            route="/integration/portfolios/{portfolioRef}/core-snapshot",
+            asOfDate=date(2026, 6, 21),
+            generatedAtUtc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+            contentHash=content_hash,
+            dataQualityStatus="complete",
+            freshness=EvidenceFreshness.CURRENT,
+        )
+
+
+def test_source_ref_request_openapi_schema_publishes_canonical_digest_shape() -> None:
+    content_hash = SourceRefRequest.model_json_schema()["properties"]["contentHash"]
+
+    assert content_hash["pattern"] == r"^sha256:[0-9a-f]{64}$"
+
+
 def test_signal_evaluation_response_maps_domain_result_source_safely() -> None:
     source_refs = (
         _source_ref("lotus-core:PortfolioStateSnapshot:v1"),
