@@ -113,7 +113,7 @@ def test_outbox_delivery_state_reports_lease_lost_for_wrong_owner() -> None:
 def downstream_submission_record() -> DownstreamSubmissionRecord:
     return build_downstream_submission_record(
         idempotency_key="downstream-submit-001",
-        request_fingerprint="sha256:downstream-submit",
+        request_fingerprint="sha256:f6ac25da83744048155af783cb034e85f00e880d707b9992f6ab4e75e62ffbad",
         resource_id="conversion-intent-001",
         status=DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
         failure_reason="publisher_rejected",
@@ -126,7 +126,7 @@ def ai_lineage_record() -> AIExplanationLineageRecord:
         request_id="ai-request-001",
         candidate_id="idea-candidate-001",
         evidence_packet_id="evidence-packet-001",
-        evidence_content_hash="sha256:evidence",
+        evidence_content_hash=f"sha256:{'a' * 64}",
         source_revision_vector_digest="legacy:unknown",
         source_cut_posture="unknown",
         workflow_pack_id="workflow-pack-001",

@@ -44,6 +44,10 @@ from app.domain import (
 )
 
 
+SOURCE_CONTENT_HASH = f"sha256:{'a' * 64}"
+LINEAGE_CONTENT_HASH = f"sha256:{'b' * 64}"
+
+
 def source_ref() -> SourceRef:
     return SourceRef(
         product_id="lotus-core:PortfolioStateSnapshot:v1",
@@ -52,7 +56,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=date(2026, 6, 21),
         generated_at_utc=datetime(2026, 6, 21, 9, 0, tzinfo=UTC),
-        content_hash="sha256:portfolio-state",
+        content_hash=SOURCE_CONTENT_HASH,
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
@@ -67,7 +71,7 @@ def evidence_packet(
     lineage = LineageRef(
         lineage_id="lineage:idea:high-cash:pb-sg-global-bal-001",
         source_refs=(source,),
-        content_hash="sha256:lineage",
+        content_hash=LINEAGE_CONTENT_HASH,
     )
     return IdeaEvidencePacket(
         evidence_packet_id="iep_high_cash_001",
@@ -113,6 +117,22 @@ def test_source_refs_require_provenance_freshness_and_quality() -> None:
     assert source.content_hash.startswith("sha256:")
 
 
+def test_source_ref_rejects_malformed_content_digest() -> None:
+    with pytest.raises(ValueError, match="content_hash must be a sha256:<64 lowercase hex>"):
+        replace(source_ref(), content_hash="x")
+
+
+def test_lineage_ref_rejects_malformed_content_digest() -> None:
+    source = source_ref()
+
+    with pytest.raises(ValueError, match="content_hash must be a sha256:<64 lowercase hex>"):
+        LineageRef(
+            lineage_id="lineage:idea:malformed-digest",
+            source_refs=(source,),
+            content_hash="sha256:not-a-digest",
+        )
+
+
 def test_source_ref_rejects_missing_contract_identity() -> None:
     with pytest.raises(ValueError, match="product_id is required"):
         SourceRef(
@@ -122,7 +142,7 @@ def test_source_ref_rejects_missing_contract_identity() -> None:
             route="/integration/portfolios/{portfolio_id}/core-snapshot",
             as_of_date=date(2026, 6, 21),
             generated_at_utc=datetime(2026, 6, 21, 9, 0, tzinfo=UTC),
-            content_hash="sha256:portfolio-state",
+            content_hash=SOURCE_CONTENT_HASH,
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,
         )
@@ -137,7 +157,7 @@ def test_source_ref_requires_timezone_aware_generated_at() -> None:
             route="/integration/portfolios/{portfolio_id}/core-snapshot",
             as_of_date=date(2026, 6, 21),
             generated_at_utc=datetime(2026, 6, 21, 9, 0),
-            content_hash="sha256:portfolio-state",
+            content_hash=SOURCE_CONTENT_HASH,
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,
         )
@@ -148,7 +168,7 @@ def test_lineage_ref_requires_source_refs() -> None:
         LineageRef(
             lineage_id="lineage:idea:empty",
             source_refs=(),
-            content_hash="sha256:lineage",
+            content_hash=LINEAGE_CONTENT_HASH,
         )
 
 
@@ -179,7 +199,7 @@ def test_evidence_packet_requires_source_refs_and_reason_codes() -> None:
     lineage = LineageRef(
         lineage_id="lineage:idea:high-cash:pb-sg-global-bal-001",
         source_refs=(source,),
-        content_hash="sha256:lineage",
+        content_hash=LINEAGE_CONTENT_HASH,
     )
 
     with pytest.raises(ValueError, match="source_refs is required"):
@@ -633,7 +653,7 @@ def test_candidate_identity_rejects_invalid_version_lineage(
     values: dict[str, object] = {
         "business_identity_id": "business-high-cash-001",
         "policy_version": "opportunity-identity-v1",
-        "material_fingerprint": "sha256:material",
+        "material_fingerprint": "sha256:b9ab7b141f9b8c2423bd9f10e7d06493136488e4449d87fbc45b922669834283",
         "material_version": 1,
         "evidence_version": 1,
         "change_reason": CandidateChangeReason.INITIAL_DETECTION,

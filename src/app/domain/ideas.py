@@ -18,6 +18,7 @@ from app.domain.feedback_taxonomy import (
     FeedbackReason,
     validate_feedback_taxonomy,
 )
+from app.domain.evidence_digest import require_sha256_digest
 from app.domain.source_revision import (
     SourceCutPosture,
     SourceCutTolerance,
@@ -258,7 +259,7 @@ class SourceRef:
         _require_text(self.product_id, "product_id")
         _require_text(self.product_version, "product_version")
         _require_text(self.route, "route")
-        _require_text(self.content_hash, "content_hash")
+        require_sha256_digest(self.content_hash, "content_hash")
         _require_text(self.data_quality_status, "data_quality_status")
         _require_aware_utc(self.generated_at_utc, "generated_at_utc")
 
@@ -271,7 +272,7 @@ class LineageRef:
 
     def __post_init__(self) -> None:
         _require_text(self.lineage_id, "lineage_id")
-        _require_text(self.content_hash, "content_hash")
+        require_sha256_digest(self.content_hash, "content_hash")
         if not self.source_refs:
             raise ValueError("source_refs is required")
         object.__setattr__(self, "source_refs", tuple(self.source_refs))
