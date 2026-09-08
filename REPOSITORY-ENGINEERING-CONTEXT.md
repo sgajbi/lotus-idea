@@ -166,7 +166,7 @@ Preferred validation commands:
 | Documentation contract | `make documentation-contract-gate` |
 | Foundation structure | `make foundation-structure-gate` |
 | Implementation truth | `make implementation-truth-gate` |
-| PostgreSQL proof lane | `make postgres-integration-gate` |
+| PostgreSQL proof lane | `make postgres-integration-gate` (automatically runs every integration test that directly requests `postgres_database_url`) |
 | Full release evidence | `make ci-release` |
 
 Durable local startup:
@@ -248,7 +248,9 @@ before choosing overlapping workflows. Repository-local documents own Idea-speci
 - Candidate-bound mutation idempotency is scoped by the trusted tenant stored on the candidate;
   callers continue to send an unchanged raw `Idempotency-Key`. Migration `028` fails closed on
   unattributable history and refuses a rollback that would collapse legitimate cross-tenant reuse.
-  System-only outbox delivery runs retain a separate global namespace.
+  System-only outbox delivery runs retain a separate global namespace. Migration `030` adds an
+  internal storage primary key for restore and default replica identity; the tenant/system partial
+  unique indexes remain the business-identity authority.
 - GitHub is the durable execution system. Search current issues and PRs before treating this summary
   as execution posture.
 

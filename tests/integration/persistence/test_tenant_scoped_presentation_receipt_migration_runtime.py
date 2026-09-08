@@ -52,9 +52,9 @@ def test_tenant_scope_migration_preserves_existing_receipt(
                 """
                 -- `constraint` and `position` are reserved words and cannot be
                 -- unquoted aliases; the sibling deployment proof uses
-                -- `constraint_record` for the same reason. This query had never
-                -- run: the file was not in `postgres-integration-gate`, whose
-                -- file list is hand-maintained, so a syntax error survived.
+                -- `constraint_record` for the same reason. The PostgreSQL gate
+                -- now derives its files from fixture use, so this query cannot
+                -- silently fall out of the governed runtime lane again.
                 SELECT attribute.attname
                 FROM pg_constraint AS constraint_record
                 CROSS JOIN

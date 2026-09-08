@@ -14,6 +14,7 @@ if str(SRC) not in sys.path:
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.proof_worktree_import_guard import ensure_worktree_imports
+from scripts.postgres_integration_gate import discover_postgres_test_paths
 
 ensure_worktree_imports(__file__)
 
@@ -162,7 +163,6 @@ def _validate_durable_submission_state_machine(repository_root: Path) -> list[st
         repository_root,
         "src/app/api/downstream_submission_reconciliation.py",
     )
-    makefile = _read(repository_root, "Makefile")
     errors: list[str] = []
     required_fragments = {
         "downstream orchestration": (
@@ -201,15 +201,20 @@ def _validate_durable_submission_state_machine(repository_root: Path) -> list[st
                 "Idempotency-Key must be valid and equal changeReference",
             ),
         ),
-        "PostgreSQL integration gate": (
-            makefile,
-            ("tests/integration/test_postgres_downstream_submission_runtime.py",),
-        ),
     }
     for label, (source, fragments) in required_fragments.items():
         for fragment in fragments:
             if fragment not in source:
                 errors.append(f"{label} missing durable submission fragment: {fragment}")
+    postgres_proof = (
+        repository_root / "tests/integration/test_postgres_downstream_submission_runtime.py"
+    )
+    selected_postgres_proofs = discover_postgres_test_paths(repository_root / "tests/integration")
+    if postgres_proof not in selected_postgres_proofs:
+        errors.append(
+            "PostgreSQL integration gate missing durable submission fixture proof: "
+            "tests/integration/test_postgres_downstream_submission_runtime.py"
+        )
     claim_position = orchestration.find("claim_downstream_submission")
     call_position = orchestration.find("outcome = call()")
     if claim_position < 0 or call_position < 0 or claim_position > call_position:

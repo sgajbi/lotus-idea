@@ -136,6 +136,11 @@ Use the [Makefile](https://github.com/sgajbi/lotus-idea/blob/main/Makefile) as
 the authoritative complete command inventory. This page groups the commands by
 decision path so it stays readable.
 
+`make postgres-integration-gate` derives its test-file set from integration
+tests that directly request the `postgres_database_url` fixture. This prevents
+new PostgreSQL recovery or persistence proofs from silently missing the release
+lane because a handwritten Makefile list was not updated.
+
 `make architecture-boundary-gate` is the durable blocking architecture proof.
 It also validates the tracked `quality/architecture_boundary_report.json`
 freshness contract, including schema, source import digest, source file count,
