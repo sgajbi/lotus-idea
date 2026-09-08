@@ -39,7 +39,7 @@ def _payload() -> dict[str, object]:
         "candidate_id": "icand_001",
         "purpose": "CLIENT_REPORT_EVIDENCE",
         "evidence_packet_id": "ievp_001",
-        "evidence_content_fingerprint": "sha256:idea-evidence-content",
+        "evidence_content_fingerprint": "sha256:df497aadc89a2583b75a9a4d8481aa342a76a0eab69f2f63866b6c8a158a7ff2",
         "source_signal_ids": ["sig_high_cash_001"],
         "source_summaries": [
             {

@@ -38,7 +38,7 @@ class _CoreSource:
                 route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:benchmark-assignment-contract-gate",
+                content_hash="sha256:f392fcb9cc82bff04b235fb6cfc20e2c0dfecc819a5e487f4364b18cba8d2999",
                 data_quality_status="complete",
                 freshness=EvidenceFreshness.CURRENT,
             ),
@@ -65,7 +65,9 @@ def validate_core_benchmark_assignment_runtime_execution_contract() -> list[str]
     if not core_benchmark_assignment_runtime_execution_is_valid(payload):
         errors.append("authoritative Core benchmark-assignment runtime fixture must validate")
     tampered = deepcopy(payload)
-    tampered["execution"]["sourceReceipt"]["contentHash"] = "sha256:tampered"
+    tampered["execution"]["sourceReceipt"]["contentHash"] = (
+        "sha256:c08f5d06279b35190e91e0bb284c545bf63c132d4fcd83e7f10485c607c8eed8"
+    )
     if core_benchmark_assignment_runtime_execution_is_valid(tampered):
         errors.append("source receipt digest tampering must fail closed")
     inflated = deepcopy(payload)

@@ -74,7 +74,7 @@ def idea_conversion_payload(
                 "source_system": "lotus-idea",
                 "source_type": "IdeaCandidate",
                 "source_id": "idea_candidate_001",
-                "content_hash": "sha256:abc123",
+                "content_hash": "sha256:27f2fb5c8ba6b6d955cbc3cd78e89a898cac60a0442260129235683f4cc74e90",
             }
         ],
     }

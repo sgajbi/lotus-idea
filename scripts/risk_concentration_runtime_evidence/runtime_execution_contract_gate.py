@@ -48,7 +48,7 @@ class _Source:
                 route="/analytics/risk/concentration",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:risk-concentration-contract-gate",
+                content_hash="sha256:42f2b957ee1e9638a4f534bf0762f7d680b31cb17b90d0a0b53be379db80b54e",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
                 revision_claims=SourceRevisionClaims(

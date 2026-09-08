@@ -75,7 +75,7 @@ def build_candidate_evidence_replay_response_examples() -> dict[str, dict[str, A
     base = {
         "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
         "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-        "recordedEvidenceHash": "sha256:evidence-lineage",
+        "recordedEvidenceHash": "sha256:8f80198e93fc38cf94db07c4d3e2481396a7a8c001c7aa45ef41232a25128347",
         "sourceRefCount": 1,
         "durableStorageBacked": False,
         "supportedFeaturePromoted": False,
@@ -86,14 +86,14 @@ def build_candidate_evidence_replay_response_examples() -> dict[str, dict[str, A
             {
                 **base,
                 "replayStatus": "matched",
-                "currentEvidenceHash": "sha256:evidence-lineage",
+                "currentEvidenceHash": "sha256:8f80198e93fc38cf94db07c4d3e2481396a7a8c001c7aa45ef41232a25128347",
             }
         ),
         "hashMismatch": _validated_candidate_evidence_replay_response(
             {
                 **base,
                 "replayStatus": "hash_mismatch",
-                "currentEvidenceHash": "sha256:changed-evidence-lineage",
+                "currentEvidenceHash": "sha256:7b551a611fd1dbcce3824d280da82c70ce33fdccd1289e7208a74dd320a6cc73",
             }
         ),
         "staleSource": _validated_candidate_evidence_replay_response(

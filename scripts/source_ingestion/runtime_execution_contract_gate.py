@@ -1,6 +1,7 @@
 # ruff: noqa: E402
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -174,7 +175,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=f"/source/{product_id}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=f"sha256:{hashlib.sha256(product_id.encode()).hexdigest()}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(

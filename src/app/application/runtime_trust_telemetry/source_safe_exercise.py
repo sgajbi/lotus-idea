@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -75,7 +76,12 @@ def _source_ref(product_id: str, *, generated_at_utc: datetime) -> SourceRef:
         route="lotus-core://source-ref/redacted",
         as_of_date=_AS_OF_DATE,
         generated_at_utc=generated_at_utc,
-        content_hash=f"sha256:runtime-trust-telemetry-source-safe-exercise:{product_id}",
+        content_hash=(
+            "sha256:"
+            + hashlib.sha256(
+                f"runtime-trust-telemetry-source-safe-exercise:{product_id}".encode()
+            ).hexdigest()
+        ),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

@@ -171,7 +171,7 @@ def _policy_ref(*, freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> 
         route="/advisory/policy-evaluations/pev_001/workflow",
         asOfDate=_AS_OF_DATE,
         generatedAtUtc=_EVALUATED_AT,
-        contentHash="sha256:missing-suitability-context-review",
+        contentHash="sha256:928c80c474e85154c14664260af24ed545fa1c115459c7b91df22348ebe09ccc",
         dataQualityStatus="quality_passed",
         freshness=freshness,
     )

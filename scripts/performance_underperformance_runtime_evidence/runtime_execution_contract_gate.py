@@ -51,7 +51,7 @@ class _Source:
                 route="/integration/returns/series",
                 as_of_date=request.as_of_date,
                 generated_at_utc=request.evaluated_at_utc,
-                content_hash="sha256:performance-underperformance-contract-gate",
+                content_hash="sha256:6ab30d267e2fc6401b7d554fc56fa732d57d130bfd8e372db85774ebf7431858",
                 data_quality_status="ready",
                 freshness=EvidenceFreshness.CURRENT,
                 revision_claims=SourceRevisionClaims(

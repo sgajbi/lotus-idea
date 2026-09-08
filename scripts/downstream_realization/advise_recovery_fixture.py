@@ -37,7 +37,7 @@ def seed_advise_realization_recovery_fixture(
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-advise",
-        request_fingerprint="sha256:dr-fixture-downstream-advise",
+        request_fingerprint="sha256:9e1403724e65d31a44af0d78f618893ac8a56bcc9286686774ffd71c39be3916",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id=conversion_intent_id,
         target=ConversionTarget.ADVISE_PROPOSAL,
@@ -57,7 +57,7 @@ def seed_advise_realization_recovery_fixture(
         owner_realization_id="ipr_dr_fixture_001",
         owner_work_id="iarw_dr_fixture_001",
         source_event_version=1,
-        source_evidence_fingerprint="sha256:dr-fixture-owner-evidence",
+        source_evidence_fingerprint="sha256:a3626b3e4983b1037d3d9d888c9f14de80ee98991c4cdc375706191240d659e0",
     )
     repository.finalize_downstream_submission(
         tenant_id=claim.tenant_id,

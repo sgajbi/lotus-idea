@@ -897,7 +897,7 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
                         "persistence": {
                             "decision": "accepted",
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "evidenceHash": "sha256:evidence-hash",
+                            "evidenceHash": "sha256:0d5a0efa754b77b99fc391172a051700f3b3532fd9dac941d434e3304d5d42a5",
                             "persistedAtUtc": "2026-06-21T10:00:00Z",
                             "auditEventType": "idea.candidate.persisted",
                         },

@@ -150,7 +150,7 @@ def _restriction_ref(
         route="/advisory/policy-evaluations/pev_001/restriction-posture",
         asOfDate=_AS_OF_DATE,
         generatedAtUtc=_EVALUATED_AT,
-        contentHash="sha256:mandate-restriction-review",
+        contentHash="sha256:623d8fd6cf805c51b6e329edd4762b0c45eb803fc606bab20d1d1189e5d9c050",
         dataQualityStatus="quality_passed",
         freshness=freshness,
     )

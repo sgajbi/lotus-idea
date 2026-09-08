@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 import json
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
@@ -780,7 +782,7 @@ def _source_ref(
         route=route,
         as_of_date=as_of_date,
         generated_at_utc=evaluated_at.astimezone(UTC),
-        content_hash=f"sha256:golden:{product_id}",
+        content_hash=evidence_digest("golden", product_id),
         data_quality_status="complete",
         freshness=freshness,
     )

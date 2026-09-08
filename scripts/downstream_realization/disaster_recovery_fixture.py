@@ -35,7 +35,7 @@ def seed_downstream_recovery_fixtures(
     conversion_claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-conversion",
-        request_fingerprint="sha256:dr-fixture-downstream-conversion",
+        request_fingerprint="sha256:41e6b9c5c42a2ed1852478b348de24cbcd813471109890615643f9c77c36ea48",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="dr-fixture-conversion-intent-001",
         target=ConversionTarget.REPORT_EVIDENCE,
@@ -52,7 +52,7 @@ def seed_downstream_recovery_fixtures(
     report_claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="dr-fixture-downstream-report",
-        request_fingerprint="sha256:dr-fixture-downstream-report",
+        request_fingerprint="sha256:61cee964f59897237592c9179c930267cda506ac5c5d6d5f7af8ce963cc207ea",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id="dr-fixture-report-pack-001",
         target=ConversionTarget.REPORT_EVIDENCE,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, TypeVar
@@ -46,7 +47,7 @@ def build_source_ref_request(
         route=f"/source/{product_id}",
         asOfDate=as_of_date,
         generatedAtUtc=generated_at_utc,
-        contentHash=f"sha256:{product_id}",
+        contentHash=f"sha256:{hashlib.sha256(product_id.encode()).hexdigest()}",
         dataQualityStatus=data_quality_status,
         freshness=freshness,
     )

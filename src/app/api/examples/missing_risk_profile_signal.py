@@ -150,7 +150,7 @@ def _risk_profile_ref(
         route="/advisory/policy-evaluations/pev_001/risk-profile-posture",
         asOfDate=_AS_OF_DATE,
         generatedAtUtc=_EVALUATED_AT,
-        contentHash="sha256:missing-risk-profile-review",
+        contentHash="sha256:452721f995592635fb63e2111145f23cb87c959b8f75ad629ab603000193660d",
         dataQualityStatus="quality_passed",
         freshness=freshness,
     )

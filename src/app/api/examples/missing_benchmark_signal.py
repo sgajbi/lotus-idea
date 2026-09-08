@@ -196,7 +196,7 @@ def _benchmark_assignment_ref(
         route=f"/integration/portfolios/{_PORTFOLIO_ID}/benchmark-assignment",
         asOfDate=_AS_OF_DATE,
         generatedAtUtc=_EVALUATED_AT,
-        contentHash="sha256:missing-benchmark-review",
+        contentHash="sha256:ac75c13ed889b4bbb612542173c39dbc20c495d08149a6ead58e81fbfd3c1bf4",
         dataQualityStatus="complete",
         freshness=freshness,
     )

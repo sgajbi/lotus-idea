@@ -54,7 +54,7 @@ def _payload() -> dict[str, object]:
         "candidate_id": "icand_001",
         "purpose": "CLIENT_REPORT_EVIDENCE",
         "evidence_packet_id": "ievp_001",
-        "evidence_content_fingerprint": "sha256:idea-evidence-content",
+        "evidence_content_fingerprint": "sha256:df497aadc89a2583b75a9a4d8481aa342a76a0eab69f2f63866b6c8a158a7ff2",
         "source_signal_ids": ["sig_high_cash_001"],
         "source_summaries": [
             {
@@ -186,7 +186,7 @@ class _SuccessfulRenderClient:
         self._archive_state = archive_state
 
     async def submit_render_package(self, payload, **kwargs):
-        artifact_sha256 = "sha256:idea-evidence-rendered-pdf"
+        artifact_sha256 = "sha256:c24dfece1e1cf6f69b134a604fc83a74fd9b730afe0cd2132a8c901b3e7444ba"
         return 201, {
             "status": "rendered",
             "render_job_id": payload["render_job_id"],

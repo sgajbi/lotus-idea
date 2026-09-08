@@ -88,8 +88,8 @@ def _missing_candidate_authority(candidate_id: str) -> dict[str, Any]:
         "expectedMaterialVersion": 1,
         "expectedEvidenceVersion": 1,
         "expectedEvidencePacketId": "missing-evidence-packet",
-        "expectedEvidenceContentHash": "sha256:missing-evidence",
-        "expectedSourceRevisionVectorDigest": "sha256:missing-source-revision-vector",
+        "expectedEvidenceContentHash": "sha256:318dd8c176d5a4a3f42f20378647d46a79d0b1ca0ab4d34608968b198d4bbc6d",
+        "expectedSourceRevisionVectorDigest": "sha256:90152e1c91ab1c5cf060c150277ca4c981119f02bff48bca6350e8c8e605455d",
         "expectedSourceCutPosture": "unknown",
         "presentationReceiptId": f"receipt-{candidate_id}",
     }
