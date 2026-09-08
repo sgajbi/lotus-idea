@@ -45,24 +45,29 @@ Implemented scope:
    `IdeaScore`, `ReviewDecision`, `IdeaFeedback`, `IdeaCandidate`,
    `IdeaConversionIntent`, and `IdeaConversionOutcome` are immutable dataclass
    domain models.
-3. `ALLOWED_LIFECYCLE_TRANSITIONS` and `transition_candidate` implement valid
+3. `SourceRef.content_hash`, `LineageRef.content_hash`, and redacted AI
+   evidence content hashes accept only canonical `sha256:<64 lowercase hex>`
+   values. Source revision-vector digests use the same form, except for the
+   explicit historical `legacy:unknown` sentinel; malformed non-empty text is
+   rejected at the Idea-owned domain boundary.
+4. `ALLOWED_LIFECYCLE_TRANSITIONS` and `transition_candidate` implement valid
    lifecycle movement and reject forbidden transitions with
    `InvalidLifecycleTransition`.
-4. Review decisions expose `grants_downstream_authority=False`, so review can
+5. Review decisions expose `grants_downstream_authority=False`, so review can
    gate conversion readiness but cannot approve suitability, compliance,
    mandate, execution, or client communication.
-5. Evidence supportability is typed: blocked evidence requires explicit
+6. Evidence supportability is typed: blocked evidence requires explicit
    unsupported reasons, and ready evidence cannot carry unsupported reasons.
-6. Conversion intent requires an approved candidate source status.
-7. Cross-module callers use public `app.domain` exports for domain invariants;
+7. Conversion intent requires an approved candidate source status.
+8. Cross-module callers use public `app.domain` exports for domain invariants;
    `make private-import-boundary-gate` blocks imports from private
    `app.domain.*` helpers so implementation slices do not create hidden domain
    coupling.
-8. `src/app/domain/candidate_state.py` defines the exhaustive, versioned
+9. `src/app/domain/candidate_state.py` defines the exhaustive, versioned
    `idea-candidate-state-v1` lifecycle/review-posture matrix. Candidate
    construction rejects contradictions, and lifecycle transitions normalize
    reviewed, approved, rejected, expired, and closed posture deterministically.
-9. `tests/unit/test_candidate_state_policy.py` covers every lifecycle/posture
+10. `tests/unit/test_candidate_state_policy.py` covers every lifecycle/posture
    pair and proves terminal states cannot remain conversion-ready or reviewable.
 
 Out of scope for this slice:
