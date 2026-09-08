@@ -2127,7 +2127,7 @@
       ],
       "owner": "lotus-idea opportunity effectiveness",
       "purpose": "Persist immutable, bounded evidence that one exact candidate version and source revision cut was visibly rendered at a governed rank in the advisor review queue without recording client content, candidate rationale, or actor identity.",
-      "when_to_use": "Use from the governed Workbench visible-render producer through exact Gateway pass-through with advisor or operator role, idea.presentation-receipt.record capability, exact tenant entitlement, and a stable Idempotency-Key for the presentation receipt.",
+      "when_to_use": "Use from the governed Workbench visible-render producer through exact Gateway pass-through with advisor or operator role, idea.presentation-receipt.record capability, a trusted entitlement set containing the body tenantId, and a stable Idempotency-Key for the presentation receipt. A plural entitlement set authorizes membership; tenantId and durable receipt identity remain request-owned and are never selected from header order.",
       "when_not_to_use": "Do not call on queue retrieval, prefetch, filtering, failed render, or background refresh; do not use as a recommendation, suitability decision, client-level surveillance feed, Gateway or Workbench certification, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/idea-candidates/candidate-presentation-001/presentation-receipts with Idempotency-Key: receipt-presentation-001, advisor role, idea.presentation-receipt.record capability, X-Caller-Tenant-Ids: tenant-private-bank-sg, and trusted caller-context provenance in production profiles.",
@@ -2138,7 +2138,7 @@
       ],
       "error_examples": [
         "400 invalid_request for malformed bounded fields, non-UTC presentedAtUtc, non-positive global rank, invalid visible-set count, or missing Idempotency-Key.",
-        "403 permission_denied for missing advisor/operator role, idea.presentation-receipt.record capability, exact tenant entitlement, or trusted production provenance.",
+        "403 permission_denied for missing advisor/operator role, idea.presentation-receipt.record capability, an entitlement set that contains the body tenantId, or trusted production provenance.",
         "404 candidate_not_found without creating receipt evidence.",
         "409 presentation_receipt_identity_conflict when the Idempotency-Key identifies different immutable evidence.",
         "409 presentation_receipt_candidate_state_conflict when tenant, material version, evidence version, source revision vector, source-cut posture, or chronology does not match the candidate.",

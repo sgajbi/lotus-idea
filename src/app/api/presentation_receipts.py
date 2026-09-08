@@ -58,6 +58,10 @@ _RECORD_PRESENTATION_POLICY = CapabilityPolicy.for_roles(
 )
 
 
+class _PresentationReceiptScopeDeniedError(Exception):
+    """The request tenant or candidate lies outside the admitted entitlement scope."""
+
+
 async def record_candidate_presentation_receipt(
     request: PresentationReceiptRequest,
     response: Response,
@@ -69,7 +73,7 @@ async def record_candidate_presentation_receipt(
         require_role_and_capability(caller, _RECORD_PRESENTATION_POLICY)
         validate_idempotency_key(idempotency_key)
         if request.tenant_id not in caller.entitlement_scope.tenant_ids:
-            raise PermissionDeniedError(_RECORD_PRESENTATION_POLICY.required_capability)
+            raise _PresentationReceiptScopeDeniedError
 
         repository = get_idea_repository()
         configuration_problem = durable_write_problem(repository)
@@ -89,7 +93,7 @@ async def record_candidate_presentation_receipt(
             repository=repository,
         )
         if candidate_result.access_scope_denied:
-            raise PermissionDeniedError(_RECORD_PRESENTATION_POLICY.required_capability)
+            raise _PresentationReceiptScopeDeniedError
         if candidate_result.record is None:
             _emit_presentation_receipt_event(OperationOutcome.NOT_FOUND)
             return _not_found_response()
@@ -101,6 +105,9 @@ async def record_candidate_presentation_receipt(
                 accepted_at_utc=get_trusted_clock().now_utc(),
             )
         )
+    except _PresentationReceiptScopeDeniedError:
+        _emit_presentation_receipt_event(OperationOutcome.PERMISSION_DENIED)
+        return _scope_denied_response()
     except PermissionDeniedError:
         _emit_presentation_receipt_event(OperationOutcome.PERMISSION_DENIED)
         return _permission_denied_response()
@@ -143,6 +150,15 @@ def _permission_denied_response() -> JSONResponse:
         code="permission_denied",
         title="Permission denied",
         detail="The caller is not permitted to record this candidate presentation receipt.",
+    )
+
+
+def _scope_denied_response() -> JSONResponse:
+    return problem_details_response(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
+        detail="The caller tenant entitlement scope does not permit this presentation receipt.",
     )
 
 
@@ -222,8 +238,10 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
     "description": (
         "Records immutable, bounded evidence that a specific candidate version was visibly "
         "rendered in the governed advisor review queue. Idempotency-Key is the stable receipt "
-        "identity. The write is fenced by candidate, exact tenant, material version, evidence "
-        "version, source revision vector, source-cut posture, and UTC chronology. Idea global "
+        "identity. The request names the tenant and the trusted entitlement set authorizes "
+        "membership; entitlement cardinality and order never select the tenant or key. The write "
+        "is fenced by candidate, exact tenant, material version, evidence version, source revision "
+        "vector, source-cut posture, and UTC chronology. Idea global "
         "rank and Workbench visible-set size remain "
         "independent facts. Queue retrieval is not presentation evidence. This route "
         "does not promote effectiveness certification until Gateway pass-through and Workbench "
@@ -277,7 +295,10 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
         ),
         **permission_denied_metadata(
             detail="The caller lacks the required role, capability, or tenant entitlement.",
-            description="Caller cannot record presentation evidence for this candidate.",
+            description=(
+                "Caller lacks the required role, capability, or tenant entitlement for this "
+                "candidate."
+            ),
         ),
         **not_found_metadata(
             code="candidate_not_found",
