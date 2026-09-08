@@ -137,7 +137,9 @@ def _mutate_proof(proof: dict[str, Any], mutation: str) -> None:
     if mutation == "tampered_source_receipt":
         source_receipt = execution["sourceReceipt"]
         assert isinstance(source_receipt, dict)
-        source_receipt["contentHash"] = "sha256:forged"
+        source_receipt["contentHash"] = (
+            "sha256:b16820571762c16001d274a8486b21ed078b8a6c4772d3a3a861d1567fc86cdd"
+        )
         return
     persistence_receipt = execution["persistenceReceipt"]
     assert isinstance(persistence_receipt, dict)

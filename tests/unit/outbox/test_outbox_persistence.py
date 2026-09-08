@@ -45,7 +45,9 @@ def outbox_repository() -> tuple[InMemoryIdeaRepository, OutboxEventRecord]:
         event_type="idea.candidate.persisted.v1",
         aggregate_id="idea-high-cash-001",
         occurred_at_utc=EVALUATED_AT,
-        payload={"source_hash": "sha256:portfolio-state"},
+        payload={
+            "source_hash": "sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3"
+        },
         idempotency_key="signal-ingestion:outbox-event:001",
     )
     repository = InMemoryIdeaRepository(
@@ -244,7 +246,9 @@ def test_outbox_failure_transition_rejects_unsafe_retry_and_dead_letter_timing()
         event_type="idea.candidate.persisted.v1",
         aggregate_id="idea-high-cash-001",
         occurred_at_utc=EVALUATED_AT,
-        payload={"source_hash": "sha256:portfolio-state"},
+        payload={
+            "source_hash": "sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3"
+        },
     )
     leased = lease_outbox_event(
         event,

@@ -65,7 +65,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
                 "realization_id": "ipr_idea_receipt_001",
                 "review_work_id": "iarw_idea_receipt_001",
                 "source_event_version": 1,
-                "source_evidence_fingerprint": "sha256:evidence-redacted",
+                "source_evidence_fingerprint": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             },
         )
 
@@ -118,7 +118,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
                 "source_system": "lotus-idea",
                 "source_type": "IdeaCandidate",
                 "source_id": "idea_high_cash_redacted",
-                "content_hash": "sha256:evidence-redacted",
+                "content_hash": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             }
         ],
     }
@@ -139,7 +139,7 @@ def test_advise_adapter_preserves_terminal_rejection_receipt() -> None:
                 "realization_id": "ipr_rejected_001",
                 "review_work_id": None,
                 "source_event_version": 1,
-                "source_evidence_fingerprint": "sha256:evidence-redacted",
+                "source_evidence_fingerprint": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             },
         )
 
@@ -386,7 +386,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
             "candidate_id": "idea_high_cash_redacted",
             "purpose": "CLIENT_REPORT_EVIDENCE",
             "evidence_packet_id": "iep-redacted",
-            "evidence_content_fingerprint": "sha256:evidence-redacted",
+            "evidence_content_fingerprint": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             "source_signal_ids": ["signal-redacted"],
             "source_summaries": [
                 {
@@ -591,7 +591,7 @@ def test_advise_receipt_rejects_non_boolean_acceptance_claim() -> None:
         "realization_id": "ipr_001",
         "review_work_id": "iarw_001",
         "source_event_version": 1,
-        "source_evidence_fingerprint": "sha256:evidence",
+        "source_evidence_fingerprint": "sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
     }
     adapter = HttpAdviseProposalRealizationClient(
         DownstreamRealizationAdapterConfig(
@@ -636,7 +636,7 @@ def test_owner_receipt_rejects_incomplete_or_unsafe_identity(
         "owner_realization_id": "ipr_001",
         "owner_work_id": "iarw_001",
         "source_event_version": 1,
-        "source_evidence_fingerprint": "sha256:evidence",
+        "source_evidence_fingerprint": "sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
     }
     values.update(changes)
 
@@ -658,7 +658,7 @@ def test_downstream_outcome_rejects_contradictory_posture_evidence() -> None:
         owner_realization_id="ipr_001",
         owner_work_id=None,
         source_event_version=1,
-        source_evidence_fingerprint="sha256:evidence",
+        source_evidence_fingerprint="sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
     )
 
     with pytest.raises(ValueError, match="accepted outcome forbids"):
@@ -1066,7 +1066,7 @@ def _advise_history_payload() -> dict[str, Any]:
         "portfolio_id": "PB_SG_GLOBAL_BAL_001",
         "idea_candidate_id": "idea_high_cash_redacted",
         "conversion_intent_id": "conversion-001",
-        "source_evidence_fingerprint": "sha256:evidence-redacted",
+        "source_evidence_fingerprint": "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
         "current_status": "PROPOSAL_LINKED",
         "current_source_event_version": 2,
         "proposal_id": "proposal-001",
@@ -1157,8 +1157,8 @@ def conversion_intent(
             requested_at_utc=REQUEST_TIME,
         ),
         evidence_packet_id="iep-redacted",
-        evidence_content_hash="sha256:evidence-redacted",
-        source_revision_vector_digest="sha256:source-revision-redacted",
+        evidence_content_hash="sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
+        source_revision_vector_digest="sha256:724fa730788c31655314681d64c1cfb252c3987b42ddc0067af7a3933a4ca81d",
         source_cut_posture=SourceCutPosture.COHERENT,
         source_signal_ids=("signal-redacted",),
         actor_subject="advisor-redacted",
@@ -1176,7 +1176,7 @@ def report_evidence_pack() -> GovernedReportEvidencePack:
         conversion_intent_id="conversion-report-001",
         candidate_id="idea_high_cash_redacted",
         evidence_packet_id="iep-redacted",
-        evidence_content_hash="sha256:evidence-redacted",
+        evidence_content_hash="sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
         source_signal_ids=("signal-redacted",),
         source_summaries=(
             ReportEvidenceSourceSummary(
@@ -1185,7 +1185,7 @@ def report_evidence_pack() -> GovernedReportEvidencePack:
                 product_version="v1",
                 as_of_date=date(2026, 6, 21).isoformat(),
                 generated_at_utc=SOURCE_TIME,
-                content_hash="sha256:source-content-redacted",
+                content_hash="sha256:06de14098ae471b07c2a78537cf1c8cefe9d1e4ce5aa19e7bbeab4a84f8ddc14",
                 data_quality_status="complete",
                 freshness=EvidenceFreshness.CURRENT.value,
             ),

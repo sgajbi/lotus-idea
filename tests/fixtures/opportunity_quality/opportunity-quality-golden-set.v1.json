@@ -719,13 +719,13 @@
       "scenarioId": "evidence-correction-preserves-review",
       "initial": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:initial",
+        "evidenceHash": "sha256:0ae967a0d09284d1d98b0e0e42acb8be93e0cc5302f67dc82e7c65487568dfc8",
         "lifecycleStatus": "reviewed_by_advisor",
         "reviewPosture": "advisor_reviewed"
       },
       "incoming": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:corrected"
+        "evidenceHash": "sha256:74e9b80195bee5ba0c6bcf5c760407b761ef8e4045028883d50d258830cb02c6"
       },
       "expected": {
         "decision": "evidence_refreshed",
@@ -742,14 +742,14 @@
       "scenarioId": "material-change-clears-suppression",
       "initial": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:initial",
+        "evidenceHash": "sha256:0ae967a0d09284d1d98b0e0e42acb8be93e0cc5302f67dc82e7c65487568dfc8",
         "lifecycleStatus": "generated",
         "reviewPosture": "suppressed",
         "suppressionReason": "manual_suppression"
       },
       "incoming": {
         "cashWeight": "0.21",
-        "evidenceHash": "sha256:golden:cashflow:material-change"
+        "evidenceHash": "sha256:ffbf9c9d0f32293c71c58f9c2a524577f13bf3def3841475ec5727da981e818d"
       },
       "expected": {
         "decision": "material_version_created",
@@ -766,13 +766,13 @@
       "scenarioId": "expired-condition-reopens-for-review",
       "initial": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:initial",
+        "evidenceHash": "sha256:0ae967a0d09284d1d98b0e0e42acb8be93e0cc5302f67dc82e7c65487568dfc8",
         "lifecycleStatus": "expired",
         "reviewPosture": "no_action"
       },
       "incoming": {
         "cashWeight": "0.21",
-        "evidenceHash": "sha256:golden:cashflow:recurrent"
+        "evidenceHash": "sha256:5d0508bda703cc7c56a0084c8b223ec72b3898f8ee409515ea45a1320bc40c32"
       },
       "expected": {
         "decision": "recurrent_condition_reopened",
@@ -789,13 +789,13 @@
       "scenarioId": "expired-evidence-correction-stays-terminal",
       "initial": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:initial",
+        "evidenceHash": "sha256:0ae967a0d09284d1d98b0e0e42acb8be93e0cc5302f67dc82e7c65487568dfc8",
         "lifecycleStatus": "expired",
         "reviewPosture": "no_action"
       },
       "incoming": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:corrected"
+        "evidenceHash": "sha256:74e9b80195bee5ba0c6bcf5c760407b761ef8e4045028883d50d258830cb02c6"
       },
       "expected": {
         "decision": "evidence_refreshed",
@@ -812,13 +812,13 @@
       "scenarioId": "expired-next-day-unchanged-stays-terminal",
       "initial": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:day-one",
+        "evidenceHash": "sha256:c2f6cdee27abc8559157df841bbcdc008f10d0506342e6fac05fe08797a2ad3c",
         "lifecycleStatus": "expired",
         "reviewPosture": "no_action"
       },
       "incoming": {
         "cashWeight": "0.18",
-        "evidenceHash": "sha256:golden:cashflow:day-two",
+        "evidenceHash": "sha256:79ec0958b2f29b67d36e2eaf6e81fb230e93a47bea0f33e7b84f5feb74954ddf",
         "asOfDateOffsetDays": 1
       },
       "expected": {

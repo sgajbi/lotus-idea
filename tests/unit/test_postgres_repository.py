@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -764,7 +766,7 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
     repository = PostgresIdeaRepository(connection)
     claim = build_downstream_submission_claim(
         idempotency_key="downstream-submit-postgres-001",
-        request_fingerprint="sha256:downstream-submit-postgres",
+        request_fingerprint="sha256:54eba80db97a3c9fc1d1725027b732728eb753cb719802a2703c6df6de74e3c1",
         resource_id="conversion-postgres-001",
         correlation_id="corr-postgres",
         trace_id="trace-postgres",
@@ -785,7 +787,7 @@ def test_postgres_repository_round_trips_downstream_submission_records() -> None
             owner_realization_id="ipr_postgres_001",
             owner_work_id="iarw_postgres_001",
             source_event_version=1,
-            source_evidence_fingerprint="sha256:downstream-submit-postgres",
+            source_evidence_fingerprint="sha256:54eba80db97a3c9fc1d1725027b732728eb753cb719802a2703c6df6de74e3c1",
         ),
     )
     assert finalized.record is not None
@@ -1059,7 +1061,7 @@ def source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef
         route=routes[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=content_hash or f"sha256:{product_id}",
+        content_hash=content_hash or evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(

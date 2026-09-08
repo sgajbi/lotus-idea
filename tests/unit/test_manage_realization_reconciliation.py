@@ -542,7 +542,7 @@ def test_persistence_blocker_binds_the_receipt_to_the_owner_history() -> None:
         submission,
         owner_receipt=replace(
             receipt,
-            source_evidence_fingerprint="sha256:112233445566",
+            source_evidence_fingerprint="sha256:87848d2673009a6fc9e92754e2af2853f25a14fb0ff5b5b959d0ed3720a8a71f",
         ),
     )
     assert (
@@ -597,7 +597,7 @@ def _repository_with_in_flight_submission(
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key=f"submission-manage-in-flight-{'expired' if expired else 'active'}",
-        request_fingerprint="sha256:manage-in-flight-recovery",
+        request_fingerprint="sha256:1f95644e5ced0647d46ee5167232de8b15f2b3e7f5ecb17e38ea55eae373847a",
         resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-manage_review-001",
         target=ConversionTarget.MANAGE_REVIEW,

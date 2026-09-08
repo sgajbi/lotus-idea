@@ -181,7 +181,7 @@ def test_report_materialization_receipt_survives_postgres_restart_exactly() -> N
         owner_realization_id="report-job-001",
         owner_work_id=None,
         source_event_version=1,
-        source_evidence_fingerprint="sha256:report-evidence",
+        source_evidence_fingerprint="sha256:04e38b9c641dcb24c2f8aa07ccdf34af583287b6c4ec97ade88e901ecc49548b",
         report_materialization=ReportMaterializationReceiptEvidence(
             status="archived",
             materialization_status="archived",
@@ -261,7 +261,7 @@ def test_report_owner_receipt_decoder_rejects_malformed_persisted_evidence(
         "ownerRealizationId": "report-job-001",
         "ownerWorkId": None,
         "sourceEventVersion": None,
-        "sourceEvidenceFingerprint": "sha256:report-evidence",
+        "sourceEvidenceFingerprint": "sha256:04e38b9c641dcb24c2f8aa07ccdf34af583287b6c4ec97ade88e901ecc49548b",
         "reportMaterialization": {
             "status": "data_ready",
             "materializationStatus": "data_ready",
@@ -343,7 +343,7 @@ def test_postgres_reconciliation_persists_recovered_owner_receipt_across_restart
         owner_realization_id="ipr_recovered",
         owner_work_id="iarw_recovered",
         source_event_version=1,
-        source_evidence_fingerprint="sha256:evidence-recovered",
+        source_evidence_fingerprint="sha256:70dea637030dc58d9a690dc5a0c79db3c55e9ef4dedb9e4819a869ec0025c604",
     )
 
     result = repository.reconcile_downstream_submission(

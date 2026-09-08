@@ -201,7 +201,7 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
                 owner_realization_id="ipr_submission_001",
                 owner_work_id="iarw_submission_001",
                 source_event_version=1,
-                source_evidence_fingerprint="sha256:evidence-redacted",
+                source_evidence_fingerprint="sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
             )
         )
     )
@@ -920,7 +920,7 @@ def candidate(candidate_id: str = "idea-downstream-001") -> IdeaCandidate:
             lineage_ref=LineageRef(
                 lineage_id=f"lineage:lotus-idea:downstream:{candidate_id}",
                 source_refs=(source,),
-                content_hash="sha256:downstream-evidence",
+                content_hash="sha256:d8d9dfa4ab7450988276bc26e49c8b1776e6ef1a0460c2b22592e400174a8069",
             ),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
             created_at_utc=EVALUATED_AT,
@@ -950,7 +950,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(

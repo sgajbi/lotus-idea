@@ -1,3 +1,5 @@
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
@@ -47,7 +49,7 @@ def _source(product_id: str, **changes: object) -> SourceRef:
         "route": "/integration/source",
         "as_of_date": date(2026, 9, 4),
         "generated_at_utc": datetime(2026, 9, 4, 20, 0, tzinfo=UTC),
-        "content_hash": f"sha256:{product_id}",
+        "content_hash": evidence_digest(product_id),
         "data_quality_status": "complete",
         "freshness": EvidenceFreshness.CURRENT,
         "revision_claims": _claims(),
@@ -416,7 +418,7 @@ def test_evidence_packet_exposes_derived_revision_vector_and_cut_posture() -> No
         lineage_ref=LineageRef(
             lineage_id="lineage-101",
             source_refs=(source,),
-            content_hash="sha256:lineage",
+            content_hash="sha256:26bb93d74af70e32c2f8b82d19307d9ff05b2fca19e7ac43886f114f001407c8",
         ),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         created_at_utc=datetime(2026, 9, 4, 20, 1, tzinfo=UTC),

@@ -105,7 +105,7 @@ def test_postgres_repository_loads_only_candidate_scoped_downstream_submissions(
     repository.claim_downstream_submission(
         build_downstream_submission_claim(
             idempotency_key="submission-detail-owned",
-            request_fingerprint="sha256:submission-detail-owned",
+            request_fingerprint="sha256:5be3e3f79528d061a54d43a00b79d4faa46236b3600ef1e1e2c9f5e968a1d6ca",
             resource_id="conversion-detail-owned",
             submitted_at_utc=EVALUATED_AT,
         )

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
@@ -502,7 +504,7 @@ def allocation_drift_payload() -> dict[str, Any]:
             "route": "/api/v1/rebalance/supportability/summary",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:portfolio-action-register",
+            "contentHash": "sha256:31a0b974d949e35981f4a75f7de1019d9369a2583900fd7d7ae695281f4f8c00",
             "dataQualityStatus": "ready",
             "freshness": "current",
         },
@@ -522,7 +524,7 @@ def source_ref_payload(
         "route": f"/source/{product_id}",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
+        "contentHash": evidence_digest(product_id),
         "dataQualityStatus": "ready",
         "freshness": "current",
     }
@@ -550,12 +552,12 @@ def _manage_mandate_health_evidence(
         mandate_performance_health_ref=_source_ref(
             product_id="lotus-performance:MandatePerformanceHealthContext:v1",
             source_system=SourceSystem.LOTUS_PERFORMANCE,
-            content_hash="sha256:mandate-performance-health",
+            content_hash="sha256:bf46e933e54309f526cc0104c107511045fda775538d6751e1091d4ba03f705c",
         ),
         mandate_risk_health_ref=_source_ref(
             product_id="lotus-risk:MandateRiskHealthContext:v1",
             source_system=SourceSystem.LOTUS_RISK,
-            content_hash="sha256:mandate-risk-health",
+            content_hash="sha256:50af6b0a4df92c3cd7abd3d10356d93a62b9783d49d653d135f1266fc148151c",
         ),
         manage_diagnostic="manage_action_register_ready_portfolio_scope",
     )
@@ -565,7 +567,7 @@ def _source_ref(
     *,
     product_id: str = "lotus-manage:PortfolioActionRegister:v1",
     source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
-    content_hash: str = "sha256:portfolio-action-register",
+    content_hash: str = "sha256:31a0b974d949e35981f4a75f7de1019d9369a2583900fd7d7ae695281f4f8c00",
 ) -> SourceRef:
     return SourceRef(
         product_id=product_id,

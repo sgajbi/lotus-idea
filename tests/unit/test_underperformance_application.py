@@ -206,7 +206,7 @@ def _source_ref() -> SourceRef:
         route="/integration/returns/series",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:returns-series-bundle",
+        content_hash="sha256:7db198036a32c06ee4933c12059622e921822b95fd56f74b4fa5c262f151a86d",
         data_quality_status="ready",
         freshness=EvidenceFreshness.CURRENT,
     )

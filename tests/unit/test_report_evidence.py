@@ -71,7 +71,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
@@ -96,7 +96,7 @@ def candidate() -> IdeaCandidate:
             lineage_ref=LineageRef(
                 lineage_id="lineage:lotus-idea:report-evidence:test",
                 source_refs=(source,),
-                content_hash="sha256:report-evidence-lineage",
+                content_hash="sha256:220c95cc261f179f6705794215d25f15911cb111ae9afd8597a640dcd700cee3",
             ),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
             created_at_utc=EVALUATED_AT,
@@ -255,7 +255,7 @@ def test_report_evidence_pack_rejects_mismatched_or_unready_conversion_state() -
     object.__setattr__(
         mismatched_intent,
         "evidence_content_hash",
-        "sha256:different-evidence",
+        "sha256:6e4b91a5fe57c0450a4c530d01bcf90142430ab364fb41297a1b7447d16c2569",
     )
     with pytest.raises(InvalidReportEvidencePack, match="evidence hash"):
         request_report_evidence_pack(

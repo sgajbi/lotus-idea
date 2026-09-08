@@ -83,7 +83,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
@@ -99,7 +99,7 @@ def review_candidate(candidate_id: str = "idea-review-001") -> IdeaCandidate:
     lineage = LineageRef(
         lineage_id="lineage:lotus-idea:review-workflow:test",
         source_refs=(source,),
-        content_hash="sha256:review-workflow-lineage",
+        content_hash="sha256:cb20850a1d88bd4e1da171670ac137c12318923d6caeb077528e5b145172eb57",
     )
     evidence_packet = IdeaEvidencePacket(
         evidence_packet_id="iep_review_workflow_test",

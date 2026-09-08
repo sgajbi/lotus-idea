@@ -51,8 +51,18 @@ def test_migration_adds_storage_primary_key_without_changing_business_identity(
                 ) VALUES (%s, 'shared-business-key', 'candidate', %s, %s, %s)
                 """,
                 (
-                    ("tenant-storage-a", "sha256:a", candidate_a, RECORDED_AT),
-                    ("tenant-storage-b", "sha256:b", candidate_b, RECORDED_AT),
+                    (
+                        "tenant-storage-a",
+                        "sha256:4248d1d19d0ef82f520e2636c3ee71b1543b2650c50b5a78361288825b452b4a",
+                        candidate_a,
+                        RECORDED_AT,
+                    ),
+                    (
+                        "tenant-storage-b",
+                        "sha256:6ceabb5f768aab73f71ed2f5f378f0d4c5a2e21c2911e640b8c8e0940df92797",
+                        candidate_b,
+                        RECORDED_AT,
+                    ),
                 ),
             )
             cursor.execute(
@@ -61,7 +71,7 @@ def test_migration_adds_storage_primary_key_without_changing_business_identity(
                     tenant_id, idempotency_key, operation_name, payload_hash,
                     candidate_id, created_at_utc
                 ) VALUES (
-                    NULL, 'system-key', 'outbox_delivery_run', 'sha256:system', NULL, %s
+                    NULL, 'system-key', 'outbox_delivery_run', 'sha256:fc39bf37970d5c8b2be251a0ff1b42f87f2afafd39e0bef3442cd638c6c7ec0f', NULL, %s
                 )
                 """,
                 (RECORDED_AT,),

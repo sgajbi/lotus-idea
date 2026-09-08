@@ -40,7 +40,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/advisory/policy-evaluations/pev_001/workflow",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:advise-risk-profile-gap",
+        content_hash="sha256:31dd4c363157c371852b0825fdb8e240935fb613789dee0fc7cf400fec7dc75e",
         data_quality_status="quality_passed",
         freshness=freshness,
     )
@@ -108,7 +108,7 @@ def test_missing_risk_profile_source_correction_preserves_candidate_and_versions
         source_input,
         risk_profile_ref=replace(
             source_input.risk_profile_ref,
-            content_hash="sha256:advise-risk-profile-gap:correction-2",
+            content_hash="sha256:93452d2e2c4d7d5ff02d13ffda54cd8202518179cec9324080384407f1eced51",
         ),
     )
 
@@ -133,7 +133,10 @@ def test_missing_risk_profile_source_correction_preserves_candidate_and_versions
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

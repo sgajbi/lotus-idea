@@ -41,7 +41,7 @@ def test_migration_backfills_candidate_tenant_and_preserves_raw_key(
                 """
                 INSERT INTO idea_idempotency_record (
                     idempotency_key, operation_name, payload_hash, candidate_id, created_at_utc
-                ) VALUES ('legacy-client-key', 'candidate', 'sha256:legacy', %s, %s)
+                ) VALUES ('legacy-client-key', 'candidate', 'sha256:b79f2c3139bd3ffa0aef8c8058baa4c2e8bc571208bbc23c0b16846391153753', %s, %s)
                 """,
                 (candidate_id, RECORDED_AT),
             )
@@ -88,7 +88,7 @@ def test_migration_refuses_unscoped_candidate_history(
                 """
                 INSERT INTO idea_idempotency_record (
                     idempotency_key, operation_name, payload_hash, candidate_id, created_at_utc
-                ) VALUES ('unscoped-client-key', 'candidate', 'sha256:unscoped', %s, %s)
+                ) VALUES ('unscoped-client-key', 'candidate', 'sha256:26571c1ab3010f5da36dc5ea689dd62cd6eabfce1171a4195cd84707caa530bb', %s, %s)
                 """,
                 (candidate_id, RECORDED_AT),
             )
@@ -142,8 +142,18 @@ def test_migration_refuses_lossy_rollback_after_cross_tenant_key_reuse(
                 ) VALUES (%s, 'shared-client-key', 'candidate', %s, %s, %s)
                 """,
                 (
-                    ("tenant-a", "sha256:a", candidate_a, RECORDED_AT),
-                    ("tenant-b", "sha256:b", candidate_b, RECORDED_AT),
+                    (
+                        "tenant-a",
+                        "sha256:4248d1d19d0ef82f520e2636c3ee71b1543b2650c50b5a78361288825b452b4a",
+                        candidate_a,
+                        RECORDED_AT,
+                    ),
+                    (
+                        "tenant-b",
+                        "sha256:6ceabb5f768aab73f71ed2f5f378f0d4c5a2e21c2911e640b8c8e0940df92797",
+                        candidate_b,
+                        RECORDED_AT,
+                    ),
                 ),
             )
         connection.commit()

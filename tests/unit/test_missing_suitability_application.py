@@ -179,7 +179,7 @@ def _source_ref() -> SourceRef:
         route="/advisory/policy-evaluations/pev_001/workflow",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:advisory-policy-evaluation-record",
+        content_hash="sha256:8cf2a30b3834a4ceb5cfe8aafb5833d774bb6af1a7b31e91ab8bedbc79e5b059",
         data_quality_status="quality_passed",
         freshness=EvidenceFreshness.CURRENT,
     )

@@ -73,7 +73,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
@@ -93,7 +93,7 @@ def evidence_packet(
     lineage = LineageRef(
         lineage_id="lineage:lotus-idea:review:test",
         source_refs=(source,),
-        content_hash="sha256:review-lineage",
+        content_hash="sha256:34d5899180acd7744a218e12ce8b6711585ae15b182f2a14a4e48c124939209f",
     )
     return IdeaEvidencePacket(
         evidence_packet_id="iep_review_test",
@@ -455,13 +455,16 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
     with pytest.raises(ValueError, match="reason_codes is required"):
         replace(identity, reason_codes=())
     assert identity != replace(identity, actor_subject="advisor-002")
-    assert identity != replace(identity, evidence_content_hash="sha256:changed")
+    assert identity != replace(
+        identity,
+        evidence_content_hash="sha256:e3ff5ffaed17d1ea5b8c36808da7c55881324ac8f147fec25bcd864931baeea9",
+    )
     assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
     changed_expected_evidence = replace(
         command,
         expected_candidate_evidence=replace(
             command.expected_candidate_evidence,
-            evidence_content_hash="sha256:changed-request-evidence",
+            evidence_content_hash="sha256:4711f4986f5225f4c1036e7f8438b49d49b5a6c6cc42f396abb507c6104e3680",
         ),
     )
     assert (
@@ -469,7 +472,7 @@ def test_review_resource_identity_matches_the_persisted_decision_and_binds_busin
             source_candidate,
             changed_expected_evidence,
         ).evidence_content_hash
-        == "sha256:changed-request-evidence"
+        == "sha256:4711f4986f5225f4c1036e7f8438b49d49b5a6c6cc42f396abb507c6104e3680"
     )
 
 
@@ -807,7 +810,10 @@ def test_feedback_event_is_source_provenanced_and_audited_without_sensitive_scop
 
     assert result.feedback_event.candidate_id == "idea-review-001"
     assert result.feedback_event.evidence_packet_id == "iep_review_test"
-    assert result.feedback_event.evidence_content_hash == "sha256:review-lineage"
+    assert (
+        result.feedback_event.evidence_content_hash
+        == "sha256:34d5899180acd7744a218e12ce8b6711585ae15b182f2a14a4e48c124939209f"
+    )
     assert result.feedback_event.source_signal_ids == ("signal-review-001",)
     assert result.audit_event.event_type == "idea.feedback.recorded"
     assert result.audit_event.attributes["feedback_reason"] == "relevant"
@@ -899,7 +905,7 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             review_id="review-no-decision-reason",
             candidate_id="idea-review-001",
             evidence_packet_id="iep_review_test",
-            evidence_content_hash="sha256:review-lineage",
+            evidence_content_hash="sha256:34d5899180acd7744a218e12ce8b6711585ae15b182f2a14a4e48c124939209f",
             source_revision_vector_digest=(
                 candidate().evidence_packet.source_revision_vector_digest
             ),
@@ -941,7 +947,7 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             ),
             candidate_id="idea-review-001",
             evidence_packet_id="iep_review_test",
-            evidence_content_hash="sha256:review-lineage",
+            evidence_content_hash="sha256:34d5899180acd7744a218e12ce8b6711585ae15b182f2a14a4e48c124939209f",
             source_signal_ids=(),
             actor_subject="advisor-001",
             actor_role=ReviewActorRole.ADVISOR,

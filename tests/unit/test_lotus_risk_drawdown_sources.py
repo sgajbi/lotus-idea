@@ -48,7 +48,9 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "contract_version": "v1",
             "methodology_version": "drawdown.v1",
             "generated_at": "2026-06-21T10:00:00Z",
-            "request_fingerprint": "drawdown-fingerprint",
+            "request_fingerprint": (
+                "ad12bb0dee1ca47a782117ed4e1986c4bb0900dde05b1e527a6f9d3889163171"
+            ),
             "calculation_supportability": {
                 "state": "ready",
                 "reason": "calculation_complete",
@@ -115,7 +117,10 @@ def test_lotus_risk_adapter_fetches_declared_drawdown_source_product() -> None:
     assert evidence.risk_ref is not None
     assert evidence.risk_ref.product_id == "lotus-risk:DrawdownAnalyticsReport:v1"
     assert evidence.risk_ref.route == "/analytics/risk/drawdown"
-    assert evidence.risk_ref.content_hash == "sha256:drawdown-fingerprint"
+    assert (
+        evidence.risk_ref.content_hash
+        == "sha256:ad12bb0dee1ca47a782117ed4e1986c4bb0900dde05b1e527a6f9d3889163171"
+    )
     assert evidence.risk_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.risk_diagnostic == "risk_drawdown_source_ready"
     assert seen == [

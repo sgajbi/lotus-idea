@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 import importlib.util
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -89,7 +91,7 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
         route="/integration/portfolios/{portfolioRef}/core-snapshot",
         asOfDate=date(2026, 6, 21),
         generatedAtUtc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
-        contentHash="sha256:portfolio-state-snapshot-demo",
+        contentHash="sha256:dc238a75287d8aa3ba2a8eff42e92e38c0635356cf7528195a9f3c1a186143f5",
         dataQualityStatus="complete",
         freshness=EvidenceFreshness.CURRENT,
         revisionClaims=SourceRevisionClaimsModel(
@@ -113,7 +115,10 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
     assert source_ref.source_system is SourceSystem.LOTUS_CORE
     assert source_ref.product_version == "v1"
     assert source_ref.route == "/integration/portfolios/{portfolioRef}/core-snapshot"
-    assert source_ref.content_hash == "sha256:portfolio-state-snapshot-demo"
+    assert (
+        source_ref.content_hash
+        == "sha256:dc238a75287d8aa3ba2a8eff42e92e38c0635356cf7528195a9f3c1a186143f5"
+    )
     assert source_ref.data_quality_status == "complete"
     assert source_ref.freshness is EvidenceFreshness.CURRENT
     assert source_ref.revision_claims is not None
@@ -370,7 +375,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=route_by_product[product_id],
         as_of_date=date(2026, 6, 21),
         generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

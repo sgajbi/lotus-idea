@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -118,7 +120,7 @@ def source_ref(
         route=route_by_product[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=content_hash or f"sha256:{product_id}",
+        content_hash=content_hash or evidence_digest(product_id),
         data_quality_status="complete",
         freshness=freshness,
         revision_claims=SourceRevisionClaims(
@@ -421,7 +423,11 @@ def test_persist_candidate_rejects_idempotency_conflict_without_extra_audit_even
     conflict = repository.persist_candidate(
         candidate,
         idempotency_key="signal-ingestion:high-cash:001",
-        payload={"source_hashes": ["sha256:different"]},
+        payload={
+            "source_hashes": [
+                "sha256:6d66e84bdf901c2938eef0d329ed4f51b623df138534d53ab52292ea62e41608"
+            ]
+        },
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
@@ -493,7 +499,7 @@ def test_replay_matches_hash_or_returns_stale_and_mismatch_posture() -> None:
     mismatch = repository.replay_evidence(
         persisted.record.candidate.candidate_id,
         current_source_refs=high_cash_candidate_source_refs(
-            cashflow_hash="sha256:changed-cashflow"
+            cashflow_hash="sha256:8845ae635f88f07971ab373b3af7cd4c0019843aa4995e73d3f1d983d27e493d"
         ),
         evaluated_at_utc=EVALUATED_AT,
     )

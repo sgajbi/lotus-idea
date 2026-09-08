@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
@@ -81,7 +83,7 @@ def source_ref(
         route=f"/source/{product_id}",
         as_of_date=as_of_date,
         generated_at_utc=generated_at_utc,
-        content_hash=content_hash or f"sha256:{product_id}",
+        content_hash=content_hash or evidence_digest(product_id),
         data_quality_status="complete",
         freshness=freshness,
     )
@@ -90,7 +92,7 @@ def source_ref(
 def core_evidence(
     *,
     cash_weight: Decimal | None = Decimal("0.18"),
-    holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
+    holdings_hash: str = "sha256:be761f838a2ccde2ec738fe09c4e99f18861279811def33e511ee8f420c8e8db",
     cash_weight_diagnostic: str | None = "core_cash_weight_supported",
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
 ) -> CoreHighCashEvidence:
@@ -300,7 +302,9 @@ def test_run_once_batch_reports_conflicts_without_duplicate_candidates() -> None
         core_source=source,
         repository=repository,
     )
-    source.evidence = core_evidence(holdings_hash="sha256:changed-batch-holdings")
+    source.evidence = core_evidence(
+        holdings_hash="sha256:7f4c377429f0f40d9c637b33b6942d17bceb8f3f36b87dca1a840762f9820b90"
+    )
     second = run_high_cash_source_ingestion_batch(
         RunHighCashSourceIngestionBatchCommand(
             work_items=(work_item,),
@@ -325,7 +329,9 @@ def test_detects_source_ingestion_conflict_when_same_key_has_new_source_identity
         core_source=source,
         repository=repository,
     )
-    source.evidence = core_evidence(holdings_hash="sha256:changed-holdings")
+    source.evidence = core_evidence(
+        holdings_hash="sha256:fd0c43342054290a6743d6048171770a8c0abf33721436c07440e54e0a9c60ce"
+    )
 
     conflict = ingest_high_cash_signal_from_core(
         command(idempotency_key=explicit_key),

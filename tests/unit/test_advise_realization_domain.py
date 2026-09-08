@@ -324,7 +324,7 @@ def _history() -> AdviseProposalRealizationHistory:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         idea_candidate_id="idea-candidate-001",
         conversion_intent_id="conversion-intent-001",
-        source_evidence_fingerprint="sha256:evidence-redacted",
+        source_evidence_fingerprint="sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
         current_status=AdviseProposalRealizationStatus.ADVISORY_COMPLETED,
         current_source_event_version=3,
         proposal_id="proposal-001",

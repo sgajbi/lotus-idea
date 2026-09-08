@@ -119,7 +119,7 @@ def test_rejected_submission_preserves_authoritative_owner_receipt() -> None:
         owner_realization_id="ipr_rejected_001",
         owner_work_id=None,
         source_event_version=1,
-        source_evidence_fingerprint="sha256:evidence-redacted",
+        source_evidence_fingerprint="sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
     )
 
     result = finalize_downstream_submission(
@@ -565,7 +565,7 @@ def _claim(
 def _owner_receipt(
     *,
     source_event_version: int = 1,
-    source_evidence_fingerprint: str = "sha256:evidence-redacted",
+    source_evidence_fingerprint: str = "sha256:3da0a08a58966f7fc4a2e5667ce539a103e70f26a3cc7ad75438bc1adca1fccf",
 ) -> DownstreamSubmissionOwnerReceipt:
     return DownstreamSubmissionOwnerReceipt(
         owner_authority=SourceSystem.LOTUS_ADVISE,
@@ -581,7 +581,7 @@ def _report_claim() -> DownstreamSubmissionRecord:
     return create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="report-downstream-secret-key",
-        request_fingerprint="sha256:report-request-fingerprint",
+        request_fingerprint="sha256:7451438ae78a5589b43cfe6ac083c42f5d4fd0a58e842598d033ba8fdacea6ef",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id="report-pack-001",
         target=ConversionTarget.REPORT_EVIDENCE,
@@ -622,6 +622,6 @@ def _report_owner_receipt(*, source_event_version: int = 1) -> DownstreamSubmiss
         owner_realization_id="report-job-001",
         owner_work_id=None,
         source_event_version=source_event_version,
-        source_evidence_fingerprint="sha256:report-evidence",
+        source_evidence_fingerprint="sha256:04e38b9c641dcb24c2f8aa07ccdf34af583287b6c4ec97ade88e901ecc49548b",
         report_materialization=evidence,
     )

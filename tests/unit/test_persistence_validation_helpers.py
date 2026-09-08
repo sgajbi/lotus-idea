@@ -32,7 +32,7 @@ def test_persistence_records_fail_closed_for_invalid_values() -> None:
     with pytest.raises(ValueError, match="persisted_at_utc must be timezone-aware"):
         CandidatePersistenceRecord(
             candidate=candidate,
-            evidence_hash="sha256:evidence",
+            evidence_hash="sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
             persisted_at_utc=datetime(2026, 6, 21, 10, 0),
         )
     with pytest.raises(ValueError, match="changed_at_utc must be UTC"):
@@ -58,7 +58,7 @@ def test_persistence_public_prechecks_treat_missing_idempotency_as_absent() -> N
                 resource_id="review-001",
                 candidate_id="idea-001",
                 evidence_packet_id="evidence-001",
-                evidence_content_hash="sha256:evidence",
+                evidence_content_hash="sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
                 actor_subject="advisor-001",
                 actor_role=ReviewActorRole.ADVISOR,
                 event_name="approve_for_conversion",

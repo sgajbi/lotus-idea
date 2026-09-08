@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any
@@ -19,7 +21,7 @@ def source_ref(product_id: str, *, suffix: str = "", freshness: str = "current")
         "route": f"/source/{product_id}",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
+        "contentHash": evidence_digest(product_id, suffix),
         "dataQualityStatus": "complete",
         "freshness": freshness,
     }
@@ -143,7 +145,9 @@ def test_candidate_evidence_replay_api_reports_hash_mismatch_and_stale_source() 
     )
     mismatched_payload = replay_payload(suffix="-compare")
     mismatched_payload = deepcopy(mismatched_payload)
-    mismatched_payload["currentSourceRefs"][3]["contentHash"] = "sha256:changed-cashflow"
+    mismatched_payload["currentSourceRefs"][3]["contentHash"] = (
+        "sha256:8845ae635f88f07971ab373b3af7cd4c0019843aa4995e73d3f1d983d27e493d"
+    )
 
     mismatch = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/evidence-replay",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -390,7 +392,7 @@ def test_low_income_signal_api_rejects_wrong_source_contract(
         "productId": "lotus-risk:RiskMetricsReport:v1",
         "sourceSystem": "lotus-risk",
         "route": "/risk/reports/PB_SG_GLOBAL_BAL_001",
-        "contentHash": "sha256:wrong-low-income-source",
+        "contentHash": "sha256:209ac9aea3967b8a0863a1174690481ef1cb11f81391e28bf184e1632c7d6471",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -496,7 +498,7 @@ def low_income_payload() -> dict[str, Any]:
             "route": "/portfolios/PB_SG_GLOBAL_BAL_001/cash-movement-summary",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:low-income-cash-movement",
+            "contentHash": "sha256:b741f49b9549551f010bdd7be646f3272dc408f0042292e752bad271cde59dc2",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -507,7 +509,7 @@ def low_income_payload() -> dict[str, Any]:
             "route": "/portfolios/PB_SG_GLOBAL_BAL_001/cashflow-projection",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:low-income-cashflow-projection",
+            "contentHash": "sha256:1592bbef4d042ffb06aac960d66712f2ce9f2afbda1dd1c1258735ca00cebf02",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -523,7 +525,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=f"/source/{product_id}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

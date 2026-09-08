@@ -49,7 +49,10 @@ def test_lotus_risk_adapter_fetches_mandate_health_source_product_ref() -> None:
     assert evidence.risk_diagnostic == "MANDATE_RISK_HEALTH_TRACKING_ERROR_SOURCE_READY"
     assert evidence.mandate_risk_health_ref.product_id == "lotus-risk:MandateRiskHealthContext:v1"
     assert evidence.mandate_risk_health_ref.route == "/analytics/risk/mandate-health-context"
-    assert evidence.mandate_risk_health_ref.content_hash == "sha256:risk-health-request"
+    assert (
+        evidence.mandate_risk_health_ref.content_hash
+        == "sha256:54e0d2bd4b169c64a8fa162a3965cbb5a7ae6d0bfd7e184c84550927e48233ae"
+    )
     assert evidence.mandate_risk_health_ref.data_quality_status == "ready"
     assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
     assert seen == [
@@ -201,8 +204,8 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "methodology_version": "risk.v1",
             "source_route": "/analytics/risk/calculate",
         },
-        "request_fingerprint": "sha256:risk-health-request",
-        "source_request_fingerprint": "sha256:risk-metrics-request",
+        "request_fingerprint": "sha256:54e0d2bd4b169c64a8fa162a3965cbb5a7ae6d0bfd7e184c84550927e48233ae",
+        "source_request_fingerprint": "sha256:1e3a13b0424d22f0c3470f1fe709ad257614083dcfba6bd58f232a31b57f48bf",
         "reason_codes": [
             "MANDATE_RISK_HEALTH_TRACKING_ERROR_SOURCE_READY",
             "RISK_METHODOLOGY_SOURCE_OWNED",

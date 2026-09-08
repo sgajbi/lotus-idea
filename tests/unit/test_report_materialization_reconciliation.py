@@ -355,7 +355,10 @@ def test_rejects_every_recovered_report_identity_mismatch_without_advancing(
     repository, evidence_pack, support_reference, _ = _uncertain_submission()
     receipt = _authoritative_receipt(evidence_pack)
     if field_name == "source_evidence_fingerprint":
-        receipt = replace(receipt, source_evidence_fingerprint="sha256:contradictory-evidence")
+        receipt = replace(
+            receipt,
+            source_evidence_fingerprint="sha256:4a1211e07cf852b98ab2f97b520371dde63819090e60f10e68268447859f41e4",
+        )
     else:
         assert receipt.report_materialization is not None
         contradictory_evidence = _with_contradictory_identity(
@@ -452,7 +455,7 @@ def test_active_in_flight_submission_cannot_be_reconciled_while_post_may_still_r
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="active-report-submission",
-        request_fingerprint="sha256:active-report-submission",
+        request_fingerprint="sha256:098ac2330bcf193e1e0d498ce188389fa73730ddcacb771addf6ffafc3312c4f",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id=evidence_pack.report_evidence_pack_id,
         target=ConversionTarget.REPORT_EVIDENCE,
@@ -484,7 +487,7 @@ def test_expired_in_flight_submission_recovers_owner_receipt_without_reposting()
     claim = create_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key="expired-report-submission",
-        request_fingerprint="sha256:expired-report-submission",
+        request_fingerprint="sha256:c68ea48d283abbfc5e5664103c211140acd9e19b8943162de88615ebf84341dc",
         resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
         resource_id=evidence_pack.report_evidence_pack_id,
         target=ConversionTarget.REPORT_EVIDENCE,

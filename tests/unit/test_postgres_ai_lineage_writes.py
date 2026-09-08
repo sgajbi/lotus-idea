@@ -19,7 +19,7 @@ def test_insert_ai_explanation_lineage_records_writes_each_lineage_record() -> N
     candidate = high_cash_candidate()
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:lineage-candidate",
+        evidence_hash="sha256:9fa204683db810297c4cdf85bf8831f3064467e2e13a5baa3742c839e5e2c017",
         persisted_at_utc=candidate.created_at_utc,
         ai_explanation_lineage_records=(_lineage_record(candidate.candidate_id),),
     )
@@ -49,7 +49,7 @@ def test_insert_verified_ai_lineage_writes_replay_protection_columns() -> None:
     )
     record = CandidatePersistenceRecord(
         candidate=candidate,
-        evidence_hash="sha256:lineage-candidate",
+        evidence_hash="sha256:9fa204683db810297c4cdf85bf8831f3064467e2e13a5baa3742c839e5e2c017",
         persisted_at_utc=candidate.created_at_utc,
         ai_explanation_lineage_records=(lineage,),
     )
@@ -73,7 +73,7 @@ def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
         request_id="ai-request-001",
         candidate_id=candidate_id,
         evidence_packet_id="iep-ai-001",
-        evidence_content_hash="sha256:evidence",
+        evidence_content_hash="sha256:92d5dd801fde2295f0e642a13c328dedfeb598a2daeeb2a0a4cb89f3166fa50c",
         source_revision_vector_digest="legacy:unknown",
         source_cut_posture="unknown",
         workflow_pack_id="lotus-ai:idea-explanation:v1",

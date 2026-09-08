@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from dataclasses import replace
@@ -51,7 +53,7 @@ def source_ref(
         route=route_by_product[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=freshness,
     )
@@ -132,7 +134,7 @@ def test_high_cash_source_correction_preserves_candidate_and_versions_evidence_l
         source_input,
         holdings_ref=replace(
             source_input.holdings_ref,
-            content_hash="sha256:lotus-core:HoldingsAsOf:v1:correction-2",
+            content_hash="sha256:c4386cceccc10f15927ce48968742f96176cf149d80b116a3fe689654097ab3b",
         ),
     )
 
@@ -154,7 +156,10 @@ def test_high_cash_source_correction_preserves_candidate_and_versions_evidence_l
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[1].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[1].content_hash
+        != original.candidate.evidence_packet.source_refs[1].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

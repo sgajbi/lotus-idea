@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from typing import Any, cast
@@ -325,7 +327,7 @@ def _bond_maturity_input(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> BondM
             route=f"/source/{product_id}",
             as_of_date=as_of_date,
             generated_at_utc=evaluated_at_utc,
-            content_hash=f"sha256:{product_id}:applicability-expiry",
+            content_hash=evidence_digest(product_id, "applicability-expiry"),
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,
         )
@@ -354,7 +356,7 @@ def _source_ref(product_id: str, *, suffix: str) -> dict[str, str]:
         "route": f"/source/{product_id}",
         "asOfDate": "2026-06-21",
         "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}{suffix}",
+        "contentHash": evidence_digest(product_id, suffix),
         "dataQualityStatus": "complete",
         "freshness": "current",
     }

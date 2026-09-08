@@ -83,8 +83,14 @@ def test_expected_candidate_evidence_binds_material_evidence_packet_and_hash() -
         replace(expected, material_version=expected.material_version + 1),
         replace(expected, evidence_version=expected.evidence_version + 1),
         replace(expected, evidence_packet_id="iep-review-new"),
-        replace(expected, evidence_content_hash="sha256:review-new"),
-        replace(expected, source_revision_vector_digest="sha256:revision-vector-new"),
+        replace(
+            expected,
+            evidence_content_hash="sha256:d00193cd5acea4f63847ebbef6504074a047267228065957ac55605b51a62ee6",
+        ),
+        replace(
+            expected,
+            source_revision_vector_digest="sha256:a23767af4de958015ae0e8e72a10a3ef769e84602cc189d597fdee905ef79f57",
+        ),
         replace(expected, source_cut_posture=SourceCutPosture.MIXED),
     ):
         with pytest.raises(ReviewAuthorityConflict, match="evidence identity is stale"):

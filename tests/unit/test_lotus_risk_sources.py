@@ -42,7 +42,9 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "as_of_date": "2026-06-21",
             "portfolio_id": "PB_SG_GLOBAL_BAL_001",
             "generated_at": "2026-06-21T10:00:00Z",
-            "request_fingerprint": "risk-concentration-fingerprint",
+            "request_fingerprint": (
+                "e5fce5f04c975e0815f9a3d1ecd07d304e4f7dea1db002b59a9153850e5fcdc8"
+            ),
             "methodology_version": "risk.v1",
             "calculation_supportability": {
                 "state": "ready",
@@ -113,7 +115,9 @@ def _volatility_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any
         },
         "metadata": {
             "generated_at": "2026-06-21T10:00:00Z",
-            "request_fingerprint": "risk-metrics-fingerprint",
+            "request_fingerprint": (
+                "43a132dfa1ddd9001fc22b40b9ee4ca4ebe7e7cabe29740d0cf06f31d5ee0692"
+            ),
             "calculation_supportability": {
                 "state": "ready",
                 "freshness_bucket": "current",
@@ -177,7 +181,10 @@ def test_lotus_risk_adapter_fetches_declared_concentration_source_product() -> N
     assert evidence.concentration_ref is not None
     assert evidence.concentration_ref.product_id == "lotus-risk:ConcentrationRiskReport:v1"
     assert evidence.concentration_ref.route == "/analytics/risk/concentration"
-    assert evidence.concentration_ref.content_hash == "sha256:risk-concentration-fingerprint"
+    assert (
+        evidence.concentration_ref.content_hash
+        == "sha256:e5fce5f04c975e0815f9a3d1ecd07d304e4f7dea1db002b59a9153850e5fcdc8"
+    )
     assert evidence.concentration_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.concentration_ref.revision_claims is not None
     assert evidence.concentration_ref.revision_claims.methodology_version == "risk.v1"
@@ -220,7 +227,10 @@ def test_lotus_risk_volatility_adapter_fetches_declared_metrics_source_product()
     assert evidence.risk_ref is not None
     assert evidence.risk_ref.product_id == "lotus-risk:RiskMetricsReport:v1"
     assert evidence.risk_ref.route == "/analytics/risk/calculate"
-    assert evidence.risk_ref.content_hash == "sha256:risk-metrics-fingerprint"
+    assert (
+        evidence.risk_ref.content_hash
+        == "sha256:43a132dfa1ddd9001fc22b40b9ee4ca4ebe7e7cabe29740d0cf06f31d5ee0692"
+    )
     assert evidence.risk_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.risk_diagnostic == "risk_volatility_source_ready"
     assert seen == [

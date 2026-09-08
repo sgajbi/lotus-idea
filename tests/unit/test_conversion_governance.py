@@ -80,7 +80,7 @@ def source_ref() -> SourceRef:
         route="/integration/portfolios/{portfolio_id}/core-snapshot",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-state",
+        content_hash="sha256:3611f48d693f1675d1faa6ba49bf7edafe199f815f8031488c43c9489bafa1f3",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
@@ -104,7 +104,7 @@ def evidence_packet(
         lineage_ref=LineageRef(
             lineage_id="lineage:lotus-idea:conversion:test",
             source_refs=(source,),
-            content_hash="sha256:conversion-lineage",
+            content_hash="sha256:3855cd78f85495006083680e9cd53469052f6d9a6cdb86f14991780274cb3552",
         ),
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         unsupported_reasons=(
@@ -190,7 +190,10 @@ def test_review_approved_candidate_can_request_report_conversion_intent() -> Non
     assert result.conversion_intent.target_source_authority is SourceSystem.LOTUS_REPORT
     assert result.conversion_intent.boundary is ConversionBoundary.INTENT_ONLY
     assert result.conversion_intent.grants_downstream_authority is False
-    assert result.conversion_intent.evidence_content_hash == "sha256:conversion-lineage"
+    assert (
+        result.conversion_intent.evidence_content_hash
+        == "sha256:3855cd78f85495006083680e9cd53469052f6d9a6cdb86f14991780274cb3552"
+    )
     assert result.conversion_intent.source_signal_ids == ("signal-conversion-001",)
     assert result.conversion_intent.review_authority_grant is not None
     assert result.conversion_intent.review_authority_grant.review_id == (
@@ -434,7 +437,7 @@ def test_persisted_conversion_intent_rejects_inconsistent_review_authority() -> 
                 grant,
                 candidate_evidence=replace(
                     grant.candidate_evidence,
-                    evidence_content_hash="sha256:evidence-other",
+                    evidence_content_hash="sha256:f90b9f0ac6b30fd618cc534a8ee3ec35016d44c9f05640dfa1c1f22b97621733",
                 ),
             ),
             "evidence hash must match",

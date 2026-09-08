@@ -56,15 +56,15 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "product_id": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
             "product_version": "v1",
             "evaluation_id": "pev_001",
-            "tenant_scope_hash": "sha256:tenant-scope",
+            "tenant_scope_hash": "sha256:54ef35041b4cad1ddcd3b1b17d6f4176dd2591d530f7251100507bd04a8928cb",
             "portfolio_id": "portfolio-001",
             "correlation_id": "corr-advise",
             "trace_id": "trace-advise",
             "generated_at": "2026-06-21T10:00:00Z",
             "as_of_date": "2026-06-21",
-            "content_hash": "sha256:advisory-policy-evaluation-record",
-            "source_evidence_hash": "sha256:source-evidence",
-            "policy_content_hash": "sha256:policy-content",
+            "content_hash": "sha256:8cf2a30b3834a4ceb5cfe8aafb5833d774bb6af1a7b31e91ab8bedbc79e5b059",
+            "source_evidence_hash": "sha256:5172dee35970c30ebe69aa6d9e08ecc261baf2045f728270e4a6db3715dc31a2",
+            "policy_content_hash": "sha256:baf9905a14c48661bc54707887e396bca6a87c9506e8451336a8e242dce06ead",
             "policy_pack_id": "global-mandate-restrictions",
             "policy_version": "2026.06",
             "data_quality_status": "quality_passed",
@@ -137,14 +137,20 @@ def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product(
     assert evidence.policy_ref.product_id == "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
     assert evidence.policy_ref.route == "/advisory/policy-evaluations/pev_001/workflow"
     assert evidence.policy_ref.freshness is EvidenceFreshness.CURRENT
-    assert evidence.policy_ref.content_hash == "sha256:advisory-policy-evaluation-record"
+    assert (
+        evidence.policy_ref.content_hash
+        == "sha256:8cf2a30b3834a4ceb5cfe8aafb5833d774bb6af1a7b31e91ab8bedbc79e5b059"
+    )
     assert evidence.policy_ref.revision_claims is not None
     assert evidence.policy_ref.revision_claims.calculation_run_id == "pev_001"
     assert evidence.policy_ref.revision_claims.policy_version == "2026.06"
     assert evidence.workflow_runtime is not None
     assert evidence.workflow_runtime.evaluation_id == "pev_001"
     assert evidence.workflow_runtime.portfolio_id == "portfolio-001"
-    assert evidence.workflow_runtime.tenant_scope_hash == "sha256:tenant-scope"
+    assert (
+        evidence.workflow_runtime.tenant_scope_hash
+        == "sha256:54ef35041b4cad1ddcd3b1b17d6f4176dd2591d530f7251100507bd04a8928cb"
+    )
     assert evidence.workflow_runtime.correlation_id == "corr-advise"
     assert evidence.workflow_runtime.trace_id == "trace-advise"
     assert evidence.workflow_runtime.open_requirement_count == 2

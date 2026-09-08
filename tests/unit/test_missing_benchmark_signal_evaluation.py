@@ -70,7 +70,7 @@ def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> Sour
         route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:benchmark-assignment-gap",
+        content_hash="sha256:7a0a8aea31b7534c8c1f156b943954bbd820ba86b063c9629f8dd2e60b83208c",
         data_quality_status="complete",
         freshness=freshness,
     )
@@ -151,7 +151,7 @@ def test_missing_benchmark_source_correction_preserves_candidate_and_versions_ev
         source_input,
         benchmark_assignment_ref=replace(
             source_input.benchmark_assignment_ref,
-            content_hash="sha256:benchmark-assignment-gap:correction-2",
+            content_hash="sha256:f60026cf192ea89cec689d469f7ec01f4311a404d33e489e8ac3d34b76b3bbd4",
         ),
     )
 
@@ -176,7 +176,10 @@ def test_missing_benchmark_source_correction_preserves_candidate_and_versions_ev
         original.candidate.evidence_packet.lineage_ref.content_hash
         != corrected.candidate.evidence_packet.lineage_ref.content_hash
     )
-    assert corrected.candidate.evidence_packet.source_refs[0].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.source_refs[0].content_hash
+        != original.candidate.evidence_packet.source_refs[0].content_hash
+    )
     assert (
         corrected.candidate.evidence_packet.lineage_ref.source_refs
         == corrected.candidate.evidence_packet.source_refs

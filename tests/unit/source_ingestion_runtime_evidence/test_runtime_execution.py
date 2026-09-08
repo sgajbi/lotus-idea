@@ -219,7 +219,10 @@ def test_empty_application_result_cannot_produce_runtime_receipts() -> None:
         pytest.param(
             lambda persistence: replace(
                 persistence,
-                record=replace(persistence.record, evidence_hash="sha256:forged"),
+                record=replace(
+                    persistence.record,
+                    evidence_hash="sha256:b16820571762c16001d274a8486b21ed078b8a6c4772d3a3a861d1567fc86cdd",
+                ),
             ),
             id="evidence-hash-mismatch",
         ),

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
@@ -444,7 +446,7 @@ def test_bond_maturity_signal_api_rejects_wrong_source_contract(
         "productId": "lotus-risk:RiskMetricsReport:v1",
         "sourceSystem": "lotus-risk",
         "route": "/risk/reports/PB_SG_GLOBAL_BAL_001",
-        "contentHash": "sha256:wrong-bond-maturity-source",
+        "contentHash": "sha256:a4898cb64f3bceb8399c3f2bd7abea5c6bda75f126f7b034da28eea35868c202",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -550,7 +552,7 @@ def bond_maturity_payload() -> dict[str, Any]:
             "route": "/portfolios/PB_SG_GLOBAL_BAL_001/positions",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:bond-maturity-holdings",
+            "contentHash": "sha256:23fb497841e67c2c684e723c6c6ddd9debb8e59cf032f65030d9b424ca857974",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -561,7 +563,7 @@ def bond_maturity_payload() -> dict[str, Any]:
             "route": "/portfolios/PB_SG_GLOBAL_BAL_001/maturity-summary",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:portfolio-maturity-summary",
+            "contentHash": "sha256:dbb7008bf361f97502600c9461c56f5e2e41e5406d8d6ec704781f8c421bea0b",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -577,7 +579,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=f"/source/{product_id}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

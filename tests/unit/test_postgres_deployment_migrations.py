@@ -182,7 +182,14 @@ def test_executor_rejects_version_bundle_history_and_rollback_drift(tmp_path: Pa
         )
     with pytest.raises(DeploymentMigrationError, match="ahead of the deployment image"):
         executor._validate_history(
-            [("001", "foundation", step.content_sha256), ("002", "extra", "sha256:x")],
+            [
+                ("001", "foundation", step.content_sha256),
+                (
+                    "002",
+                    "extra",
+                    "sha256:fe8eb9ab9836bcf963c044b6f84eb71c089db399876f45e72a6c21b488da26c4",
+                ),
+            ],
             (step,),
         )
     with pytest.raises(DeploymentMigrationError, match="not a strict image prefix"):

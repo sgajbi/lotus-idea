@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -147,7 +149,7 @@ def test_postgres_runtime_serializes_concurrent_evidence_corrections(
     candidate = _high_cash_candidate("concurrent-evidence-correction")
     corrected = _high_cash_candidate(
         "concurrent-evidence-correction",
-        cashflow_hash="sha256:corrected-cashflow",
+        cashflow_hash="sha256:a78e1e0fffc1502d275fc19d778fd2aed3b2affc3519dd434b7acca188c41d01",
     )
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
@@ -335,7 +337,7 @@ def _high_cash_candidate(
                 cashflow_hash
                 if product_id == "lotus-core:PortfolioCashflowProjection:v1"
                 and cashflow_hash is not None
-                else f"sha256:{product_id}"
+                else evidence_digest(product_id)
             ),
             data_quality_status="complete",
             freshness=EvidenceFreshness.CURRENT,

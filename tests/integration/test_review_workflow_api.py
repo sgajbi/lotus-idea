@@ -543,7 +543,10 @@ def test_review_action_api_conflicts_when_exact_authority_input_changes_on_same_
 
     changed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json={**payload, "expectedEvidenceContentHash": "sha256:different-evidence"},
+        json={
+            **payload,
+            "expectedEvidenceContentHash": "sha256:6e4b91a5fe57c0450a4c530d01bcf90142430ab364fb41297a1b7447d16c2569",
+        },
         headers=headers,
     )
 

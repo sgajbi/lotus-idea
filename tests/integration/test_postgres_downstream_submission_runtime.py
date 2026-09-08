@@ -158,14 +158,14 @@ def test_postgres_downstream_submission_identity_is_tenant_scoped(
     first = build_downstream_submission_claim(
         tenant_id="tenant-private-bank-sg",
         idempotency_key=shared_key,
-        request_fingerprint="sha256:tenant-scope-sg",
+        request_fingerprint="sha256:60fbc4136143e84683f92e6b0f739a849d2a6707cd508a097081e0875f448237",
         resource_id=first_resource,
         submitted_at_utc=SUBMITTED_AT,
     )
     second = build_downstream_submission_claim(
         tenant_id="tenant-private-bank-hk",
         idempotency_key=shared_key,
-        request_fingerprint="sha256:tenant-scope-hk",
+        request_fingerprint="sha256:ece9f2a48d1f904fc444d6fba5a54f60e7a3553a5f35fe179df7f0e608b947f9",
         resource_id=second_resource,
         submitted_at_utc=SUBMITTED_AT,
     )
@@ -202,7 +202,7 @@ def test_postgres_advise_history_race_reports_one_atomic_append_delta(
     )
     claim = build_downstream_submission_claim(
         idempotency_key="atomic-history-delta-submission",
-        request_fingerprint="sha256:atomic-history-delta",
+        request_fingerprint="sha256:d30a159ff506adfaa6747d78af918caf10455137b3b85f5a69868ec23aae3948",
         resource_id=conversion_intent_id,
         submitted_at_utc=SUBMITTED_AT,
     )
@@ -255,7 +255,7 @@ def test_postgres_advise_reconciliation_is_one_time_and_exact_replay_is_zero_del
     )
     claim = build_downstream_submission_claim(
         idempotency_key="advise-restart-reconciliation-submission",
-        request_fingerprint="sha256:advise-restart-reconciliation",
+        request_fingerprint="sha256:6b3276539e9c42dd5888f30055133ef96b9cb7d4e15d72b65c2c6bb05c21e74d",
         resource_id=conversion_intent_id,
         submitted_at_utc=SUBMITTED_AT,
     )
@@ -387,7 +387,7 @@ def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owne
 
     claim = build_downstream_submission_claim(
         idempotency_key="precommit-timeout-submission",
-        request_fingerprint="sha256:precommit-timeout",
+        request_fingerprint="sha256:fed3fb249d2649d457569b081029b817f66d15d38049c3d72b5a8797a655d0cd",
         resource_id=conversion_intent_id,
         submitted_at_utc=SUBMITTED_AT,
     )
@@ -465,7 +465,7 @@ def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owne
 def _claim(idempotency_key: str) -> DownstreamSubmissionRecord:
     return build_downstream_submission_claim(
         idempotency_key=idempotency_key,
-        request_fingerprint="sha256:postgres-downstream-runtime",
+        request_fingerprint="sha256:acceec62f1f99090209dcc24406fb7eb583d16b82c8ec99aa2c9eb97baf9754c",
         resource_id="conversion-postgres-runtime",
         submitted_at_utc=SUBMITTED_AT,
     )

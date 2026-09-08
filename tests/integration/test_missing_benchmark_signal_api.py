@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
@@ -452,7 +454,7 @@ def test_missing_benchmark_signal_api_rejects_wrong_source_contract(
         "productId": "lotus-performance:ReturnsSeriesBundle:v1",
         "sourceSystem": "lotus-performance",
         "route": "/performance/returns/series",
-        "contentHash": "sha256:wrong-missing-benchmark-source",
+        "contentHash": "sha256:43086cb2299b9a720aa33b078b98c4e05e4d46ac2600520b816285496f792524",
     }
     events: list[tuple[str, str, str, str | None]] = []
 
@@ -556,7 +558,7 @@ def missing_benchmark_payload() -> dict[str, Any]:
             "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:benchmark-assignment-gap",
+            "contentHash": "sha256:7a0a8aea31b7534c8c1f156b943954bbd820ba86b063c9629f8dd2e60b83208c",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -576,7 +578,7 @@ def _source_ref(product_id: str) -> SourceRef:
         route=f"/source/{product_id}",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash=f"sha256:{product_id}",
+        content_hash=evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

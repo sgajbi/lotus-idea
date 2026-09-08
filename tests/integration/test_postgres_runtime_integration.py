@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tests.support.evidence_digest import evidence_digest
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -416,7 +418,9 @@ def test_postgres_runtime_provider_recovers_source_ingestion_replay_and_conflict
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
 
-    source.evidence = _core_high_cash_evidence(holdings_hash="sha256:changed-holdings")
+    source.evidence = _core_high_cash_evidence(
+        holdings_hash="sha256:fd0c43342054290a6743d6048171770a8c0abf33721436c07440e54e0a9c60ce"
+    )
     reset_idea_repository_for_tests(reload_from_environment=True)
     conflict = ingest_high_cash_signal_from_core(
         _source_ingestion_command(),
@@ -967,7 +971,7 @@ def _source_ingestion_command() -> IngestHighCashSourceSignalCommand:
 
 def _core_high_cash_evidence(
     *,
-    holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
+    holdings_hash: str = "sha256:be761f838a2ccde2ec738fe09c4e99f18861279811def33e511ee8f420c8e8db",
 ) -> CoreHighCashEvidence:
     return CoreHighCashEvidence(
         source_reported_cash_weight=Decimal("0.18"),
@@ -986,7 +990,7 @@ def _core_source_ref(product_id: str, *, content_hash: str | None = None) -> Sou
         route=f"/source/{product_id}",
         as_of_date=date(2026, 6, 21),
         generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
-        content_hash=content_hash or f"sha256:{product_id}",
+        content_hash=content_hash or evidence_digest(product_id),
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
