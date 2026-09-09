@@ -1181,3 +1181,22 @@ idempotency record. Historical source-only v2 artifacts do not qualify against
 this contract. The public bond-maturity evaluation APIs remain read-only, and
 Workbench realization, data-mesh certification, client publication,
 deployment, production, and supported-feature promotion remain separate.
+
+## Core Projected-Cash-Shortfall Candidate Persistence
+
+Issue `#1319` applies the same durable authority boundary to the low-income /
+liquidity-shortfall family without generalizing the two source products into a
+new framework. Complete tenant/book/portfolio/client scope is required before
+Core I/O. An eligible `PortfolioCashMovementSummary:v1` plus
+`PortfolioCashflowProjection:v1` evaluation is accepted once under the caller's
+raw idempotency key and exact replay creates no additional candidate,
+idempotency, audit, or outbox state. Entitlement denial, source unavailability,
+and incomplete or conflicting scope create no durable state. An authoritative
+later no-opportunity result expires the matching generated condition.
+
+The closed v3 runtime artifact binds both Core receipts, source-revision
+posture, policy result, full pseudonymous scope, and accepted or replayed
+repository receipt. Real PostgreSQL proof reloads the repository between the
+accepted and replayed executions. Public low-income evaluation APIs remain
+read-only, and Idea does not infer a client income need, funding advice,
+treasury instruction, suitability, downstream outcome, or publication state.

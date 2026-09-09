@@ -68,6 +68,9 @@ Implemented foundations include:
 - Core bond-maturity evaluation and run-once proof that require authoritative
   tenant/book/portfolio/client scope and bind eligible maturity evidence to accepted or
   exact-replayed durable candidate state; the public evaluation endpoints remain read-only;
+- Core projected-cash-shortfall evaluation and run-once proof that require the same authoritative
+  scope and bind eligible movement/projection evidence to accepted or exact-replayed durable
+  candidate state; no-opportunity and non-durable executions cannot certify persistence;
 - qualification, scoring, ranking, suppression, snooze, expiry, recurrence, and reopen policy;
 - persisted presentation receipts, review decisions, feedback, and conversion intents;
 - action-specific review evidence is exclusive: suppression reason belongs only
