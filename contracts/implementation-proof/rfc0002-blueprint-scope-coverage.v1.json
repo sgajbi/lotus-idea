@@ -219,10 +219,10 @@
     },
     {
       "family": "low income / liquidity shortfall",
-      "status": "blocked_pending_external_proof",
+      "status": "implemented_foundation",
       "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
-      "issues": [{"repository": "sgajbi/lotus-core", "number": 796, "url": "https://github.com/sgajbi/lotus-core/issues/796"}],
-      "evidenceRefs": ["src/app/application/low_income_signal.py"],
+      "issues": [{"repository": "sgajbi/lotus-idea", "number": 1320, "url": "https://github.com/sgajbi/lotus-idea/issues/1320"}],
+      "evidenceRefs": ["src/app/application/low_income_signal.py", "src/app/application/low_income_cashflow_runtime_evidence/runtime_execution.py"],
       "supportedFeaturePosture": "foundation_only_not_promoted"
     },
     {
