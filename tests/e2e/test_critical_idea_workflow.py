@@ -112,6 +112,16 @@ def _queue_headers() -> dict[str, str]:
     return headers
 
 
+def _detail_headers() -> dict[str, str]:
+    headers = _headers(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities="idea.candidate.detail.read",
+    )
+    headers.update(_scope_headers())
+    return headers
+
+
 def _review_headers(*, idempotency_key: str) -> dict[str, str]:
     headers = _headers(
         subject="advisor-001",
@@ -212,11 +222,7 @@ def _assert_advisor_queue_contains_candidate(
     assert queue_payload["supportedFeaturePromoted"] is False
     detail = client.get(
         f"/api/v1/idea-candidates/{candidate_id}",
-        headers=_headers(
-            subject="advisor-001",
-            roles="advisor",
-            capabilities="idea.candidate.detail.read",
-        ),
+        headers=_detail_headers(),
     )
     assert detail.status_code == 200
     evidence = detail.json()["evidence"]
@@ -398,11 +404,7 @@ def _assert_candidate_detail_replays_non_authority_workflow(
 ) -> None:
     detail_response = client.get(
         f"/api/v1/idea-candidates/{candidate_id}",
-        headers=_headers(
-            subject="advisor-001",
-            roles="advisor",
-            capabilities="idea.candidate.detail.read",
-        ),
+        headers=_detail_headers(),
     )
 
     assert detail_response.status_code == 200
