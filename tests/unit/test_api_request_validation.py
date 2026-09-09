@@ -25,6 +25,7 @@ from app.domain import (
     ReportEvidencePackPurpose,
     ReviewAction,
 )
+from app.domain.evidence_digest import REVISION_VECTOR_DIGEST_PATTERN, SHA256_DIGEST_PATTERN
 
 
 REQUESTED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
@@ -37,6 +38,35 @@ CONVERSION_AUTHORITY_FIELDS = {
     "expectedSourceRevisionVectorDigest": "sha256:73735e44a8921cf0f0829e9a7d0d637e57a15ec43f6cf1836da0d5208cdf772d",
     "expectedSourceCutPosture": "coherent",
 }
+
+
+def _conversion_intent_request_payload() -> dict[str, object]:
+    return {
+        "conversionIntentId": "conversion-report-001",
+        "target": ConversionTarget.REPORT_EVIDENCE,
+        "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
+        "requestedAtUtc": REQUESTED_AT,
+        **CONVERSION_AUTHORITY_FIELDS,
+    }
+
+
+def _review_action_request_payload() -> dict[str, object]:
+    return {
+        "reviewId": "review-reject-001",
+        "action": ReviewAction.REJECT,
+        "reasonCodes": [ReasonCode.REVIEW_REQUIRED],
+        "decidedAtUtc": REQUESTED_AT,
+        "reviewChannel": "workbench",
+        "expectedMaterialVersion": 1,
+        "expectedEvidenceVersion": 1,
+        "expectedEvidencePacketId": "evidence-packet-001",
+        "expectedEvidenceContentHash": CONVERSION_AUTHORITY_FIELDS["expectedEvidenceContentHash"],
+        "expectedSourceRevisionVectorDigest": CONVERSION_AUTHORITY_FIELDS[
+            "expectedSourceRevisionVectorDigest"
+        ],
+        "expectedSourceCutPosture": "coherent",
+        "presentationReceiptId": "receipt-001",
+    }
 
 
 def test_require_non_empty_reason_codes_preserves_tuple_values() -> None:
@@ -121,33 +151,75 @@ def test_conversion_intent_request_rejects_oversized_identity() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("request_type", "payload_factory"),
+    (
+        (ConversionIntentRequest, _conversion_intent_request_payload),
+        (ReviewActionRequest, _review_action_request_payload),
+    ),
+)
+@pytest.mark.parametrize(
+    ("field_name", "malformed_value"),
+    (
+        ("expectedEvidenceContentHash", "x"),
+        ("expectedEvidenceContentHash", f"sha256:{'A' * 64}"),
+        ("expectedSourceRevisionVectorDigest", "a" * 64),
+        ("expectedSourceRevisionVectorDigest", f"sha256:{'a' * 63} "),
+    ),
+)
+def test_human_authority_requests_reject_malformed_evidence_digests(
+    request_type: type[ConversionIntentRequest] | type[ReviewActionRequest],
+    payload_factory: Callable[[], dict[str, object]],
+    field_name: str,
+    malformed_value: str,
+) -> None:
+    payload = payload_factory()
+    payload[field_name] = malformed_value
+
+    with pytest.raises(ValidationError, match="string_pattern_mismatch"):
+        request_type.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("request_type", "payload_factory"),
+    (
+        (ConversionIntentRequest, _conversion_intent_request_payload),
+        (ReviewActionRequest, _review_action_request_payload),
+    ),
+)
+def test_human_authority_requests_preserve_historical_revision_vector_sentinel(
+    request_type: type[ConversionIntentRequest] | type[ReviewActionRequest],
+    payload_factory: Callable[[], dict[str, object]],
+) -> None:
+    payload = payload_factory()
+    payload["expectedSourceRevisionVectorDigest"] = "legacy:unknown"
+
+    request = request_type.model_validate(payload)
+
+    assert request.expected_source_revision_vector_digest == "legacy:unknown"
+
+
+@pytest.mark.parametrize("request_type", (ConversionIntentRequest, ReviewActionRequest))
+def test_human_authority_request_schema_publishes_digest_constraints(
+    request_type: type[ConversionIntentRequest] | type[ReviewActionRequest],
+) -> None:
+    properties = request_type.model_json_schema(by_alias=True)["properties"]
+
+    assert properties["expectedEvidenceContentHash"]["pattern"] == SHA256_DIGEST_PATTERN.pattern
+    assert (
+        properties["expectedSourceRevisionVectorDigest"]["pattern"]
+        == REVISION_VECTOR_DIGEST_PATTERN.pattern
+    )
+
+
 def test_human_authority_requests_reject_blank_or_ambiguous_fields() -> None:
-    conversion_payload = {
-        "conversionIntentId": "conversion-report-001",
-        "target": ConversionTarget.REPORT_EVIDENCE,
-        "reasonCodes": [ReasonCode.REVIEW_APPROVED_FOR_CONVERSION],
-        "requestedAtUtc": REQUESTED_AT,
-        **CONVERSION_AUTHORITY_FIELDS,
-    }
+    conversion_payload = _conversion_intent_request_payload()
     conversion_payload["expectedReviewId"] = " "
     with pytest.raises(ValidationError, match="review authority identity fields are required"):
         ConversionIntentRequest.model_validate(conversion_payload)
 
-    review_payload = {
-        "reviewId": "review-reject-001",
-        "action": ReviewAction.REJECT,
-        "reasonCodes": [ReasonCode.REVIEW_REQUIRED],
-        "decidedAtUtc": REQUESTED_AT,
-        "reviewChannel": "workbench",
-        "expectedMaterialVersion": 1,
-        "expectedEvidenceVersion": 1,
-        "expectedEvidencePacketId": "evidence-packet-001",
-        "expectedEvidenceContentHash": "sha256:130db97f723f60c45a5e85a5794d11fab3a339ffa6d17a4341ab1e15582b0a21",
-        "expectedSourceRevisionVectorDigest": "sha256:73735e44a8921cf0f0829e9a7d0d637e57a15ec43f6cf1836da0d5208cdf772d",
-        "expectedSourceCutPosture": "coherent",
-        "presentationReceiptId": "receipt-001",
-        "snoozedUntilUtc": None,
-    }
+    review_payload = _review_action_request_payload()
+    review_payload["snoozedUntilUtc"] = None
     assert ReviewActionRequest.model_validate(review_payload).snoozed_until_utc is None
     review_payload["expectedEvidencePacketId"] = " "
     with pytest.raises(ValidationError, match="reviewId is required"):
