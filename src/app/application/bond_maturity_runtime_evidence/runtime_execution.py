@@ -5,6 +5,12 @@ from datetime import date, datetime, timedelta
 import re
 from typing import Any
 
+from app.application.bond_maturity_signal import (
+    BondMaturitySignalPersistenceResult,
+    EvaluateAndPersistBondMaturityFromCoreCommand,
+    EvaluateBondMaturityFromCoreCommand,
+    evaluate_and_persist_bond_maturity_signal_from_core,
+)
 from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
@@ -13,16 +19,20 @@ from app.application.runtime_evidence import (
     source_ref_receipt,
 )
 from app.domain.evidence_digest import is_sha256_digest
-from app.domain import EvidenceFreshness, SourceSystem
+from app.domain import CandidatePersistenceDecision, EvidenceFreshness, ReviewAccessScope, SourceSystem
+from app.domain.evidence_hashing import evidence_hash_for_source_refs
+from app.domain.source_revision import source_cut_posture, source_revision_vector_digest
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
     CoreBondMaturityEvidence,
-    CoreBondMaturityEvidenceRequest,
     CoreBondMaturitySourcePort,
+    CoreSourceEntitlementDenied,
+    CoreSourceUnavailable,
 )
+from app.ports.idea_repository import CandidateEvaluationRepository
 
 BOND_MATURITY_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF"
-BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.bond-maturity.runtime-execution.v2"
+BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.bond-maturity.runtime-execution.v3"
 BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_maturity_live_core_source_proof_missing",
 )
@@ -37,6 +47,7 @@ BOND_MATURITY_REMAINING_BLOCKERS = (
 BOND_MATURITY_RUNTIME_EVIDENCE_REFS = (
     "src/app/application/bond_maturity_runtime_evidence/runtime_execution.py",
     "src/app/application/bond_maturity_runtime_evidence/contract.py",
+    "src/app/application/bond_maturity_signal.py",
     "src/app/application/runtime_evidence/receipts.py",
     "src/app/ports/core_sources.py",
     "src/app/infrastructure/lotus_core_sources.py",
@@ -60,19 +71,35 @@ _REQUEST_FINGERPRINT_PATTERN = re.compile(r"^maturity_summary:[0-9a-f]{16}$")
 @dataclass(frozen=True)
 class EvaluateBondMaturityReadiness:
     tenant_id: str
+    book_id: str
     portfolio_id: str
+    client_id: str
     as_of_date: date
     evaluated_at_utc: datetime
+    accepted_at_utc: datetime
+    idempotency_key: str
+    actor_subject: str
     maturity_window_days: int = 30
     correlation_id: str | None = None
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.tenant_id.strip() or not self.portfolio_id.strip():
-            raise ValueError("tenant_id and portfolio_id are required")
+        if not all(
+            value.strip()
+            for value in (
+                self.tenant_id,
+                self.book_id,
+                self.portfolio_id,
+                self.client_id,
+                self.idempotency_key,
+                self.actor_subject,
+            )
+        ):
+            raise ValueError("authoritative scope, idempotency_key, and actor_subject are required")
         if self.maturity_window_days < 1 or self.maturity_window_days > 366:
             raise ValueError("maturity_window_days must be between 1 and 366")
         require_aware(self.evaluated_at_utc, "evaluated_at_utc")
+        require_aware(self.accepted_at_utc, "accepted_at_utc")
         if self.correlation_id is not None and not self.correlation_id.strip():
             raise ValueError("correlation_id must not be blank")
 
@@ -81,31 +108,56 @@ class EvaluateBondMaturityReadiness:
 class BondMaturityReadinessResult:
     command: EvaluateBondMaturityReadiness
     evidence: CoreBondMaturityEvidence
+    signal_result: BondMaturitySignalPersistenceResult
 
 
 def evaluate_bond_maturity_readiness(
     command: EvaluateBondMaturityReadiness,
     *,
     core_source: CoreBondMaturitySourcePort,
+    repository: CandidateEvaluationRepository,
 ) -> BondMaturityReadinessResult:
-    evidence = core_source.fetch_bond_maturity_evidence(
-        CoreBondMaturityEvidenceRequest(
-            tenant_id=command.tenant_id,
-            portfolio_id=command.portfolio_id,
-            as_of_date=command.as_of_date,
-            evaluated_at_utc=command.evaluated_at_utc,
-            maturity_window_days=command.maturity_window_days,
-            correlation_id=command.correlation_id,
-            trace_id=command.trace_id,
-        )
+    signal_result = evaluate_and_persist_bond_maturity_signal_from_core(
+        EvaluateAndPersistBondMaturityFromCoreCommand(
+            evaluation=EvaluateBondMaturityFromCoreCommand(
+                tenant_id=command.tenant_id,
+                portfolio_id=command.portfolio_id,
+                as_of_date=command.as_of_date,
+                evaluated_at_utc=command.evaluated_at_utc,
+                maturity_window_days=command.maturity_window_days,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
+            ),
+            access_scope=ReviewAccessScope(
+                tenant_id=command.tenant_id,
+                book_id=command.book_id,
+                portfolio_id=command.portfolio_id,
+                client_id=command.client_id,
+            ),
+            idempotency_key=command.idempotency_key,
+            actor_subject=command.actor_subject,
+            accepted_at_utc=command.accepted_at_utc,
+        ),
+        core_source=core_source,
+        repository=repository,
     )
-    return BondMaturityReadinessResult(command=command, evidence=evidence)
+    if signal_result.source_evidence is None:
+        diagnostic = next(iter(signal_result.source_diagnostic_codes), "")
+        if diagnostic == "core_source_entitlement_denied":
+            raise CoreSourceEntitlementDenied
+        raise CoreSourceUnavailable(code=diagnostic or "core_maturity_source_unavailable")
+    return BondMaturityReadinessResult(
+        command=command,
+        evidence=signal_result.source_evidence,
+        signal_result=signal_result,
+    )
 
 
 def build_bond_maturity_runtime_execution(
     *,
     generated_at_utc: datetime,
     result: BondMaturityReadinessResult,
+    durable_storage_backed: bool,
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
     blockers = _qualification_blockers(
@@ -113,11 +165,23 @@ def build_bond_maturity_runtime_execution(
         result.evidence,
         evidence_observed_at_utc=generated_at_utc,
     )
+    persistence_receipt = _persistence_receipt(result)
+    if result.signal_result.evaluation.candidate is None:
+        blockers = (
+            *blockers,
+            f"candidate_evaluation_{result.signal_result.evaluation.outcome.value}",
+        )
+    if not durable_storage_backed:
+        blockers = (*blockers, "durable_repository_not_configured")
+    if persistence_receipt is None:
+        blockers = (*blockers, "persistence_receipt_missing")
     return _payload(
         generated_at_utc=generated_at_utc,
         command=result.command,
         status="completed",
         source_receipt=_source_receipt(result.evidence),
+        persistence_receipt=persistence_receipt,
+        durable_storage_backed=durable_storage_backed,
         diagnostic_code=result.evidence.maturity_diagnostic or "core_maturity_unknown",
         opportunity_detected=(result.evidence.source_reported_maturing_position_count or 0) > 0,
         qualification_blockers=blockers,
@@ -129,6 +193,7 @@ def build_blocked_bond_maturity_runtime_execution(
     generated_at_utc: datetime,
     command: EvaluateBondMaturityReadiness,
     error_code: str,
+    durable_storage_backed: bool,
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
     return _payload(
@@ -136,9 +201,16 @@ def build_blocked_bond_maturity_runtime_execution(
         command=command,
         status="blocked",
         source_receipt=None,
+        persistence_receipt=None,
+        durable_storage_backed=durable_storage_backed,
         diagnostic_code=error_code,
         opportunity_detected=False,
-        qualification_blockers=("core_maturity_source_execution_blocked", error_code),
+        qualification_blockers=(
+            "core_maturity_source_execution_blocked",
+            error_code,
+            *(("durable_repository_not_configured",) if not durable_storage_backed else ()),
+            "persistence_receipt_missing",
+        ),
     )
 
 
@@ -148,6 +220,8 @@ def _payload(
     command: EvaluateBondMaturityReadiness,
     status: str,
     source_receipt: dict[str, Any] | None,
+    persistence_receipt: dict[str, Any] | None,
+    durable_storage_backed: bool,
     diagnostic_code: str,
     opportunity_detected: bool,
     qualification_blockers: tuple[str, ...],
@@ -158,14 +232,16 @@ def _payload(
         "repository": "lotus-idea",
         "evidenceClass": EvidenceClass.RUNTIME_EXECUTION.value,
         "proofFamily": "bond_maturity",
-        "proofType": "lotus_core_portfolio_maturity_summary_read",
+        "proofType": "lotus_core_bond_maturity_candidate_persistence",
         "sourceAuthority": SourceSystem.LOTUS_CORE.value,
         "generatedAtUtc": format_utc(generated_at_utc),
         "execution": {
             "status": status,
+            "durableStorageBacked": durable_storage_backed,
             "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
             "requestReceipt": _request_receipt(command),
             "sourceReceipt": source_receipt,
+            "persistenceReceipt": persistence_receipt,
             "diagnosticCode": diagnostic_code,
             "opportunityDetected": opportunity_detected,
             "qualificationBlockers": list(blockers),
@@ -192,7 +268,6 @@ def _payload(
             "deploymentCertified": False,
             "productionCertified": False,
             "supportedFeaturePromoted": False,
-            "ideaPersistenceRequired": False,
         },
     }
 
@@ -425,9 +500,14 @@ def _maturity_fact_is_consistent(evidence: CoreBondMaturityEvidence) -> bool:
 def _request_receipt(command: EvaluateBondMaturityReadiness) -> dict[str, Any]:
     material = {
         "tenantIdHash": identity_hash(command.tenant_id),
+        "bookIdHash": identity_hash(command.book_id),
         "portfolioIdHash": identity_hash(command.portfolio_id),
+        "clientIdHash": identity_hash(command.client_id),
         "asOfDate": command.as_of_date.isoformat(),
         "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
+        "acceptedAtUtc": format_utc(command.accepted_at_utc),
+        "idempotencyKeyHash": identity_hash(command.idempotency_key),
+        "actorSubjectHash": identity_hash(command.actor_subject),
         "consumerSystem": _CONSUMER_SYSTEM,
         "maturityWindowDays": command.maturity_window_days,
         "includeProjected": False,
@@ -436,6 +516,54 @@ def _request_receipt(command: EvaluateBondMaturityReadiness) -> dict[str, Any]:
         ),
     }
     return {**material, "requestDigest": sha256_json(material)}
+
+
+def _persistence_receipt(
+    result: BondMaturityReadinessResult,
+) -> dict[str, Any] | None:
+    evaluation = result.signal_result.evaluation
+    persistence = result.signal_result.persistence
+    candidate = evaluation.candidate
+    if (
+        candidate is None
+        or persistence is None
+        or persistence.record is None
+        or persistence.decision
+        not in {CandidatePersistenceDecision.ACCEPTED, CandidatePersistenceDecision.REPLAYED}
+        or persistence.record.candidate != candidate
+    ):
+        return None
+    source_refs = candidate.evidence_packet.source_refs
+    if (
+        len(source_refs) != 2
+        or persistence.record.evidence_hash != evidence_hash_for_source_refs(source_refs)
+        or candidate.access_scope is None
+        or not candidate.access_scope.is_authoritative
+    ):
+        return None
+    source_receipt = _source_receipt(result.evidence)
+    if source_receipt is None:
+        return None
+    material = {
+        "decision": persistence.decision.value,
+        "candidateFamily": candidate.family.value,
+        "candidateLifecycleStatus": candidate.lifecycle_status.value,
+        "sourceReceiptDigest": source_receipt["receiptDigest"],
+        "sourceEvidenceHash": persistence.record.evidence_hash,
+        "sourceRevisionVectorDigest": source_revision_vector_digest(source_refs),
+        "sourceCutPosture": source_cut_posture(source_refs).value,
+        "scopeFingerprint": sha256_json(
+            {
+                "tenantId": candidate.access_scope.tenant_id,
+                "bookId": candidate.access_scope.book_id,
+                "portfolioId": candidate.access_scope.portfolio_id,
+                "clientId": candidate.access_scope.client_id,
+                "requestDigest": _request_receipt(result.command)["requestDigest"],
+            }
+        ),
+        "persistedAtUtc": format_utc(persistence.record.persisted_at_utc),
+    }
+    return {**material, "receiptDigest": sha256_json(material)}
 
 
 def _source_receipt(evidence: CoreBondMaturityEvidence) -> dict[str, Any] | None:

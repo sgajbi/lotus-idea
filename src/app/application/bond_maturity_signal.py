@@ -73,12 +73,14 @@ class BondMaturitySignalPersistenceResult:
     persistence: CandidatePersistenceResult | None
     expiry: CandidateExpiryResult | None = None
     source_diagnostic_codes: tuple[str, ...] = ()
+    source_evidence: CoreBondMaturityEvidence | None = None
 
 
 @dataclass(frozen=True)
 class _BondMaturitySourceEvaluation:
     evaluation: SignalEvaluationResult
     source_diagnostic_codes: tuple[str, ...] = ()
+    source_evidence: CoreBondMaturityEvidence | None = None
 
 
 DEFAULT_BOND_MATURITY_POLICY = BondMaturitySignalPolicy(
@@ -160,6 +162,7 @@ def evaluate_and_persist_bond_maturity_signal_from_core(
                 repository=repository,
             ),
             source_diagnostic_codes=source_evaluation.source_diagnostic_codes,
+            source_evidence=source_evaluation.source_evidence,
         )
 
     persistence = repository.persist_candidate(
@@ -181,6 +184,7 @@ def evaluate_and_persist_bond_maturity_signal_from_core(
         evaluation=evaluation,
         persistence=persistence,
         source_diagnostic_codes=source_evaluation.source_diagnostic_codes,
+        source_evidence=source_evaluation.source_evidence,
     )
 
 
@@ -243,6 +247,7 @@ def _evaluate_bond_maturity_source(
             access_scope=fallback_scope,
         ),
         source_diagnostic_codes=_core_source_diagnostic_codes(evidence),
+        source_evidence=evidence,
     )
 
 

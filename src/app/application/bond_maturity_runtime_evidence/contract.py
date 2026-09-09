@@ -41,9 +41,11 @@ _TOP_KEYS = frozenset(
 _EXECUTION_KEYS = frozenset(
     {
         "status",
+        "durableStorageBacked",
         "evaluatedAtUtc",
         "requestReceipt",
         "sourceReceipt",
+        "persistenceReceipt",
         "diagnosticCode",
         "opportunityDetected",
         "qualificationBlockers",
@@ -52,14 +54,33 @@ _EXECUTION_KEYS = frozenset(
 _REQUEST_KEYS = frozenset(
     {
         "tenantIdHash",
+        "bookIdHash",
         "portfolioIdHash",
+        "clientIdHash",
         "asOfDate",
         "evaluatedAtUtc",
+        "acceptedAtUtc",
+        "idempotencyKeyHash",
+        "actorSubjectHash",
         "consumerSystem",
         "maturityWindowDays",
         "includeProjected",
         "correlationIdHash",
         "requestDigest",
+    }
+)
+_PERSISTENCE_KEYS = frozenset(
+    {
+        "decision",
+        "candidateFamily",
+        "candidateLifecycleStatus",
+        "sourceReceiptDigest",
+        "sourceEvidenceHash",
+        "sourceRevisionVectorDigest",
+        "sourceCutPosture",
+        "scopeFingerprint",
+        "persistedAtUtc",
+        "receiptDigest",
     }
 )
 _SOURCE_KEYS = frozenset(
@@ -127,7 +148,6 @@ _CLAIM_KEYS = frozenset(
         "deploymentCertified",
         "productionCertified",
         "supportedFeaturePromoted",
-        "ideaPersistenceRequired",
     }
 )
 _REQUEST_FINGERPRINT_PATTERN = re.compile(r"^maturity_summary:[0-9a-f]{16}$")
@@ -140,6 +160,7 @@ class _RuntimeExecutionValidationParts:
     execution: Mapping[str, Any]
     request: Mapping[str, Any]
     source: Mapping[str, Any]
+    persistence: Mapping[str, Any]
 
 
 def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool:
@@ -148,6 +169,7 @@ def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         parts is not None
         and _request_receipt_is_valid(parts)
         and _source_receipt_is_valid(parts)
+        and _persistence_receipt_is_valid(parts)
         and _fact_posture_is_valid(parts)
         and _execution_closure_is_valid(payload, parts)
         and evidence_class_can_clear(
@@ -167,7 +189,7 @@ def _runtime_execution_validation_parts(
         or payload.get("repository") != "lotus-idea"
         or payload.get("evidenceClass") != EvidenceClass.RUNTIME_EXECUTION.value
         or payload.get("proofFamily") != "bond_maturity"
-        or payload.get("proofType") != "lotus_core_portfolio_maturity_summary_read"
+        or payload.get("proofType") != "lotus_core_bond_maturity_candidate_persistence"
         or payload.get("sourceAuthority") != SourceSystem.LOTUS_CORE.value
     ):
         return None
@@ -180,12 +202,15 @@ def _runtime_execution_validation_parts(
         return None
     request = execution.get("requestReceipt")
     source = execution.get("sourceReceipt")
+    persistence = execution.get("persistenceReceipt")
     evaluated = parse_timezone_aware_datetime(execution.get("evaluatedAtUtc"))
     if (
         not isinstance(request, Mapping)
         or set(request) != _REQUEST_KEYS
         or not isinstance(source, Mapping)
         or set(source) != _SOURCE_KEYS
+        or not isinstance(persistence, Mapping)
+        or set(persistence) != _PERSISTENCE_KEYS
         or evaluated is None
     ):
         return None
@@ -195,6 +220,7 @@ def _runtime_execution_validation_parts(
         execution=execution,
         request=request,
         source=source,
+        persistence=persistence,
     )
 
 
@@ -219,7 +245,11 @@ def _request_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bool:
         return False
     request_hashes = (
         request.get("tenantIdHash"),
+        request.get("bookIdHash"),
         request.get("portfolioIdHash"),
+        request.get("clientIdHash"),
+        request.get("idempotencyKeyHash"),
+        request.get("actorSubjectHash"),
         request.get("correlationIdHash"),
         request.get("requestDigest"),
     )
@@ -236,6 +266,32 @@ def _source_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bool:
         and _source_window_and_temporal_posture_are_valid(parts)
         and _source_hash_identity_is_valid(source)
         and _source_required_strings_are_present(source)
+    )
+
+
+def _persistence_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bool:
+    persistence = parts.persistence
+    unsigned = {key: persistence[key] for key in _PERSISTENCE_KEYS if key != "receiptDigest"}
+    persisted_at = parse_timezone_aware_datetime(persistence.get("persistedAtUtc"))
+    return (
+        persistence.get("receiptDigest") == sha256_json(unsigned)
+        and persistence.get("decision") in {"accepted", "replayed"}
+        and persistence.get("candidateFamily") == "bond_maturity"
+        and persistence.get("candidateLifecycleStatus") == "generated"
+        and persistence.get("sourceReceiptDigest") == parts.source.get("receiptDigest")
+        and persistence.get("sourceCutPosture")
+        in {"coherent", "coherent_with_declared_tolerance"}
+        and all(
+            _is_sha256(persistence.get(key))
+            for key in (
+                "sourceReceiptDigest",
+                "sourceEvidenceHash",
+                "sourceRevisionVectorDigest",
+                "scopeFingerprint",
+            )
+        )
+        and persisted_at is not None
+        and persisted_at <= parts.generated_at_utc
     )
 
 
@@ -337,6 +393,7 @@ def _execution_closure_is_valid(
     execution = parts.execution
     if (
         execution.get("status") != "completed"
+        or execution.get("durableStorageBacked") is not True
         or tuple(execution.get("qualificationBlockers") or ())
         or tuple(payload.get("aggregateBlockersSatisfied") or ())
         != BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED
