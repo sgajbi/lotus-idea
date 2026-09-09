@@ -78,6 +78,10 @@ atomically and refuses retained duplicates.
     intent. The comparison precedes idempotency precheck, outcome progression,
     audit, outbox, and repository mutation; source systems remain authoritative
     for the outcome fact.
+    Report evidence-pack requests apply the same complete-scope object
+    authorization to the persisted candidate behind the conversion intent.
+    Incomplete or mismatched scope is refused before idempotency precheck,
+    report-pack creation, audit, outbox, or candidate mutation.
 11. `src/app/api/conversion_governance.py` exposes certified internal API
     foundations:
     - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,

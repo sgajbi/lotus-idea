@@ -146,7 +146,10 @@ Implementation evidence:
    mutation; missing or mismatched scope is product-safe and mutation-free.
 8. `src/app/api/report_evidence.py` emits bounded operation events for report
    evidence-pack request accepted, replayed, conflict, not-found,
-   permission-denied, invalid-request, and invalid-state outcomes.
+   permission-denied, invalid-request, and invalid-state outcomes. The route
+   requires complete trusted tenant/book/portfolio/client entitlements and the
+   application layer compares them with persisted candidate scope before
+   idempotency precheck or durable mutation.
 9. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
    `src/app/api/candidate_evidence_replay.py`,
    `src/app/api/ai_governance.py`, `src/app/api/review_queue/`, and
