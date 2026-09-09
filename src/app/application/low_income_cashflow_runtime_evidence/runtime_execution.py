@@ -5,7 +5,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
@@ -528,17 +527,6 @@ def _point_material(point: Any) -> dict[str, Any]:
         "netCashflow": _decimal_text(point.net_cashflow),
         "projectedCumulativeCashflow": _decimal_text(point.projected_cumulative_cashflow),
     }
-
-
-def _movement_direction_reconciles(amount: Decimal | None, direction: str | None) -> bool:
-    if not isinstance(amount, Decimal):
-        return False
-    expected = "INFLOW" if amount > 0 else "OUTFLOW" if amount < 0 else "FLAT"
-    return direction == expected
-
-
-def _is_sha256(value: object) -> bool:
-    return is_sha256_digest(value)
 
 
 def _date_text(value: date | None) -> str | None:
