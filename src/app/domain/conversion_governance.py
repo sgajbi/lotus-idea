@@ -398,6 +398,52 @@ def record_conversion_outcome(
     return ConversionOutcomeResult(conversion_outcome=governed_outcome, audit_event=audit_event)
 
 
+def validate_conversion_intent_for_realization(
+    candidate: IdeaCandidate,
+    governed_intent: GovernedConversionIntent,
+    *,
+    evaluated_at_utc: datetime,
+) -> None:
+    """Require current Idea authority before the first downstream submission attempt."""
+
+    _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
+    intent = governed_intent.intent
+    expected_target_status = TARGET_LIFECYCLE_STATUS[intent.target]
+    expected_source_authority = TARGET_SOURCE_AUTHORITIES[intent.target]
+    current_evidence = CandidateEvidenceIdentity.from_candidate(candidate)
+    grant = governed_intent.review_authority_grant
+    if grant is None:
+        raise InvalidConversionIntent(candidate.candidate_id, "review authority is missing")
+    retained_evidence = CandidateEvidenceIdentity(
+        candidate_id=intent.candidate_id,
+        material_version=grant.candidate_evidence.material_version,
+        evidence_version=grant.candidate_evidence.evidence_version,
+        evidence_packet_id=governed_intent.evidence_packet_id,
+        evidence_content_hash=governed_intent.evidence_content_hash,
+        source_revision_vector_digest=governed_intent.source_revision_vector_digest,
+        source_cut_posture=governed_intent.source_cut_posture,
+    )
+
+    if intent.source_status is not IdeaLifecycleStatus.APPROVED:
+        raise InvalidConversionIntent(candidate.candidate_id, "source lifecycle is not approved")
+    if candidate.lifecycle_status is not expected_target_status:
+        raise InvalidConversionIntent(candidate.candidate_id, "candidate conversion target changed")
+    if governed_intent.target_source_authority is not expected_source_authority:
+        raise InvalidConversionIntent(candidate.candidate_id, "target source authority changed")
+    if retained_evidence != current_evidence:
+        raise InvalidConversionIntent(candidate.candidate_id, "candidate evidence changed")
+    if not source_cut_is_authoritative(governed_intent.source_cut_posture):
+        raise InvalidConversionIntent(candidate.candidate_id, "source cut is not authoritative")
+    if (
+        grant.effective_status(
+            candidate,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+        is not ReviewAuthorityStatus.ACTIVE
+    ):
+        raise InvalidConversionIntent(candidate.candidate_id, "review authority is not active")
+
+
 def conversion_outcome_identity_from_command(
     governed_intent: GovernedConversionIntent,
     command: ConversionOutcomeCommand,

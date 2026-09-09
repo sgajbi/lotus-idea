@@ -63,6 +63,7 @@ from app.domain.conversion_governance import (
     current_conversion_outcome,
     record_conversion_outcome,
     request_conversion_intent,
+    validate_conversion_intent_for_realization,
 )
 from app.domain.conversion_outcome_policy import (
     CONVERSION_OUTCOME_POLICY_VERSION,
@@ -438,6 +439,7 @@ __all__ = [
     "current_conversion_outcome",
     "record_conversion_outcome",
     "request_conversion_intent",
+    "validate_conversion_intent_for_realization",
     "CONVERSION_OUTCOME_POLICY_VERSION",
     "TERMINAL_CONVERSION_OUTCOME_STATUSES",
     "ConversionOutcomeIdentity",

@@ -188,6 +188,7 @@ def test_downstream_submission_openapi_problem_codes_match_runtime_contract() ->
             "downstream_realization_resource_not_found"
         }
         assert _problem_codes(conversion_responses["409"], media_type) == {
+            "conversion_intent_authority_conflict",
             "idempotency_conflict",
             "unsupported_downstream_realization_target",
         }

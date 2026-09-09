@@ -15,11 +15,13 @@ from app.domain import (
     DownstreamSubmissionResourceType,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
+    InvalidConversionIntent,
     QueueAccessScopeFilter,
     ReviewAccessScope,
     SourceSystem,
     create_downstream_submission_claim,
     downstream_submission_lease_attempt_id,
+    validate_conversion_intent_for_realization,
 )
 from app.domain.idempotency import payload_fingerprint
 from app.ports.downstream_realization import (
@@ -47,6 +49,7 @@ class DownstreamRealizationStatus(StrEnum):
     IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     NOT_FOUND = "not_found"
     UNSUPPORTED_TARGET = "unsupported_target"
+    AUTHORITY_CONFLICT = "authority_conflict"
 
 
 @dataclass(frozen=True)
@@ -144,6 +147,26 @@ def submit_conversion_intent_to_downstream(
         candidate_record.candidate.access_scope,
     )
     request = _request_for_conversion(command, conversion_intent, access_scope=access_scope)
+    if (
+        repository.downstream_submission_by_idempotency_key(
+            request.tenant_id,
+            request.idempotency_key,
+        )
+        is None
+    ):
+        try:
+            validate_conversion_intent_for_realization(
+                candidate_record.candidate,
+                conversion_intent,
+                evaluated_at_utc=request.submitted_at_utc,
+            )
+        except InvalidConversionIntent:
+            return DownstreamRealizationSubmissionResult(
+                status=DownstreamRealizationStatus.AUTHORITY_CONFLICT,
+                source_authority=conversion_intent.target_source_authority,
+                target=conversion_intent.intent.target,
+                downstream_failure_reason="conversion_intent_authority_conflict",
+            )
     if conversion_intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
         call = (
             None

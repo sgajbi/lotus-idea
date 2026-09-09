@@ -59,6 +59,7 @@ _SUBMISSION_ERROR_CODES_BY_STATUS = {
     DownstreamRealizationStatus.UNSUPPORTED_TARGET: "unsupported_downstream_realization_target",
     DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT: "idempotency_conflict",
     DownstreamRealizationStatus.NOT_CONFIGURED: "downstream_realization_not_configured",
+    DownstreamRealizationStatus.AUTHORITY_CONFLICT: "conversion_intent_authority_conflict",
 }
 _DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA = not_found_metadata(
     code="downstream_realization_resource_not_found",
@@ -93,6 +94,15 @@ _DOWNSTREAM_NOT_CONFIGURED_METADATA = service_unavailable_metadata(
     ),
     description="Downstream realization adapters are not configured.",
 )
+_CONVERSION_INTENT_AUTHORITY_CONFLICT_METADATA = conflict_metadata(
+    code="conversion_intent_authority_conflict",
+    title="Conversion intent authority conflict",
+    detail=(
+        "The retained conversion intent no longer has current authority for a new "
+        "downstream submission attempt."
+    ),
+    description="Conversion intent evidence or review authority is no longer current.",
+)
 
 
 def _conversion_submission_conflict_metadata() -> dict[int | str, dict[str, object]]:
@@ -102,6 +112,7 @@ def _conversion_submission_conflict_metadata() -> dict[int | str, dict[str, obje
         responses=(
             _UNSUPPORTED_DOWNSTREAM_REALIZATION_TARGET_METADATA,
             _IDEMPOTENCY_CONFLICT_METADATA,
+            _CONVERSION_INTENT_AUTHORITY_CONFLICT_METADATA,
         ),
     )
 
@@ -420,6 +431,16 @@ def _problem_for_submission_result(
                 "downstream realization submission target."
             ),
         )
+    if result.status is DownstreamRealizationStatus.AUTHORITY_CONFLICT:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="conversion_intent_authority_conflict",
+            title="Conversion intent authority conflict",
+            detail=(
+                "The retained conversion intent no longer has current authority for a new "
+                "downstream submission attempt."
+            ),
+        )
     if result.status is DownstreamRealizationStatus.NOT_CONFIGURED:
         return _downstream_not_configured()
     return None
@@ -477,6 +498,8 @@ def _operation_outcome_from_submission_status(
     if submission_status is DownstreamRealizationStatus.NOT_FOUND:
         return OperationOutcome.NOT_FOUND
     if submission_status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT:
+        return OperationOutcome.CONFLICT
+    if submission_status is DownstreamRealizationStatus.AUTHORITY_CONFLICT:
         return OperationOutcome.CONFLICT
     if submission_status is DownstreamRealizationStatus.NOT_CONFIGURED:
         return OperationOutcome.BLOCKED
