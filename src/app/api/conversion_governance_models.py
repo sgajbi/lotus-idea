@@ -163,6 +163,7 @@ class ConversionOutcomeRequest(CamelModel):
         conversion_intent_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        access_scope_filter: QueueAccessScopeFilter | None,
         accepted_at_utc: datetime,
         event_lineage: EventLineageContext,
     ) -> RecordConversionOutcomeToRepositoryCommand:
@@ -181,6 +182,7 @@ class ConversionOutcomeRequest(CamelModel):
             ),
             idempotency_key=idempotency_key,
             accepted_at_utc=accepted_at_utc,
+            access_scope_filter=access_scope_filter,
             event_lineage=event_lineage,
         )
 

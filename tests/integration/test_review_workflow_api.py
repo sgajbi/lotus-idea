@@ -102,6 +102,10 @@ def conversion_outcome_headers(
     return {
         "X-Caller-Subject": "lotus-report-worker",
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-conversion-outcome-api",
         "X-Trace-Id": "trace-conversion-outcome-api",
         "Idempotency-Key": idempotency_key,
@@ -1065,6 +1069,126 @@ def test_conversion_outcome_api_records_source_authorized_result() -> None:
     assert payload["persistence"]["auditEventType"] == "idea.conversion.outcome_recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+
+
+@pytest.mark.parametrize(
+    ("header_name", "header_value"),
+    (
+        ("X-Caller-Tenant-Ids", None),
+        ("X-Caller-Book-Ids", None),
+        ("X-Caller-Portfolio-Ids", None),
+        ("X-Caller-Client-Ids", None),
+        ("X-Caller-Tenant-Ids", "tenant-private-bank-hk"),
+        ("X-Caller-Book-Ids", "book-other"),
+        ("X-Caller-Portfolio-Ids", "portfolio-other"),
+        ("X-Caller-Client-Ids", "client-other"),
+    ),
+)
+def test_conversion_outcome_api_denies_incomplete_or_mismatched_candidate_scope(
+    header_name: str,
+    header_value: str | None,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key=f"seed-outcome-scope-{header_name}-{header_value}",
+    )
+    approve_candidate_for_conversion(client, candidate_id)
+    intent_id = f"conversion-outcome-scope-{header_name}-{header_value}"
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=intent_id),
+        headers=conversion_intent_headers(f"intent-outcome-scope-{header_name}-{header_value}"),
+    )
+    assert intent.status_code == 200
+    repository = get_idea_repository()
+    before = repository.snapshot()
+    headers = conversion_outcome_headers(f"outcome-scope-{header_name}-{header_value}")
+    if header_value is None:
+        headers.pop(header_name)
+    else:
+        headers[header_name] = header_value
+
+    response = client.post(
+        f"/api/v1/conversion-intents/{intent_id}/outcomes",
+        json=conversion_outcome_payload(
+            conversion_outcome_id=f"outcome-scope-{header_name}-{header_value}"
+        ),
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert repository.snapshot() == before
+
+
+def test_conversion_outcome_api_accepts_matching_multi_value_scope_and_replay() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-outcome-multi-scope")
+    approve_candidate_for_conversion(client, candidate_id)
+    intent_id = "conversion-outcome-multi-scope"
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=intent_id),
+        headers=conversion_intent_headers("intent-outcome-multi-scope"),
+    )
+    assert intent.status_code == 200
+    headers = conversion_outcome_headers("outcome-multi-scope")
+    headers.update(
+        {
+            "X-Caller-Tenant-Ids": "tenant-private-bank-hk,tenant-private-bank-sg",
+            "X-Caller-Book-Ids": "book-other,book-advisor-001",
+            "X-Caller-Portfolio-Ids": "portfolio-other,PB_SG_GLOBAL_BAL_001",
+            "X-Caller-Client-Ids": "client-other,client-001",
+        }
+    )
+    outcome_payload = conversion_outcome_payload(conversion_outcome_id="outcome-multi-scope-event")
+
+    accepted = client.post(
+        f"/api/v1/conversion-intents/{intent_id}/outcomes",
+        json=outcome_payload,
+        headers=headers,
+    )
+    replayed = client.post(
+        f"/api/v1/conversion-intents/{intent_id}/outcomes",
+        json=outcome_payload,
+        headers=headers,
+    )
+
+    assert accepted.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["conversionOutcome"] == accepted.json()["conversionOutcome"]
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+
+
+def test_conversion_outcome_api_rejects_malformed_scope_without_mutation() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-outcome-malformed-scope")
+    approve_candidate_for_conversion(client, candidate_id)
+    intent_id = "conversion-outcome-malformed-scope"
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=intent_id),
+        headers=conversion_intent_headers("intent-outcome-malformed-scope"),
+    )
+    assert intent.status_code == 200
+    repository = get_idea_repository()
+    before = repository.snapshot()
+    headers = conversion_outcome_headers("outcome-malformed-scope")
+    headers["X-Caller-Tenant-Ids"] = "tenant-private-bank-sg,,tenant-other"
+
+    response = client.post(
+        f"/api/v1/conversion-intents/{intent_id}/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="outcome-malformed-scope-event"),
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert repository.snapshot() == before
 
 
 def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays() -> None:

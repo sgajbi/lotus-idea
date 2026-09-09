@@ -139,6 +139,10 @@ def _conversion_outcome_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "lotus-report-worker",
         "X-Caller-Capabilities": "idea.conversion.outcome.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-outcome",
         "X-Trace-Id": "trace-postgres-runtime-proof-conversion-outcome",
         "Idempotency-Key": "postgres-runtime-proof-conversion-outcome-001",

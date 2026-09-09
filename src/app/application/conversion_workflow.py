@@ -38,7 +38,7 @@ class RequestConversionIntentToRepositoryCommand:
     conversion: ConversionIntentCommand
     idempotency_key: str
     accepted_at_utc: datetime
-    access_scope_filter: QueueAccessScopeFilter | None = None
+    access_scope_filter: QueueAccessScopeFilter | None
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -55,6 +55,7 @@ class RecordConversionOutcomeToRepositoryCommand:
     outcome: ConversionOutcomeCommand
     idempotency_key: str
     accepted_at_utc: datetime
+    access_scope_filter: QueueAccessScopeFilter | None = None
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -216,6 +217,10 @@ def record_conversion_outcome_to_repository(
                 record=None,
             ),
         )
+    if command.access_scope_filter is None or not command.access_scope_filter.matches(
+        record.candidate.access_scope
+    ):
+        raise ConversionAccessScopeDenied
 
     payload = _conversion_outcome_payload(command)
     identity = conversion_outcome_identity_from_command(conversion_intent, command.outcome)

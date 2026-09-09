@@ -297,6 +297,7 @@ async def record_conversion_outcome(
             capability=_CONVERSION_OUTCOME_CAPABILITY,
             idempotency_key=idempotency_key,
             operation=IdeaOperation.CONVERSION_OUTCOME,
+            require_complete_entitlement_scope=True,
         )
         if isinstance(context, JSONResponse):
             return context
@@ -306,6 +307,7 @@ async def record_conversion_outcome(
                     conversion_intent_id=conversion_intent_id,
                     caller=context.caller,
                     idempotency_key=idempotency_key,
+                    access_scope_filter=context.access_scope_filter,
                     accepted_at_utc=get_trusted_clock().now_utc(),
                     event_lineage=event_lineage_from_request(
                         http_request,
@@ -319,7 +321,7 @@ async def record_conversion_outcome(
                 operation=IdeaOperation.CONVERSION_OUTCOME,
                 durable_storage_backed=context.durable_storage_backed,
             )
-    except PermissionDeniedError:
+    except (PermissionDeniedError, ConversionAccessScopeDenied):
         return conversion_permission_denied_response(
             operation=IdeaOperation.CONVERSION_OUTCOME,
             detail="The caller is not permitted to record idea conversion outcomes.",
@@ -411,8 +413,10 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
         "Records an internal downstream conversion outcome against a previously recorded "
         "idea conversion intent. Source-event identity and version are independent of the "
         "transport idempotency key; legal progression and append-only corrections are "
-        "validated before persistence. The route verifies that the reporting source system "
-        "matches the target source authority, writes audit evidence, and returns the exact "
+        "validated before persistence. The route requires complete trusted tenant, book, "
+        "portfolio, and client entitlements and verifies them against the persisted candidate "
+        "before idempotency precheck or mutation. It also verifies that the reporting source "
+        "system matches the target source authority, writes audit evidence, and returns the exact "
         "persisted conversion outcome for accepted and replayed success. Missing or ambiguous "
         "persisted evidence fails closed. The route remains an "
         "internal foundation. Process-local writes are allowed only for local/test "

@@ -190,6 +190,10 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         method="POST",
         path="/api/v1/conversion-intents/{conversionIntentId}/outcomes",
         required_capabilities=("idea.conversion.outcome.record",),
+        entitlement_scope=(
+            "Complete tenant, book, portfolio, and client entitlement scope must match the "
+            "persisted candidate behind the conversion intent before outcome mutation."
+        ),
     ),
     CallerContextOpenApiRequirement(
         method="POST",
