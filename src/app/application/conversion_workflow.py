@@ -38,7 +38,7 @@ class RequestConversionIntentToRepositoryCommand:
     conversion: ConversionIntentCommand
     idempotency_key: str
     accepted_at_utc: datetime
-    access_scope_filter: QueueAccessScopeFilter | None
+    access_scope_filter: QueueAccessScopeFilter | None = None
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -55,7 +55,7 @@ class RecordConversionOutcomeToRepositoryCommand:
     outcome: ConversionOutcomeCommand
     idempotency_key: str
     accepted_at_utc: datetime
-    access_scope_filter: QueueAccessScopeFilter | None = None
+    access_scope_filter: QueueAccessScopeFilter | None
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
