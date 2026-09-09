@@ -194,14 +194,24 @@ def test_persist_core_bond_maturity_preserves_absent_optional_source_diagnostic(
     assert result.source_diagnostic_codes == ()
 
 
-@pytest.mark.parametrize("field_name", ("idempotency_key", "actor_subject"))
-def test_persist_core_bond_maturity_requires_non_blank_write_authority(field_name: str) -> None:
+@pytest.mark.parametrize(
+    "field_name",
+    ("idempotency_key", "actor_subject"),
+)
+def test_persist_core_bond_maturity_requires_non_blank_write_authority(
+    field_name: str,
+) -> None:
     source = StubCoreBondMaturitySource(evidence=_eligible_evidence())
     repository = InMemoryIdeaRepository()
+    command = _persist_command()
+    if field_name == "idempotency_key":
+        command = replace(command, idempotency_key=" ")
+    else:
+        command = replace(command, actor_subject=" ")
 
     with pytest.raises(ValueError, match=f"{field_name} is required"):
         evaluate_and_persist_bond_maturity_signal_from_core(
-            replace(_persist_command(), **{field_name: " "}),
+            command,
             core_source=source,
             repository=repository,
         )
