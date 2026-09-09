@@ -743,7 +743,7 @@
         "lotus-core:PortfolioCashflowProjection:v1",
         "lotus-core:PortfolioCashMovementSummary:v1"
       ],
-      "lotus_idea_responsibility": "Detect source-backed cashflow pressure for advisor review without inferring client income needs, funding advice, treasury instruction, or planning suitability.",
+      "lotus_idea_responsibility": "Detect and durably persist authoritative-scope cashflow pressure for advisor review without inferring client income needs, funding advice, treasury instruction, or planning suitability.",
       "evidence_refs": [
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/low_income_signal.py",
@@ -760,6 +760,7 @@
         "tests/integration/test_low_income_signal_api.py",
         "tests/unit/low_income_cashflow_runtime_evidence/test_runtime_execution.py",
         "tests/unit/low_income_cashflow_runtime_evidence/test_generator.py",
+        "tests/integration/source_runtime_evidence/test_postgres_replay.py",
         "tests/unit/test_lotus_core_sources.py",
         "POST /api/v1/idea-signals/low-income/evaluate"
       ],
@@ -776,6 +777,7 @@
             "Core cash movement summary source ref",
             "source freshness",
             "projected cumulative cashflow threshold",
+            "accepted or exact-replayed durable Idea candidate receipt",
             "advisor review posture"
           ],
           "remaining_blockers": [

@@ -758,14 +758,15 @@ Persistence adapter validation:
     metadata.
     `tests/unit/low_income_cashflow_runtime_evidence/` and
     `make low-income-core-cashflow-live-proof-contract-gate` prove the optional
-    Lotus Core cashflow artifact is closed v2 `runtime_execution` evidence. It
-    binds pseudonymous request scope, exact movement-summary and projection
-    receipts, projection arithmetic, movement counts, and deterministic
-    candidate or no-opportunity outcome. Unknown, stale, degraded,
-    scope-inconsistent, arithmetically invalid, or tampered evidence fails
-    closed; zero cashflow remains valid no-opportunity evidence. It can satisfy
-    only the namespaced low-income Core cashflow source blocker. Core issue
-    `#796` tracks producer trust metadata required for live qualification.
+    Lotus Core cashflow artifact is closed v3 `runtime_execution` evidence. It
+    binds complete authoritative scope, exact movement-summary and projection
+    receipts, projection arithmetic, movement counts, coherent source revision
+    posture, and accepted or exact-replayed durable Idea candidate persistence.
+    Unknown, stale, degraded, scope-inconsistent, arithmetically invalid,
+    non-durable, missing-persistence, or tampered evidence fails closed. A
+    no-opportunity result remains truthful but cannot clear this persistence
+    proof. It can satisfy only the namespaced low-income Core cashflow source
+    blocker; historical v2 artifacts do not qualify.
     `tests/unit/advise_missing_suitability_runtime_evidence/test_runtime_execution.py`,
     `tests/unit/advise_missing_suitability_runtime_evidence/test_generator.py`,
     `tests/unit/advise_missing_risk_profile_runtime_evidence/test_runtime_execution.py`,

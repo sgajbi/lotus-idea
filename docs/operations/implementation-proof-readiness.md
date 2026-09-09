@@ -878,7 +878,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes validated v2 Core portfolio-state `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. A valid artifact binds pseudonymous request scope to the complete current `PortfolioStateSnapshot:v1` source receipt and clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`. It preserves Manage, Performance, Risk, mesh, Workbench, publication, deployment, production, and promotion blockers. |
 | `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes validated closed v3 Core bond-maturity `runtime_execution` evidence into opportunity-archetype readiness. It requires complete authoritative scope, consumes `PortfolioMaturitySummary:v1` plus upstream `HoldingsAsOf:v1`, and binds an eligible result to accepted or exact-replayed durable Idea persistence. Empty, non-durable, missing-persistence, incoherent, or tampered evidence cannot clear the blocker. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it grants no recommendation, suitability, mesh, Workbench, publication, deployment, production, or support authority. Historical v2 artifacts do not qualify. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes validated closed v2 Core missing-benchmark `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. One Core fetch must reconcile pseudonymous tenant/book/portfolio/client/evaluation/correlation/trace scope, current `BenchmarkAssignment:v1` evidence, assignment identity/effectiveness/status/version posture, and a deterministic candidate or truthful ready-assignment no-opportunity receipt. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; Performance readiness, methodology, data mesh, Gateway/Workbench, publication, deployment, production, and promotion remain blocked. |
-| `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes validated receipt-bound Core cashflow v2 runtime evidence into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. |
+| `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes validated closed v3 Core cashflow `runtime_execution` evidence into opportunity-archetype readiness. It requires authoritative tenant/book/portfolio/client scope and binds exact movement/projection receipts plus an eligible evaluation to accepted or exact-replayed durable Idea persistence. No-opportunity, non-durable, missing-persistence, incoherent, or tampered evidence clears no blocker. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, advice, suitability, data mesh, Workbench, publication, deployment, production, or feature support. Historical v2 artifacts do not qualify. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes validated closed v3 Lotus Manage mandate runtime evidence into opportunity-archetype readiness. Exact source scope, time, temporal receipt identity, policy, and deterministic outcome must reconcile. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`, `opportunity_archetype_mandate_performance_health_source_ref_missing`, and `opportunity_archetype_mandate_risk_health_source_ref_missing`; it does not certify Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, production trusted caller context, rebalance authority, action authority, order creation, execution, or settlement. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` | Passes validated closed v2 Advise mandate/restriction `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. Exact pseudonymous request scope, producer scope/time, workflow posture, source/policy hashes, deterministic candidate or no-opportunity outcome, and receipt digests must reconcile. A valid artifact clears only `opportunity_archetype_live_restriction_source_proof_missing`; typed source-product, restriction clearance, mandate state, suitability, policy/proposal approval, data mesh, Workbench, client publication, rebalance/order authority, deployment, production, and support promotion remain blocked. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise mandate/restriction source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_restriction_source_product_missing`; it does not certify live Advise reachability, clear restrictions, change mandate state, approve suitability, approve policy, approve proposals, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
@@ -1083,20 +1083,21 @@ Lotus Core low-income cashflow runtime evidence is captured by
 `scripts/low_income_cashflow_runtime_evidence/generate_runtime_execution.py`. A valid artifact
 referenced through `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` clears only
 `opportunity_archetype_live_core_cashflow_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The named application use case
-invokes the Core source port and binds a pseudonymous request receipt, exact
+`opportunity-archetype-scenarios` capability. The closed v3 application path
+invokes the authoritative evaluate-and-persist use case and binds a
+pseudonymous tenant/book/portfolio/client request receipt, exact
 `lotus-core:PortfolioCashflowProjection:v1` and
 `lotus-core:PortfolioCashMovementSummary:v1` receipts, projection arithmetic,
-movement counts, policy threshold, and deterministic candidate or no-opportunity
-outcome. Unknown, stale, degraded, scope-inconsistent, arithmetically invalid,
-or tampered evidence fails closed. Zero projected cumulative cashflow is valid
-numeric evidence and completes without creating an opportunity. The artifact
-stores hashes and bounded aggregates rather than raw tenant, portfolio,
-correlation, trace, request, response, movement, or client facts. It deliberately retains Workbench,
+movement counts, policy threshold, source-revision posture, and accepted or
+exact-replayed durable candidate persistence. Unknown, stale, degraded,
+scope-inconsistent, arithmetically invalid, non-durable, missing-persistence,
+or tampered evidence fails closed. Zero projected cumulative cashflow remains a
+truthful no-opportunity evaluation but cannot clear a candidate-persistence proof. The artifact
+stores hashes and bounded aggregates rather than raw tenant, book, portfolio,
+client, idempotency, actor, correlation, trace, request, response, or movement facts. It deliberately retains Workbench,
 data-mesh, client-publication, supported-feature, suitability, planning,
-funding-advice, and treasury-instruction blockers. Core issue `#796` tracks
-producer tenant, reconciliation, snapshot/policy, correlation, and empty-window
-evidence semantics required before live qualification can pass.
+funding-advice, and treasury-instruction blockers. A fresh qualifying live
+artifact is still required; historical v2 source-only evidence does not qualify.
 
 Lotus Core bond-maturity runtime evidence is captured by
 `scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py`. A valid

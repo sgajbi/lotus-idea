@@ -441,16 +441,18 @@ evidence.
 36. `src/app/application/low_income_cashflow_runtime_evidence/`,
     `scripts/low_income_cashflow_runtime_evidence/`, and
     `make low-income-core-cashflow-live-proof-contract-gate` now define and
-    enforce closed v2 Lotus Core cashflow runtime evidence. A named application
-    use case binds pseudonymous request scope, exact movement-summary and
-    projection receipts, projection arithmetic, movement counts, policy, and
-    deterministic candidate or no-opportunity outcome. Aggregate
+    enforce closed v3 Lotus Core cashflow candidate-persistence evidence. The
+    authoritative application use case binds complete pseudonymous scope, exact
+    movement-summary and projection receipts, projection arithmetic, movement
+    counts, policy, coherent source revision posture, and accepted or
+    exact-replayed durable candidate state. A no-opportunity result remains
+    truthful but cannot clear this persistence proof. Aggregate
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`, while
     preserving Workbench, data-mesh, client-publication, supported-feature,
     suitability, planning, funding-advice, treasury-instruction, deployment,
-    and production blockers. Core issue `#796` tracks producer trust metadata
-    required before live qualification can pass.
+    and production blockers. Historical v2 source-only artifacts do not qualify;
+    a fresh live v3 capture remains required.
 33. `src/app/application/manage_mandate_runtime_evidence/`,
     `scripts/manage_mandate_runtime_evidence/`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a

@@ -899,11 +899,12 @@ Additional implemented low-income / liquidity-shortfall foundation:
 8. `src/app/application/low_income_cashflow_runtime_evidence/`,
     `scripts/low_income_cashflow_runtime_evidence/`, and
     `make low-income-core-cashflow-live-proof-contract-gate` define a
-   receipt-bound v2 Core cashflow runtime-evidence artifact. A valid artifact proves live
+   closed v3 Core cashflow candidate-persistence runtime artifact. A valid artifact proves live
    `lotus-core:PortfolioCashflowProjection:v1` and
    `lotus-core:PortfolioCashMovementSummary:v1` source calls, current source
-   evidence, and deterministic low-income / liquidity-shortfall candidate
-   posture, then clears only the namespaced opportunity-archetype live Core
+   evidence, complete authoritative candidate scope, deterministic low-income /
+   liquidity-shortfall qualification, and accepted or exact-replayed durable
+   Idea persistence, then clears only the namespaced opportunity-archetype live Core
    cashflow source blocker when consumed by aggregate readiness.
 9. This foundation does not include data-mesh certification, Workbench proof,
     client-publication approval, supported-feature promotion, income-needs
