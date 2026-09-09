@@ -15,10 +15,16 @@ from app.application.risk_concentration_runtime_evidence import (
     build_risk_concentration_runtime_execution,
     risk_concentration_runtime_execution_is_valid,
 )
+from app.application.source_runtime_evidence.receipts import build_runtime_receipts
 from app.application.concentration_risk_signal import (
     evaluate_and_persist_concentration_risk_signal_from_risk,
 )
-from app.domain import CandidatePersistenceDecision, EvidenceFreshness, InMemoryIdeaRepository
+from app.domain import (
+    CandidatePersistenceDecision,
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    OpportunityFamily,
+)
 from app.ports.risk_sources import RiskConcentrationEvidence
 from tests.support.risk_concentration_runtime_evidence import (
     GENERATED_AT,
@@ -59,6 +65,37 @@ def test_runtime_execution_accepts_authoritative_repository_replay() -> None:
     assert first["execution"]["persistenceReceipt"]["decision"] == "accepted"
     assert replay["execution"]["persistenceReceipt"]["decision"] == "replayed"
     assert risk_concentration_runtime_execution_is_valid(replay) is True
+
+
+def test_runtime_receipts_refuse_placeholder_candidate_scope() -> None:
+    command = runtime_command()
+    result = evaluate_and_persist_concentration_risk_signal_from_risk(
+        command,
+        risk_source=FixedRiskConcentrationSource(risk_evidence()),
+        repository=InMemoryIdeaRepository(),
+    )
+    assert result.evaluation.candidate is not None
+    assert result.persistence is not None
+    assert result.persistence.record is not None
+    candidate = replace(
+        result.evaluation.candidate,
+        access_scope=replace(command.access_scope, client_id="unknown"),
+    )
+    persistence = replace(
+        result.persistence,
+        record=replace(result.persistence.record, candidate=candidate),
+    )
+
+    receipts = build_runtime_receipts(
+        candidate=candidate,
+        persistence=persistence,
+        expected_family=OpportunityFamily.CONCENTRATION,
+        expected_portfolio_id=command.evaluation.portfolio_id,
+        request_fingerprint="sha256:" + "1" * 64,
+        source_ref_is_authoritative=lambda _: True,
+    )
+
+    assert receipts == (None, None)
 
 
 @pytest.mark.parametrize(

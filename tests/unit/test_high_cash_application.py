@@ -556,6 +556,37 @@ def test_core_persistence_refuses_placeholder_scope_before_source_io_or_mutation
     assert repository.snapshot().outbox_events == {}
 
 
+@pytest.mark.parametrize(
+    ("access_scope", "message"),
+    (
+        (replace(ACCESS_SCOPE, tenant_id="tenant-b"), "tenant_id must match"),
+        (replace(ACCESS_SCOPE, portfolio_id="portfolio-b"), "portfolio_id must match"),
+    ),
+)
+def test_core_persistence_refuses_scope_that_conflicts_with_evaluation_before_source_io(
+    access_scope: ReviewAccessScope,
+    message: str,
+) -> None:
+    source = RecordingCoreSource(evidence=current_core_evidence())
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(ValueError, match=message):
+        evaluate_and_persist_high_cash_signal_from_core(
+            EvaluateAndPersistHighCashFromCoreCommand(
+                evaluation=from_core_command(),
+                access_scope=access_scope,
+                idempotency_key="signal-ingestion:high-cash:core:conflicting-scope",
+                actor_subject="signal-ingestion-worker",
+                accepted_at_utc=EVALUATED_AT,
+            ),
+            core_source=source,
+            repository=repository,
+        )
+
+    assert source.seen_request is None
+    assert repository.snapshot().candidate_records == {}
+
+
 def test_core_ingestion_retires_candidate_when_source_condition_is_no_longer_eligible() -> None:
     repository = InMemoryIdeaRepository()
     source = RecordingCoreSource(evidence=current_core_evidence())
