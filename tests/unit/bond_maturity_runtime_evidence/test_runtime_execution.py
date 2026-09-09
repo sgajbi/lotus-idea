@@ -17,7 +17,7 @@ from app.application.bond_maturity_runtime_evidence import (
     evaluate_bond_maturity_readiness,
 )
 from app.application.runtime_evidence import sha256_json
-from app.domain import EvidenceFreshness
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository
 from app.ports.core_sources import CoreBondMaturityEvidence, CoreBondMaturityEvidenceRequest
 from tests.support.bond_maturity_runtime_evidence import (
     authoritative_bond_maturity_evidence,
@@ -53,8 +53,12 @@ def test_use_case_preserves_scope_and_builds_source_safe_closed_receipts() -> No
     source = RecordingSource()
     command = _command()
 
-    result = evaluate_bond_maturity_readiness(command, core_source=source)
-    payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
+    result = evaluate_bond_maturity_readiness(
+        command, core_source=source, repository=InMemoryIdeaRepository()
+    )
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW, result=result, durable_storage_backed=True
+    )
 
     assert source.request == CoreBondMaturityEvidenceRequest(
         tenant_id="tenant-a",
@@ -75,6 +79,7 @@ def test_use_case_preserves_scope_and_builds_source_safe_closed_receipts() -> No
     assert receipt["maturityBasis"] == "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
     assert receipt["supportabilityStatus"] == "SUPPORTED"
     assert payload["execution"]["opportunityDetected"] is True
+    assert payload["execution"]["persistenceReceipt"]["decision"] == "accepted"
     assert payload["aggregateBlockersSatisfied"] == list(BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED)
     assert payload["remainingCertificationBlockers"] == list(BOND_MATURITY_REMAINING_BLOCKERS)
     assert payload["nonProofClaims"]["maturityFactsOwned"] == "lotus-core"
@@ -90,7 +95,45 @@ def test_use_case_preserves_scope_and_builds_source_safe_closed_receipts() -> No
     assert bond_maturity_runtime_execution_is_valid(payload)
 
 
-def test_source_generated_during_fetch_qualifies_at_artifact_observation_time() -> None:
+def test_runtime_execution_accepts_exact_persistence_replay() -> None:
+    source = RecordingSource()
+    repository = InMemoryIdeaRepository()
+    command = _command()
+    evaluate_bond_maturity_readiness(command, core_source=source, repository=repository)
+    replay = evaluate_bond_maturity_readiness(
+        command,
+        core_source=source,
+        repository=repository,
+    )
+
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW,
+        result=replay,
+        durable_storage_backed=True,
+    )
+
+    assert payload["execution"]["persistenceReceipt"]["decision"] == "replayed"
+    assert bond_maturity_runtime_execution_is_valid(payload)
+
+
+def test_runtime_execution_refuses_in_memory_repository_posture() -> None:
+    result = evaluate_bond_maturity_readiness(
+        _command(),
+        core_source=RecordingSource(),
+        repository=InMemoryIdeaRepository(),
+    )
+
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW,
+        result=result,
+        durable_storage_backed=False,
+    )
+
+    assert "durable_repository_not_configured" in payload["execution"]["qualificationBlockers"]
+    assert not bond_maturity_runtime_execution_is_valid(payload)
+
+
+def test_source_generated_after_evaluation_cannot_authorize_persistence() -> None:
     source = RecordingSource()
     maturity_ref = source.evidence.maturity_fact_ref
     assert maturity_ref is not None
@@ -101,18 +144,22 @@ def test_source_generated_during_fetch_qualifies_at_artifact_observation_time() 
             generated_at_utc=NOW + timedelta(seconds=1),
         ),
     )
-    result = evaluate_bond_maturity_readiness(_command(), core_source=source)
+    result = evaluate_bond_maturity_readiness(
+        _command(), core_source=source, repository=InMemoryIdeaRepository()
+    )
 
     payload = build_bond_maturity_runtime_execution(
         generated_at_utc=NOW + timedelta(seconds=2),
         result=result,
+        durable_storage_backed=True,
     )
 
-    assert payload["execution"]["qualificationBlockers"] == []
-    assert bond_maturity_runtime_execution_is_valid(payload)
+    assert "candidate_evaluation_blocked" in payload["execution"]["qualificationBlockers"]
+    assert "persistence_receipt_missing" in payload["execution"]["qualificationBlockers"]
+    assert not bond_maturity_runtime_execution_is_valid(payload)
 
 
-def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
+def test_supported_empty_window_cannot_claim_candidate_persistence() -> None:
     payload = valid_bond_maturity_runtime_evidence(
         evaluated_at_utc=NOW,
         opportunity_detected=False,
@@ -121,13 +168,14 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
     assert payload["execution"]["opportunityDetected"] is False
     assert payload["execution"]["sourceReceipt"]["nextMaturityDate"] is None
     assert payload["execution"]["sourceReceipt"]["maturingHoldingCount"] == 0
-    assert bond_maturity_runtime_execution_is_valid(payload)
+    assert "persistence_receipt_missing" in payload["execution"]["qualificationBlockers"]
+    assert not bond_maturity_runtime_execution_is_valid(payload)
 
 
 @pytest.mark.parametrize(
     ("changes", "expected_message"),
     [
-        ({"tenant_id": " "}, "tenant_id and portfolio_id are required"),
+        ({"tenant_id": " "}, "authoritative scope"),
         ({"maturity_window_days": 0}, "maturity_window_days must be between 1 and 366"),
         ({"maturity_window_days": 367}, "maturity_window_days must be between 1 and 366"),
         ({"correlation_id": " "}, "correlation_id must not be blank"),
@@ -139,9 +187,14 @@ def test_command_rejects_ambiguous_or_out_of_policy_scope(
 ) -> None:
     values: dict[str, Any] = {
         "tenant_id": "tenant-a",
+        "book_id": "book-a",
         "portfolio_id": "portfolio-a",
+        "client_id": "client-a",
         "as_of_date": AS_OF,
         "evaluated_at_utc": NOW,
+        "accepted_at_utc": NOW,
+        "idempotency_key": "bond-maturity:test",
+        "actor_subject": "bond-maturity-runtime-evidence",
         "maturity_window_days": 30,
         "correlation_id": "corr-a",
         "trace_id": "trace-a",
@@ -235,10 +288,6 @@ def test_command_rejects_ambiguous_or_out_of_policy_scope(
             "core_maturity_basis_unsupported",
         ),
         (
-            lambda value: replace(value, source_reported_maturing_position_count=-1),
-            "core_maturity_counts_invalid",
-        ),
-        (
             lambda value: replace(value, source_reported_next_maturity_date=None),
             "core_maturity_fact_inconsistent",
         ),
@@ -306,13 +355,31 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
 ) -> None:
     source = RecordingSource()
     source.evidence = mutation(source.evidence)
-    result = evaluate_bond_maturity_readiness(_command(), core_source=source)
+    result = evaluate_bond_maturity_readiness(
+        _command(), core_source=source, repository=InMemoryIdeaRepository()
+    )
 
-    payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW, result=result, durable_storage_backed=True
+    )
 
     assert expected_blocker in payload["execution"]["qualificationBlockers"]
     assert payload["aggregateBlockersSatisfied"] == []
     assert not bond_maturity_runtime_execution_is_valid(payload)
+
+
+def test_negative_maturing_count_is_rejected_before_persistence() -> None:
+    source = RecordingSource(
+        evidence=replace(
+            RecordingSource().evidence,
+            source_reported_maturing_position_count=-1,
+        )
+    )
+
+    with pytest.raises(ValueError, match="must be non-negative"):
+        evaluate_bond_maturity_readiness(
+            _command(), core_source=source, repository=InMemoryIdeaRepository()
+        )
 
 
 def test_qualification_blockers_preserve_source_authority_order() -> None:
@@ -349,9 +416,13 @@ def test_qualification_blockers_preserve_source_authority_order() -> None:
         latest_evidence_at_utc=NOW + timedelta(seconds=1),
         source_correlation_id="corr-b",
     )
-    result = evaluate_bond_maturity_readiness(_command(), core_source=source)
+    result = evaluate_bond_maturity_readiness(
+        _command(), core_source=source, repository=InMemoryIdeaRepository()
+    )
 
-    payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW, result=result, durable_storage_backed=True
+    )
 
     assert payload["execution"]["qualificationBlockers"] == [
         "core_maturity_evidence_not_current",
@@ -377,6 +448,8 @@ def test_qualification_blockers_preserve_source_authority_order() -> None:
         "core_maturity_source_current_posture_missing",
         "core_maturity_latest_evidence_time_invalid",
         "core_maturity_correlation_binding_missing",
+        "candidate_evaluation_blocked",
+        "persistence_receipt_missing",
     ]
     assert payload["aggregateBlockersSatisfied"] == []
     assert not bond_maturity_runtime_execution_is_valid(payload)
@@ -392,8 +465,12 @@ def test_qualification_blockers_preserve_source_authority_order() -> None:
         "execution",
         "request",
         "source",
+        "persistence",
         "request_digest",
         "source_digest",
+        "persistence_digest",
+        "persistence_source_binding",
+        "durability",
         "tenant_binding",
         "portfolio_binding",
         "correlation_binding",
@@ -426,6 +503,7 @@ def test_blocked_execution_is_source_safe_and_never_valid() -> None:
         generated_at_utc=NOW,
         command=_command(),
         error_code="core_source_entitlement_denied",
+        durable_storage_backed=True,
     )
 
     assert payload["execution"]["sourceReceipt"] is None
@@ -438,9 +516,14 @@ def test_blocked_execution_is_source_safe_and_never_valid() -> None:
 def _command() -> EvaluateBondMaturityReadiness:
     return EvaluateBondMaturityReadiness(
         tenant_id="tenant-a",
+        book_id="book-a",
         portfolio_id="portfolio-a",
+        client_id="client-a",
         as_of_date=AS_OF,
         evaluated_at_utc=NOW,
+        accepted_at_utc=NOW,
+        idempotency_key="runtime-evidence:bond-maturity:portfolio-a",
+        actor_subject="bond-maturity-runtime-evidence",
         maturity_window_days=30,
         correlation_id="corr-a",
         trace_id="trace-a",
@@ -451,6 +534,7 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     execution = payload["execution"]
     request = execution["requestReceipt"]
     source = execution["sourceReceipt"]
+    persistence = execution["persistenceReceipt"]
     if tamper == "top_level":
         payload["invented"] = True
     elif tamper == "evidence_class_underclaim":
@@ -465,10 +549,19 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
         request["invented"] = True
     elif tamper == "source":
         source["invented"] = True
+    elif tamper == "persistence":
+        persistence["invented"] = True
     elif tamper == "request_digest":
         request["requestDigest"] = "sha256:" + "0" * 64
     elif tamper == "source_digest":
         source["receiptDigest"] = "sha256:" + "0" * 64
+    elif tamper == "persistence_digest":
+        persistence["receiptDigest"] = "sha256:" + "0" * 64
+    elif tamper == "persistence_source_binding":
+        persistence["sourceReceiptDigest"] = "sha256:" + "4" * 64
+        _refresh_persistence_digest(persistence)
+    elif tamper == "durability":
+        execution["durableStorageBacked"] = False
     elif tamper == "tenant_binding":
         source["responseTenantIdHash"] = "sha256:" + "1" * 64
         _refresh_source_digest(source)
@@ -526,4 +619,10 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
 def _refresh_source_digest(source: dict[str, Any]) -> None:
     source["receiptDigest"] = sha256_json(
         {key: value for key, value in source.items() if key != "receiptDigest"}
+    )
+
+
+def _refresh_persistence_digest(persistence: dict[str, Any]) -> None:
+    persistence["receiptDigest"] = sha256_json(
+        {key: value for key, value in persistence.items() if key != "receiptDigest"}
     )

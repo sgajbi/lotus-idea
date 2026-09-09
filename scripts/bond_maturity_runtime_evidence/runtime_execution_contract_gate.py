@@ -23,6 +23,7 @@ from app.application.bond_maturity_runtime_evidence import (  # noqa: E402
     build_bond_maturity_runtime_execution,
     evaluate_bond_maturity_readiness,
 )
+from app.domain import InMemoryIdeaRepository  # noqa: E402
 from tests.support.bond_maturity_runtime_evidence import (  # noqa: E402
     AuthoritativeCoreBondMaturitySource,
 )
@@ -66,8 +67,13 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
     result = evaluate_bond_maturity_readiness(
         command,
         core_source=AuthoritativeCoreBondMaturitySource(),
+        repository=InMemoryIdeaRepository(),
     )
-    payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW,
+        result=result,
+        durable_storage_backed=True,
+    )
     if not bond_maturity_runtime_execution_is_valid(payload):
         errors.append("authoritative Core bond-maturity runtime fixture must validate")
     if payload.get("aggregateBlockersSatisfied") != list(BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED):
@@ -78,13 +84,15 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
     no_opportunity = evaluate_bond_maturity_readiness(
         command,
         core_source=AuthoritativeCoreBondMaturitySource(opportunity_detected=False),
+        repository=InMemoryIdeaRepository(),
     )
     no_opportunity_payload = build_bond_maturity_runtime_execution(
         generated_at_utc=NOW,
         result=no_opportunity,
+        durable_storage_backed=True,
     )
-    if not bond_maturity_runtime_execution_is_valid(no_opportunity_payload):
-        errors.append("supported empty maturity window must validate without a false opportunity")
+    if bond_maturity_runtime_execution_is_valid(no_opportunity_payload):
+        errors.append("empty maturity window must not claim candidate persistence")
 
     unknown_reconciliation = build_bond_maturity_runtime_execution(
         generated_at_utc=NOW,
@@ -92,6 +100,7 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
             result,
             evidence=replace(result.evidence, reconciliation_status="UNKNOWN"),
         ),
+        durable_storage_backed=True,
     )
     if bond_maturity_runtime_execution_is_valid(unknown_reconciliation):
         errors.append("unknown Core maturity reconciliation must fail closed")
@@ -100,6 +109,7 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
         generated_at_utc=NOW,
         command=command,
         error_code="core_source_entitlement_denied",
+        durable_storage_backed=True,
     )
     if bond_maturity_runtime_execution_is_valid(blocked):
         errors.append("blocked Core bond-maturity execution must not validate")
@@ -111,9 +121,14 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
 def _command() -> EvaluateBondMaturityReadiness:
     return EvaluateBondMaturityReadiness(
         tenant_id="tenant-a",
+        book_id="book-a",
         portfolio_id="portfolio-a",
+        client_id="client-a",
         as_of_date=date(2026, 6, 21),
         evaluated_at_utc=NOW,
+        accepted_at_utc=NOW,
+        idempotency_key="runtime-evidence:bond-maturity:portfolio-a",
+        actor_subject="bond-maturity-runtime-evidence",
         maturity_window_days=30,
         correlation_id="corr-a",
         trace_id="trace-a",

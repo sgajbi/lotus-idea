@@ -8,7 +8,14 @@ from app.application.bond_maturity_runtime_evidence import (
     build_bond_maturity_runtime_execution,
     evaluate_bond_maturity_readiness,
 )
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
 from app.ports.core_sources import CoreBondMaturityEvidence, CoreBondMaturityEvidenceRequest
 
 MATURITY_HASH = "sha256:" + "a" * 64
@@ -53,6 +60,10 @@ def authoritative_bond_maturity_evidence(
             content_hash=HOLDINGS_HASH,
             data_quality_status="COMPLETE",
             freshness=EvidenceFreshness.CURRENT,
+            revision_claims=SourceRevisionClaims(
+                source_cut_id="core-bond-maturity-runtime-cut-001",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         ),
         maturity_fact_ref=SourceRef(
             product_id="lotus-core:PortfolioMaturitySummary:v1",
@@ -64,6 +75,10 @@ def authoritative_bond_maturity_evidence(
             content_hash=MATURITY_HASH,
             data_quality_status="COMPLETE",
             freshness=EvidenceFreshness.CURRENT,
+            revision_claims=SourceRevisionClaims(
+                source_cut_id="core-bond-maturity-runtime-cut-001",
+                reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+            ),
         ),
         response_product_name="PortfolioMaturitySummary",
         response_product_version="v1",
@@ -108,9 +123,14 @@ def valid_bond_maturity_runtime_evidence(
 ) -> dict[str, Any]:
     command = EvaluateBondMaturityReadiness(
         tenant_id="test-tenant",
+        book_id="test-book",
         portfolio_id="test-portfolio",
+        client_id="test-client",
         as_of_date=as_of_date or evaluated_at_utc.date(),
         evaluated_at_utc=evaluated_at_utc,
+        accepted_at_utc=evaluated_at_utc,
+        idempotency_key="runtime-evidence:bond-maturity:test-portfolio",
+        actor_subject="bond-maturity-runtime-evidence",
         maturity_window_days=30,
         correlation_id="corr-test",
         trace_id="trace-test",
@@ -118,8 +138,10 @@ def valid_bond_maturity_runtime_evidence(
     result = evaluate_bond_maturity_readiness(
         command,
         core_source=AuthoritativeCoreBondMaturitySource(opportunity_detected=opportunity_detected),
+        repository=InMemoryIdeaRepository(),
     )
     return build_bond_maturity_runtime_execution(
         generated_at_utc=evaluated_at_utc,
         result=result,
+        durable_storage_backed=True,
     )

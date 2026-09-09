@@ -10,6 +10,7 @@ import pytest
 from app.application.bond_maturity_runtime_evidence import (
     bond_maturity_runtime_execution_is_valid,
 )
+from app.domain import InMemoryIdeaRepository
 from app.ports.core_sources import (
     CoreBondMaturityEvidence,
     CoreBondMaturityEvidenceRequest,
@@ -52,11 +53,15 @@ class ReceiptGeneratedDuringFetchSource(AuthoritativeCoreBondMaturitySource):
         )
 
 
+class DurableIdeaRepository(InMemoryIdeaRepository):
+    durable_storage_backed = True
+
+
 @pytest.mark.parametrize(
     ("source", "expected_exit", "expected_status", "opportunity_detected"),
     [
         (AuthoritativeCoreBondMaturitySource(), 0, "completed", True),
-        (AuthoritativeCoreBondMaturitySource(opportunity_detected=False), 0, "completed", False),
+        (AuthoritativeCoreBondMaturitySource(opportunity_detected=False), 3, "completed", False),
         (UnknownReconciliationSource(), 3, "completed", True),
         (UnavailableCoreSource(), 3, "blocked", False),
     ],
@@ -75,6 +80,7 @@ def test_generator_routes_through_use_case_and_writes_truthful_artifact(
         "LotusCoreHighCashSourceAdapter",
         lambda _client: source,
     )
+    monkeypatch.setattr(generate_runtime_execution, "get_idea_repository", DurableIdeaRepository)
 
     exit_code = generate_runtime_execution.main(_args(output))
 
@@ -101,8 +107,12 @@ def test_generator_observes_receipt_created_during_live_fetch(
         lambda _client: ReceiptGeneratedDuringFetchSource(),
     )
 
-    assert generate_runtime_execution.main(_args(output)) == 0
-    assert bond_maturity_runtime_execution_is_valid(json.loads(output.read_text(encoding="utf-8")))
+    monkeypatch.setattr(generate_runtime_execution, "get_idea_repository", DurableIdeaRepository)
+
+    assert generate_runtime_execution.main(_args(output)) == 3
+    assert not bond_maturity_runtime_execution_is_valid(
+        json.loads(output.read_text(encoding="utf-8"))
+    )
 
 
 def test_generator_rejects_invalid_configuration_without_artifact(tmp_path: Path) -> None:
@@ -120,8 +130,12 @@ def _args(output: Path) -> list[str]:
         "http://localhost:8000",
         "--tenant-id",
         "tenant-a",
+        "--book-id",
+        "book-a",
         "--portfolio-id",
         "PB_SG_GLOBAL_BAL_001",
+        "--client-id",
+        "client-a",
         "--as-of-date",
         "2026-06-21",
         "--maturity-window-days",
