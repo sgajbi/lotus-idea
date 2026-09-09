@@ -53,22 +53,26 @@ class FixedCoreHighCashSource(CoreOpportunitySourcePort):
         return self.evidence
 
 
+def runtime_manifest(*, work_item_count: int = 1) -> dict[str, Any]:
+    return {
+        "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "evaluatedAtUtc": EVALUATED_AT.isoformat(),
+        "tenantId": "tenant-runtime-proof",
+        "workItems": [
+            {
+                "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                "bookId": "book-runtime-proof",
+                "clientId": "client-runtime-proof",
+                "asOfDate": AS_OF_DATE.isoformat(),
+            }
+            for _ in range(work_item_count)
+        ],
+    }
+
+
 def runtime_plan(*, work_item_count: int = 1) -> SourceIngestionWorkerPlan:
     return source_ingestion_worker_plan_from_manifest(
-        {
-            "schemaVersion": MANIFEST_SCHEMA_VERSION,
-            "evaluatedAtUtc": EVALUATED_AT.isoformat(),
-            "tenantId": "tenant-runtime-proof",
-            "workItems": [
-                {
-                    "portfolioId": "PB_SG_GLOBAL_BAL_001",
-                    "bookId": "book-runtime-proof",
-                    "clientId": "client-runtime-proof",
-                    "asOfDate": AS_OF_DATE.isoformat(),
-                }
-                for _ in range(work_item_count)
-            ],
-        }
+        runtime_manifest(work_item_count=work_item_count)
     )
 
 
