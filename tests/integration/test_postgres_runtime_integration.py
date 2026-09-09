@@ -820,6 +820,21 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
 
     request_payload = _ai_explanation_payload(request_id="postgres-runtime-proof-ai-lineage-001")
     reset_idea_repository_for_tests(reload_from_environment=True)
+    mismatched_headers = _ai_explanation_headers(
+        "postgres-runtime-proof-ai-lineage-scope-refusal-001"
+    )
+    mismatched_headers["X-Caller-Book-Ids"] = "book-other"
+    refused = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=request_payload,
+        headers=mismatched_headers,
+    )
+
+    assert refused.status_code == 403
+    assert refused.json()["code"] == "permission_denied"
+    assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 0
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
     accepted = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=request_payload,
@@ -1069,6 +1084,9 @@ def _ai_explanation_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
         "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-ai-lineage",
         "Idempotency-Key": idempotency_key,
     }

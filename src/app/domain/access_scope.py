@@ -60,6 +60,13 @@ class QueueAccessScopeFilter:
             not value for value in (self.tenant_id, self.book_id, self.portfolio_id, self.client_id)
         )
 
+    @property
+    def is_complete(self) -> bool:
+        return all(
+            bool(value)
+            for value in (self.tenant_id, self.book_id, self.portfolio_id, self.client_id)
+        )
+
     def is_subset_of(self, entitlement_scope: "QueueAccessScopeFilter") -> bool:
         return (
             self._is_allowed(self.tenant_id, entitlement_scope.tenant_id)

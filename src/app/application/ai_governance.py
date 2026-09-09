@@ -28,7 +28,7 @@ from app.domain import (
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
-from app.domain.access_scope import ReviewAccessScope
+from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.ports.idea_repository import AIExplanationRepository
 from app.ports.lotus_ai_attestation import LotusAIAttestationKeySource
 from app.domain.lotus_ai_execution_digest import (
@@ -111,12 +111,12 @@ class EvaluateAIExplanationToRepositoryCommand:
     fallback_reason: AIFallbackReason
     idempotency_key: str
     idempotency_payload: Mapping[str, Any]
+    caller_access_scope_filter: QueueAccessScopeFilter
     workflow_output: AIWorkflowOutput | None = None
     producer_run_id: str | None = None
     producer_execution_output: LotusAIExecutionOutputContent | None = None
     run_attestation: LotusAIRunAttestationEnvelope | None = None
     provider_retention_confirmation: AIProviderRetentionEnvelope | None = None
-    caller_tenant_ids: tuple[str, ...] = ()
     workflow_output_trust_policy: AIWorkflowOutputTrustPolicy = (
         AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
     )
@@ -157,7 +157,6 @@ class EvaluateAIExplanationToRepositoryCommand:
                 "provider retention confirmation requires a complete attested execution bundle",
                 reason=AIWorkflowProvenanceRejectionReason.INCOMPLETE_ATTESTATION_BUNDLE,
             )
-        object.__setattr__(self, "caller_tenant_ids", tuple(self.caller_tenant_ids))
 
 
 @dataclass(frozen=True)
@@ -266,11 +265,13 @@ def _validate_ai_explanation_entitlement(
     record: CandidatePersistenceRecord,
     command: EvaluateAIExplanationToRepositoryCommand,
 ) -> None:
-    candidate_scope = record.candidate.access_scope
-    if candidate_scope is None or candidate_scope.tenant_id in command.caller_tenant_ids:
+    if (
+        command.caller_access_scope_filter.is_complete
+        and command.caller_access_scope_filter.matches(record.candidate.access_scope)
+    ):
         return
     raise AIExplanationEntitlementDenied(
-        "caller tenant entitlement does not include the idea candidate"
+        "caller entitlement scope does not include the idea candidate"
     )
 
 

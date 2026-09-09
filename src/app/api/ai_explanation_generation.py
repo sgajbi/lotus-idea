@@ -14,7 +14,11 @@ from app.api.ai_governance_models import (
     AIExplanationGenerationRequest,
     AIExplanationGenerationResponse,
 )
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_HEADER,
+    caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.examples.ai_explanation import build_ai_explanation_generation_openapi_examples
 from app.api.idempotency import validate_idempotency_key
@@ -66,6 +70,9 @@ async def generate_ai_explanation(
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
     x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
@@ -77,6 +84,9 @@ async def generate_ai_explanation(
             roles=x_caller_roles,
             capabilities=x_caller_capabilities,
             tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
             trusted_caller_context=x_lotus_trusted_caller_context,
         )
         _require_generation_caller(caller)
@@ -88,7 +98,10 @@ async def generate_ai_explanation(
             purpose=request.purpose,
             requested_at_utc=request.requested_at_utc,
             idempotency_key=idempotency_key,
-            caller_tenant_ids=caller.entitlement_scope.tenant_ids,
+            caller_access_scope_filter=require_complete_caller_access_scope_filter(
+                caller,
+                denied_permission="idea.ai-explanation.entitlement-scope",
+            ),
         )
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)

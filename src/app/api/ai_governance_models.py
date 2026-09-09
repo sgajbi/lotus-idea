@@ -41,6 +41,7 @@ from app.domain import (
     RedactedSourceRef,
     SourceSystem,
 )
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext
 from app.integration.lotus_ai_attestation_contract import LotusAIProducerAttestation
 from app.integration.lotus_ai_idea_explanation_output import LotusAIExecutionOutputEvidence
@@ -244,6 +245,7 @@ class AIExplanationEvaluationRequest(CamelModel):
         *,
         candidate_id: str,
         caller: CallerContext,
+        caller_access_scope_filter: QueueAccessScopeFilter,
         idempotency_key: str,
         allow_unattested_workflow_fixture: bool,
     ) -> EvaluateAIExplanationToRepositoryCommand:
@@ -284,7 +286,7 @@ class AIExplanationEvaluationRequest(CamelModel):
                 if self.provider_retention_confirmation is not None
                 else None
             ),
-            caller_tenant_ids=caller.entitlement_scope.tenant_ids,
+            caller_access_scope_filter=caller_access_scope_filter,
             workflow_output_trust_policy=(
                 AIWorkflowOutputTrustPolicy.UNATTESTED_LOCAL_TEST_FIXTURE_ALLOWED
                 if allow_unattested_workflow_fixture
