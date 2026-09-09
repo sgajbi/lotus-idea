@@ -138,15 +138,17 @@ Critical invariants:
 6. Generic lifecycle mutation cannot create review, approval, or conversion authority; malformed
    review/conversion evidence digests fail request validation before authority or persistence work.
 7. Review and conversion use their owned commands and exact presentation/review grants.
-8. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
-9. Outbound work records durable intent before I/O.
-10. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
-11. A first downstream conversion attempt revalidates current candidate evidence, exact active
+8. Conversion outcomes require complete trusted tenant/book/portfolio/client entitlements matching
+   the persisted candidate before idempotency precheck or mutation.
+9. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
+10. Outbound work records durable intent before I/O.
+11. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
+12. A first downstream conversion attempt revalidates current candidate evidence, exact active
     review authority, source-cut authority, target lifecycle, and owner authority before claim or
     I/O. Retained `legacy:unknown` evidence remains auditable but cannot authorize new owner work.
-12. Exact replay does not create duplicate state, owner work, events, or outbox records.
-13. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
-14. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
+13. Exact replay does not create duplicate state, owner work, events, or outbox records.
+14. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+15. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.
