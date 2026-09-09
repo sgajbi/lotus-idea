@@ -109,6 +109,9 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     redacted input only from persisted candidate evidence, sends a stable
     hashed owner idempotency key, retains the exact Lotus AI run id, and sends
     returned content through the existing deterministic evaluation pipeline.
+    Both AI mutation routes require complete trusted tenant, book, portfolio,
+    and client scope matching the persisted candidate before evaluation,
+    lineage persistence, idempotency work, or Lotus AI execution.
 26. an exact pre-call/post-call candidate evidence fence over business
     identity, material version, evidence version, evidence packet id, and
     repository evidence hash. Changed evidence discards generated content and

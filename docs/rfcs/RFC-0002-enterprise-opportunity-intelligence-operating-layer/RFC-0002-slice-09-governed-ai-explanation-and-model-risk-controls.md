@@ -82,7 +82,9 @@ Implemented in this slice:
    repository mutation path.
 11. `src/app/api/ai_governance.py` exposes the certified internal endpoint
     `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
-    It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
+    It requires `idea.ai-explanation.evaluate` plus complete trusted tenant,
+    book, portfolio, and client scope matching the persisted candidate before
+    evaluation or lineage work, returns redacted evidence only,
     blocks unsupported claims and forbidden actions, requires
     `Idempotency-Key`, records source-safe lineage, emits bounded
     `ai_explanation` operation events, reports
@@ -120,7 +122,8 @@ Implemented in this slice:
     stays blocked and not certified until runtime and lineage evidence exist.
 16. `tests/integration/test_ai_governance_api.py` covers deterministic
     fallback, verified-output acceptance, unsupported-claim blocking,
-    forbidden-action blocking, permission denial, missing candidate handling,
+    forbidden-action blocking, complete-scope and per-dimension mismatch
+    denial before lineage or owner work, malformed-scope handling, missing candidate handling,
     invalid candidate state, provider-unsafe metadata, unregistered workflow-pack
     id/version/evaluator rejection, and source-safe AI readiness diagnostics,
     plus API idempotency required/replay/conflict behavior and accepted/

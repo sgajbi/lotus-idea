@@ -785,7 +785,11 @@ evidence, redacts source refs, blocks unsupported claims and forbidden actions,
 and renders accepted advisor narrative only from verified ordered claims. Each
 grounded claim carries source-safe product/version, as-of, freshness, and quality
 references; blocked output carries no grounding. The evaluator requires
-`Idempotency-Key`, records source-safe lineage through the active
+`Idempotency-Key` and complete trusted tenant, book, portfolio, and client scope
+matching the persisted candidate before evaluation or lineage work. The
+generation route applies the same candidate authorization before any Lotus AI
+execution. Missing or mismatched scope fails closed without lineage or owner
+side effects. The evaluator records source-safe lineage through the active
 repository mutation path, and emits bounded `ai_explanation` operation events.
 Same-key/same-request calls replay without duplicate lineage writes,
 same-key/different-request calls return product-safe

@@ -147,15 +147,23 @@ PM/compliance routes do not grant Manage or compliance authority. Presentation r
 **Routes**
 
 - `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`
+- `POST /api/v1/idea-candidates/{candidateId}/ai-explanations`
 - `GET /api/v1/ai-explanations/readiness`
 
 **Current use**
 
 Deterministic fallback and model-risk diagnostics. Local/test may use a visibly unattested fixture; production-like profiles accept workflow output only as a complete producer bundle with verified Lotus AI run attestation. Accepted narrative is server-rendered from verified claims under `lotus-idea.ai-claim-grounding-policy.v1`, with source-safe product/version, as-of, freshness, and quality references. Blocked output exposes no grounding and uses deterministic server-owned explanation text; submitted provider narrative is digest-bound but not returned or persisted across accepted, blocked, replay, or conflict paths. Readiness reports dashboard and alert-rule source-contract validity separately from their runtime blockers.
 
+Both mutation routes require complete trusted tenant, book, portfolio, and client
+scope matching the persisted candidate. Authorization precedes evaluation,
+lineage persistence, idempotency work, and Lotus AI execution.
+
 **Boundary — not granted by these routes**
 
-No provider call by Idea, autonomous advice, dashboard provisioning, alert evaluation/delivery, live-provider certification, or client-ready explanation claim.
+The evaluator never calls a provider. The generation route may call the configured
+Lotus AI runtime only where profile policy permits; this is not autonomous advice,
+dashboard provisioning, alert evaluation/delivery, live-provider certification,
+or a client-ready explanation claim.
 
 ### Conversion and report evidence
 
