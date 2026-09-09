@@ -750,6 +750,37 @@ def test_review_action_api_validation_errors_are_product_safe() -> None:
     assert "PB_SG_GLOBAL_BAL_001" not in response.text
 
 
+@pytest.mark.parametrize(
+    ("field_name", "malformed_value"),
+    (
+        ("expectedEvidenceContentHash", "x"),
+        ("expectedSourceRevisionVectorDigest", f"sha256:{'A' * 64}"),
+    ),
+)
+def test_review_action_api_rejects_malformed_evidence_identity_without_side_effects(
+    field_name: str,
+    malformed_value: str,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key=f"seed-review-{field_name}")
+    transition_candidate_to_review_ready(client, candidate_id)
+    payload = approve_review_payload(candidate_id)
+    payload[field_name] = malformed_value
+    repository = get_idea_repository()
+    before = repository.snapshot()
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=payload,
+        headers=review_headers(f"review-malformed-{field_name}"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert repository.snapshot() == before
+
+
 def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_role() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
@@ -1031,6 +1062,37 @@ def test_conversion_intent_api_requires_approved_state_permission_and_valid_requ
     assert blank_idempotency.status_code == 400
     assert missing.status_code == 404
     assert missing.json()["code"] == "conversion_resource_not_found"
+
+
+@pytest.mark.parametrize(
+    ("field_name", "malformed_value"),
+    (
+        ("expectedEvidenceContentHash", "x"),
+        ("expectedSourceRevisionVectorDigest", f"sha256:{'A' * 64}"),
+    ),
+)
+def test_conversion_intent_api_rejects_malformed_evidence_identity_without_side_effects(
+    field_name: str,
+    malformed_value: str,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key=f"seed-convert-{field_name}")
+    approve_candidate_for_conversion(client, candidate_id)
+    payload = conversion_intent_payload()
+    payload[field_name] = malformed_value
+    repository = get_idea_repository()
+    before = repository.snapshot()
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=payload,
+        headers=conversion_intent_headers(f"conversion-malformed-{field_name}"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert repository.snapshot() == before
 
 
 def test_conversion_outcome_api_records_source_authorized_result() -> None:
