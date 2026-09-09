@@ -9,17 +9,21 @@ import pytest
 
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
+    CandidateLifecycleAccessScopeDenied,
     CandidateLifecycleTransitionWorkflowResult,
     apply_candidate_lifecycle_transition_to_repository,
 )
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.domain import (
     CandidatePersistenceDecision,
+    CandidatePersistenceRecord,
     IdeaLifecycleStatus,
+    IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     LifecyclePersistenceDecision,
     LifecyclePersistenceResult,
     OpportunityFamily,
+    QueueAccessScopeFilter,
 )
 from tests.support.opportunity_effectiveness_fixture import candidate_fixture
 
@@ -38,6 +42,12 @@ def lifecycle_command(**overrides: object) -> ApplyCandidateLifecycleTransitionC
         "reason_codes": ("review_required",),
         "actor_subject": "advisor-001",
         "idempotency_key": "lifecycle-transition-001",
+        "access_scope_filter": QueueAccessScopeFilter(
+            tenant_id="tenant-a",
+            book_id="book-001",
+            portfolio_id="portfolio-001",
+            client_id="client-001",
+        ),
     }
     values.update(overrides)
     return ApplyCandidateLifecycleTransitionCommand(**values)
@@ -131,6 +141,27 @@ def test_lifecycle_replay_returns_original_acceptance_time() -> None:
 
     assert replayed.persistence.decision is LifecyclePersistenceDecision.REPLAYED
     assert replayed.require_transition() == accepted.require_transition()
+
+
+def test_lifecycle_transition_denies_foreign_scope_before_repository_mutation() -> None:
+    repository = _repository_with_candidate()
+    before = repository.snapshot()
+
+    with pytest.raises(CandidateLifecycleAccessScopeDenied):
+        apply_candidate_lifecycle_transition_to_repository(
+            lifecycle_command(
+                target_status=IdeaLifecycleStatus.ENRICHED,
+                access_scope_filter=QueueAccessScopeFilter(
+                    tenant_id="tenant-other",
+                    book_id="book-001",
+                    portfolio_id="portfolio-001",
+                    client_id="client-001",
+                ),
+            ),
+            repository=repository,
+        )
+
+    assert repository.snapshot() == before
 
 
 def test_unsuccessful_lifecycle_results_do_not_claim_persisted_transition_evidence() -> None:
@@ -243,7 +274,8 @@ def test_successful_lifecycle_transition_requires_matching_candidate_record() ->
                 LifecyclePersistenceResult(
                     decision=LifecyclePersistenceDecision.REPLAYED,
                     record=replace(record, candidate=mismatched_candidate),
-                )
+                ),
+                lookup_record=record,
             ),
         )
 
@@ -282,8 +314,22 @@ def _repository_with_candidate() -> InMemoryIdeaRepository:
 
 
 class _StaticLifecycleRepository:
-    def __init__(self, persistence: LifecyclePersistenceResult) -> None:
+    def __init__(
+        self,
+        persistence: LifecyclePersistenceResult,
+        *,
+        lookup_record: CandidatePersistenceRecord | None = None,
+    ) -> None:
         self._persistence = persistence
+        self._lookup_record = lookup_record or persistence.record
 
     def record_lifecycle_transition(self, *args: Any, **kwargs: Any) -> LifecyclePersistenceResult:
         return self._persistence
+
+    def snapshot(self) -> IdeaRepositorySnapshot:
+        record = self._lookup_record
+        return IdeaRepositorySnapshot(
+            candidate_records=({} if record is None else {record.candidate.candidate_id: record}),
+            idempotency_records={},
+            idempotency_candidates={},
+        )

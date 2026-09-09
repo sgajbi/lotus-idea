@@ -9,7 +9,11 @@ from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_HEADER,
+    caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
@@ -38,6 +42,7 @@ from app.api.runtime_dependencies import (
 )
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
+    CandidateLifecycleAccessScopeDenied,
     CandidateLifecycleTransitionWorkflowResult,
     PersistedLifecycleTransition,
     apply_candidate_lifecycle_transition_to_repository,
@@ -49,6 +54,7 @@ from app.domain import (
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
     LifecyclePersistenceResult,
+    QueueAccessScopeFilter,
     ReasonCode,
     validate_caller_settable_lifecycle_status,
 )
@@ -123,6 +129,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        access_scope_filter: QueueAccessScopeFilter,
         event_lineage: EventLineageContext,
         accepted_at_utc: datetime,
     ) -> ApplyCandidateLifecycleTransitionCommand:
@@ -135,6 +142,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
             reason_codes=tuple(reason.value for reason in self.reason_codes),
             actor_subject=caller.subject,
             idempotency_key=idempotency_key,
+            access_scope_filter=access_scope_filter,
             event_lineage=event_lineage,
         )
 
@@ -202,21 +210,29 @@ async def record_candidate_lifecycle_transition(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
     x_causation_id: EventCausationHeader = None,
 ) -> CandidateLifecycleTransitionResponse | JSONResponse:
-    caller = _caller_from_lifecycle_headers(
-        x_caller_subject=x_caller_subject,
-        x_caller_roles=x_caller_roles,
-        x_caller_capabilities=x_caller_capabilities,
-        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     durable_storage_backed = False
     try:
-        _validate_lifecycle_request_authority(caller, idempotency_key)
+        caller = _caller_from_lifecycle_headers(
+            x_caller_subject=x_caller_subject,
+            x_caller_roles=x_caller_roles,
+            x_caller_capabilities=x_caller_capabilities,
+            x_caller_tenant_ids=x_caller_tenant_ids,
+            x_caller_book_ids=x_caller_book_ids,
+            x_caller_portfolio_ids=x_caller_portfolio_ids,
+            x_caller_client_ids=x_caller_client_ids,
+            x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
+        )
+        access_scope_filter = _validate_lifecycle_request_authority(caller, idempotency_key)
         repository_context = _lifecycle_repository_context_or_problem()
         if isinstance(repository_context, JSONResponse):
             return repository_context
@@ -229,8 +245,9 @@ async def record_candidate_lifecycle_transition(
             http_request=http_request,
             x_causation_id=x_causation_id,
             repository_context=repository_context,
+            access_scope_filter=access_scope_filter,
         )
-    except PermissionDeniedError:
+    except (PermissionDeniedError, CandidateLifecycleAccessScopeDenied):
         _emit_lifecycle_operation_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
@@ -286,12 +303,20 @@ def _caller_from_lifecycle_headers(
     x_caller_subject: str | None,
     x_caller_roles: str | None,
     x_caller_capabilities: str | None,
+    x_caller_tenant_ids: str | None,
+    x_caller_book_ids: str | None,
+    x_caller_portfolio_ids: str | None,
+    x_caller_client_ids: str | None,
     x_lotus_trusted_caller_context: str | None,
 ) -> CallerContext:
     return caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        tenant_ids=x_caller_tenant_ids,
+        book_ids=x_caller_book_ids,
+        portfolio_ids=x_caller_portfolio_ids,
+        client_ids=x_caller_client_ids,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
 
@@ -299,9 +324,14 @@ def _caller_from_lifecycle_headers(
 def _validate_lifecycle_request_authority(
     caller: CallerContext,
     idempotency_key: str,
-) -> None:
+) -> QueueAccessScopeFilter:
     _require_lifecycle_caller(caller)
+    access_scope_filter = require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission="idea.candidate.lifecycle.entitlement_scope",
+    )
     validate_idempotency_key(idempotency_key)
+    return access_scope_filter
 
 
 def _lifecycle_repository_context_or_problem() -> _LifecycleRepositoryContext | JSONResponse:
@@ -330,6 +360,7 @@ def _apply_lifecycle_transition(
     http_request: Request,
     x_causation_id: EventCausationHeader,
     repository_context: _LifecycleRepositoryContext,
+    access_scope_filter: QueueAccessScopeFilter,
 ) -> CandidateLifecycleTransitionWorkflowResult:
     return apply_candidate_lifecycle_transition_to_repository(
         _lifecycle_transition_command(
@@ -339,6 +370,7 @@ def _apply_lifecycle_transition(
             idempotency_key=idempotency_key,
             http_request=http_request,
             x_causation_id=x_causation_id,
+            access_scope_filter=access_scope_filter,
         ),
         repository=repository_context.repository,
     )
@@ -352,11 +384,13 @@ def _lifecycle_transition_command(
     idempotency_key: str,
     http_request: Request,
     x_causation_id: EventCausationHeader,
+    access_scope_filter: QueueAccessScopeFilter,
 ) -> ApplyCandidateLifecycleTransitionCommand:
     return request.to_command(
         candidate_id=candidate_id,
         caller=caller,
         idempotency_key=idempotency_key,
+        access_scope_filter=access_scope_filter,
         event_lineage=event_lineage_from_request(
             http_request,
             causation_id=x_causation_id,

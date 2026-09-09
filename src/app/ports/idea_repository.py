@@ -286,7 +286,7 @@ class CandidatePersistenceRepository(Protocol):
     ) -> CandidatePersistenceResult: ...
 
 
-class CandidateLifecycleRepository(Protocol):
+class CandidateLifecycleRepository(CandidateSnapshotRepository, Protocol):
     def record_lifecycle_transition(
         self,
         candidate_id: str,
@@ -303,11 +303,7 @@ class CandidateLifecycleRepository(Protocol):
     ) -> LifecyclePersistenceResult: ...
 
 
-class CandidateExpiryRepository(
-    CandidateSnapshotRepository,
-    CandidateLifecycleRepository,
-    Protocol,
-):
+class CandidateExpiryRepository(CandidateLifecycleRepository, Protocol):
     """Repository capabilities required for source-authoritative candidate retirement."""
 
 

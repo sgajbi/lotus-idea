@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from app.application.candidate_lookup import candidate_record_by_id
 from app.application.persisted_action_evidence import (
     PersistedActionEvidenceUnavailable,
     require_single_persisted_action,
@@ -13,6 +14,7 @@ from app.domain import (
     IdeaLifecycleStatus,
     LifecyclePersistenceDecision,
     LifecyclePersistenceResult,
+    QueueAccessScopeFilter,
     validate_caller_settable_lifecycle_status,
 )
 from app.domain.control_time import (
@@ -36,6 +38,7 @@ class ApplyCandidateLifecycleTransitionCommand:
     reason_codes: tuple[str, ...]
     actor_subject: str
     idempotency_key: str
+    access_scope_filter: QueueAccessScopeFilter
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -81,11 +84,27 @@ class CandidateLifecycleTransitionWorkflowResult:
         return self.transition
 
 
+class CandidateLifecycleAccessScopeDenied(Exception):
+    """Raised when caller entitlements do not cover the target candidate scope."""
+
+
 def apply_candidate_lifecycle_transition_to_repository(
     command: ApplyCandidateLifecycleTransitionCommand,
     *,
     repository: CandidateLifecycleRepository,
 ) -> CandidateLifecycleTransitionWorkflowResult:
+    record = candidate_record_by_id(repository, command.candidate_id)
+    if record is None:
+        return CandidateLifecycleTransitionWorkflowResult(
+            transition=None,
+            persistence=LifecyclePersistenceResult(
+                decision=LifecyclePersistenceDecision.NOT_FOUND,
+                record=None,
+            ),
+        )
+    if not command.access_scope_filter.matches(record.candidate.access_scope):
+        raise CandidateLifecycleAccessScopeDenied
+
     persistence = repository.record_lifecycle_transition(
         command.candidate_id,
         command.target_status,
