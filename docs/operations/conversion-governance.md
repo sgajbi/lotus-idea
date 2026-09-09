@@ -13,28 +13,31 @@ Current implemented scope:
    - `manage_review`: `lotus-manage`,
    - `report_evidence`: `lotus-report`,
 4. downstream outcomes must come from the target source authority,
-5. outcomes do not grant execution, suitability, compliance, mandate, or
+5. downstream outcomes require complete trusted tenant, book, portfolio, and
+   client entitlements matching the persisted candidate; authorization occurs
+   before idempotency precheck or mutation,
+6. outcomes do not grant execution, suitability, compliance, mandate, or
    client-communication authority,
-6. source-safe downstream application orchestration can submit existing
+7. source-safe downstream application orchestration can submit existing
    Advise/Manage conversion intents and Report evidence-pack requests through
    downstream ports without recording authoritative downstream outcomes,
-7. certified internal API foundations expose:
+8. certified internal API foundations expose:
    - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
    - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`,
    - `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`,
    - `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
-8. successful conversion-intent and conversion-outcome acceptance or replay
+9. successful conversion-intent and conversion-outcome acceptance or replay
    returns the exact persisted Idea-owned action. The application layer binds
    the command/resource identity to exactly one candidate-record entry;
    missing or ambiguous evidence fails closed as product-safe degraded
    recovery instead of returning a successful null or reconstructing an event
    from the request.
-9. conversion readiness is evaluated against an exact candidate snapshot. The
+10. conversion readiness is evaluated against an exact candidate snapshot. The
    PostgreSQL candidate fence reloads current state, resolves legitimate replay
    first, and rejects a distinct stale intent before lifecycle, audit, outbox,
    idempotency, or conversion-intent evidence is written. When competing
    intents race, the first commit is authoritative.
-10. downstream submission requires a complete trusted tenant, book, portfolio,
+11. downstream submission requires a complete trusted tenant, book, portfolio,
     and client entitlement scope that covers the persisted source candidate.
     Missing or mismatched scope fails closed before a local submission claim or
     downstream call. The claim fingerprint binds all four scope dimensions so
@@ -42,15 +45,15 @@ Current implemented scope:
     `(tenant_id, idempotency_key)`: exact reuse within one tenant replays or
     conflicts according to the request fingerprint, while another tenant may
     use the same ordinary key with a distinct opaque recovery reference.
-11. the Advise intake envelope carries the candidate's canonical
+12. the Advise intake envelope carries the candidate's canonical
     `portfolio_id`; it never derives portfolio identity from an opaque candidate
     or conversion-intent identifier. The Manage envelope remains unchanged
     until the Manage-owned contract explicitly accepts portfolio scope.
-12. producer `requestedAtUtc` and downstream-owner `recordedAtUtc` remain
+13. producer `requestedAtUtc` and downstream-owner `recordedAtUtc` remain
     observed business evidence. Idea records a distinct server-controlled
     `acceptedAtUtc`, uses it for mutation/audit chronology, and returns the
     original acceptance instant on exact replay.
-13. a new conversion intent is refused at or after the candidate evidence
+14. a new conversion intent is refused at or after the candidate evidence
     applicability boundary using server acceptance time. An exact replay of an
     intent accepted before expiry remains replayable and creates no additional
     outbox or downstream work.

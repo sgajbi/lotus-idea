@@ -141,6 +141,9 @@ Implementation evidence:
 7. `src/app/api/conversion_governance.py` emits bounded operation events for
    conversion-intent and conversion-outcome accepted, replayed, conflict,
    not-found, permission-denied, invalid-request, and invalid-state outcomes.
+   Conversion outcomes also require complete trusted tenant/book/portfolio/client
+   entitlements matching the persisted candidate before idempotency precheck or
+   mutation; missing or mismatched scope is product-safe and mutation-free.
 8. `src/app/api/report_evidence.py` emits bounded operation events for report
    evidence-pack request accepted, replayed, conflict, not-found,
    permission-denied, invalid-request, and invalid-state outcomes.

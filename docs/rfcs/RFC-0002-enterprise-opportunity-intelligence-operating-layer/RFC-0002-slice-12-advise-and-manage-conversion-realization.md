@@ -73,6 +73,11 @@ atomically and refuses retained duplicates.
     recording also requires a complete trusted caller entitlement scope and
     rejects candidate-scope mismatches before persistence, aligning conversion
     controls with review-action and feedback mutation proof.
+    Outcome recording applies the same complete tenant/book/portfolio/client
+    entitlement requirement to the persisted candidate behind the conversion
+    intent. The comparison precedes idempotency precheck, outcome progression,
+    audit, outbox, and repository mutation; source systems remain authoritative
+    for the outcome fact.
 11. `src/app/api/conversion_governance.py` exposes certified internal API
     foundations:
     - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
@@ -84,7 +89,7 @@ atomically and refuses retained duplicates.
     `tests/integration/test_review_workflow_api.py` cover repository
     idempotency, audit posture, API permission, invalid state, missing
     resources, wrong source authority, replay, conflict behavior, and
-    conversion-intent entitlement-scope denial.
+    conversion-intent and conversion-outcome entitlement-scope denial.
     `tests/unit/test_conversion_workflow_application.py` adds focused
     projection-only coverage proving conversion-intent requests and missing
     candidate handling do not require `snapshot()` hydration, plus regression
