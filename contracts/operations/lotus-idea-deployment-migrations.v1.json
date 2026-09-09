@@ -13,7 +13,7 @@
   "legacyAdoption": {
     "allowedOnlyWhenHistoryIsAbsent": true,
     "schemaFingerprintAlgorithm": "postgresql-structural-inventory-v1",
-    "schemaFingerprintSha256": "sha256:5d5e9f4c7c58cfad181c077ad431238fa4cde5d57db4e61520c365a43f87d4b4",
+    "schemaFingerprintSha256": "sha256:5a005e9493f105c4a2d234cb2b42b8bd9bee43fabe887b9c596e2b943cdd5cca",
     "ideaTableCount": 21,
     "columnCount": 278,
     "constraintCount": 324,
