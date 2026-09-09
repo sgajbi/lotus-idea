@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 from typing import NamedTuple
+
+from migration_sql_validation import (
+    contains_sql_statement as _contains_sql_statement,
+    validate_table_safe_rollback_alter_statements as _validate_table_safe_rollback_alter_statements,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -381,12 +385,13 @@ REQUIRED_MIGRATIONS = (
     MigrationContract(
         version="031",
         forward_path=MIGRATIONS_DIR / "031_downstream_submission_resource_identity.sql",
-        rollback_path=(MIGRATIONS_DIR / "031_downstream_submission_resource_identity.rollback.sql"),
+        rollback_path=MIGRATIONS_DIR / "031_downstream_submission_resource_identity.rollback.sql",
         required_tables=(),
         required_indexes=(),
         required_forward_fragments=(
             "GROUP BY tenant_id, resource_type, resource_id, target",
-            "cannot enforce downstream submission resource identity while duplicate resources exist",
+            "cannot enforce downstream submission resource identity while "
+            "duplicate resources exist",
             "CREATE UNIQUE INDEX uq_idea_downstream_submission_resource_identity",
         ),
         required_rollback_fragments=(
@@ -406,12 +411,6 @@ def _display_path(path: Path) -> str:
         return path.relative_to(ROOT).as_posix()
     except ValueError:
         return path.as_posix()
-
-
-def _contains_sql_statement(sql: str, statement: str) -> bool:
-    normalized_sql = re.sub(r"\s+", " ", sql.upper())
-    normalized_statement = re.sub(r"\s+", " ", statement.upper())
-    return normalized_statement in normalized_sql
 
 
 def validate_migration_contracts(
@@ -473,7 +472,7 @@ def _validate_forward_sql(migration: MigrationContract, forward_sql: str) -> lis
 
 def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> list[str]:
     errors: list[str] = []
-    errors.extend(_validate_table_safe_rollback_alter_statements(migration, rollback_sql))
+    errors.extend(_validate_table_safe_rollback_alter_statements(migration.version, rollback_sql))
     for index in migration.required_indexes:
         if not _contains_sql_statement(rollback_sql, f"DROP INDEX IF EXISTS {index};"):
             errors.append(f"Migration {migration.version} rollback missing index `{index}`")
@@ -484,20 +483,6 @@ def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> l
     for fragment in migration.required_rollback_fragments:
         if fragment.upper() not in upper_rollback:
             errors.append(f"Migration {migration.version} rollback SQL missing `{fragment}`")
-    return errors
-
-
-def _validate_table_safe_rollback_alter_statements(
-    migration: MigrationContract | str,
-    rollback_sql: str,
-) -> list[str]:
-    version = migration.version if isinstance(migration, MigrationContract) else migration
-    errors: list[str] = []
-    for match in re.finditer(r"\bALTER\s+TABLE\s+(?!IF\s+EXISTS\b)", rollback_sql, re.IGNORECASE):
-        line_number = rollback_sql.count("\n", 0, match.start()) + 1
-        errors.append(
-            f"Migration {version} rollback line {line_number} uses ALTER TABLE without IF EXISTS"
-        )
     return errors
 
 
