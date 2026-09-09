@@ -57,6 +57,10 @@ def _detail_headers() -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.candidate.detail.read",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-detail-api",
         "X-Trace-Id": "trace-operation-detail-api",
     }
@@ -67,6 +71,10 @@ def _queue_headers() -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.queue.read",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-queue-api",
         "X-Trace-Id": "trace-operation-queue-api",
     }

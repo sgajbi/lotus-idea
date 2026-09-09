@@ -9,8 +9,8 @@ drawer, and `lotus-gateway` now publishes bounded read-only advisor queue and
 candidate detail routes. `lotus-workbench` PR #391 merged to `main` at
 `56ce0614875e8b6ecd4df259ef14a1631ea8a4ac` and implements bounded
 Gateway/BFF-backed rendering for the advisor idea queue and source-safe
-candidate detail. The Workbench helper forwards the required Idea caller
-headers, unwraps Gateway envelopes, keeps candidate detail inside Workbench
+candidate detail. The Workbench helper forwards the required complete Idea caller
+entitlement scope and permission headers, unwraps Gateway envelopes, keeps candidate detail inside Workbench
 routing, and the canonical live-validation script now requires a populated
 candidate row, loaded detail fields, and observed post-navigation route
 evidence before accepting the opportunities screenshot.

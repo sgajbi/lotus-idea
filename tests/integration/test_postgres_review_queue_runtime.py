@@ -244,6 +244,14 @@ def test_postgres_review_queue_preserves_historical_snapshot_across_later_accept
 ) -> None:
     del postgres_database_url
     client = managed_test_client(app)
+    queue_headers = _review_queue_headers(
+        portfolio_ids=(
+            "PB_SG_GLOBAL_BAL_001-snapshot-visible-0,"
+            "PB_SG_GLOBAL_BAL_001-snapshot-visible-1,"
+            "PB_SG_GLOBAL_BAL_001-snapshot-future,"
+            "PB_SG_GLOBAL_BAL_001-snapshot-backdated"
+        )
+    )
     visible_candidate_ids = []
     for index in range(2):
         persisted = client.post(
@@ -257,7 +265,7 @@ def test_postgres_review_queue_preserves_historical_snapshot_across_later_accept
     first_page = client.get(
         "/api/v1/review-queues/advisor",
         params={"evaluatedAtUtc": "2026-06-21T10:10:00Z", "limit": 1},
-        headers=_review_queue_headers(),
+        headers=queue_headers,
     )
     assert first_page.status_code == 200
     snapshot_token = str(first_page.json()["page"]["snapshotToken"])
@@ -286,7 +294,7 @@ def test_postgres_review_queue_preserves_historical_snapshot_across_later_accept
             "offset": 1,
             "snapshotToken": snapshot_token,
         },
-        headers=_review_queue_headers(),
+        headers=queue_headers,
     )
     assert second_page.status_code == 200
     assert second_page.json()["page"]["totalReviewableItemCount"] == 2
@@ -308,7 +316,7 @@ def test_postgres_review_queue_preserves_historical_snapshot_across_later_accept
             "offset": 1,
             "snapshotToken": snapshot_token,
         },
-        headers=_review_queue_headers(),
+        headers=queue_headers,
     )
     assert historical_page.status_code == 200
     assert historical_page.json()["page"]["snapshotToken"] == snapshot_token
@@ -401,11 +409,15 @@ def _persistence_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def _review_queue_headers() -> dict[str, str]:
+def _review_queue_headers(*, portfolio_ids: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.queue.read",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-review-queue-snapshot-read",
     }
 

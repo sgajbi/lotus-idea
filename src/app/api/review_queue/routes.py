@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse
 from app.api.caller_headers import (
     INVALID_CALLER_SCOPE_DETAIL,
     TRUSTED_CALLER_CONTEXT_HEADER,
-    caller_access_scope_filter,
     caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
 )
 from app.api.problem_details import (
     conflict_metadata,
@@ -156,6 +156,7 @@ def _get_business_review_queue(
         request,
         caller=caller_or_problem,
         audience=audience,
+        permission_policy=permission_policy,
     )
     if isinstance(effective_scope_filter, JSONResponse):
         return effective_scope_filter
@@ -254,8 +255,13 @@ def _effective_review_queue_access_scope(
     *,
     caller: CallerContext,
     audience: ReviewQueueAudience,
+    permission_policy: CapabilityPolicy,
 ) -> QueueAccessScopeFilter | None | JSONResponse:
     try:
+        caller_scope_filter = require_complete_caller_access_scope_filter(
+            caller,
+            denied_permission=permission_policy.required_capability,
+        )
         requested_scope_filter = QueueAccessScopeFilter(
             tenant_id=request.tenant_id,
             book_id=request.book_id,
@@ -274,9 +280,21 @@ def _effective_review_queue_access_scope(
             title="Invalid request",
             detail="Scope query fields cannot be blank.",
         )
+    except PermissionDeniedError:
+        _emit_review_queue_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+            request=request,
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail=_queue_scope_permission_denied_detail(audience),
+        )
     effective_scope_filter = effective_queue_scope_filter(
         requested_scope_filter=requested_scope_filter,
-        caller_scope_filter=caller_access_scope_filter(caller),
+        caller_scope_filter=caller_scope_filter,
     )
     if effective_scope_filter is None:
         _emit_review_queue_operation_event(
@@ -482,7 +500,8 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
     "description": (
         "Returns the deterministic advisor review queue projection over persisted idea "
         "candidate snapshots. Optional tenantId, bookId, portfolioId, and clientId "
-        "query filters constrain results to the requested advisor access scope. "
+        "query filters may narrow the required complete trusted caller entitlement scope; "
+        "they never create or widen authority. "
         "When evaluatedAtUtc is omitted, the route returns the governed active "
         "advisor queue evaluation snapshot. "
         "evaluatedAtUtc is a candidate-creation as-of boundary: candidates created "
@@ -496,8 +515,8 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         "Requests with offset greater "
         "than zero must return that token; changed queue state returns a 409 snapshot "
         "conflict so consumers restart without silent skips or duplicates. "
-        "When platform caller-context scope headers are present, the route applies "
-        "those entitlements automatically and rejects broader query scopes fail-closed. "
+        "Complete tenant, book, portfolio, and client caller-context scope is required "
+        "and broader query scopes are rejected fail-closed before repository access. "
         "This is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
         "with bounded read-only Gateway publication; it does not expose a Workbench "
         "product surface, data-product certification, or supported feature. "
@@ -549,8 +568,10 @@ def _role_review_queue_route(
         "summary": f"Get the {role_label} idea review queue",
         "description": (
             f"Returns only candidates routed to the {role_label} review audience under the "
-            "shared deterministic ranking policy. Caller-context tenant, book, portfolio, and "
-            "client entitlements are applied fail-closed. Snapshot tokens bind the audience, "
+            "shared deterministic ranking policy. Complete trusted caller-context tenant, book, "
+            "portfolio, and client entitlements are required and applied fail-closed before "
+            "repository access. Query filters may narrow but never create authority. Snapshot "
+            "tokens bind the audience, "
             "evaluation time, entitled scope, policy versions, and queue state, so a token from "
             "another role cannot continue this queue. This internal foundation does not grant "
             "suitability, compliance, mandate, execution, or client-communication authority and "

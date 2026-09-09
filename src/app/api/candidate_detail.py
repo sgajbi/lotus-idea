@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse
 from app.api.caller_headers import (
     INVALID_CALLER_SCOPE_DETAIL,
     TRUSTED_CALLER_CONTEXT_HEADER,
-    caller_access_scope_filter,
     caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
 )
 from app.api.candidate_detail_models import (
     AuditSummaryResponse,
@@ -41,6 +41,7 @@ from app.application.candidate_detail import (
 )
 from app.api.problem_details import problem_details_response as problem_response
 from app.api.operation_events import request_context_id
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.ports.idea_repository import CandidateSnapshotRepository
 from app.security.caller_context import (
@@ -103,11 +104,11 @@ async def get_idea_candidate_detail(
         return caller
 
     try:
-        _authorize_candidate_detail_read(caller)
+        access_scope_filter = _authorize_candidate_detail_read(caller)
         repository = get_idea_repository()
         result = _load_candidate_detail(
             candidate_id=candidate_id,
-            caller=caller,
+            access_scope_filter=access_scope_filter,
             repository=repository,
         )
     except PermissionDeniedError:
@@ -145,20 +146,24 @@ def _candidate_detail_caller_from_headers(
         return _candidate_detail_invalid_request_response(request, INVALID_CALLER_SCOPE_DETAIL)
 
 
-def _authorize_candidate_detail_read(caller: CallerContext) -> None:
+def _authorize_candidate_detail_read(caller: CallerContext) -> QueueAccessScopeFilter:
     require_role_and_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
+    return require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission=_READ_CANDIDATE_DETAIL_POLICY.required_capability,
+    )
 
 
 def _load_candidate_detail(
     *,
     candidate_id: str,
-    caller: CallerContext,
+    access_scope_filter: QueueAccessScopeFilter,
     repository: CandidateSnapshotRepository,
 ) -> CandidateDetailResult:
     return get_candidate_detail(
         GetCandidateDetailCommand(
             candidate_id=candidate_id,
-            access_scope_filter=caller_access_scope_filter(caller),
+            access_scope_filter=access_scope_filter,
         ),
         repository=repository,
     )
@@ -259,9 +264,9 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
         "including redacted source evidence, lifecycle history, review, feedback, "
         "conversion, local downstream-submission, report-evidence, and audit summary "
         "posture. Local submission posture does not assert a source-owned business "
-        "outcome. When platform "
-        "caller-context scope headers are present, the route applies those entitlements "
-        "fail-closed before returning detail. This is an RFC-0002 Slice 10 and Slice 11 "
+        "outcome. The route requires complete trusted tenant, book, portfolio, and client "
+        "entitlement scope and applies it fail-closed before repository access. This is an "
+        "RFC-0002 Slice 10 and Slice 11 "
         "API foundation for evidence-drawer use; it is not a Workbench product proof, "
         "data-product certification, or supported-feature promotion."
     ),

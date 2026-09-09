@@ -4,10 +4,12 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import pytest
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from tests.support.http import ManagedTestClient, managed_test_client
 
+import app.api.candidate_detail as candidate_detail_api
 from app.api.candidate_detail import get_idea_candidate_detail
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.application.candidate_detail import GetCandidateDetailCommand
@@ -57,23 +59,18 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
 def detail_headers(
     capabilities: str = "idea.candidate.detail.read",
     *,
-    portfolio_ids: str | None = None,
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
 ) -> dict[str, str]:
     headers = {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-candidate-detail-api",
     }
-    if portfolio_ids is not None:
-        headers.update(
-            {
-                "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
-                "X-Caller-Book-Ids": "book-advisor-001",
-                "X-Caller-Portfolio-Ids": portfolio_ids,
-                "X-Caller-Client-Ids": "client-001",
-            }
-        )
     return headers
 
 
@@ -520,6 +517,42 @@ def test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed() -> 
     assert "PB_SG" not in str(denied.json())
 
 
+@pytest.mark.parametrize(
+    "missing_header",
+    (
+        "X-Caller-Tenant-Ids",
+        "X-Caller-Book-Ids",
+        "X-Caller-Portfolio-Ids",
+        "X-Caller-Client-Ids",
+    ),
+)
+def test_candidate_detail_api_requires_complete_scope_before_repository_access(
+    monkeypatch: pytest.MonkeyPatch,
+    missing_header: str,
+) -> None:
+    def fail_on_repository_access() -> object:
+        raise AssertionError("repository must not be accessed without complete caller scope")
+
+    monkeypatch.setattr(candidate_detail_api, "get_idea_repository", fail_on_repository_access)
+    headers = detail_headers()
+    headers.pop(missing_header)
+
+    response = managed_test_client(app).get(
+        "/api/v1/idea-candidates/sensitive-candidate",
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read idea candidate detail.",
+    }
+    assert "sensitive-candidate" not in response.text
+
+
 def test_candidate_detail_api_rejects_blank_entitlement_scope_header_safely() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
@@ -564,10 +597,10 @@ def test_candidate_detail_api_rejects_blank_candidate_id_safely() -> None:
             x_caller_subject="advisor-001",
             x_caller_roles="advisor",
             x_caller_capabilities="idea.candidate.detail.read",
-            x_caller_tenant_ids=None,
-            x_caller_book_ids=None,
-            x_caller_portfolio_ids=None,
-            x_caller_client_ids=None,
+            x_caller_tenant_ids="tenant-private-bank-sg",
+            x_caller_book_ids="book-advisor-001",
+            x_caller_portfolio_ids="PB_SG_GLOBAL_BAL_001",
+            x_caller_client_ids="client-001",
         )
     )
 
