@@ -956,7 +956,11 @@ def seed_approved_candidate(
                 target_status=target_status,
                 minute=index,
             ),
-            headers=lifecycle_headers(f"{idempotency_prefix}-lifecycle-{target_status}-001"),
+            headers=lifecycle_headers(
+                f"{idempotency_prefix}-lifecycle-{target_status}-001",
+                portfolio_id=portfolio_id,
+                tenant_id=tenant_id,
+            ),
         )
         assert transition_response.status_code == 200
     review_response = client.post(
@@ -1068,13 +1072,18 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
+def lifecycle_headers(
+    idempotency_key: str,
+    *,
+    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
+    tenant_id: str = "tenant-private-bank-sg",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "idea-lifecycle-worker",
         "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
-        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Tenant-Ids": tenant_id,
         "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Portfolio-Ids": portfolio_id,
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-lifecycle-downstream-api",
         "Idempotency-Key": idempotency_key,
