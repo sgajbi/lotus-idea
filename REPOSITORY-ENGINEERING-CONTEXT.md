@@ -140,9 +140,12 @@ Critical invariants:
 8. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
 9. Outbound work records durable intent before I/O.
 10. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
-11. Exact replay does not create duplicate state, owner work, events, or outbox records.
-12. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
-13. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
+11. A first downstream conversion attempt revalidates current candidate evidence, exact active
+    review authority, source-cut authority, target lifecycle, and owner authority before claim or
+    I/O. Retained `legacy:unknown` evidence remains auditable but cannot authorize new owner work.
+12. Exact replay does not create duplicate state, owner work, events, or outbox records.
+13. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+14. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.

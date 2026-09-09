@@ -78,7 +78,17 @@ The submission routes are:
 
 These routes are API-certified internal foundations. They propagate
 correlation, trace, and idempotency headers to configured adapters after a
-local idempotency precheck. The repository stores source authority, target,
+local idempotency precheck. Before the first Advise or Manage attempt, Idea
+revalidates the retained intent against the current candidate evidence, exact
+review grant, target lifecycle, source authority, applicability window, and
+authoritative source-cut posture. Historical `legacy:unknown` revision posture,
+stale evidence, expired or revoked review authority, and target drift return
+`409 conversion_intent_authority_conflict` before a claim or owner call. An
+already admitted submission remains exactly replayable or read-only
+reconcilable after later authority expiry; the refusal never authorizes a new
+POST or rewrites retained evidence.
+
+The repository stores source authority, target,
 resource id, bounded posture, bounded failure reason, correlation id, trace id,
 and timestamp by authoritative tenant plus caller idempotency key without
 storing sensitive request payloads. The same tenant, key, and request

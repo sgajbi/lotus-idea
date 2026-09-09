@@ -477,3 +477,13 @@ revision-vector digests as `400 invalid_request` before conversion authority or
 persistence work. A well-formed but non-matching digest continues to fail as a
 conversion conflict; `legacy:unknown` remains only the explicit historical
 revision-vector sentinel and never establishes current authority.
+
+The downstream submission boundary repeats the authority decision for a first
+owner attempt. It requires the retained intent to match the current candidate
+evidence, exact active review grant, target lifecycle, mapped source owner,
+applicability window, and authoritative source cut before claim or I/O. A
+historical unknown revision posture or later authority conflict returns `409
+conversion_intent_authority_conflict` without creating a submission claim or
+calling Advise/Manage. Once an attempt has been admitted, exact replay and
+read-only reconciliation remain available without authorizing a second POST or
+rewriting historical evidence.
