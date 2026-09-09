@@ -19,7 +19,12 @@ from app.application.runtime_evidence import (
     source_ref_receipt,
 )
 from app.domain.evidence_digest import is_sha256_digest
-from app.domain import CandidatePersistenceDecision, EvidenceFreshness, ReviewAccessScope, SourceSystem
+from app.domain import (
+    CandidatePersistenceDecision,
+    EvidenceFreshness,
+    ReviewAccessScope,
+    SourceSystem,
+)
 from app.domain.evidence_hashing import evidence_hash_for_source_refs
 from app.domain.source_revision import source_cut_posture, source_revision_vector_digest
 from app.domain.proof_evidence import EvidenceClass

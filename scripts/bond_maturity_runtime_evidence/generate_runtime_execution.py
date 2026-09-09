@@ -111,9 +111,7 @@ def _write_blocked(
             ),
             command=active_command,
             error_code=error_code,
-            durable_storage_backed=idea_repository_durable_storage_backed(
-                get_idea_repository()
-            ),
+            durable_storage_backed=idea_repository_durable_storage_backed(get_idea_repository()),
         )
         write_json_payload(payload, output=args.output)
     except (OSError, ValueError, json.JSONDecodeError) as exc:

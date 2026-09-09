@@ -9,6 +9,12 @@ import pytest
 from app.application.concentration_risk_signal import (
     evaluate_and_persist_concentration_risk_signal_from_risk,
 )
+from app.application.bond_maturity_runtime_evidence import (
+    EvaluateBondMaturityReadiness,
+    bond_maturity_runtime_execution_is_valid,
+    build_bond_maturity_runtime_execution,
+    evaluate_bond_maturity_readiness,
+)
 from app.application.drawdown_review_signal import (
     evaluate_and_persist_drawdown_review_signal_from_risk,
 )
@@ -35,7 +41,7 @@ from app.application.underperformance_signal import (
     evaluate_and_persist_underperformance_signal_from_performance,
 )
 from app.domain import UnscopedCandidatePersistenceError
-from app.ports.idea_repository import CandidatePersistenceRepository
+from app.ports.idea_repository import CandidateEvaluationRepository
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -48,6 +54,8 @@ from tests.support.high_volatility_runtime_evidence import (
     risk_evidence as high_volatility_risk_evidence,
     runtime_command as high_volatility_runtime_command,
 )
+from tests.support.bond_maturity_runtime_evidence import AuthoritativeCoreBondMaturitySource
+from datetime import UTC, date, datetime
 from tests.support.performance_underperformance_runtime_evidence import (
     GENERATED_AT as PERFORMANCE_UNDERPERFORMANCE_GENERATED_AT,
     FixedPerformanceUnderperformanceSource,
@@ -96,11 +104,15 @@ _RUNTIME_TABLES = frozenset(
             lambda repository: _performance_underperformance_execution(repository),
             id="performance-underperformance",
         ),
+        pytest.param(
+            lambda repository: _bond_maturity_execution(repository),
+            id="core-bond-maturity",
+        ),
     ),
 )
 def test_source_runtime_evidence_replays_after_postgres_repository_reload(
     postgres_database_url: str,
-    execute: Callable[[CandidatePersistenceRepository], tuple[Mapping[str, Any], bool]],
+    execute: Callable[[CandidateEvaluationRepository], tuple[Mapping[str, Any], bool]],
 ) -> None:
     accepted_payload, accepted_valid = execute(get_idea_repository())
 
@@ -154,7 +166,7 @@ def test_source_runtime_evidence_rejects_placeholder_scope_without_postgres_muta
 
 
 def _concentration_execution(
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
     command = risk_concentration_runtime_command()
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
@@ -172,7 +184,7 @@ def _concentration_execution(
 
 
 def _high_volatility_execution(
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
     command = high_volatility_runtime_command()
     result = evaluate_and_persist_high_volatility_signal_from_risk(
@@ -190,7 +202,7 @@ def _high_volatility_execution(
 
 
 def _drawdown_execution(
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
     command = risk_drawdown_runtime_command()
     result = evaluate_and_persist_drawdown_review_signal_from_risk(
@@ -208,7 +220,7 @@ def _drawdown_execution(
 
 
 def _performance_underperformance_execution(
-    repository: CandidatePersistenceRepository,
+    repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
     command = performance_underperformance_runtime_command()
     result = evaluate_and_persist_underperformance_signal_from_performance(
@@ -223,3 +235,34 @@ def _performance_underperformance_execution(
         durable_storage_backed=idea_repository_durable_storage_backed(repository),
     )
     return payload, performance_underperformance_runtime_execution_is_valid(payload)
+
+
+def _bond_maturity_execution(
+    repository: CandidateEvaluationRepository,
+) -> tuple[Mapping[str, Any], bool]:
+    generated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+    command = EvaluateBondMaturityReadiness(
+        tenant_id="tenant-a",
+        book_id="book-a",
+        portfolio_id="portfolio-a",
+        client_id="client-a",
+        as_of_date=date(2026, 6, 21),
+        evaluated_at_utc=generated_at_utc,
+        accepted_at_utc=generated_at_utc,
+        idempotency_key="runtime-evidence:bond-maturity:portfolio-a",
+        actor_subject="bond-maturity-runtime-evidence",
+        maturity_window_days=30,
+        correlation_id="corr-a",
+        trace_id="trace-a",
+    )
+    result = evaluate_bond_maturity_readiness(
+        command,
+        core_source=AuthoritativeCoreBondMaturitySource(),
+        repository=repository,
+    )
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=generated_at_utc,
+        result=result,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+    return payload, bond_maturity_runtime_execution_is_valid(payload)

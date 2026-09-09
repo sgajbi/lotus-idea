@@ -279,8 +279,7 @@ def _persistence_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bo
         and persistence.get("candidateFamily") == "bond_maturity"
         and persistence.get("candidateLifecycleStatus") == "generated"
         and persistence.get("sourceReceiptDigest") == parts.source.get("receiptDigest")
-        and persistence.get("sourceCutPosture")
-        in {"coherent", "coherent_with_declared_tolerance"}
+        and persistence.get("sourceCutPosture") in {"coherent", "coherent_with_declared_tolerance"}
         and all(
             _is_sha256(persistence.get(key))
             for key in (
