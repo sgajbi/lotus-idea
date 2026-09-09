@@ -39,25 +39,46 @@ _TOP_KEYS = frozenset(
 _EXECUTION_KEYS = frozenset(
     {
         "status",
+        "durableStorageBacked",
         "evaluatedAtUtc",
         "requestReceipt",
         "cashMovementReceipt",
         "cashflowProjectionReceipt",
         "evaluationReceipt",
+        "persistenceReceipt",
         "qualificationBlockers",
     }
 )
 _REQUEST_KEYS = frozenset(
     {
         "tenantIdHash",
+        "bookIdHash",
         "portfolioIdHash",
+        "clientIdHash",
         "asOfDate",
         "evaluatedAtUtc",
+        "acceptedAtUtc",
+        "idempotencyKeyHash",
+        "actorSubjectHash",
         "consumerSystem",
         "horizonDays",
         "includeProjected",
         "correlationIdHash",
         "requestDigest",
+    }
+)
+_PERSISTENCE_KEYS = frozenset(
+    {
+        "decision",
+        "candidateFamily",
+        "candidateLifecycleStatus",
+        "sourceReceiptsDigest",
+        "sourceEvidenceHash",
+        "sourceRevisionVectorDigest",
+        "sourceCutPosture",
+        "scopeFingerprint",
+        "persistedAtUtc",
+        "receiptDigest",
     }
 )
 _SOURCE_BASE_KEYS = frozenset(
@@ -162,7 +183,7 @@ def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -
         or payload.get("repository") != "lotus-idea"
         or payload.get("evidenceClass") != EvidenceClass.RUNTIME_EXECUTION.value
         or payload.get("proofFamily") != "low_income_cashflow"
-        or payload.get("proofType") != "lotus_core_cashflow_evaluation"
+        or payload.get("proofType") != "lotus_core_cashflow_candidate_persistence"
         or payload.get("sourceAuthority") != "lotus-core"
     ):
         return False
@@ -180,21 +201,29 @@ def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -
     if (
         claims.get("cashflowFactsOwned") != "lotus-core"
         or claims.get("opportunityDetectionOwned") != "lotus-idea"
+        or claims.get("ideaPersistenceRequired") is not True
     ):
         return False
     if any(
         value is not False
         for key, value in claims.items()
-        if key not in {"cashflowFactsOwned", "opportunityDetectionOwned"}
+        if key
+        not in {
+            "cashflowFactsOwned",
+            "opportunityDetectionOwned",
+            "ideaPersistenceRequired",
+        }
     ):
         return False
     request = execution.get("requestReceipt")
     movement = execution.get("cashMovementReceipt")
     projection = execution.get("cashflowProjectionReceipt")
     evaluation = execution.get("evaluationReceipt")
+    persistence = execution.get("persistenceReceipt")
     evaluated = parse_timezone_aware_datetime(execution.get("evaluatedAtUtc"))
     if (
         execution.get("status") != "completed"
+        or execution.get("durableStorageBacked") is not True
         or tuple(execution.get("qualificationBlockers") or ())
         or not isinstance(request, Mapping)
         or set(request) != _REQUEST_KEYS
@@ -204,17 +233,21 @@ def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -
         or set(projection) != _PROJECTION_KEYS
         or not isinstance(evaluation, Mapping)
         or set(evaluation) != _EVALUATION_KEYS
+        or not isinstance(persistence, Mapping)
+        or set(persistence) != _PERSISTENCE_KEYS
         or evaluated is None
         or generated < evaluated
     ):
         return False
-    if not _digests_are_valid(request, movement, projection, evaluation):
+    if not _digests_are_valid(request, movement, projection, evaluation, persistence):
         return False
     if not _request_and_sources_reconcile(request, movement, projection, evaluated):
         return False
     if not _source_posture_is_valid(movement) or not _source_posture_is_valid(projection):
         return False
     if not _evaluation_is_valid(evaluation, projection):
+        return False
+    if not _persistence_is_valid(request, movement, projection, evaluation, persistence):
         return False
     return (
         tuple(payload.get("aggregateBlockersSatisfied") or ())
@@ -234,12 +267,14 @@ def _digests_are_valid(
     movement: Mapping[str, Any],
     projection: Mapping[str, Any],
     evaluation: Mapping[str, Any],
+    persistence: Mapping[str, Any],
 ) -> bool:
     for mapping, digest_key in (
         (request, "requestDigest"),
         (movement, "receiptDigest"),
         (projection, "receiptDigest"),
         (evaluation, "evaluationDigest"),
+        (persistence, "receiptDigest"),
     ):
         material = {key: mapping[key] for key in mapping if key != digest_key}
         if mapping.get(digest_key) != sha256_json(material):
@@ -247,6 +282,10 @@ def _digests_are_valid(
     hash_fields = (
         request.get("tenantIdHash"),
         request.get("portfolioIdHash"),
+        request.get("bookIdHash"),
+        request.get("clientIdHash"),
+        request.get("idempotencyKeyHash"),
+        request.get("actorSubjectHash"),
         request.get("correlationIdHash"),
         request.get("requestDigest"),
         movement.get("bucketDigest"),
@@ -254,6 +293,11 @@ def _digests_are_valid(
         projection.get("pointDigest"),
         projection.get("receiptDigest"),
         evaluation.get("evaluationDigest"),
+        persistence.get("sourceReceiptsDigest"),
+        persistence.get("sourceEvidenceHash"),
+        persistence.get("sourceRevisionVectorDigest"),
+        persistence.get("scopeFingerprint"),
+        persistence.get("receiptDigest"),
     )
     return all(_is_sha256(value) for value in hash_fields)
 
@@ -346,20 +390,41 @@ def _evaluation_is_valid(evaluation: Mapping[str, Any], projection: Mapping[str,
     except (InvalidOperation, ValueError):
         return False
     candidate_expected = minimum <= threshold
-    if not score_receipt_is_valid(evaluation, candidate_expected=candidate_expected):
+    if not candidate_expected or not score_receipt_is_valid(evaluation, candidate_expected=True):
         return False
-    if candidate_expected:
-        return (
-            evaluation.get("outcome") == "candidate_created"
-            and _is_sha256(evaluation.get("candidateIdHash"))
-            and _is_sha256(evaluation.get("signalIdHash"))
-            and "income_attention" in tuple(evaluation.get("reasonCodes") or ())
-        )
     return (
-        evaluation.get("outcome") == "not_eligible"
-        and evaluation.get("candidateIdHash") is None
-        and evaluation.get("signalIdHash") is None
-        and tuple(evaluation.get("reasonCodes") or ()) == ("below_materiality",)
+        evaluation.get("outcome") == "candidate_created"
+        and _is_sha256(evaluation.get("candidateIdHash"))
+        and _is_sha256(evaluation.get("signalIdHash"))
+        and "income_attention" in tuple(evaluation.get("reasonCodes") or ())
+    )
+
+
+def _persistence_is_valid(
+    request: Mapping[str, Any],
+    movement: Mapping[str, Any],
+    projection: Mapping[str, Any],
+    evaluation: Mapping[str, Any],
+    persistence: Mapping[str, Any],
+) -> bool:
+    expected_source_receipts_digest = sha256_json(
+        {
+            "cashMovementReceiptDigest": movement.get("receiptDigest"),
+            "cashflowProjectionReceiptDigest": projection.get("receiptDigest"),
+        }
+    )
+    persisted_at = parse_timezone_aware_datetime(persistence.get("persistedAtUtc"))
+    accepted_at = parse_timezone_aware_datetime(request.get("acceptedAtUtc"))
+    return (
+        persistence.get("decision") in {"accepted", "replayed"}
+        and persistence.get("candidateFamily") == "low_income"
+        and persistence.get("candidateLifecycleStatus") == "generated"
+        and persistence.get("sourceReceiptsDigest") == expected_source_receipts_digest
+        and persistence.get("sourceCutPosture") in {"coherent", "coherent_with_declared_tolerance"}
+        and persisted_at is not None
+        and accepted_at is not None
+        and persisted_at == accepted_at
+        and _is_sha256(evaluation.get("candidateIdHash"))
     )
 
 

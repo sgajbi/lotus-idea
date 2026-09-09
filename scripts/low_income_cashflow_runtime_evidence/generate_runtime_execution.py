@@ -31,6 +31,10 @@ from app.infrastructure.downstream_client import (
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 
 try:
     from scripts.proof_generator_io import (
@@ -56,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         generated_at = _parse_instant(args.generated_at_utc, "generated-at-utc")
         command = _command(args)
+        repository = get_idea_repository()
         with closing(
             LotusCoreHighCashSourceAdapter(
                 DownstreamJsonClient(
@@ -70,10 +75,15 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
         ) as source:
-            result = evaluate_low_income_cashflow_readiness(command, core_source=source)
+            result = evaluate_low_income_cashflow_readiness(
+                command,
+                core_source=source,
+                repository=repository,
+            )
         payload = build_low_income_cashflow_runtime_execution(
-            generated_at_utc=generated_at,
+            generated_at_utc=_artifact_generated_at(generated_at),
             result=result,
+            durable_storage_backed=idea_repository_durable_storage_backed(repository),
         )
         write_json_payload(payload, output=args.output)
         if low_income_cashflow_runtime_execution_is_valid(payload):
@@ -99,6 +109,7 @@ def _write_blocked(
             generated_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
             command=active_command,
             error_code=error_code,
+            durable_storage_backed=idea_repository_durable_storage_backed(get_idea_repository()),
         )
         write_json_payload(payload, output=args.output)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -111,9 +122,18 @@ def _write_blocked(
 def _command(args: argparse.Namespace) -> EvaluateLowIncomeCashflowReadiness:
     return EvaluateLowIncomeCashflowReadiness(
         tenant_id=args.tenant_id,
+        book_id=args.book_id,
         portfolio_id=args.portfolio_id,
+        client_id=args.client_id,
         as_of_date=_parse_date(args.as_of_date, "as-of-date"),
         evaluated_at_utc=_parse_instant(args.evaluated_at_utc, "evaluated-at-utc"),
+        accepted_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
+        idempotency_key=(
+            str(args.idempotency_key or "").strip()
+            or "runtime-evidence:low-income:"
+            f"{args.tenant_id}:{args.portfolio_id}:{args.as_of_date}:{args.horizon_days}d"
+        ),
+        actor_subject="lotus-idea-low-income-runtime-evidence",
         horizon_days=args.horizon_days,
         correlation_id=args.correlation_id,
         trace_id=args.trace_id,
@@ -129,10 +149,13 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument("--portfolio-id", required=True)
     parser.add_argument("--tenant-id", required=True)
+    parser.add_argument("--book-id", required=True)
+    parser.add_argument("--client-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--horizon-days", type=int, default=30)
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--evaluated-at-utc", required=True)
+    parser.add_argument("--idempotency-key")
     parser.add_argument("--correlation-id")
     parser.add_argument("--trace-id")
     parser.add_argument("--output")
@@ -151,6 +174,11 @@ def _parse_instant(value: str, field_name: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
     return parsed.astimezone(UTC)
+
+
+def _artifact_generated_at(requested_generated_at: datetime) -> datetime:
+    """Return a truthful post-fetch artifact finalization time."""
+    return max(requested_generated_at, datetime.now(UTC))
 
 
 def _source_error_code(exc: Exception) -> str:

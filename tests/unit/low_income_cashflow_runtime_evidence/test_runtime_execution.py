@@ -18,6 +18,7 @@ from app.application.low_income_cashflow_runtime_evidence import (
 )
 from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness, LowIncomeSignalPolicy, SignalEvaluationOutcome
+from app.domain.persistence import InMemoryIdeaRepository
 from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from tests.support.low_income_cashflow_runtime_evidence import (
     AuthoritativeCoreLowIncomeSource,
@@ -40,18 +41,20 @@ def test_runtime_execution_binds_domain_threshold_outcome(
     minimum: Decimal,
     expected_outcome: SignalEvaluationOutcome,
 ) -> None:
-    result = evaluate_low_income_cashflow_readiness(
-        _command(),
-        core_source=AuthoritativeCoreLowIncomeSource(minimum_cashflow=minimum),
-    )
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource(minimum_cashflow=minimum))
 
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = _build(result)
 
     assert result.evaluation.outcome is expected_outcome
-    assert low_income_cashflow_runtime_execution_is_valid(payload)
-    assert payload["aggregateBlockersSatisfied"] == list(
-        LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is (
+        expected_outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     )
+    if expected_outcome is SignalEvaluationOutcome.CANDIDATE_CREATED:
+        assert payload["aggregateBlockersSatisfied"] == list(
+            LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED
+        )
+    else:
+        assert "persistence_receipt_missing" in payload["execution"]["qualificationBlockers"]
     serialized = str(payload)
     assert "tenant-a" not in serialized
     assert "portfolio-a" not in serialized
@@ -174,12 +177,9 @@ def test_runtime_execution_fails_closed_on_source_trust_drift(
         minimum_cashflow=Decimal("-12500"),
     )
     mutated = mutation(evidence)
-    result = evaluate_low_income_cashflow_readiness(
-        command,
-        core_source=_FixedSource(mutated),
-    )
+    result = _evaluate(command, _FixedSource(mutated))
 
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = _build(result)
 
     assert expected_blocker in payload["execution"]["qualificationBlockers"]
     assert payload["aggregateBlockersSatisfied"] == []
@@ -323,11 +323,8 @@ def test_runtime_execution_rejects_incomplete_or_inconsistent_core_receipts(
         minimum_cashflow=Decimal("-12500"),
     )
 
-    result = evaluate_low_income_cashflow_readiness(
-        command,
-        core_source=_FixedSource(mutation(evidence)),
-    )
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+    result = _evaluate(command, _FixedSource(mutation(evidence)))
+    payload = _build(result)
 
     assert expected_blocker in payload["execution"]["qualificationBlockers"]
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
@@ -412,10 +409,7 @@ def test_contract_rejects_semantic_forgery_with_recomputed_digest() -> None:
 
 
 def test_runtime_execution_rejects_policy_result_drift() -> None:
-    result = evaluate_low_income_cashflow_readiness(
-        _command(),
-        core_source=AuthoritativeCoreLowIncomeSource(),
-    )
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
     mismatched = replace(
         result,
         policy=LowIncomeSignalPolicy(
@@ -424,7 +418,7 @@ def test_runtime_execution_rejects_policy_result_drift() -> None:
         ),
     )
 
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=mismatched)
+    payload = _build(mismatched)
 
     assert (
         "low_income_no_opportunity_outcome_mismatch"
@@ -434,13 +428,16 @@ def test_runtime_execution_rejects_policy_result_drift() -> None:
 
 
 def test_runtime_execution_requires_candidate_identity_for_eligible_cashflow() -> None:
-    result = evaluate_low_income_cashflow_readiness(
-        _command(),
-        core_source=AuthoritativeCoreLowIncomeSource(),
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
+    result = replace(
+        result,
+        signal_result=replace(
+            result.signal_result,
+            evaluation=replace(result.evaluation, candidate=None),
+        ),
     )
-    result = replace(result, evaluation=replace(result.evaluation, candidate=None))
 
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+    payload = _build(result)
 
     assert "low_income_candidate_identity_missing" in payload["execution"]["qualificationBlockers"]
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
@@ -451,29 +448,103 @@ def test_blocked_runtime_execution_never_qualifies() -> None:
         generated_at_utc=NOW,
         command=_command(),
         error_code="core_source_entitlement_denied",
+        durable_storage_backed=True,
     )
 
     assert payload["aggregateBlockersSatisfied"] == []
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
 
 
-def _valid_payload() -> dict[str, Any]:
-    result = evaluate_low_income_cashflow_readiness(
-        _command(),
-        core_source=AuthoritativeCoreLowIncomeSource(),
+def test_runtime_execution_proves_one_candidate_and_exact_replay() -> None:
+    command = _command()
+    source = AuthoritativeCoreLowIncomeSource()
+    repository = InMemoryIdeaRepository()
+
+    accepted = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=source,
+        repository=repository,
     )
-    return build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+    replayed = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=source,
+        repository=repository,
+    )
+    accepted_payload = _build(accepted)
+    replayed_payload = _build(replayed)
+
+    assert accepted_payload["execution"]["persistenceReceipt"]["decision"] == "accepted"
+    assert replayed_payload["execution"]["persistenceReceipt"]["decision"] == "replayed"
+    assert low_income_cashflow_runtime_execution_is_valid(accepted_payload)
+    assert low_income_cashflow_runtime_execution_is_valid(replayed_payload)
+    snapshot = repository.snapshot()
+    assert len(snapshot.candidate_records) == 1
+    assert len(snapshot.idempotency_records) == 1
+    assert len(snapshot.outbox_events) == 1
+
+
+def test_runtime_execution_refuses_non_durable_repository_claim() -> None:
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
+
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=NOW,
+        result=result,
+        durable_storage_backed=False,
+    )
+
+    assert "durable_repository_not_configured" in payload["execution"]["qualificationBlockers"]
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_contract_rejects_forged_persistence_receipt_with_recomputed_digest() -> None:
+    payload = _valid_payload()
+    persistence = payload["execution"]["persistenceReceipt"]
+    persistence["sourceCutPosture"] = "unknown"
+    persistence["receiptDigest"] = sha256_json(
+        {key: value for key, value in persistence.items() if key != "receiptDigest"}
+    )
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def _valid_payload() -> dict[str, Any]:
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
+    return _build(result)
 
 
 def _command() -> EvaluateLowIncomeCashflowReadiness:
     return EvaluateLowIncomeCashflowReadiness(
         tenant_id="tenant-a",
+        book_id="book-a",
         portfolio_id="portfolio-a",
+        client_id="client-a",
         as_of_date=date(2026, 6, 21),
         evaluated_at_utc=NOW,
+        accepted_at_utc=NOW,
+        idempotency_key="low-income-runtime-a",
+        actor_subject="runtime-proof",
         horizon_days=30,
         correlation_id="corr-a",
         trace_id="trace-a",
+    )
+
+
+def _evaluate(
+    command: EvaluateLowIncomeCashflowReadiness,
+    source: Any,
+) -> Any:
+    return evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=source,
+        repository=InMemoryIdeaRepository(),
+    )
+
+
+def _build(result: Any) -> dict[str, Any]:
+    return build_low_income_cashflow_runtime_execution(
+        generated_at_utc=NOW,
+        result=result,
+        durable_storage_backed=True,
     )
 
 

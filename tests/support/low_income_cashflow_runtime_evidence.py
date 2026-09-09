@@ -9,7 +9,14 @@ from app.application.low_income_cashflow_runtime_evidence import (
     build_low_income_cashflow_runtime_execution,
     evaluate_low_income_cashflow_readiness,
 )
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    SourceReconciliationPosture,
+    SourceRef,
+    SourceRevisionClaims,
+    SourceSystem,
+)
+from app.domain.persistence import InMemoryIdeaRepository
 from app.ports.core_sources import (
     CoreCashMovementBucketEvidence,
     CoreCashMovementSummaryEvidence,
@@ -138,9 +145,14 @@ def valid_low_income_cashflow_runtime_evidence(
 ) -> dict[str, Any]:
     command = EvaluateLowIncomeCashflowReadiness(
         tenant_id="test-tenant",
+        book_id="test-book",
         portfolio_id="test-portfolio",
+        client_id="test-client",
         as_of_date=as_of_date or evaluated_at_utc.date(),
         evaluated_at_utc=evaluated_at_utc,
+        accepted_at_utc=evaluated_at_utc,
+        idempotency_key="test-low-income-runtime",
+        actor_subject="test-runtime-proof",
         horizon_days=30,
         correlation_id="corr-test",
         trace_id="trace-test",
@@ -148,10 +160,12 @@ def valid_low_income_cashflow_runtime_evidence(
     result = evaluate_low_income_cashflow_readiness(
         command,
         core_source=AuthoritativeCoreLowIncomeSource(minimum_cashflow=minimum_cashflow),
+        repository=InMemoryIdeaRepository(),
     )
     return build_low_income_cashflow_runtime_execution(
         generated_at_utc=evaluated_at_utc,
         result=result,
+        durable_storage_backed=True,
     )
 
 
@@ -207,4 +221,11 @@ def _source_ref(
         content_hash=content_hash,
         data_quality_status="COMPLETE",
         freshness=EvidenceFreshness.CURRENT,
+        revision_claims=SourceRevisionClaims(
+            snapshot_id=f"{product_id}:snapshot-1",
+            source_revision="1",
+            restatement_version="restatement-v1",
+            source_cut_id="cashflow-cut-1",
+            reconciliation_posture=SourceReconciliationPosture.COMPLETE,
+        ),
     )

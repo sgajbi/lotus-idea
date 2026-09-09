@@ -7,6 +7,7 @@ from types import ModuleType
 
 import pytest
 
+from app.domain.persistence import InMemoryIdeaRepository
 from app.ports.core_sources import CoreSourceUnavailable
 from tests.support.low_income_cashflow_runtime_evidence import AuthoritativeCoreLowIncomeSource
 
@@ -24,6 +25,8 @@ def test_generator_writes_source_safe_qualified_artifact(
         "LotusCoreHighCashSourceAdapter",
         lambda _client: AuthoritativeCoreLowIncomeSource(),
     )
+    monkeypatch.setattr(module, "get_idea_repository", InMemoryIdeaRepository)
+    monkeypatch.setattr(module, "idea_repository_durable_storage_backed", lambda _repo: True)
 
     result = module.main(_arguments(output))
 
@@ -51,6 +54,8 @@ def test_generator_writes_blocked_artifact_for_source_failure(
         "LotusCoreHighCashSourceAdapter",
         lambda _client: _UnavailableSource(),
     )
+    monkeypatch.setattr(module, "get_idea_repository", InMemoryIdeaRepository)
+    monkeypatch.setattr(module, "idea_repository_durable_storage_backed", lambda _repo: True)
 
     result = module.main(_arguments(output))
 
@@ -68,8 +73,12 @@ def _arguments(output: Path) -> list[str]:
         "http://localhost:8100",
         "--tenant-id",
         "tenant-a",
+        "--book-id",
+        "book-a",
         "--portfolio-id",
         "PB_SG_GLOBAL_BAL_001",
+        "--client-id",
+        "client-a",
         "--as-of-date",
         "2026-06-21",
         "--horizon-days",
