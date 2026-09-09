@@ -25,6 +25,12 @@ from app.application.high_volatility_runtime_evidence import (
 from app.application.high_volatility_signal import (
     evaluate_and_persist_high_volatility_signal_from_risk,
 )
+from app.application.low_income_cashflow_runtime_evidence import (
+    EvaluateLowIncomeCashflowReadiness,
+    build_low_income_cashflow_runtime_execution,
+    evaluate_low_income_cashflow_readiness,
+    low_income_cashflow_runtime_execution_is_valid,
+)
 from app.application.performance_underperformance_runtime_evidence import (
     build_performance_underperformance_runtime_execution,
     performance_underperformance_runtime_execution_is_valid,
@@ -54,6 +60,7 @@ from tests.support.high_volatility_runtime_evidence import (
     risk_evidence as high_volatility_risk_evidence,
     runtime_command as high_volatility_runtime_command,
 )
+from tests.support.low_income_cashflow_runtime_evidence import AuthoritativeCoreLowIncomeSource
 from tests.support.bond_maturity_runtime_evidence import AuthoritativeCoreBondMaturitySource
 from datetime import UTC, date, datetime
 from tests.support.performance_underperformance_runtime_evidence import (
@@ -107,6 +114,10 @@ _RUNTIME_TABLES = frozenset(
         pytest.param(
             lambda repository: _bond_maturity_execution(repository),
             id="core-bond-maturity",
+        ),
+        pytest.param(
+            lambda repository: _low_income_cashflow_execution(repository),
+            id="core-low-income-cashflow",
         ),
     ),
 )
@@ -266,3 +277,34 @@ def _bond_maturity_execution(
         durable_storage_backed=idea_repository_durable_storage_backed(repository),
     )
     return payload, bond_maturity_runtime_execution_is_valid(payload)
+
+
+def _low_income_cashflow_execution(
+    repository: CandidateEvaluationRepository,
+) -> tuple[Mapping[str, Any], bool]:
+    generated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+    command = EvaluateLowIncomeCashflowReadiness(
+        tenant_id="tenant-a",
+        book_id="book-a",
+        portfolio_id="portfolio-a",
+        client_id="client-a",
+        as_of_date=date(2026, 6, 21),
+        evaluated_at_utc=generated_at_utc,
+        accepted_at_utc=generated_at_utc,
+        idempotency_key="runtime-evidence:low-income:portfolio-a",
+        actor_subject="low-income-runtime-evidence",
+        horizon_days=30,
+        correlation_id="corr-a",
+        trace_id="trace-a",
+    )
+    result = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=AuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=generated_at_utc,
+        result=result,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+    return payload, low_income_cashflow_runtime_execution_is_valid(payload)

@@ -6,7 +6,6 @@ from decimal import Decimal
 from typing import Any, cast
 
 from app.domain.evidence_digest import is_sha256_digest
-from app.application.access_scope import tenant_portfolio_scope
 from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
@@ -17,25 +16,33 @@ from app.application.runtime_evidence import (
 )
 from app.application.low_income_signal import (
     DEFAULT_LOW_INCOME_POLICY,
-    EvaluateLowIncomeSignalCommand,
-    evaluate_low_income_signal_command,
+    EvaluateAndPersistLowIncomeFromCoreCommand,
+    EvaluateLowIncomeFromCoreCommand,
+    LowIncomeSignalPersistenceResult,
+    evaluate_and_persist_low_income_signal_from_core,
 )
 from app.domain import (
+    CandidatePersistenceDecision,
     EvidenceFreshness,
     LowIncomeSignalPolicy,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SignalEvaluationResult,
     SourceSystem,
 )
+from app.domain.evidence_hashing import evidence_hash_for_source_refs
+from app.domain.source_revision import source_cut_posture, source_revision_vector_digest
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
     CoreCashMovementSummaryEvidence,
     CoreCashflowProjectionEvidence,
     CoreLowIncomeEvidence,
-    CoreLowIncomeEvidenceRequest,
     CoreLowIncomeSourcePort,
+    CoreSourceEntitlementDenied,
+    CoreSourceUnavailable,
     CoreSourceProductRuntimeEvidence,
 )
+from app.ports.idea_repository import CandidateEvaluationRepository
 
 LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF"
 LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_SCHEMA_VERSION = (
@@ -76,19 +83,35 @@ _COMPLETE = "COMPLETE"
 @dataclass(frozen=True)
 class EvaluateLowIncomeCashflowReadiness:
     tenant_id: str
+    book_id: str
     portfolio_id: str
+    client_id: str
     as_of_date: date
     evaluated_at_utc: datetime
+    accepted_at_utc: datetime
+    idempotency_key: str
+    actor_subject: str
     horizon_days: int = 30
     correlation_id: str | None = None
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.tenant_id.strip() or not self.portfolio_id.strip():
-            raise ValueError("tenant_id and portfolio_id are required")
+        if not all(
+            value.strip()
+            for value in (
+                self.tenant_id,
+                self.book_id,
+                self.portfolio_id,
+                self.client_id,
+                self.idempotency_key,
+                self.actor_subject,
+            )
+        ):
+            raise ValueError("authoritative scope, idempotency_key, and actor_subject are required")
         if self.horizon_days < 1 or self.horizon_days > 366:
             raise ValueError("horizon_days must be between 1 and 366")
         require_aware(self.evaluated_at_utc, "evaluated_at_utc")
+        require_aware(self.accepted_at_utc, "accepted_at_utc")
         if self.correlation_id is not None and not self.correlation_id.strip():
             raise ValueError("correlation_id must not be blank")
 
@@ -97,49 +120,55 @@ class EvaluateLowIncomeCashflowReadiness:
 class LowIncomeCashflowReadinessResult:
     command: EvaluateLowIncomeCashflowReadiness
     evidence: CoreLowIncomeEvidence
-    evaluation: SignalEvaluationResult
+    signal_result: LowIncomeSignalPersistenceResult
     policy: LowIncomeSignalPolicy
+
+    @property
+    def evaluation(self) -> SignalEvaluationResult:
+        return self.signal_result.evaluation
 
 
 def evaluate_low_income_cashflow_readiness(
     command: EvaluateLowIncomeCashflowReadiness,
     *,
     core_source: CoreLowIncomeSourcePort,
+    repository: CandidateEvaluationRepository,
     policy: LowIncomeSignalPolicy = DEFAULT_LOW_INCOME_POLICY,
 ) -> LowIncomeCashflowReadinessResult:
-    evidence = core_source.fetch_low_income_evidence(
-        CoreLowIncomeEvidenceRequest(
-            tenant_id=command.tenant_id,
-            portfolio_id=command.portfolio_id,
-            as_of_date=command.as_of_date,
-            evaluated_at_utc=command.evaluated_at_utc,
-            horizon_days=command.horizon_days,
-            correlation_id=command.correlation_id,
-            trace_id=command.trace_id,
-        )
-    )
-    evaluation = evaluate_low_income_signal_command(
-        EvaluateLowIncomeSignalCommand(
-            as_of_date=command.as_of_date,
-            source_reported_min_projected_cumulative_cashflow=(
-                evidence.source_reported_min_projected_cumulative_cashflow
-            ),
-            cash_movement_count=evidence.cash_movement_count,
-            cash_movement_ref=evidence.cash_movement_ref,
-            cashflow_projection_ref=evidence.cashflow_projection_ref,
-            evaluated_at_utc=command.evaluated_at_utc,
-            entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=tenant_portfolio_scope(
+    signal_result = evaluate_and_persist_low_income_signal_from_core(
+        EvaluateAndPersistLowIncomeFromCoreCommand(
+            evaluation=EvaluateLowIncomeFromCoreCommand(
                 tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
+                as_of_date=command.as_of_date,
+                evaluated_at_utc=command.evaluated_at_utc,
+                horizon_days=command.horizon_days,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
             ),
+            access_scope=ReviewAccessScope(
+                tenant_id=command.tenant_id,
+                book_id=command.book_id,
+                portfolio_id=command.portfolio_id,
+                client_id=command.client_id,
+            ),
+            idempotency_key=command.idempotency_key,
+            actor_subject=command.actor_subject,
+            accepted_at_utc=command.accepted_at_utc,
         ),
+        core_source=core_source,
+        repository=repository,
         policy=policy,
     )
+    if signal_result.source_evidence is None:
+        diagnostic = next(iter(signal_result.source_diagnostic_codes), "")
+        if diagnostic == "core_source_entitlement_denied":
+            raise CoreSourceEntitlementDenied
+        raise CoreSourceUnavailable(code=diagnostic or "core_cashflow_source_unavailable")
     return LowIncomeCashflowReadinessResult(
         command=command,
-        evidence=evidence,
-        evaluation=evaluation,
+        evidence=signal_result.source_evidence,
+        signal_result=signal_result,
         policy=policy,
     )
 
@@ -148,9 +177,20 @@ def build_low_income_cashflow_runtime_execution(
     *,
     generated_at_utc: datetime,
     result: LowIncomeCashflowReadinessResult,
+    durable_storage_backed: bool,
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
     blockers = _qualification_blockers(result)
+    persistence_receipt = _persistence_receipt(result)
+    if result.signal_result.evaluation.candidate is None:
+        blockers = (
+            *blockers,
+            f"candidate_evaluation_{result.signal_result.evaluation.outcome.value}",
+        )
+    if not durable_storage_backed:
+        blockers = (*blockers, "durable_repository_not_configured")
+    if persistence_receipt is None:
+        blockers = (*blockers, "persistence_receipt_missing")
     return _payload(
         generated_at_utc=generated_at_utc,
         command=result.command,
@@ -158,6 +198,8 @@ def build_low_income_cashflow_runtime_execution(
         movement_receipt=_movement_receipt(result.evidence),
         projection_receipt=_projection_receipt(result.evidence),
         evaluation_receipt=_evaluation_receipt(result),
+        persistence_receipt=persistence_receipt,
+        durable_storage_backed=durable_storage_backed,
         qualification_blockers=blockers,
     )
 
@@ -167,6 +209,7 @@ def build_blocked_low_income_cashflow_runtime_execution(
     generated_at_utc: datetime,
     command: EvaluateLowIncomeCashflowReadiness,
     error_code: str,
+    durable_storage_backed: bool,
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
     return _payload(
@@ -176,7 +219,14 @@ def build_blocked_low_income_cashflow_runtime_execution(
         movement_receipt=None,
         projection_receipt=None,
         evaluation_receipt=None,
-        qualification_blockers=("core_cashflow_source_execution_blocked", error_code),
+        persistence_receipt=None,
+        durable_storage_backed=durable_storage_backed,
+        qualification_blockers=(
+            "core_cashflow_source_execution_blocked",
+            error_code,
+            *(("durable_repository_not_configured",) if not durable_storage_backed else ()),
+            "persistence_receipt_missing",
+        ),
     )
 
 
@@ -188,6 +238,8 @@ def _payload(
     movement_receipt: dict[str, Any] | None,
     projection_receipt: dict[str, Any] | None,
     evaluation_receipt: dict[str, Any] | None,
+    persistence_receipt: dict[str, Any] | None,
+    durable_storage_backed: bool,
     qualification_blockers: tuple[str, ...],
 ) -> dict[str, Any]:
     blockers = tuple(dict.fromkeys(qualification_blockers))
@@ -196,16 +248,18 @@ def _payload(
         "repository": "lotus-idea",
         "evidenceClass": EvidenceClass.RUNTIME_EXECUTION.value,
         "proofFamily": "low_income_cashflow",
-        "proofType": "lotus_core_cashflow_evaluation",
+        "proofType": "lotus_core_cashflow_candidate_persistence",
         "sourceAuthority": SourceSystem.LOTUS_CORE.value,
         "generatedAtUtc": format_utc(generated_at_utc),
         "execution": {
             "status": status,
+            "durableStorageBacked": durable_storage_backed,
             "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
             "requestReceipt": _request_receipt(command),
             "cashMovementReceipt": movement_receipt,
             "cashflowProjectionReceipt": projection_receipt,
             "evaluationReceipt": evaluation_receipt,
+            "persistenceReceipt": persistence_receipt,
             "qualificationBlockers": list(blockers),
         },
         "aggregateBlockersSatisfied": (
@@ -230,7 +284,7 @@ def _payload(
             "deploymentCertified": False,
             "productionCertified": False,
             "supportedFeaturePromoted": False,
-            "ideaPersistenceRequired": False,
+            "ideaPersistenceRequired": True,
         },
     }
 
@@ -457,7 +511,7 @@ def _evaluation_blockers(
     result: LowIncomeCashflowReadinessResult,
     minimum: Decimal | None,
 ) -> tuple[str, ...]:
-    evaluation = result.evaluation
+    evaluation = result.signal_result.evaluation
     if evaluation.family.value != "low_income" or minimum is None:
         return ("low_income_evaluation_invalid",)
     should_create = minimum <= result.policy.projected_cumulative_cashflow_threshold
@@ -478,9 +532,14 @@ def _evaluation_blockers(
 def _request_receipt(command: EvaluateLowIncomeCashflowReadiness) -> dict[str, Any]:
     material = {
         "tenantIdHash": identity_hash(command.tenant_id),
+        "bookIdHash": identity_hash(command.book_id),
         "portfolioIdHash": identity_hash(command.portfolio_id),
+        "clientIdHash": identity_hash(command.client_id),
         "asOfDate": command.as_of_date.isoformat(),
         "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
+        "acceptedAtUtc": format_utc(command.accepted_at_utc),
+        "idempotencyKeyHash": identity_hash(command.idempotency_key),
+        "actorSubjectHash": identity_hash(command.actor_subject),
         "consumerSystem": "lotus-idea",
         "horizonDays": command.horizon_days,
         "includeProjected": True,
@@ -573,7 +632,7 @@ def _runtime_receipt(runtime: CoreSourceProductRuntimeEvidence) -> dict[str, Any
 
 
 def _evaluation_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, Any]:
-    evaluation = result.evaluation
+    evaluation = result.signal_result.evaluation
     candidate = evaluation.candidate
     material = {
         "family": evaluation.family.value,
@@ -591,6 +650,59 @@ def _evaluation_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, A
         "signalIdHash": identity_hash(evaluation.signal.signal_id) if evaluation.signal else None,
     }
     return {**material, "evaluationDigest": sha256_json(material)}
+
+
+def _persistence_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, Any] | None:
+    evaluation = result.signal_result.evaluation
+    persistence = result.signal_result.persistence
+    candidate = evaluation.candidate
+    if (
+        candidate is None
+        or persistence is None
+        or persistence.record is None
+        or persistence.decision
+        not in {CandidatePersistenceDecision.ACCEPTED, CandidatePersistenceDecision.REPLAYED}
+        or persistence.record.candidate != candidate
+    ):
+        return None
+    source_refs = candidate.evidence_packet.source_refs
+    if (
+        len(source_refs) != 2
+        or persistence.record.evidence_hash != evidence_hash_for_source_refs(source_refs)
+        or candidate.access_scope is None
+        or not candidate.access_scope.is_authoritative
+    ):
+        return None
+    movement = _movement_receipt(result.evidence)
+    projection = _projection_receipt(result.evidence)
+    if movement is None or projection is None:
+        return None
+    source_receipts_digest = sha256_json(
+        {
+            "cashMovementReceiptDigest": movement["receiptDigest"],
+            "cashflowProjectionReceiptDigest": projection["receiptDigest"],
+        }
+    )
+    material = {
+        "decision": persistence.decision.value,
+        "candidateFamily": candidate.family.value,
+        "candidateLifecycleStatus": candidate.lifecycle_status.value,
+        "sourceReceiptsDigest": source_receipts_digest,
+        "sourceEvidenceHash": persistence.record.evidence_hash,
+        "sourceRevisionVectorDigest": source_revision_vector_digest(source_refs),
+        "sourceCutPosture": source_cut_posture(source_refs).value,
+        "scopeFingerprint": sha256_json(
+            {
+                "tenantId": candidate.access_scope.tenant_id,
+                "bookId": candidate.access_scope.book_id,
+                "portfolioId": candidate.access_scope.portfolio_id,
+                "clientId": candidate.access_scope.client_id,
+                "requestDigest": _request_receipt(result.command)["requestDigest"],
+            }
+        ),
+        "persistedAtUtc": format_utc(persistence.record.persisted_at_utc),
+    }
+    return {**material, "receiptDigest": sha256_json(material)}
 
 
 def _bucket_material(bucket: Any) -> dict[str, Any]:

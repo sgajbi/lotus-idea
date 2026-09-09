@@ -24,6 +24,7 @@ from app.application.low_income_cashflow_runtime_evidence import (  # noqa: E402
     evaluate_low_income_cashflow_readiness,
     low_income_cashflow_runtime_execution_is_valid,
 )
+from app.domain.persistence import InMemoryIdeaRepository  # noqa: E402
 from tests.support.low_income_cashflow_runtime_evidence import (  # noqa: E402
     AuthoritativeCoreLowIncomeSource,
 )
@@ -70,8 +71,13 @@ def validate_low_income_cashflow_runtime_execution_contract() -> list[str]:
     candidate = evaluate_low_income_cashflow_readiness(
         command,
         core_source=AuthoritativeCoreLowIncomeSource(),
+        repository=InMemoryIdeaRepository(),
     )
-    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=candidate)
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=NOW,
+        result=candidate,
+        durable_storage_backed=True,
+    )
     if not low_income_cashflow_runtime_execution_is_valid(payload):
         errors.append("authoritative low-income cashflow runtime fixture must validate")
     if payload.get("aggregateBlockersSatisfied") != list(
@@ -82,16 +88,22 @@ def validate_low_income_cashflow_runtime_execution_contract() -> list[str]:
         LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS
     ):
         errors.append("runtime evidence must preserve unrelated certification blockers")
+    projection = candidate.evidence.cashflow_projection_product
+    if projection is None:
+        errors.append("authoritative fixture must contain the Core cashflow projection product")
+        return errors
     no_opportunity = evaluate_low_income_cashflow_readiness(
         command,
         core_source=AuthoritativeCoreLowIncomeSource(minimum_cashflow=Decimal("0")),
+        repository=InMemoryIdeaRepository(),
     )
     no_opportunity_payload = build_low_income_cashflow_runtime_execution(
         generated_at_utc=NOW,
         result=no_opportunity,
+        durable_storage_backed=True,
     )
-    if not low_income_cashflow_runtime_execution_is_valid(no_opportunity_payload):
-        errors.append("zero cashflow must validate as a completed no-opportunity execution")
+    if low_income_cashflow_runtime_execution_is_valid(no_opportunity_payload):
+        errors.append("no-opportunity evaluation must not certify candidate persistence")
     unknown_reconciliation = build_low_income_cashflow_runtime_execution(
         generated_at_utc=NOW,
         result=replace(
@@ -99,14 +111,15 @@ def validate_low_income_cashflow_runtime_execution_contract() -> list[str]:
             evidence=replace(
                 candidate.evidence,
                 cashflow_projection_product=replace(
-                    candidate.evidence.cashflow_projection_product,
+                    projection,
                     runtime=replace(
-                        candidate.evidence.cashflow_projection_product.runtime,
+                        projection.runtime,
                         reconciliation_status="UNKNOWN",
                     ),
                 ),
             ),
         ),
+        durable_storage_backed=True,
     )
     if low_income_cashflow_runtime_execution_is_valid(unknown_reconciliation):
         errors.append("unknown Core cashflow reconciliation must fail closed")
@@ -114,6 +127,7 @@ def validate_low_income_cashflow_runtime_execution_contract() -> list[str]:
         generated_at_utc=NOW,
         command=command,
         error_code="core_source_entitlement_denied",
+        durable_storage_backed=True,
     )
     if low_income_cashflow_runtime_execution_is_valid(blocked):
         errors.append("blocked Core cashflow execution must not validate")
@@ -125,9 +139,14 @@ def validate_low_income_cashflow_runtime_execution_contract() -> list[str]:
 def _command() -> EvaluateLowIncomeCashflowReadiness:
     return EvaluateLowIncomeCashflowReadiness(
         tenant_id="tenant-a",
+        book_id="book-a",
         portfolio_id="portfolio-a",
+        client_id="client-a",
         as_of_date=date(2026, 6, 21),
         evaluated_at_utc=NOW,
+        accepted_at_utc=NOW,
+        idempotency_key="runtime-low-income-a",
+        actor_subject="runtime-proof",
         horizon_days=30,
         correlation_id="corr-a",
         trace_id="trace-a",
