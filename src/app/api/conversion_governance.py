@@ -439,7 +439,10 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
         **invalid_request_metadata(detail="Correct the conversion outcome request and retry."),
         **permission_denied_metadata(
             detail="The caller is not permitted to record idea conversion outcomes.",
-            description="Caller lacks conversion permission.",
+            description=(
+                "Caller lacks the conversion-outcome capability, complete trusted "
+                "entitlements, or access to the persisted candidate scope."
+            ),
         ),
         **not_found_metadata(
             code="conversion_resource_not_found",
