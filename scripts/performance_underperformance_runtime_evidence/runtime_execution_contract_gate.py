@@ -25,6 +25,7 @@ from app.application.underperformance_signal import (
 from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -75,6 +76,12 @@ def validate_performance_underperformance_runtime_execution_contract() -> list[s
         idempotency_key="performance-underperformance-contract-gate",
         actor_subject="contract-gate",
         accepted_at_utc=evaluated_at,
+        access_scope=ReviewAccessScope(
+            tenant_id="contract-gate-tenant",
+            book_id="contract-gate-book",
+            portfolio_id="contract-gate-portfolio",
+            client_id="contract-gate-client",
+        ),
     )
     result = evaluate_and_persist_underperformance_signal_from_performance(
         command,

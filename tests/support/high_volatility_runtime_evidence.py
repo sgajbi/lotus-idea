@@ -16,6 +16,7 @@ from app.application.high_volatility_signal import (
 from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -26,6 +27,9 @@ from app.ports.risk_sources import RiskVolatilityEvidence, RiskVolatilityEvidenc
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 GENERATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+ACCESS_SCOPE = ReviewAccessScope(
+    "tenant-private-bank-sg", "book-advisor-001", "PB_SG_GLOBAL_BAL_001", "client-001"
+)
 
 
 @dataclass(frozen=True)
@@ -46,6 +50,7 @@ def runtime_command() -> EvaluateAndPersistHighVolatilityFromRiskCommand:
             period_name="YTD",
             evaluated_at_utc=EVALUATED_AT,
         ),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="high-volatility-runtime-evidence",
         actor_subject="runtime-evidence-test",
         accepted_at_utc=GENERATED_AT,

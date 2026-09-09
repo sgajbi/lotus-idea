@@ -983,4 +983,8 @@ class PostgresIdeaRepository(
 def _candidate_tenant_id(candidate: IdeaCandidate) -> str:
     if candidate.access_scope is None:
         raise UnscopedCandidatePersistenceError("persisted candidate tenant scope is unavailable")
+    if not candidate.access_scope.is_authoritative:
+        raise UnscopedCandidatePersistenceError(
+            "persisted candidate tenant scope is not authoritative"
+        )
     return candidate.access_scope.tenant_id

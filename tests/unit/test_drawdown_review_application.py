@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -19,9 +20,11 @@ from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
     OpportunityFamily,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
+    UnscopedCandidatePersistenceError,
 )
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
@@ -37,6 +40,7 @@ from app.ports.risk_sources import (
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+ACCESS_SCOPE = ReviewAccessScope("tenant-a", "book-a", "portfolio-001", "client-a")
 
 
 class StubRiskSource:
@@ -163,6 +167,7 @@ def test_evaluate_and_persist_drawdown_review_accepts_then_replays_same_command(
     )
     persisted_command = EvaluateAndPersistDrawdownReviewFromRiskCommand(
         evaluation=command(),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="drawdown-review-runtime",
         actor_subject="runtime-evidence",
         accepted_at_utc=EVALUATED_AT,
@@ -190,6 +195,35 @@ def test_evaluate_and_persist_drawdown_review_accepts_then_replays_same_command(
     )
 
 
+def test_drawdown_persistence_refuses_placeholder_scope_without_mutation() -> None:
+    repository = InMemoryIdeaRepository()
+    source = StubRiskSource(
+        RiskDrawdownEvidence(
+            source_reported_max_drawdown=Decimal("-0.1245"),
+            risk_supportability_state="ready",
+            risk_ref=source_ref(),
+        )
+    )
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_and_persist_drawdown_review_signal_from_risk(
+            EvaluateAndPersistDrawdownReviewFromRiskCommand(
+                evaluation=command(),
+                access_scope=replace(ACCESS_SCOPE, tenant_id="unknown"),
+                idempotency_key="drawdown-review-unscoped",
+                actor_subject="runtime-evidence",
+                accepted_at_utc=EVALUATED_AT,
+            ),
+            risk_source=source,
+            repository=repository,
+        )
+
+    assert repository.snapshot().candidate_records == {}
+    assert repository.snapshot().idempotency_records == {}
+    assert repository.snapshot().outbox_events == {}
+    assert source.requests == []
+
+
 @pytest.mark.parametrize(
     ("exception", "diagnostic"),
     (
@@ -204,6 +238,7 @@ def test_evaluate_and_persist_drawdown_review_fails_before_persistence_on_source
     result = evaluate_and_persist_drawdown_review_signal_from_risk(
         EvaluateAndPersistDrawdownReviewFromRiskCommand(
             evaluation=command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="drawdown-review-runtime",
             actor_subject="runtime-evidence",
             accepted_at_utc=EVALUATED_AT,
@@ -226,6 +261,7 @@ def test_evaluate_and_persist_drawdown_review_requires_command_identity(
         evaluate_and_persist_drawdown_review_signal_from_risk(
             EvaluateAndPersistDrawdownReviewFromRiskCommand(
                 evaluation=command(),
+                access_scope=ACCESS_SCOPE,
                 idempotency_key=idempotency_key,
                 actor_subject=actor_subject,
                 accepted_at_utc=EVALUATED_AT,

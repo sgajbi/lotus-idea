@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from dataclasses import replace
 from typing import Any
 
 import pytest
 
+from app.application.concentration_risk_signal import (
+    evaluate_and_persist_concentration_risk_signal_from_risk,
+)
 from app.application.drawdown_review_signal import (
     evaluate_and_persist_drawdown_review_signal_from_risk,
 )
@@ -19,13 +23,18 @@ from app.application.performance_underperformance_runtime_evidence import (
     build_performance_underperformance_runtime_execution,
     performance_underperformance_runtime_execution_is_valid,
 )
-from app.application.underperformance_signal import (
-    evaluate_and_persist_underperformance_signal_from_performance,
+from app.application.risk_concentration_runtime_evidence import (
+    build_risk_concentration_runtime_execution,
+    risk_concentration_runtime_execution_is_valid,
 )
 from app.application.risk_drawdown_runtime_evidence import (
     build_risk_drawdown_runtime_execution,
     risk_drawdown_runtime_execution_is_valid,
 )
+from app.application.underperformance_signal import (
+    evaluate_and_persist_underperformance_signal_from_performance,
+)
+from app.domain import UnscopedCandidatePersistenceError
 from app.ports.idea_repository import CandidatePersistenceRepository
 from app.runtime.repository_state import (
     get_idea_repository,
@@ -51,13 +60,30 @@ from tests.support.risk_drawdown_runtime_evidence import (
     risk_evidence as risk_drawdown_evidence,
     runtime_command as risk_drawdown_runtime_command,
 )
+from tests.support.risk_concentration_runtime_evidence import (
+    FixedRiskConcentrationSource,
+    GENERATED_AT as RISK_CONCENTRATION_GENERATED_AT,
+    risk_evidence as risk_concentration_evidence,
+    runtime_command as risk_concentration_runtime_command,
+)
 
-_RUNTIME_TABLES = frozenset({"idea_candidate_record", "idea_idempotency_record"})
+_RUNTIME_TABLES = frozenset(
+    {
+        "idea_audit_event",
+        "idea_candidate_record",
+        "idea_idempotency_record",
+        "idea_outbox_event",
+    }
+)
 
 
 @pytest.mark.parametrize(
     "execute",
     (
+        pytest.param(
+            lambda repository: _concentration_execution(repository),
+            id="risk-concentration",
+        ),
         pytest.param(
             lambda repository: _high_volatility_execution(repository),
             id="high-volatility",
@@ -101,6 +127,48 @@ def test_source_runtime_evidence_replays_after_postgres_repository_reload(
         )
         == 1
     )
+
+
+def test_source_runtime_evidence_rejects_placeholder_scope_without_postgres_mutation(
+    postgres_database_url: str,
+) -> None:
+    repository = get_idea_repository()
+    command = risk_concentration_runtime_command()
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_and_persist_concentration_risk_signal_from_risk(
+            replace(command, access_scope=replace(command.access_scope, client_id="unknown")),
+            risk_source=FixedRiskConcentrationSource(risk_concentration_evidence()),
+            repository=repository,
+        )
+
+    for table_name in _RUNTIME_TABLES:
+        assert (
+            table_count(
+                postgres_database_url,
+                table_name,
+                allowed_tables=_RUNTIME_TABLES,
+            )
+            == 0
+        )
+
+
+def _concentration_execution(
+    repository: CandidatePersistenceRepository,
+) -> tuple[Mapping[str, Any], bool]:
+    command = risk_concentration_runtime_command()
+    result = evaluate_and_persist_concentration_risk_signal_from_risk(
+        command,
+        risk_source=FixedRiskConcentrationSource(risk_concentration_evidence()),
+        repository=repository,
+    )
+    payload = build_risk_concentration_runtime_execution(
+        generated_at_utc=RISK_CONCENTRATION_GENERATED_AT,
+        command=command,
+        result=result,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+    return payload, risk_concentration_runtime_execution_is_valid(payload)
 
 
 def _high_volatility_execution(

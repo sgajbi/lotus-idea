@@ -212,6 +212,12 @@ def _proof_command(
         args.portfolio_id,
         "--as-of-date",
         args.as_of_date,
+        "--tenant-id",
+        args.tenant_id,
+        "--book-id",
+        args.book_id,
+        "--client-id",
+        args.client_id,
         "--generated-at-utc",
         _format_instant(generated_at),
         "--evaluated-at-utc",
@@ -225,18 +231,7 @@ def _proof_command(
     ]
     if case.name == "performance_benchmark_readiness":
         command.extend(["--performance-base-url", args.performance_base_url])
-        command.extend(
-            [
-                "--tenant-id",
-                args.tenant_id,
-                "--book-id",
-                args.book_id,
-                "--client-id",
-                args.client_id,
-                "--evaluation-id",
-                args.evaluation_id,
-            ]
-        )
+        command.extend(["--evaluation-id", args.evaluation_id])
     elif case.name == "performance_underperformance":
         command.extend(["--performance-base-url", args.performance_base_url])
     else:

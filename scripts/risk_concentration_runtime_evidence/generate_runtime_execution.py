@@ -25,6 +25,7 @@ from app.application.risk_concentration_runtime_evidence import (
     build_risk_concentration_runtime_execution,
     risk_concentration_runtime_execution_is_valid,
 )
+from app.domain import ReviewAccessScope
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamClientConfigurationError,
@@ -129,6 +130,12 @@ def _command(args: argparse.Namespace) -> EvaluateAndPersistConcentrationRiskFro
         idempotency_key=idempotency_key,
         actor_subject=ACTOR_SUBJECT,
         accepted_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
+        access_scope=ReviewAccessScope(
+            tenant_id=args.tenant_id,
+            book_id=args.book_id,
+            portfolio_id=portfolio_id,
+            client_id=args.client_id,
+        ),
     )
 
 
@@ -139,6 +146,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--risk-base-url", default=os.getenv(RISK_BASE_URL_ENV))
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument("--portfolio-id", required=True)
+    parser.add_argument("--tenant-id", required=True)
+    parser.add_argument("--book-id", required=True)
+    parser.add_argument("--client-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--evaluated-at-utc", required=True)

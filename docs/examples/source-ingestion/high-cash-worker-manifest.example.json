@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+  "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v2",
   "evaluatedAtUtc": "2026-06-20T10:00:00Z",
   "tenantId": "default",
   "actorSubject": "signal-ingestion-worker",
@@ -9,6 +9,8 @@
   "workItems": [
     {
       "portfolioId": "DEMO_ADV_USD_001",
+      "bookId": "BOOK_DEMO_ADVISORY",
+      "clientId": "CLIENT_DEMO_ADV_USD_001",
       "asOfDate": "2026-06-20"
     }
   ]

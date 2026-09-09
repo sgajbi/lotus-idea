@@ -160,6 +160,8 @@ def _plan():
             "workItems": [
                 {
                     "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                    "bookId": "book-runtime-contract",
+                    "clientId": "client-runtime-contract",
                     "asOfDate": AS_OF_DATE.isoformat(),
                 }
             ],

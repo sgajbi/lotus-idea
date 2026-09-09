@@ -1,8 +1,15 @@
 from __future__ import annotations
 
-from app.domain.access_scope import ReviewAccessScope
+from app.domain.access_scope import ReviewAccessScope, UNKNOWN_SCOPE_VALUE as UNKNOWN_SCOPE_VALUE
+from app.domain.persistence import UnscopedCandidatePersistenceError
 
-UNKNOWN_SCOPE_VALUE = "unknown"
+
+def require_authoritative_scope(scope: ReviewAccessScope | None) -> None:
+    """Reject placeholder authority before a durable workflow performs source I/O."""
+    if scope is None or not scope.is_authoritative:
+        raise UnscopedCandidatePersistenceError(
+            "candidate access scope must be authoritative for persistence"
+        )
 
 
 def portfolio_only_scope(portfolio_id: str) -> ReviewAccessScope:

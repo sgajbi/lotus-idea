@@ -25,6 +25,7 @@ from app.application.high_volatility_signal import (
 from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -72,6 +73,12 @@ def validate_high_volatility_runtime_execution_contract() -> list[str]:
         idempotency_key="high-volatility-contract-gate",
         actor_subject="contract-gate",
         accepted_at_utc=evaluated_at,
+        access_scope=ReviewAccessScope(
+            tenant_id="contract-gate-tenant",
+            book_id="contract-gate-book",
+            portfolio_id="contract-gate-portfolio",
+            client_id="contract-gate-client",
+        ),
     )
     result = evaluate_and_persist_high_volatility_signal_from_risk(
         command,

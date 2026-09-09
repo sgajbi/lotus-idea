@@ -62,6 +62,8 @@ def runtime_plan(*, work_item_count: int = 1) -> SourceIngestionWorkerPlan:
             "workItems": [
                 {
                     "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                    "bookId": "book-runtime-proof",
+                    "clientId": "client-runtime-proof",
                     "asOfDate": AS_OF_DATE.isoformat(),
                 }
                 for _ in range(work_item_count)

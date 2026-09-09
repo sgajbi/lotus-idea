@@ -247,7 +247,15 @@ def test_static_scheduled_worker_source_contract_preserves_deployment_blocker(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+                "tenantId": "tenant-a",
+                "workItems": [
+                    {
+                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "bookId": "book-a",
+                        "clientId": "client-a",
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
             }
         ),
         encoding="utf-8",
@@ -361,7 +369,15 @@ def test_generate_implementation_proof_readiness_uses_runtime_execution_receipts
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+                "tenantId": "tenant-a",
+                "workItems": [
+                    {
+                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "bookId": "book-a",
+                        "clientId": "client-a",
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
             }
         ),
         encoding="utf-8",

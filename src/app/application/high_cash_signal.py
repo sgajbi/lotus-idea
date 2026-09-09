@@ -25,7 +25,7 @@ from app.application.candidate_expiry import (
     expire_candidate,
 )
 from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
-from app.application.access_scope import tenant_portfolio_scope
+from app.application.access_scope import require_authoritative_scope, tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
     CoreHighCashEvidence,
@@ -74,6 +74,7 @@ class EvaluateAndPersistHighCashSignalCommand:
 @dataclass(frozen=True)
 class EvaluateAndPersistHighCashFromCoreCommand:
     evaluation: EvaluateHighCashFromCoreCommand
+    access_scope: ReviewAccessScope
     idempotency_key: str
     actor_subject: str
     accepted_at_utc: datetime
@@ -166,6 +167,7 @@ def evaluate_and_persist_high_cash_signal(
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.evaluation.access_scope)
     evaluation = accept_candidate_evaluation(
         evaluate_high_cash_signal_command(command.evaluation, policy=policy),
         accepted_at_utc=command.accepted_at_utc,
@@ -205,6 +207,11 @@ def evaluate_and_persist_high_cash_signal_from_core(
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.access_scope)
+    if command.access_scope.tenant_id != command.evaluation.tenant_id:
+        raise ValueError("access_scope tenant_id must match evaluation tenant_id")
+    if command.access_scope.portfolio_id != command.evaluation.portfolio_id:
+        raise ValueError("access_scope portfolio_id must match evaluation portfolio_id")
     try:
         evidence = core_source.fetch_high_cash_evidence(
             CoreHighCashEvidenceRequest(
@@ -227,10 +234,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=tenant_portfolio_scope(
-                    tenant_id=command.evaluation.tenant_id,
-                    portfolio_id=command.evaluation.portfolio_id,
-                ),
+                access_scope=command.access_scope,
             ),
             policy=policy,
         )
@@ -253,7 +257,12 @@ def evaluate_and_persist_high_cash_signal_from_core(
         )
 
     evaluation = accept_candidate_evaluation(
-        _evaluate_high_cash_core_evidence(command.evaluation, evidence, policy=policy),
+        _evaluate_high_cash_core_evidence(
+            command.evaluation,
+            evidence,
+            policy=policy,
+            access_scope=command.access_scope,
+        ),
         accepted_at_utc=command.accepted_at_utc,
     )
     source_diagnostic_codes = _core_source_diagnostic_codes(evidence)
@@ -264,10 +273,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
             expiry=_expire_non_eligible_high_cash(
                 evaluation=evaluation,
                 as_of_date=command.evaluation.as_of_date,
-                access_scope=tenant_portfolio_scope(
-                    tenant_id=command.evaluation.tenant_id,
-                    portfolio_id=command.evaluation.portfolio_id,
-                ),
+                access_scope=command.access_scope,
                 actor_subject=command.actor_subject,
                 evaluated_at_utc=command.accepted_at_utc,
                 repository=repository,
@@ -327,6 +333,7 @@ def _evaluate_high_cash_core_evidence(
     evidence: CoreHighCashEvidence,
     *,
     policy: HighCashSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> SignalEvaluationResult:
     return evaluate_high_cash_signal_command(
         EvaluateHighCashSignalCommand(
@@ -338,7 +345,8 @@ def _evaluate_high_cash_core_evidence(
             cashflow_projection_ref=evidence.cashflow_projection_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=tenant_portfolio_scope(
+            access_scope=access_scope
+            or tenant_portfolio_scope(
                 tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
             ),

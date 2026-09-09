@@ -25,6 +25,7 @@ from app.application.risk_concentration_runtime_evidence import (
 from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -67,6 +68,12 @@ def validate_risk_concentration_runtime_execution_contract() -> list[str]:
             portfolio_id="contract-gate-portfolio",
             as_of_date=date(2026, 6, 21),
             evaluated_at_utc=evaluated_at,
+        ),
+        access_scope=ReviewAccessScope(
+            tenant_id="contract-gate-tenant",
+            book_id="contract-gate-book",
+            portfolio_id="contract-gate-portfolio",
+            client_id="contract-gate-client",
         ),
         idempotency_key="risk-concentration-contract-gate",
         actor_subject="contract-gate",

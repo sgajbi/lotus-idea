@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -25,6 +25,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     UnsupportedEvidenceReason,
+    UnscopedCandidatePersistenceError,
 )
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
@@ -281,6 +282,7 @@ def test_application_persists_risk_backed_concentration_candidate() -> None:
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
         EvaluateAndPersistConcentrationRiskFromRiskCommand(
             evaluation=from_risk_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="signal-ingestion:concentration:risk:pb-001:2026-06-21",
             actor_subject="signal-ingestion-worker",
             accepted_at_utc=EVALUATED_AT,
@@ -297,6 +299,29 @@ def test_application_persists_risk_backed_concentration_candidate() -> None:
     assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
 
 
+def test_application_refuses_placeholder_scope_without_persistence_side_effects() -> None:
+    source = RecordingRiskSource(evidence=current_risk_evidence())
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_and_persist_concentration_risk_signal_from_risk(
+            EvaluateAndPersistConcentrationRiskFromRiskCommand(
+                evaluation=from_risk_command(),
+                access_scope=replace(ACCESS_SCOPE, client_id="unknown"),
+                idempotency_key="signal-ingestion:concentration:risk:unscoped",
+                actor_subject="signal-ingestion-worker",
+                accepted_at_utc=EVALUATED_AT,
+            ),
+            risk_source=source,
+            repository=repository,
+        )
+
+    assert repository.snapshot().candidate_records == {}
+    assert repository.snapshot().idempotency_records == {}
+    assert repository.snapshot().outbox_events == {}
+    assert source.seen_request is None
+
+
 def test_application_does_not_persist_risk_backed_entitlement_denial() -> None:
     source = RecordingRiskSource(error=RiskSourceEntitlementDenied())
     repository = InMemoryIdeaRepository()
@@ -304,6 +329,7 @@ def test_application_does_not_persist_risk_backed_entitlement_denial() -> None:
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
         EvaluateAndPersistConcentrationRiskFromRiskCommand(
             evaluation=from_risk_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="signal-ingestion:concentration:risk:denied:2026-06-21",
             actor_subject="signal-ingestion-worker",
             accepted_at_utc=EVALUATED_AT,
@@ -325,6 +351,7 @@ def test_application_does_not_persist_risk_backed_unavailable_source() -> None:
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
         EvaluateAndPersistConcentrationRiskFromRiskCommand(
             evaluation=from_risk_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="signal-ingestion:concentration:risk:unavailable:2026-06-21",
             actor_subject="signal-ingestion-worker",
             accepted_at_utc=EVALUATED_AT,
@@ -352,6 +379,7 @@ def test_application_does_not_persist_risk_backed_below_materiality_result() -> 
     result = evaluate_and_persist_concentration_risk_signal_from_risk(
         EvaluateAndPersistConcentrationRiskFromRiskCommand(
             evaluation=from_risk_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="signal-ingestion:concentration:risk:below:2026-06-21",
             actor_subject="signal-ingestion-worker",
             accepted_at_utc=EVALUATED_AT,
@@ -373,6 +401,7 @@ def test_application_requires_actor_for_risk_backed_persistence() -> None:
         evaluate_and_persist_concentration_risk_signal_from_risk(
             EvaluateAndPersistConcentrationRiskFromRiskCommand(
                 evaluation=from_risk_command(),
+                access_scope=ACCESS_SCOPE,
                 idempotency_key="signal-ingestion:concentration:risk:actor:2026-06-21",
                 actor_subject=" ",
                 accepted_at_utc=EVALUATED_AT,

@@ -569,6 +569,8 @@ def test_source_ingestion_runtime_blocks_manifest_over_batch_ceiling(
                 "workItems": [
                     {
                         "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "bookId": "book-a",
+                        "clientId": "client-a",
                         "asOfDate": "2026-06-21",
                     }
                 ],
@@ -1139,6 +1141,8 @@ def write_manifest(tmp_path: Path) -> Path:
                 "workItems": [
                     {
                         "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "bookId": "book-a",
+                        "clientId": "client-a",
                         "asOfDate": "2026-06-21",
                     }
                 ],

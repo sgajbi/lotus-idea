@@ -31,6 +31,8 @@ def source_contract(*, repository_root: Path) -> dict[str, Any]:
             "workItems": [
                 {
                     "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                    "bookId": "book-runtime-proof",
+                    "clientId": "client-runtime-proof",
                     "asOfDate": "2026-06-21",
                 }
             ],

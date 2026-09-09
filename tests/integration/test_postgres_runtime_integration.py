@@ -976,6 +976,8 @@ def _source_ingestion_command() -> IngestHighCashSourceSignalCommand:
     return IngestHighCashSourceSignalCommand(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         tenant_id="tenant-a",
+        book_id="book-a",
+        client_id="client-a",
         as_of_date=date(2026, 6, 21),
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         idempotency_key="signal-ingestion:high-cash:lotus-core:postgres-recovery-001",
