@@ -67,9 +67,11 @@ internal signal API foundations for high-cash, concentration-risk,
 underperformance, allocation-drift, bond-maturity, high-volatility, drawdown,
 low-income, missing suitability, missing risk-profile, mandate/restriction,
 and missing-benchmark review.
-Caller-supplied durable high-cash persistence requires complete pseudonymous
-economic access scope and fails before mutation when it is missing; unscoped
-evaluation remains diagnostic only. This strengthens internal tenant/portfolio
+Caller-supplied and source-backed durable candidate persistence requires complete
+pseudonymous tenant/book/portfolio/client scope and fails before mutation when
+it is missing or contains the internal `unknown` sentinel; portfolio-only
+evaluation remains diagnostic only. Runtime evidence publishes only a scope
+fingerprint, never raw access identifiers. This strengthens internal tenant/portfolio
 candidate identity but does not add a supported feature or production
 authentication/identity-provider claim.
 Internal conversion governance and certified internal

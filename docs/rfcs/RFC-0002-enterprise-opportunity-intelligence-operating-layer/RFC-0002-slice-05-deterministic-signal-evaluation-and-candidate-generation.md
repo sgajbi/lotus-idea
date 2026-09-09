@@ -1014,6 +1014,13 @@ This is implementation-proof automation, not Gateway/Workbench certification,
 data-product activation, client publication approval, official performance or
 risk calculation authority, or supported-feature promotion.
 
+Issue `#1315` extends authoritative access scope to the durable Risk
+concentration, high-volatility, drawdown-review, and Performance
+underperformance writers. Their proof generators require explicit tenant,
+book, portfolio, and client scope, bind it into source-safe persistence
+evidence, and never emit the raw identifiers. Portfolio-only evaluation remains
+available for diagnostics, but cannot create durable candidate posture.
+
 ## Golden Scenarios
 
 `tests/unit/test_high_cash_signal_evaluation.py` covers:
