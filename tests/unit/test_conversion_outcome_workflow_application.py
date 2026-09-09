@@ -4,10 +4,12 @@ from dataclasses import replace
 from datetime import timedelta
 from functools import partial
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
 from app.application.conversion_workflow import (
+    ConversionAccessScopeDenied,
     ConversionOutcomeWorkflowResult,
     RecordConversionOutcomeToRepositoryCommand as _RecordConversionOutcomeToRepositoryCommand,
     record_conversion_outcome_to_repository,
@@ -21,6 +23,7 @@ from app.domain import (
     ConversionPersistenceResult,
     InMemoryIdeaRepository,
     InvalidConversionOutcome,
+    QueueAccessScopeFilter,
     ReviewAccessScope,
     SourceSystem,
     current_conversion_outcome,
@@ -39,9 +42,17 @@ from tests.support.review_authority import (
     with_in_memory_review_authority,
 )
 
+OUTCOME_ACCESS_SCOPE = QueueAccessScopeFilter(
+    tenant_id="tenant-a",
+    book_id="book-advisor-001",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-001",
+)
+
 RecordConversionOutcomeToRepositoryCommand = partial(
     _RecordConversionOutcomeToRepositoryCommand,
     accepted_at_utc=OUTCOME_AT,
+    access_scope_filter=OUTCOME_ACCESS_SCOPE,
 )
 
 
@@ -116,15 +127,96 @@ def record_outcome(
     outcome: ConversionOutcomeCommand,
     *,
     idempotency_key: str,
+    access_scope_filter: QueueAccessScopeFilter | None = OUTCOME_ACCESS_SCOPE,
 ) -> ConversionOutcomeWorkflowResult:
     return record_conversion_outcome_to_repository(
         RecordConversionOutcomeToRepositoryCommand(
             conversion_intent_id=conversion_intent_id,
             outcome=outcome,
             idempotency_key=idempotency_key,
+            access_scope_filter=access_scope_filter,
         ),
         repository=repository,
     )
+
+
+@pytest.mark.parametrize(
+    "access_scope_filter",
+    (
+        None,
+        QueueAccessScopeFilter(
+            tenant_id="tenant-b",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-a",
+            book_id="book-other",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-a",
+            book_id="book-advisor-001",
+            portfolio_id="portfolio-other",
+            client_id="client-001",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-a",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-other",
+        ),
+    ),
+)
+def test_conversion_outcome_scope_denial_precedes_precheck_and_mutation(
+    access_scope_filter: QueueAccessScopeFilter | None,
+) -> None:
+    repository, intent_id = repository_with_conversion_intent()
+    before = repository.snapshot()
+    spy = Mock(wraps=repository)
+
+    with pytest.raises(ConversionAccessScopeDenied):
+        record_outcome(
+            spy,
+            intent_id,
+            outcome_command(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="outcome-scope-denied",
+                version=1,
+            ),
+            idempotency_key="outcome:scope-denied",
+            access_scope_filter=access_scope_filter,
+        )
+
+    spy.precheck_conversion_outcome_mutation.assert_not_called()
+    spy.record_conversion_outcome.assert_not_called()
+    assert repository.snapshot() == before
+
+
+def test_conversion_outcome_accepts_matching_multi_value_scope() -> None:
+    repository, intent_id = repository_with_conversion_intent()
+    matching_scope = QueueAccessScopeFilter(
+        tenant_id=("tenant-b", "tenant-a"),
+        book_id=("book-other", "book-advisor-001"),
+        portfolio_id=("portfolio-other", "PB_SG_GLOBAL_BAL_001"),
+        client_id=("client-other", "client-001"),
+    )
+
+    result = record_outcome(
+        repository,
+        intent_id,
+        outcome_command(
+            ConversionOutcomeStatus.ACCEPTED,
+            outcome_id="outcome-multi-scope",
+            version=1,
+        ),
+        idempotency_key="outcome:multi-scope",
+        access_scope_filter=matching_scope,
+    )
+
+    assert result.persistence.decision is ConversionPersistenceDecision.ACCEPTED
 
 
 def test_conversion_outcome_identity_replays_across_transport_keys_without_side_effects() -> None:
