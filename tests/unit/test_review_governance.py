@@ -835,6 +835,30 @@ def test_review_commands_validate_required_action_fields() -> None:
             snoozed_until_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         )
 
+    for action in ReviewAction:
+        if action is not ReviewAction.SUPPRESS:
+            with pytest.raises(ValueError, match="suppression_reason is only valid for suppress"):
+                decision_command(
+                    action,
+                    snoozed_until_utc=(
+                        datetime(2026, 6, 21, 11, 0, tzinfo=UTC)
+                        if action is ReviewAction.SNOOZE
+                        else None
+                    ),
+                    suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
+                )
+        if action is not ReviewAction.SNOOZE:
+            with pytest.raises(ValueError, match="snoozed_until_utc is only valid for snooze"):
+                decision_command(
+                    action,
+                    suppression_reason=(
+                        SuppressionReason.MANUAL_SUPPRESSION
+                        if action is ReviewAction.SUPPRESS
+                        else None
+                    ),
+                    snoozed_until_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
+                )
+
     with pytest.raises(ValueError, match="tenant_ids is required"):
         ReviewActorContext(
             actor_subject="advisor-001",

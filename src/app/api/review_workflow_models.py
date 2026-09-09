@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.api.base_model import CamelModel
 from app.api.persistence_summary import persistence_summary_payload
@@ -31,6 +31,7 @@ from app.domain import (
     ReviewPersistenceResult,
     SourceCutPosture,
     SuppressionReason,
+    validate_review_action_field_compatibility,
 )
 from app.domain.evidence_digest import REVISION_VECTOR_DIGEST_PATTERN, SHA256_DIGEST_PATTERN
 from app.security.caller_context import CallerContext
@@ -67,8 +68,16 @@ class ReviewActionRequest(CamelModel):
         alias="expectedSourceCutPosture",
     )
     presentation_receipt_id: str | None = Field(default=None, alias="presentationReceiptId")
-    suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
-    snoozed_until_utc: datetime | None = Field(default=None, alias="snoozedUntilUtc")
+    suppression_reason: SuppressionReason | None = Field(
+        default=None,
+        alias="suppressionReason",
+        description="Required only for suppress; forbidden for every other review action.",
+    )
+    snoozed_until_utc: datetime | None = Field(
+        default=None,
+        alias="snoozedUntilUtc",
+        description="Required only for snooze; forbidden for every other review action.",
+    )
 
     @field_validator(
         "review_id",
@@ -94,6 +103,15 @@ class ReviewActionRequest(CamelModel):
     _reason_codes_must_not_be_empty = field_validator("reason_codes")(
         require_non_empty_reason_codes
     )
+
+    @model_validator(mode="after")
+    def _action_specific_fields_must_match_action(self) -> "ReviewActionRequest":
+        validate_review_action_field_compatibility(
+            action=self.action,
+            suppression_reason=self.suppression_reason,
+            snoozed_until_utc=self.snoozed_until_utc,
+        )
+        return self
 
     def to_command(
         self,

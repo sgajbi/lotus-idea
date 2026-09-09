@@ -356,6 +356,7 @@ from app.domain.review_governance import (
     record_feedback,
     review_mutation_identity_from_command,
     review_mutation_identity_from_decision,
+    validate_review_action_field_compatibility,
 )
 from app.domain.scoring import (
     CandidateScorePolicyVersion,
@@ -464,6 +465,7 @@ __all__ = [
     "ReviewAuthorityStatus",
     "ReviewChannel",
     "validate_expected_candidate_evidence",
+    "validate_review_action_field_compatibility",
     "validate_workbench_presentation",
     "OutboxEventRecord",
     "EventLineageContext",

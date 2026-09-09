@@ -65,6 +65,9 @@ Implemented foundations include:
 - source-revision and source-time coherence classification;
 - qualification, scoring, ranking, suppression, snooze, expiry, recurrence, and reopen policy;
 - persisted presentation receipts, review decisions, feedback, and conversion intents;
+- action-specific review evidence is exclusive: suppression reason belongs only
+  to `suppress`, and snooze horizon belongs only to `snooze`; invalid combinations
+  fail before durable mutation;
 - exact replay, concurrency fencing, PostgreSQL persistence, and transactional outbox behavior;
 - durable intent-before-I/O for downstream submission;
 - tenant-scoped downstream submission identity with opaque recovery references;
