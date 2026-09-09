@@ -8,7 +8,11 @@ from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_HEADER,
+    caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
@@ -34,6 +38,7 @@ from app.api.runtime_dependencies import (
 )
 from app.application.report_evidence import (
     RequestReportEvidencePackToRepositoryCommand,
+    ReportEvidenceAccessScopeDenied,
     ReportEvidencePackWorkflowResult,
     request_report_evidence_pack_to_repository,
 )
@@ -51,6 +56,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.data_lifecycle import resolve_external_retention_policy_ref
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.recovery_posture import ServiceRecoveryPosture
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
@@ -65,6 +71,7 @@ class ReportEvidenceMutationContext:
     caller: CallerContext
     repository: ReportEvidenceWorkflowRepository
     durable_storage_backed: bool
+    access_scope_filter: QueueAccessScopeFilter
 
 
 class ReportEvidencePackRequest(CamelModel):
@@ -109,6 +116,7 @@ class ReportEvidencePackRequest(CamelModel):
         caller: CallerContext,
         idempotency_key: str,
         event_lineage: EventLineageContext,
+        access_scope_filter: QueueAccessScopeFilter,
     ) -> RequestReportEvidencePackToRepositoryCommand:
         return RequestReportEvidencePackToRepositoryCommand(
             conversion_intent_id=conversion_intent_id,
@@ -123,6 +131,7 @@ class ReportEvidencePackRequest(CamelModel):
                 client_ready_publication_requested=self.client_ready_publication_requested,
             ),
             idempotency_key=idempotency_key,
+            access_scope_filter=access_scope_filter,
             event_lineage=event_lineage,
         )
 
@@ -237,6 +246,10 @@ async def record_report_evidence_pack(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
@@ -248,6 +261,10 @@ async def record_report_evidence_pack(
             x_caller_subject=x_caller_subject,
             x_caller_roles=x_caller_roles,
             x_caller_capabilities=x_caller_capabilities,
+            x_caller_tenant_ids=x_caller_tenant_ids,
+            x_caller_book_ids=x_caller_book_ids,
+            x_caller_portfolio_ids=x_caller_portfolio_ids,
+            x_caller_client_ids=x_caller_client_ids,
             x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
             idempotency_key=idempotency_key,
         )
@@ -266,7 +283,7 @@ async def record_report_evidence_pack(
             return _report_evidence_persisted_evidence_problem(
                 durable_storage_backed=context.durable_storage_backed
             )
-    except PermissionDeniedError:
+    except (PermissionDeniedError, ReportEvidenceAccessScopeDenied):
         return _report_evidence_permission_problem(
             "The caller is not permitted to request idea report evidence packs."
         )
@@ -286,6 +303,10 @@ def _report_evidence_mutation_context(
     x_caller_subject: str | None,
     x_caller_roles: str | None,
     x_caller_capabilities: str | None,
+    x_caller_tenant_ids: str | None,
+    x_caller_book_ids: str | None,
+    x_caller_portfolio_ids: str | None,
+    x_caller_client_ids: str | None,
     x_lotus_trusted_caller_context: str | None,
     idempotency_key: str,
 ) -> ReportEvidenceMutationContext | JSONResponse:
@@ -293,9 +314,17 @@ def _report_evidence_mutation_context(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        tenant_ids=x_caller_tenant_ids,
+        book_ids=x_caller_book_ids,
+        portfolio_ids=x_caller_portfolio_ids,
+        client_ids=x_caller_client_ids,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
     _require_report_evidence_caller(caller)
+    access_scope_filter = require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission="idea.report-evidence-pack.entitlement_scope",
+    )
     validate_idempotency_key(idempotency_key)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
@@ -311,6 +340,7 @@ def _report_evidence_mutation_context(
         caller=caller,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        access_scope_filter=access_scope_filter,
     )
 
 
@@ -328,6 +358,7 @@ def _apply_report_evidence_request(
             conversion_intent_id=conversion_intent_id,
             caller=context.caller,
             idempotency_key=idempotency_key,
+            access_scope_filter=context.access_scope_filter,
             event_lineage=event_lineage_from_request(
                 http_request,
                 causation_id=causation_id,
@@ -486,6 +517,8 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
         "Records an internal report evidence-pack request for a reviewed idea that already "
         "has a report-evidence conversion intent. The route preserves source refs, lineage, "
         "retention posture, Report/Render/Archive source authority, and idempotency evidence, "
+        "requires complete trusted tenant/book/portfolio/client entitlements matching the "
+        "persisted candidate before idempotency precheck or mutation, "
         "and returns the exact persisted evidence-pack request for accepted and replayed "
         "success. Missing or ambiguous persisted evidence fails closed. "
         "It does not create lotus-report, lotus-render, or lotus-archive records and does "
@@ -504,7 +537,10 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
         **invalid_request_metadata(detail="Correct the report evidence pack request and retry."),
         **permission_denied_metadata(
             detail="The caller is not permitted to request idea report evidence packs.",
-            description="Caller lacks evidence-pack permission.",
+            description=(
+                "Caller lacks evidence-pack permission or complete entitlement scope matching "
+                "the persisted candidate."
+            ),
         ),
         **not_found_metadata(
             code="report_evidence_pack_resource_not_found",

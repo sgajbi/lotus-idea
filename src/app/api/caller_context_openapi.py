@@ -199,6 +199,10 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         method="POST",
         path="/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
         required_capabilities=("idea.report-evidence-pack.request",),
+        entitlement_scope=(
+            "Complete tenant, book, portfolio, and client entitlement scope must match the "
+            "persisted candidate behind the conversion intent before evidence-pack mutation."
+        ),
     ),
     CallerContextOpenApiRequirement(
         method="POST",

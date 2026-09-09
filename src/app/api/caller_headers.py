@@ -9,7 +9,11 @@ from fastapi import Depends, Header, status
 from app.api.runtime_dependencies import load_runtime_settings
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.api.problem_details import ProblemDetailsHTTPException
-from app.security.caller_context import CallerContext, CallerEntitlementScope
+from app.security.caller_context import (
+    CallerContext,
+    CallerEntitlementScope,
+    PermissionDeniedError,
+)
 
 TRUSTED_CALLER_CONTEXT_TOKEN_ENV = "LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN"
 TRUSTED_CALLER_CONTEXT_HEADER = "X-Lotus-Trusted-Caller-Context"
@@ -161,6 +165,24 @@ def caller_access_scope_filter(caller: CallerContext) -> QueueAccessScopeFilter 
     scope = caller.entitlement_scope
     if scope.is_empty:
         return None
+    return QueueAccessScopeFilter(
+        tenant_id=scope.tenant_ids,
+        book_id=scope.book_ids,
+        portfolio_id=scope.portfolio_ids,
+        client_id=scope.client_ids,
+    )
+
+
+def require_complete_caller_access_scope_filter(
+    caller: CallerContext,
+    *,
+    denied_permission: str,
+) -> QueueAccessScopeFilter:
+    """Return a complete trusted caller scope or fail closed."""
+
+    scope = caller.entitlement_scope
+    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
+        raise PermissionDeniedError(denied_permission)
     return QueueAccessScopeFilter(
         tenant_id=scope.tenant_ids,
         book_id=scope.book_ids,

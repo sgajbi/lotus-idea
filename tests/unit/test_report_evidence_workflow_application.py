@@ -7,6 +7,7 @@ import pytest
 
 from app.application.persisted_action_evidence import PersistedActionEvidenceUnavailable
 from app.application.report_evidence import (
+    ReportEvidenceAccessScopeDenied,
     ReportEvidencePackWorkflowResult,
     RequestReportEvidencePackToRepositoryCommand,
     request_report_evidence_pack_to_repository,
@@ -16,6 +17,7 @@ from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
     InMemoryIdeaRepository,
+    QueueAccessScopeFilter,
     ReviewAccessScope,
 )
 from tests.unit.test_report_evidence import (
@@ -72,6 +74,12 @@ def _request_command(
         conversion_intent_id=conversion_intent_id,
         evidence_pack=evidence_pack,
         idempotency_key=evidence_pack.idempotency_key,
+        access_scope_filter=QueueAccessScopeFilter(
+            tenant_id="tenant-a",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
     )
 
 
@@ -94,6 +102,26 @@ def test_report_evidence_replay_returns_exact_persisted_pack_without_side_effect
     assert replayed.report_evidence_pack is replayed.persistence.record.report_evidence_packs[-1]
     assert after_replay.candidate_records == before_replay.candidate_records
     assert after_replay.outbox_events == before_replay.outbox_events
+
+
+def test_report_evidence_denies_candidate_scope_before_idempotency_precheck() -> None:
+    repository, conversion_intent_id = _repository_with_report_conversion_intent()
+    guarded_repository = ScopeDenialProbeRepository(repository)
+    request = replace(
+        _request_command(conversion_intent_id),
+        access_scope_filter=QueueAccessScopeFilter(
+            tenant_id="tenant-other",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
+    )
+
+    with pytest.raises(ReportEvidenceAccessScopeDenied):
+        request_report_evidence_pack_to_repository(request, repository=guarded_repository)
+
+    assert guarded_repository.precheck_called is False
+    assert guarded_repository.persistence_called is False
 
 
 def test_report_evidence_replay_rejects_client_publication_escalation() -> None:
@@ -196,6 +224,7 @@ def test_report_evidence_command_rejects_mismatched_idempotency_boundary() -> No
             conversion_intent_id="conversion-report-evidence-001",
             evidence_pack=report_evidence_command(),
             idempotency_key="different-repository-key",
+            access_scope_filter=QueueAccessScopeFilter(tenant_id="tenant-a"),
         )
 
 
@@ -206,6 +235,7 @@ def test_report_evidence_command_rejects_blank_conversion_intent_id() -> None:
             conversion_intent_id=" ",
             evidence_pack=evidence_pack,
             idempotency_key=evidence_pack.idempotency_key,
+            access_scope_filter=QueueAccessScopeFilter(tenant_id="tenant-a"),
         )
 
 
@@ -229,3 +259,24 @@ class PrecheckedReportEvidenceRepository:
 
     def record_report_evidence_pack(self, *args: Any, **kwargs: Any) -> Any:
         raise AssertionError("prechecked replay must not persist another evidence pack")
+
+
+class ScopeDenialProbeRepository:
+    def __init__(self, repository: InMemoryIdeaRepository) -> None:
+        self._repository = repository
+        self.precheck_called = False
+        self.persistence_called = False
+
+    def conversion_intent_by_id(self, conversion_intent_id: str) -> Any:
+        return self._repository.conversion_intent_by_id(conversion_intent_id)
+
+    def candidate_record_for_conversion_intent(self, conversion_intent_id: str) -> Any:
+        return self._repository.candidate_record_for_conversion_intent(conversion_intent_id)
+
+    def precheck_evidence_pack_mutation(self, **kwargs: Any) -> Any:
+        self.precheck_called = True
+        raise AssertionError("scope denial must precede idempotency precheck")
+
+    def record_report_evidence_pack(self, *args: Any, **kwargs: Any) -> Any:
+        self.persistence_called = True
+        raise AssertionError("scope denial must precede persistence")

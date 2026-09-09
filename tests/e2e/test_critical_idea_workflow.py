@@ -341,11 +341,14 @@ def _assert_report_evidence_pack_request_has_no_report_authority(client: Any) ->
     report_pack_response = client.post(
         "/api/v1/conversion-intents/critical-e2e-conversion-report-001/report-evidence-packs",
         json=_report_evidence_pack_payload(),
-        headers=_headers(
-            subject="advisor-001",
-            capabilities="idea.report-evidence-pack.request",
-            idempotency_key="critical-e2e-report-pack-001",
-        ),
+        headers={
+            **_headers(
+                subject="advisor-001",
+                capabilities="idea.report-evidence-pack.request",
+                idempotency_key="critical-e2e-report-pack-001",
+            ),
+            **_scope_headers(),
+        },
     )
 
     assert report_pack_response.status_code == 200
@@ -371,11 +374,14 @@ def _assert_client_ready_publication_request_is_rejected_without_leak(
             report_evidence_pack_id="critical-e2e-client-ready-pack-001",
             client_ready_publication_requested=True,
         ),
-        headers=_headers(
-            subject="advisor-001",
-            capabilities="idea.report-evidence-pack.request",
-            idempotency_key="critical-e2e-client-ready-report-pack-001",
-        ),
+        headers={
+            **_headers(
+                subject="advisor-001",
+                capabilities="idea.report-evidence-pack.request",
+                idempotency_key="critical-e2e-client-ready-report-pack-001",
+            ),
+            **_scope_headers(),
+        },
     )
 
     assert client_ready_response.status_code == 409
