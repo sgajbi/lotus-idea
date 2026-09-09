@@ -18,7 +18,11 @@ from app.application.bond_maturity_runtime_evidence import (
 )
 from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository
-from app.ports.core_sources import CoreBondMaturityEvidence, CoreBondMaturityEvidenceRequest
+from app.ports.core_sources import (
+    CoreBondMaturityEvidence,
+    CoreBondMaturityEvidenceRequest,
+    CoreSourceEntitlementDenied,
+)
 from tests.support.bond_maturity_runtime_evidence import (
     authoritative_bond_maturity_evidence,
     valid_bond_maturity_runtime_evidence,
@@ -29,7 +33,11 @@ AS_OF = date(2026, 6, 21)
 
 
 class RecordingSource:
-    def __init__(self, evidence: CoreBondMaturityEvidence | None = None) -> None:
+    def __init__(
+        self,
+        evidence: CoreBondMaturityEvidence | None = None,
+        exception: Exception | None = None,
+    ) -> None:
         request = CoreBondMaturityEvidenceRequest(
             tenant_id="tenant-a",
             portfolio_id="portfolio-a",
@@ -40,12 +48,15 @@ class RecordingSource:
             trace_id="trace-a",
         )
         self.evidence = evidence or authoritative_bond_maturity_evidence(request=request)
+        self.exception = exception
         self.request: CoreBondMaturityEvidenceRequest | None = None
 
     def fetch_bond_maturity_evidence(
         self, request: CoreBondMaturityEvidenceRequest
     ) -> CoreBondMaturityEvidence:
         self.request = request
+        if self.exception is not None:
+            raise self.exception
         return self.evidence
 
 
@@ -131,6 +142,15 @@ def test_runtime_execution_refuses_in_memory_repository_posture() -> None:
 
     assert "durable_repository_not_configured" in payload["execution"]["qualificationBlockers"]
     assert not bond_maturity_runtime_execution_is_valid(payload)
+
+
+def test_runtime_readiness_preserves_entitlement_refusal() -> None:
+    with pytest.raises(CoreSourceEntitlementDenied):
+        evaluate_bond_maturity_readiness(
+            _command(),
+            core_source=RecordingSource(exception=CoreSourceEntitlementDenied()),
+            repository=InMemoryIdeaRepository(),
+        )
 
 
 def test_source_generated_after_evaluation_cannot_authorize_persistence() -> None:
@@ -477,12 +497,16 @@ def test_qualification_blockers_preserve_source_authority_order() -> None:
         "horizon_binding",
         "source_substitution",
         "content_hash",
+        "malformed_content_hash",
         "upstream_hash",
+        "malformed_upstream_hash",
         "future_generated",
         "future_latest_evidence",
         "malformed_window_end",
         "negative_count",
+        "non_integer_count",
         "missing_count_exceeds_bearing_count",
+        "empty_window_with_persistence",
         "positive_count_without_opportunity",
         "malformed_next_maturity",
         "missing_snapshot_identity",
@@ -580,9 +604,15 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     elif tamper == "content_hash":
         source["responseContentHash"] = "sha256:" + "c" * 64
         _refresh_source_digest(source)
+    elif tamper == "malformed_content_hash":
+        source["responseContentHash"] = "not-a-digest"
+        _refresh_source_and_persistence_digest(source, persistence)
     elif tamper == "upstream_hash":
         source["upstreamContentHash"] = "sha256:" + "d" * 64
         _refresh_source_digest(source)
+    elif tamper == "malformed_upstream_hash":
+        source["upstreamContentHash"] = "not-a-digest"
+        _refresh_source_and_persistence_digest(source, persistence)
     elif tamper == "future_generated":
         source["generatedAtUtc"] = "2026-06-21T10:11:00Z"
         _refresh_source_digest(source)
@@ -595,14 +625,23 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     elif tamper == "negative_count":
         source["maturingHoldingCount"] = -1
         _refresh_source_digest(source)
+    elif tamper == "non_integer_count":
+        source["maturingHoldingCount"] = "2"
+        _refresh_source_and_persistence_digest(source, persistence)
     elif tamper == "missing_count_exceeds_bearing_count":
-        source["missingMaturityDateCount"] = 3
-        _refresh_source_digest(source)
+        source["missingMaturityDateCount"] = 999
+        _refresh_source_and_persistence_digest(source, persistence)
+    elif tamper == "empty_window_with_persistence":
+        source["maturingHoldingCount"] = 0
+        source["nextMaturityDate"] = None
+        execution["opportunityDetected"] = False
+        execution["diagnosticCode"] = "core_maturity_window_empty"
+        _refresh_source_and_persistence_digest(source, persistence)
     elif tamper == "positive_count_without_opportunity":
         execution["opportunityDetected"] = False
     elif tamper == "malformed_next_maturity":
         source["nextMaturityDate"] = "not-a-date"
-        _refresh_source_digest(source)
+        _refresh_source_and_persistence_digest(source, persistence)
     elif tamper == "missing_snapshot_identity":
         source["snapshotId"] = ""
         _refresh_source_digest(source)
@@ -626,3 +665,12 @@ def _refresh_persistence_digest(persistence: dict[str, Any]) -> None:
     persistence["receiptDigest"] = sha256_json(
         {key: value for key, value in persistence.items() if key != "receiptDigest"}
     )
+
+
+def _refresh_source_and_persistence_digest(
+    source: dict[str, Any],
+    persistence: dict[str, Any],
+) -> None:
+    _refresh_source_digest(source)
+    persistence["sourceReceiptDigest"] = source["receiptDigest"]
+    _refresh_persistence_digest(persistence)

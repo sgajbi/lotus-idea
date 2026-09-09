@@ -417,18 +417,15 @@ def _fact_posture_is_valid(
     )
     if not all(isinstance(value, int) and value >= 0 for value in counts):
         return False
-    if int(source["missingMaturityDateCount"]) > int(source["maturityBearingHoldingCount"]):
-        return False
     maturing_count = int(source["maturingHoldingCount"])
     opportunity_detected = execution.get("opportunityDetected")
     diagnostic = execution.get("diagnosticCode")
     next_maturity = source.get("nextMaturityDate")
+    # This closed proof certifies durable candidate persistence. An empty source
+    # window may be a truthful evaluation result, but it cannot authorize a
+    # persistence receipt or clear the candidate-persistence blocker.
     if maturing_count == 0:
-        return (
-            next_maturity is None
-            and opportunity_detected is False
-            and diagnostic == "core_maturity_window_empty"
-        )
+        return False
     if opportunity_detected is not True or diagnostic != "core_maturity_evidence_ready":
         return False
     try:
