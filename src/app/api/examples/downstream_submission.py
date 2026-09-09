@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 from app.api.downstream_realization import (
@@ -16,9 +16,8 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import (
-    SourceCutPosture,
     AdviseProposalRealizationHistory,
-    ManageActionRealizationHistory,
+    CandidateEvidenceIdentity,
     CandidatePersistenceRecord,
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
@@ -28,13 +27,18 @@ from app.domain import (
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
+    EvidenceSupportability,
     GovernedConversionIntent,
     IdeaConversionIntent,
     IdeaLifecycleStatus,
-    ReasonCode,
+    ManageActionRealizationHistory,
     QueueAccessScopeFilter,
+    ReasonCode,
     ReviewAccessScope,
+    ReviewAuthorityGrant,
+    ReviewChannel,
     ReportMaterializationReceiptEvidence,
+    SourceCutPosture,
     SourceSystem,
     downstream_submission_identity,
     evaluate_downstream_submission_claim,
@@ -219,8 +223,12 @@ def _conversion_submission(
     outcome: DownstreamRealizationOutcome,
     replay: bool = False,
 ) -> dict[str, Any]:
-    intent = _conversion_intent(target)
-    repository = _ExampleDownstreamSubmissionRepository(conversion_intent=intent)
+    candidate = _conversion_candidate(target)
+    intent = _conversion_intent(target, candidate=candidate)
+    repository = _ExampleDownstreamSubmissionRepository(
+        conversion_intent=intent,
+        conversion_intent_candidate=candidate,
+    )
     command = RealizeConversionIntentCommand(
         conversion_intent_id=intent.intent.conversion_intent_id,
         idempotency_key=idempotency_key,
@@ -280,16 +288,21 @@ def _serialize(result: Any) -> dict[str, Any]:
     ).model_dump(mode="json", by_alias=True)
 
 
-def _conversion_intent(target: ConversionTarget) -> GovernedConversionIntent:
+def _conversion_intent(
+    target: ConversionTarget,
+    *,
+    candidate: _ExampleCandidate,
+) -> GovernedConversionIntent:
     source_authority = (
         SourceSystem.LOTUS_ADVISE
         if target is ConversionTarget.ADVISE_PROPOSAL
         else SourceSystem.LOTUS_MANAGE
     )
+    candidate_evidence = CandidateEvidenceIdentity.from_candidate(cast(Any, candidate))
     return GovernedConversionIntent(
         intent=IdeaConversionIntent(
             conversion_intent_id=f"conversion-example-{target.value}",
-            candidate_id="idea_example",
+            candidate_id=candidate.candidate_id,
             target=target,
             source_status=IdeaLifecycleStatus.APPROVED,
             requested_at_utc=_SUBMITTED_AT,
@@ -304,6 +317,44 @@ def _conversion_intent(target: ConversionTarget) -> GovernedConversionIntent:
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         target_source_authority=source_authority,
         accepted_at_utc=_SUBMITTED_AT,
+        review_authority_grant=ReviewAuthorityGrant(
+            review_id="review-example-001",
+            candidate_evidence=candidate_evidence,
+            review_channel=ReviewChannel.OPERATOR,
+            actor_subject=_ACTOR,
+            actor_role="operator",
+            review_policy_version="idea-review-decision-v1",
+            accepted_at_utc=_SUBMITTED_AT,
+            applicability_expires_at_utc=_SUBMITTED_AT + timedelta(days=1),
+        ),
+    )
+
+
+def _conversion_candidate(target: ConversionTarget) -> _ExampleCandidate:
+    lifecycle_status = (
+        IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL
+        if target is ConversionTarget.ADVISE_PROPOSAL
+        else IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW
+    )
+    return _ExampleCandidate(
+        candidate_id="idea_example",
+        identity=_ExampleIdentity(),
+        lifecycle_status=lifecycle_status,
+        evidence_packet=_ExampleEvidencePacket(
+            evidence_packet_id="iep_example",
+            lineage_ref=_ExampleLineageRef(
+                content_hash=(
+                    "sha256:75c28e116245aefd510ed8f6538ffeb26c2c759384b11097028d2dcff392a9c6"
+                )
+            ),
+            source_revision_vector_digest=(
+                "sha256:eb8a6de20a947892edca15c627ce7c38ac59cc1ac308ff0a992609cc4f2feb3d"
+            ),
+            source_cut_posture=SourceCutPosture.COHERENT,
+            supportability=EvidenceSupportability.READY,
+            applicability_expires_at_utc=_SUBMITTED_AT + timedelta(days=1),
+        ),
+        access_scope=_ACCESS_SCOPE,
     )
 
 
@@ -370,7 +421,32 @@ def _report_materialization_outcome() -> DownstreamRealizationOutcome:
 
 
 @dataclass(frozen=True)
+class _ExampleIdentity:
+    material_version: int = 1
+    evidence_version: int = 1
+
+
+@dataclass(frozen=True)
+class _ExampleLineageRef:
+    content_hash: str
+
+
+@dataclass(frozen=True)
+class _ExampleEvidencePacket:
+    evidence_packet_id: str
+    lineage_ref: _ExampleLineageRef
+    source_revision_vector_digest: str
+    source_cut_posture: SourceCutPosture
+    supportability: EvidenceSupportability
+    applicability_expires_at_utc: datetime | None
+
+
+@dataclass(frozen=True)
 class _ExampleCandidate:
+    candidate_id: str
+    identity: _ExampleIdentity
+    lifecycle_status: IdeaLifecycleStatus
+    evidence_packet: _ExampleEvidencePacket
     access_scope: ReviewAccessScope
 
 
@@ -387,17 +463,16 @@ class _ExampleDownstreamSubmissionRepository(
         self,
         *,
         conversion_intent: GovernedConversionIntent | None = None,
+        conversion_intent_candidate: _ExampleCandidate | None = None,
         report_evidence_pack: GovernedReportEvidencePack | None = None,
     ) -> None:
         self._conversion_intent = conversion_intent
         self._conversion_intent_candidate: CandidatePersistenceRecord | None = (
             cast(
                 CandidatePersistenceRecord,
-                _ExampleReportEvidencePackCandidateRecord(
-                    candidate=_ExampleCandidate(access_scope=_ACCESS_SCOPE)
-                ),
+                _ExampleReportEvidencePackCandidateRecord(candidate=conversion_intent_candidate),
             )
-            if conversion_intent is not None
+            if conversion_intent is not None and conversion_intent_candidate is not None
             else None
         )
         self._report_evidence_pack = report_evidence_pack
@@ -406,12 +481,29 @@ class _ExampleDownstreamSubmissionRepository(
                 CandidatePersistenceRecord,
                 _ExampleReportEvidencePackCandidateRecord(
                     candidate=_ExampleCandidate(
+                        candidate_id="idea_report_example",
+                        identity=_ExampleIdentity(),
+                        lifecycle_status=IdeaLifecycleStatus.CONVERTED_TO_REPORT,
+                        evidence_packet=_ExampleEvidencePacket(
+                            evidence_packet_id="iep_example",
+                            lineage_ref=_ExampleLineageRef(
+                                content_hash=(
+                                    "sha256:75c28e116245aefd510ed8f6538ffeb26c2c759384b11097028d2dcff392a9c6"
+                                )
+                            ),
+                            source_revision_vector_digest=(
+                                "sha256:eb8a6de20a947892edca15c627ce7c38ac59cc1ac308ff0a992609cc4f2feb3d"
+                            ),
+                            source_cut_posture=SourceCutPosture.COHERENT,
+                            supportability=EvidenceSupportability.READY,
+                            applicability_expires_at_utc=_SUBMITTED_AT + timedelta(days=1),
+                        ),
                         access_scope=ReviewAccessScope(
                             tenant_id="tenant-sg",
                             book_id="book-private-bank-sg",
                             portfolio_id="PB_SG_GLOBAL_BAL_001",
                             client_id="client-example",
-                        )
+                        ),
                     )
                 ),
             )

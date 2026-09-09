@@ -19,6 +19,8 @@ from app.domain import (
     GovernedReportEvidencePack,
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    ReviewAuthorityStatus,
+    SourceCutPosture,
 )
 from app.ports.downstream_realization import DownstreamRealizationOutcome
 from tests.unit.test_downstream_realization_application import (
@@ -64,6 +66,106 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
         )
         is not None
     )
+
+
+def test_downstream_conversion_refuses_historical_source_authority_before_claim_or_io() -> None:
+    source_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    conversion_intent = source_repository.conversion_intent_by_id("conversion-advise_proposal-001")
+    candidate_record = source_repository.candidate_record_for_conversion_intent(
+        "conversion-advise_proposal-001"
+    )
+    assert conversion_intent is not None
+    assert conversion_intent.review_authority_grant is not None
+    assert candidate_record is not None
+    historical_evidence = replace(
+        conversion_intent.review_authority_grant.candidate_evidence,
+        source_revision_vector_digest="legacy:unknown",
+        source_cut_posture=SourceCutPosture.UNKNOWN,
+    )
+    historical_intent = replace(
+        conversion_intent,
+        source_revision_vector_digest="legacy:unknown",
+        source_cut_posture=SourceCutPosture.UNKNOWN,
+        review_authority_grant=replace(
+            conversion_intent.review_authority_grant,
+            candidate_evidence=historical_evidence,
+        ),
+    )
+    repository = LookupOnlyDownstreamRepository(
+        conversion_intent=historical_intent,
+        conversion_intent_candidate=candidate_record,
+    )
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    result = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="downstream-historical-authority-refused",
+            actor_subject="advisor-redacted",
+            access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+        ),
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+
+    assert result.status is DownstreamRealizationStatus.AUTHORITY_CONFLICT
+    assert result.downstream_failure_reason == "conversion_intent_authority_conflict"
+    assert advise_client.submitted == ()
+    assert (
+        repository.downstream_submission_by_idempotency_key(
+            "tenant-sg",
+            "downstream-historical-authority-refused",
+        )
+        is None
+    )
+
+
+def test_existing_submission_replays_after_review_authority_is_revoked_without_new_io() -> None:
+    source_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    conversion_intent = source_repository.conversion_intent_by_id("conversion-advise_proposal-001")
+    candidate_record = source_repository.candidate_record_for_conversion_intent(
+        "conversion-advise_proposal-001"
+    )
+    assert conversion_intent is not None
+    assert conversion_intent.review_authority_grant is not None
+    assert candidate_record is not None
+    repository = LookupOnlyDownstreamRepository(
+        conversion_intent=conversion_intent,
+        conversion_intent_candidate=candidate_record,
+    )
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="downstream-authority-replay",
+        actor_subject="advisor-redacted",
+        access_scope_filter=AUTHORIZED_SCOPE_FILTER,
+    )
+
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+    repository.conversion_intent = replace(
+        conversion_intent,
+        review_authority_grant=replace(
+            conversion_intent.review_authority_grant,
+            status=ReviewAuthorityStatus.REVOKED,
+        ),
+    )
+    replayed = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+
+    assert first.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert replayed.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert replayed.idempotency_replayed is True
+    assert len(advise_client.submitted) == 1
 
 
 def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> None:

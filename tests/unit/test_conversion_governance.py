@@ -35,12 +35,14 @@ from app.domain import (
     ReviewAuthorityStatus,
     SourceRef,
     SourceReconciliationPosture,
+    SourceCutPosture,
     SourceRevisionClaims,
     SourceSystem,
     SuppressionReason,
     UnsupportedEvidenceReason,
     record_conversion_outcome as _record_conversion_outcome,
     request_conversion_intent as _request_conversion_intent,
+    validate_conversion_intent_for_realization,
 )
 
 
@@ -182,6 +184,61 @@ def intent_command(
     )
 
 
+def conversion_intent_with_evidence_drift(
+    intent: GovernedConversionIntent,
+    field: str,
+) -> GovernedConversionIntent:
+    grant = intent.review_authority_grant
+    assert grant is not None
+    evidence = grant.candidate_evidence
+    if field == "candidate_id":
+        candidate_id = "idea-other-candidate"
+        return replace(
+            intent,
+            intent=replace(intent.intent, candidate_id=candidate_id),
+            review_authority_grant=replace(
+                grant,
+                candidate_evidence=replace(evidence, candidate_id=candidate_id),
+            ),
+        )
+    if field == "material_version":
+        changed_evidence = replace(evidence, material_version=2)
+    elif field == "evidence_version":
+        changed_evidence = replace(evidence, evidence_version=2)
+    elif field == "evidence_packet_id":
+        changed_evidence = replace(evidence, evidence_packet_id="packet-other")
+        return replace(
+            intent,
+            evidence_packet_id="packet-other",
+            review_authority_grant=replace(grant, candidate_evidence=changed_evidence),
+        )
+    elif field == "evidence_content_hash":
+        content_hash = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        changed_evidence = replace(evidence, evidence_content_hash=content_hash)
+        return replace(
+            intent,
+            evidence_content_hash=content_hash,
+            review_authority_grant=replace(grant, candidate_evidence=changed_evidence),
+        )
+    elif field == "source_revision_vector_digest":
+        revision_digest = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        changed_evidence = replace(
+            evidence,
+            source_revision_vector_digest=revision_digest,
+        )
+        return replace(
+            intent,
+            source_revision_vector_digest=revision_digest,
+            review_authority_grant=replace(grant, candidate_evidence=changed_evidence),
+        )
+    else:
+        raise AssertionError(f"unsupported evidence drift field: {field}")
+    return replace(
+        intent,
+        review_authority_grant=replace(grant, candidate_evidence=changed_evidence),
+    )
+
+
 def test_review_approved_candidate_can_request_report_conversion_intent() -> None:
     result = request_conversion_intent(candidate(), intent_command())
 
@@ -203,6 +260,131 @@ def test_review_approved_candidate_can_request_report_conversion_intent() -> Non
     assert result.audit_event.attributes["target_source_authority"] == "lotus-report"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
+
+
+def test_current_conversion_intent_is_authorized_for_first_realization() -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+
+    validate_conversion_intent_for_realization(
+        result.candidate,
+        result.conversion_intent,
+        evaluated_at_utc=REQUESTED_AT,
+    )
+
+
+@pytest.mark.parametrize(
+    "source_cut_posture",
+    (SourceCutPosture.UNKNOWN, SourceCutPosture.PARTIAL, SourceCutPosture.MIXED),
+)
+def test_conversion_intent_realization_refuses_non_authoritative_retained_source_cut(
+    source_cut_posture: SourceCutPosture,
+) -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+    grant = result.conversion_intent.review_authority_grant
+    assert grant is not None
+    historical_evidence = replace(
+        grant.candidate_evidence,
+        source_cut_posture=source_cut_posture,
+    )
+    historical_intent = replace(
+        result.conversion_intent,
+        source_cut_posture=source_cut_posture,
+        review_authority_grant=replace(grant, candidate_evidence=historical_evidence),
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="candidate evidence changed"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            historical_intent,
+            evaluated_at_utc=REQUESTED_AT,
+        )
+
+
+def test_conversion_intent_realization_refuses_expired_review_authority() -> None:
+    source_candidate = candidate(applicability_expires_at_utc=OUTCOME_AT)
+    result = request_conversion_intent(source_candidate, intent_command())
+
+    with pytest.raises(InvalidConversionIntent, match="review authority is not active"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            result.conversion_intent,
+            evaluated_at_utc=OUTCOME_AT,
+        )
+
+
+@pytest.mark.parametrize(
+    "status",
+    (ReviewAuthorityStatus.REVOKED, ReviewAuthorityStatus.SUPERSEDED),
+)
+def test_conversion_intent_realization_refuses_inactive_review_authority(
+    status: ReviewAuthorityStatus,
+) -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+    grant = result.conversion_intent.review_authority_grant
+    assert grant is not None
+    retained_intent = replace(
+        result.conversion_intent,
+        review_authority_grant=replace(grant, status=status),
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="review authority is not active"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            retained_intent,
+            evaluated_at_utc=REQUESTED_AT,
+        )
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "candidate_id",
+        "material_version",
+        "evidence_version",
+        "evidence_packet_id",
+        "evidence_content_hash",
+        "source_revision_vector_digest",
+    ),
+)
+def test_conversion_intent_realization_refuses_retained_evidence_identity_drift(
+    field: str,
+) -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+    retained_intent = conversion_intent_with_evidence_drift(result.conversion_intent, field)
+
+    with pytest.raises(InvalidConversionIntent, match="candidate evidence changed"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            retained_intent,
+            evaluated_at_utc=REQUESTED_AT,
+        )
+
+
+def test_conversion_intent_realization_refuses_wrong_target_authority() -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+    invalid_intent = replace(
+        result.conversion_intent,
+        target_source_authority=SourceSystem.LOTUS_ADVISE,
+    )
+
+    with pytest.raises(InvalidConversionIntent, match="target source authority changed"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            invalid_intent,
+            evaluated_at_utc=REQUESTED_AT,
+        )
+
+
+def test_conversion_intent_realization_refuses_missing_review_authority() -> None:
+    result = request_conversion_intent(candidate(), intent_command())
+    invalid_intent = replace(result.conversion_intent, review_authority_grant=None)
+
+    with pytest.raises(InvalidConversionIntent, match="review authority is missing"):
+        validate_conversion_intent_for_realization(
+            result.candidate,
+            invalid_intent,
+            evaluated_at_utc=REQUESTED_AT,
+        )
 
 
 @pytest.mark.parametrize(
