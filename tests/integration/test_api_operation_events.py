@@ -32,6 +32,9 @@ from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 from tests.support import review_authority_api
 from tests.support.source_revision import lotus_core_source_ref
+from tests.integration.test_review_workflow_api import (
+    lifecycle_headers as governed_lifecycle_headers,
+)
 
 
 OperationEventCall = tuple[str, str, str, bool, str | None]
@@ -365,16 +368,9 @@ def queue_readiness_headers() -> dict[str, str]:
 
 
 def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
-    return {
-        "X-Caller-Subject": "idea-lifecycle-worker",
-        "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
-        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
-        "X-Caller-Book-Ids": "book-advisor-001",
-        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
-        "X-Caller-Client-Ids": "client-001",
-        "X-Correlation-Id": "corr-operation-lifecycle-api",
-        "Idempotency-Key": idempotency_key,
-    }
+    headers = governed_lifecycle_headers(idempotency_key)
+    headers["X-Correlation-Id"] = "corr-operation-lifecycle-api"
+    return headers
 
 
 def review_headers(idempotency_key: str) -> dict[str, str]:
