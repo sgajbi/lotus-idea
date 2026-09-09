@@ -178,6 +178,38 @@ def test_persist_core_bond_maturity_candidate_and_exact_replay() -> None:
     assert len(source.requests) == 2
 
 
+def test_persist_core_bond_maturity_preserves_absent_optional_source_diagnostic() -> None:
+    source = StubCoreBondMaturitySource(
+        evidence=replace(_eligible_evidence(), maturity_diagnostic=None)
+    )
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_bond_maturity_signal_from_core(
+        _persist_command(),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.persistence is not None
+    assert result.source_diagnostic_codes == ()
+
+
+@pytest.mark.parametrize("field_name", ("idempotency_key", "actor_subject"))
+def test_persist_core_bond_maturity_requires_non_blank_write_authority(field_name: str) -> None:
+    source = StubCoreBondMaturitySource(evidence=_eligible_evidence())
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(ValueError, match=f"{field_name} is required"):
+        evaluate_and_persist_bond_maturity_signal_from_core(
+            replace(_persist_command(), **{field_name: " "}),
+            core_source=source,
+            repository=repository,
+        )
+
+    assert source.requests == []
+    assert repository.snapshot().candidate_records == {}
+
+
 def test_persist_core_bond_maturity_refuses_placeholder_scope_before_source_io() -> None:
     source = StubCoreBondMaturitySource(evidence=_eligible_evidence())
     repository = InMemoryIdeaRepository()
