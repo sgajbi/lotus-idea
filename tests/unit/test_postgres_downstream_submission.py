@@ -83,6 +83,28 @@ def test_postgres_claim_scopes_same_idempotency_key_by_tenant_across_restart() -
     assert first.lease_attempt_id != second.lease_attempt_id
 
 
+def test_postgres_claim_rejects_new_key_for_existing_resource_identity() -> None:
+    connection = FakePostgresConnection()
+    first = _claim("fingerprint-a")
+    second = replace(
+        _claim("fingerprint-b"),
+        idempotency_key="second-submission-key",
+        support_reference=downstream_submission_support_reference(
+            "tenant-private-bank-sg",
+            "second-submission-key",
+        ),
+        lease_attempt_id="attempt-second-submission-key",
+    )
+
+    accepted = PostgresIdeaRepository(connection).claim_downstream_submission(first)
+    conflict = PostgresIdeaRepository(connection).claim_downstream_submission(second)
+
+    assert accepted.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert conflict.decision is DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT
+    assert conflict.record == first
+    assert len(connection.rows["idea_downstream_submission"]) == 1
+
+
 def test_postgres_claim_rejects_erased_resource_before_delivery_insert() -> None:
     connection = FakePostgresConnection()
     connection.rows["idea_conversion_intent"].append(
@@ -465,6 +487,9 @@ def test_postgres_submission_claim_fails_closed_for_unresolved_unique_conflicts(
     repository.claim_downstream_submission(claim)
     monkeypatch.setattr(
         postgres_submission, "_load_by_idempotency_key", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        postgres_submission, "_load_by_resource_identity", lambda *args, **kwargs: None
     )
 
     monkeypatch.setattr(

@@ -8,6 +8,7 @@ import pytest
 from app.domain import (
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
+    DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
@@ -59,15 +60,31 @@ def test_in_memory_claim_allows_same_idempotency_key_in_distinct_tenants() -> No
     assert second_result.decision is DownstreamSubmissionClaimDecision.ACCEPTED
     assert first.support_reference != second.support_reference
     assert first.lease_attempt_id != second.lease_attempt_id
-    assert (
-        repository.downstream_submission_by_idempotency_key(first.tenant_id, first.idempotency_key)
-        == first
+
+
+def test_in_memory_claim_rejects_new_key_for_existing_resource_identity() -> None:
+    repository = InMemoryIdeaRepository()
+    first = _claim("submission-key-one", "fingerprint-a")
+    second = _claim("submission-key-two", "fingerprint-b")
+
+    accepted = repository.claim_downstream_submission(first)
+    conflict = repository.claim_downstream_submission(second)
+
+    assert accepted.decision is DownstreamSubmissionClaimDecision.ACCEPTED
+    assert conflict == DownstreamSubmissionClaimResult(
+        decision=DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT,
+        record=first,
     )
     assert (
         repository.downstream_submission_by_idempotency_key(
-            second.tenant_id, second.idempotency_key
+            second.tenant_id,
+            second.idempotency_key,
         )
-        == second
+        is None
+    )
+    assert (
+        repository.downstream_submission_by_idempotency_key(first.tenant_id, first.idempotency_key)
+        == first
     )
 
 

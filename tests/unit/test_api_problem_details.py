@@ -189,10 +189,14 @@ def test_downstream_submission_openapi_problem_codes_match_runtime_contract() ->
         }
         assert _problem_codes(conversion_responses["409"], media_type) == {
             "conversion_intent_authority_conflict",
+            "downstream_submission_resource_conflict",
             "idempotency_conflict",
             "unsupported_downstream_realization_target",
         }
-        assert _problem_codes(report_responses["409"], media_type) == {"idempotency_conflict"}
+        assert _problem_codes(report_responses["409"], media_type) == {
+            "downstream_submission_resource_conflict",
+            "idempotency_conflict",
+        }
         assert _problem_codes(conversion_responses["503"], media_type) == {
             "downstream_realization_not_configured",
             "durable_repository_not_configured",

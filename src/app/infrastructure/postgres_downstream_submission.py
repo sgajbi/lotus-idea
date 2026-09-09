@@ -78,6 +78,17 @@ def claim_postgres_downstream_submission(
                 for_update=True,
             )
             if existing is None:
+                resource_existing = _load_by_resource_identity(
+                    cursor,
+                    record,
+                    for_update=True,
+                )
+                if resource_existing is not None:
+                    connection.commit()
+                    return DownstreamSubmissionClaimResult(
+                        decision=DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT,
+                        record=resource_existing,
+                    )
                 support_collision = _load_by_support_reference(
                     cursor,
                     record.support_reference,
@@ -398,6 +409,26 @@ def _load_by_support_reference(
         marker="downstream-submission-by-support-reference",
         predicate="support_reference = %s",
         values=(support_reference,),
+        for_update=for_update,
+    )
+
+
+def _load_by_resource_identity(
+    cursor: PostgresCursor,
+    record: DownstreamSubmissionRecord,
+    *,
+    for_update: bool,
+) -> DownstreamSubmissionRecord | None:
+    return _load_one(
+        cursor,
+        marker="downstream-submission-by-resource-identity",
+        predicate=("tenant_id = %s AND resource_type = %s AND resource_id = %s AND target = %s"),
+        values=(
+            record.tenant_id,
+            record.resource_type.value,
+            record.resource_id,
+            record.target.value,
+        ),
         for_update=for_update,
     )
 
