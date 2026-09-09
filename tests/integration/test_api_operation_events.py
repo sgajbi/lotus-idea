@@ -36,7 +36,6 @@ from tests.integration.test_review_workflow_api import (
     lifecycle_headers as governed_lifecycle_headers,
 )
 
-
 OperationEventCall = tuple[str, str, str, bool, str | None]
 
 
