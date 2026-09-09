@@ -272,14 +272,17 @@ Implemented first-wave internal scope:
    `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
    lifecycle transition orchestration over the same repository contract.
    `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` requires
-   `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
-   canonical caller-settable domain lifecycle transition graph, writes
+   `idea.candidate.lifecycle.transition`, complete trusted tenant/book/portfolio/client
+   scope matching the persisted candidate, plus `Idempotency-Key`. The application
+   authorizes candidate scope before idempotency or mutation, applies the canonical
+   caller-settable domain lifecycle transition graph, writes
    lifecycle history and audit evidence, returns the same exact persisted
    transition for accepted and replayed success, and returns not-found/
    conflict/invalid-state posture. Successful mutation fails closed when one
    matching persisted transition cannot be resolved. The route rejects
-   `accepted` and `executed` as generic
-   lifecycle transition inputs before repository mutation or outbox emission,
+   review, conversion, downstream-outcome, and terminal states reserved for their
+   owned commands as generic lifecycle transition inputs before repository mutation
+   or outbox emission,
    and keeps `supportedFeaturePromoted=false`.
 16. `src/app/application/candidate_evidence_replay.py` and
     `src/app/api/candidate_evidence_replay.py` now expose evidence replay

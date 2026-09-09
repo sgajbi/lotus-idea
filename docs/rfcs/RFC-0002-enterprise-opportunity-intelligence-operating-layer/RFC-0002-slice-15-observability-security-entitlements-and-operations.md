@@ -157,6 +157,10 @@ Implementation evidence:
    high-cash evaluation, candidate persistence, lifecycle transitions,
    candidate evidence replay, AI explanation fallback/verifier evaluation,
    advisor queue reads, review actions, and feedback.
+   The pre-review lifecycle route requires complete trusted tenant/book/portfolio/client
+   entitlements and the application layer compares them with persisted candidate scope
+   before idempotency or mutation; denied requests emit bounded permission posture and
+   leave candidate, audit, outbox, and idempotency state unchanged.
 10. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
    attribute, metric-label, and route-template request diagnostic contract.
 11. `tests/unit/test_source_observability_contract_gate.py` covers the current

@@ -498,8 +498,10 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
     "description": (
         "Records an internal governed lifecycle transition for a persisted idea candidate "
         "through the RFC-0002 Slice 06 pre-review lifecycle. The route requires "
-        "a lifecycle transition capability and Idempotency-Key, applies the canonical "
-        "domain lifecycle transition graph, writes lifecycle history plus audit evidence, "
+        "a lifecycle transition capability, complete trusted tenant/book/portfolio/client "
+        "scope, and Idempotency-Key. It authorizes that scope against the persisted candidate "
+        "before idempotency or mutation, applies the canonical domain lifecycle transition "
+        "graph, writes lifecycle history plus audit evidence, "
         "uses trusted acceptance for mutation chronology while retaining observed changedAtUtc, "
         "returns the exact persisted transition on accepted and replayed success, and fails "
         "closed when that persisted evidence cannot be resolved uniquely. It does not "
@@ -540,7 +542,7 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
         **invalid_request_metadata(detail="Correct the lifecycle transition request and retry."),
         **permission_denied_metadata(
             detail="The caller is not permitted to transition idea candidates.",
-            description="Caller lacks lifecycle permission.",
+            description="Caller lacks lifecycle permission or exact candidate scope.",
         ),
         **not_found_metadata(
             code="candidate_not_found",
