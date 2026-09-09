@@ -30,6 +30,7 @@ from app.domain import (
     SourceCutPosture,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
+from app.domain.evidence_digest import REVISION_VECTOR_DIGEST_PATTERN, SHA256_DIGEST_PATTERN
 from app.security.caller_context import CallerContext
 
 
@@ -46,10 +47,15 @@ class ConversionIntentRequest(CamelModel):
     expected_material_version: int = Field(..., alias="expectedMaterialVersion", gt=0)
     expected_evidence_version: int = Field(..., alias="expectedEvidenceVersion", gt=0)
     expected_evidence_packet_id: str = Field(..., alias="expectedEvidencePacketId")
-    expected_evidence_content_hash: str = Field(..., alias="expectedEvidenceContentHash")
+    expected_evidence_content_hash: str = Field(
+        ...,
+        alias="expectedEvidenceContentHash",
+        pattern=SHA256_DIGEST_PATTERN.pattern,
+    )
     expected_source_revision_vector_digest: str = Field(
         ...,
         alias="expectedSourceRevisionVectorDigest",
+        pattern=REVISION_VECTOR_DIGEST_PATTERN.pattern,
     )
     expected_source_cut_posture: SourceCutPosture = Field(
         ...,
@@ -59,8 +65,6 @@ class ConversionIntentRequest(CamelModel):
     @field_validator(
         "expected_review_id",
         "expected_evidence_packet_id",
-        "expected_evidence_content_hash",
-        "expected_source_revision_vector_digest",
     )
     @classmethod
     def _authority_identity_must_not_be_blank(cls, value: str) -> str:

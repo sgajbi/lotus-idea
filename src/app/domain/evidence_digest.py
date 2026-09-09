@@ -23,7 +23,8 @@ import re
 # `hexdigest()` is 64 lowercase hex characters, so the producers satisfy this
 # by construction. Anchored, and lowercase-only: accepting uppercase would let
 # two spellings of one digest compare unequal as strings.
-SHA256_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+_SHA256_DIGEST_BODY = r"sha256:[0-9a-f]{64}"
+SHA256_DIGEST_PATTERN = re.compile(rf"^{_SHA256_DIGEST_BODY}$")
 
 # Rows persisted before `source_revision_vector_digest` existed decode to this
 # in `postgres_codecs`, in four places. It is a statement that no revision
@@ -31,6 +32,9 @@ SHA256_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 # digest shape on that field would be a read outage on historical data rather
 # than a validation tightening.
 LEGACY_REVISION_VECTOR_SENTINEL = "legacy:unknown"
+REVISION_VECTOR_DIGEST_PATTERN = re.compile(
+    rf"^(?:{_SHA256_DIGEST_BODY}|{re.escape(LEGACY_REVISION_VECTOR_SENTINEL)})$"
+)
 
 
 def is_sha256_digest(value: object) -> bool:
@@ -59,9 +63,7 @@ def require_revision_vector_digest(value: object, field_name: str) -> None:
     author has to notice.
     """
 
-    if value == LEGACY_REVISION_VECTOR_SENTINEL:
-        return
-    if not is_sha256_digest(value):
+    if not isinstance(value, str) or REVISION_VECTOR_DIGEST_PATTERN.fullmatch(value) is None:
         raise ValueError(
             f"{field_name} must be a sha256:<64 lowercase hex> digest "
             f"or {LEGACY_REVISION_VECTOR_SENTINEL!r}, got {value!r}"
