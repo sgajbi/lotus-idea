@@ -472,3 +472,8 @@ evidence-ready, target-eligible, and strictly before applicability expiry at
 trusted server time; the repository repeats this check under the candidate
 mutation lock. Exact replay of a pre-expiry intent remains replayable without a
 new downstream mutation. Downstream business authority remains with its owner.
+The request contract rejects malformed evidence content hashes and
+revision-vector digests as `400 invalid_request` before conversion authority or
+persistence work. A well-formed but non-matching digest continues to fail as a
+conversion conflict; `legacy:unknown` remains only the explicit historical
+revision-vector sentinel and never establishes current authority.

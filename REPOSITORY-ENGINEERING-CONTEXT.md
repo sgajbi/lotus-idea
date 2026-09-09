@@ -131,7 +131,8 @@ Critical invariants:
 4. Known source-revision or restatement contradictions fail authority advancement. Shared cut IDs
    and time tolerance cannot override a known contradiction.
 5. Unknown comparison remains uncertain; never invent source-owner identities or coherence.
-6. Generic lifecycle mutation cannot create review, approval, or conversion authority.
+6. Generic lifecycle mutation cannot create review, approval, or conversion authority; malformed
+   review/conversion evidence digests fail request validation before authority or persistence work.
 7. Review and conversion use their owned commands and exact presentation/review grants.
 8. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
 9. Outbound work records durable intent before I/O.

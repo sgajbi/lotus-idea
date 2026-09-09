@@ -72,6 +72,13 @@ authority strictly before applicability expiry. The repository repeats the
 grant check under its candidate mutation lock before writing the intent and
 outbox event.
 
+Review and conversion request DTOs reject malformed evidence content hashes
+and revision-vector digests as `400 invalid_request` before authority or
+persistence logic runs. A well-formed but non-matching digest remains an
+authority conflict. The historical `legacy:unknown` revision-vector sentinel
+remains readable and structurally admissible; it does not create current source
+authority.
+
 ## Evidence-change compatibility policy
 
 The current policy is `idea-review-authority-v1`:
