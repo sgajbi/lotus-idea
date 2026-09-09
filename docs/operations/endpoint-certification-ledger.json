@@ -1079,7 +1079,7 @@
       ],
       "test_evidence": [
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim",
-        "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_rejects_incomplete_or_mismatched_candidate_scope_before_write",
+        "tests/integration/test_ai_explanation_scope_api.py::test_ai_explanation_api_rejects_incomplete_or_mismatched_candidate_scope_before_write",
         "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_ai_explanation_lineage",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate",
         "tests/integration/test_attested_ai_governance_api.py::test_api_accepts_signed_bound_lotus_ai_output",
@@ -1123,7 +1123,7 @@
       ],
       "test_evidence": [
         "tests/integration/test_ai_governance_api.py::test_ai_generation_api_executes_pack_and_returns_accepted_explanation",
-        "tests/integration/test_ai_governance_api.py::test_ai_generation_api_rejects_incomplete_or_mismatched_scope_before_owner_io",
+        "tests/integration/test_ai_explanation_scope_api.py::test_ai_generation_api_rejects_incomplete_or_mismatched_scope_before_owner_io",
         "tests/integration/test_ai_governance_api.py::test_ai_generation_api_degrades_to_fallback_when_runtime_unavailable",
         "tests/integration/test_ai_governance_api.py::test_ai_generation_api_requires_generation_capability",
         "tests/integration/test_ai_governance_api.py::test_ai_generation_api_reports_unconfigured_runtime_without_execution",

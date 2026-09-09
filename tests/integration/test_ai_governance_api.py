@@ -234,72 +234,6 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert "route" not in response.text
 
 
-@pytest.mark.parametrize(
-    ("scope_header", "scope_value"),
-    (
-        ("X-Caller-Tenant-Ids", "tenant-other"),
-        ("X-Caller-Book-Ids", "book-other"),
-        ("X-Caller-Portfolio-Ids", "PORTFOLIO_OTHER"),
-        ("X-Caller-Client-Ids", "client-other"),
-        ("X-Caller-Tenant-Ids", None),
-        ("X-Caller-Book-Ids", None),
-        ("X-Caller-Portfolio-Ids", None),
-        ("X-Caller-Client-Ids", None),
-    ),
-)
-def test_ai_explanation_api_rejects_incomplete_or_mismatched_candidate_scope_before_write(
-    scope_header: str,
-    scope_value: str | None,
-) -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    candidate_id = persisted_candidate_id(
-        client,
-        idempotency_key=f"seed-ai-scope-{scope_header}-{scope_value}",
-    )
-    headers = ai_headers(idempotency_key=f"ai-scope-{scope_header}-{scope_value}")
-    if scope_value is None:
-        headers.pop(scope_header)
-    else:
-        headers[scope_header] = scope_value
-
-    response = client.post(
-        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
-        json=ai_request_payload(request_id=f"ai-scope-{scope_header}-{scope_value}"),
-        headers=headers,
-    )
-
-    assert response.status_code == 403
-    assert response.json()["code"] == "permission_denied"
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.ai_explanation_lineage_records == ()
-
-
-@pytest.mark.parametrize(
-    "route",
-    ("evaluate", "generate"),
-)
-def test_ai_explanation_api_rejects_malformed_scope_as_invalid_request(route: str) -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    candidate_id = persisted_candidate_id(client, idempotency_key=f"seed-ai-malformed-{route}")
-    headers = ai_headers() if route == "evaluate" else generation_headers()
-    headers["X-Caller-Book-Ids"] = "book-advisor-001, "
-    endpoint = (
-        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate"
-        if route == "evaluate"
-        else f"/api/v1/idea-candidates/{candidate_id}/ai-explanations"
-    )
-    payload = ai_request_payload() if route == "evaluate" else generation_payload()
-
-    response = client.post(endpoint, json=payload, headers=headers)
-
-    assert response.status_code == 400
-    assert response.json()["code"] == "invalid_request"
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.ai_explanation_lineage_records == ()
-
-
 def test_production_like_ai_output_requires_provenance_before_lineage_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1038,56 +972,6 @@ class _FakeGenerationRuntime:
             },
             "workflow_pack_run": {"run_id": "wpr_generation_api_001"},
         }
-
-
-@pytest.mark.parametrize(
-    ("scope_header", "scope_value"),
-    (
-        ("X-Caller-Tenant-Ids", "tenant-other"),
-        ("X-Caller-Book-Ids", "book-other"),
-        ("X-Caller-Portfolio-Ids", "PORTFOLIO_OTHER"),
-        ("X-Caller-Client-Ids", "client-other"),
-        ("X-Caller-Tenant-Ids", None),
-        ("X-Caller-Book-Ids", None),
-        ("X-Caller-Portfolio-Ids", None),
-        ("X-Caller-Client-Ids", None),
-    ),
-)
-def test_ai_generation_api_rejects_incomplete_or_mismatched_scope_before_owner_io(
-    monkeypatch: pytest.MonkeyPatch,
-    scope_header: str,
-    scope_value: str | None,
-) -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    candidate_id = persisted_candidate_id(
-        client,
-        idempotency_key=f"seed-generation-scope-{scope_header}-{scope_value}",
-    )
-    transition_candidate_to_review_ready(client, candidate_id)
-    runtime = _FakeGenerationRuntime()
-    monkeypatch.setattr(
-        ai_explanation_generation_api,
-        "get_lotus_ai_workflow_runtime",
-        lambda: runtime,
-    )
-    headers = generation_headers(idempotency_key=f"generation-scope-{scope_header}-{scope_value}")
-    if scope_value is None:
-        headers.pop(scope_header)
-    else:
-        headers[scope_header] = scope_value
-
-    response = client.post(
-        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations",
-        json=generation_payload(request_id=f"generation-scope-{scope_header}-{scope_value}"),
-        headers=headers,
-    )
-
-    assert response.status_code == 403
-    assert response.json()["code"] == "permission_denied"
-    assert runtime.requests == []
-    record = get_idea_repository().snapshot().candidate_records[candidate_id]
-    assert record.ai_explanation_lineage_records == ()
 
 
 def test_ai_generation_api_executes_pack_and_returns_accepted_explanation(
