@@ -180,6 +180,12 @@ Implemented in this slice:
     outbox work; well-formed stale identity remains an authority conflict. The
     explicit historical `legacy:unknown` revision-vector sentinel remains
     admissible without conferring current source authority.
+32. GitHub issue `#1299` makes action-specific review evidence exclusive as
+    well as required. Only `suppress` can carry `suppressionReason`, and only
+    `snooze` can carry `snoozedUntilUtc`; every other combination fails as an
+    invalid request before repository, audit, outbox, presentation-consumption,
+    or review-authority mutation. The domain repeats the invariant for non-HTTP
+    callers, while valid suppress and snooze decisions retain exact replay.
 
 Validation evidence from the implementation slice:
 

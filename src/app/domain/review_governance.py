@@ -275,15 +275,37 @@ class ReviewDecisionCommand:
                 raise ValueError("non-Workbench review cannot carry presentation_receipt_id")
         else:
             raise ValueError("legacy review channel cannot admit new decisions")
-        if self.action is ReviewAction.SUPPRESS and self.suppression_reason is None:
-            raise ValueError("suppression_reason is required for suppress action")
+        validate_review_action_field_compatibility(
+            action=self.action,
+            suppression_reason=self.suppression_reason,
+            snoozed_until_utc=self.snoozed_until_utc,
+        )
         if self.action is ReviewAction.SNOOZE:
-            if self.snoozed_until_utc is None:
-                raise ValueError("snoozed_until_utc is required for snooze action")
+            assert self.snoozed_until_utc is not None
             _require_aware_utc(self.snoozed_until_utc, "snoozed_until_utc")
             if self.snoozed_until_utc <= self.decided_at_utc:
                 raise ValueError("snoozed_until_utc must be after decided_at_utc")
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
+
+
+def validate_review_action_field_compatibility(
+    *,
+    action: ReviewAction,
+    suppression_reason: SuppressionReason | None,
+    snoozed_until_utc: datetime | None,
+) -> None:
+    """Keep action-specific review evidence unambiguous at every caller boundary."""
+    if action is ReviewAction.SUPPRESS:
+        if suppression_reason is None:
+            raise ValueError("suppression_reason is required for suppress action")
+    elif suppression_reason is not None:
+        raise ValueError("suppression_reason is only valid for suppress action")
+
+    if action is ReviewAction.SNOOZE:
+        if snoozed_until_utc is None:
+            raise ValueError("snoozed_until_utc is required for snooze action")
+    elif snoozed_until_utc is not None:
+        raise ValueError("snoozed_until_utc is only valid for snooze action")
 
 
 @dataclass(frozen=True)

@@ -275,6 +275,11 @@ eligible at that exact instant when other queue rules pass. Evidence refresh
 preserves the snooze; a new material version or recurrent reopen starts a new
 review cycle rather than inheriting stale queue suppression.
 
+Review action fields are exclusive to their owning action. Only `suppress`
+accepts `suppressionReason`, and only `snooze` accepts `snoozedUntilUtc`.
+Contradictory combinations return `400 invalid_request` before review,
+candidate, idempotency, audit, outbox, or authority state changes.
+
 | Control | Current expectation |
 | --- | --- |
 | Authorization | API routes fail closed through platform caller-context roles and `idea.*` capabilities. `local` and `test` may simulate `X-Caller-*` headers; production-like profiles require `X-Lotus-Trusted-Caller-Context` to match `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN` before those headers can authorize a route. This is trusted-ingress provenance only, not full identity-provider or Workbench entitlement proof. |
