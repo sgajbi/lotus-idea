@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from tests.support.http import ManagedTestClient, managed_test_client
 
+import app.api.review_queue.routes as review_queues_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import InMemoryIdeaRepository, ReviewPosture
 from app.runtime import trusted_clock_state
@@ -70,11 +71,19 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def queue_headers(capabilities: str = "idea.review.queue.read") -> dict[str, str]:
+def queue_headers(
+    capabilities: str = "idea.review.queue.read",
+    *,
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-review-queue-api",
     }
 
@@ -84,7 +93,7 @@ def scoped_queue_headers(
     portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
     capabilities: str = "idea.review.queue.read",
 ) -> dict[str, str]:
-    headers = queue_headers(capabilities=capabilities)
+    headers = queue_headers(capabilities=capabilities, portfolio_ids=portfolio_ids)
     headers.update(
         {
             "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
@@ -127,11 +136,20 @@ def operator_exception_headers(
     return headers
 
 
-def role_queue_headers(*, role: str, capability: str) -> dict[str, str]:
+def role_queue_headers(
+    *,
+    role: str,
+    capability: str,
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": f"{role}-001",
         "X-Caller-Roles": role,
         "X-Caller-Capabilities": capability,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": f"corr-{role}-review-queue",
     }
 
@@ -195,7 +213,7 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_QUEUE_001,PB_SG_QUEUE_002"),
     )
 
     assert response.status_code == 200
@@ -234,6 +252,51 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         "snapshotToken": None,
     }
     assert payload["page"]["snapshotToken"].startswith("rqs1_")
+
+
+@pytest.mark.parametrize(
+    ("path", "role", "capability"),
+    (
+        ("advisor", "advisor", "idea.review.queue.read"),
+        (
+            "portfolio-manager",
+            "portfolio_manager",
+            "idea.review.queue.portfolio-manager.read",
+        ),
+        ("compliance", "compliance", "idea.review.queue.compliance.read"),
+    ),
+)
+@pytest.mark.parametrize(
+    "missing_header",
+    (
+        "X-Caller-Tenant-Ids",
+        "X-Caller-Book-Ids",
+        "X-Caller-Portfolio-Ids",
+        "X-Caller-Client-Ids",
+    ),
+)
+def test_business_review_queues_require_complete_scope_before_repository_access(
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+    role: str,
+    capability: str,
+    missing_header: str,
+) -> None:
+    def fail_on_repository_access() -> object:
+        raise AssertionError("repository must not be accessed without complete caller scope")
+
+    monkeypatch.setattr(review_queues_api, "get_idea_repository", fail_on_repository_access)
+    headers = role_queue_headers(role=role, capability=capability)
+    headers.pop(missing_header)
+
+    response = managed_test_client(app).get(
+        f"/api/v1/review-queues/{path}",
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert "candidate" not in response.text.lower()
 
 
 def test_advisor_queue_versions_bind_visible_render_receipt_to_current_evidence() -> None:
@@ -340,7 +403,7 @@ def test_business_review_queue_apis_route_only_the_responsible_audience() -> Non
     cases = (
         (
             "/api/v1/review-queues/advisor",
-            queue_headers(),
+            queue_headers(portfolio_ids="PB_SG_AUDIENCE_001"),
             "advisor",
             advisor_candidate,
             "advisor_review_required",
@@ -350,6 +413,7 @@ def test_business_review_queue_apis_route_only_the_responsible_audience() -> Non
             role_queue_headers(
                 role="portfolio_manager",
                 capability="idea.review.queue.portfolio-manager.read",
+                portfolio_ids="PB_SG_AUDIENCE_002",
             ),
             "portfolio_manager",
             pm_candidate,
@@ -360,6 +424,7 @@ def test_business_review_queue_apis_route_only_the_responsible_audience() -> Non
             role_queue_headers(
                 role="compliance",
                 capability="idea.review.queue.compliance.read",
+                portfolio_ids="PB_SG_AUDIENCE_003",
             ),
             "compliance",
             compliance_candidate,
@@ -548,7 +613,7 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
 
     first_page = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1",
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_PAGE_000,PB_SG_PAGE_001,PB_SG_PAGE_002"),
     )
     snapshot_token = first_page.json()["page"]["snapshotToken"]
     response = client.get(
@@ -556,7 +621,7 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
             "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
             f"&limit=1&offset=1&snapshotToken={snapshot_token}"
         ),
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_PAGE_000,PB_SG_PAGE_001,PB_SG_PAGE_002"),
     )
 
     assert response.status_code == 200
@@ -585,7 +650,7 @@ def test_advisor_review_queue_api_requires_snapshot_token_for_continuation() -> 
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&offset=1",
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_VISIBLE_000,PB_SG_VISIBLE_001"),
     )
 
     assert response.status_code == 400
@@ -634,7 +699,7 @@ def test_advisor_review_queue_api_rejects_stale_snapshot_after_backdated_insert(
             "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
             f"&limit=1&offset=1&snapshotToken={snapshot_token}"
         ),
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_VISIBLE_000,PB_SG_VISIBLE_001"),
     )
 
     assert response.status_code == 409
@@ -658,7 +723,7 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of(
     ]
     first_page = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1",
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_VISIBLE_000,PB_SG_VISIBLE_001"),
     )
     snapshot_token = first_page.json()["page"]["snapshotToken"]
     monkeypatch.setattr(
@@ -680,7 +745,7 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of(
             "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
             f"&limit=1&offset=1&snapshotToken={snapshot_token}"
         ),
-        headers=queue_headers(),
+        headers=queue_headers(portfolio_ids="PB_SG_VISIBLE_000,PB_SG_VISIBLE_001"),
     )
 
     assert second_page.status_code == 200

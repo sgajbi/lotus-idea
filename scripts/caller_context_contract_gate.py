@@ -21,6 +21,10 @@ CALLER_CONTEXT_OPENAPI_MODULE = API_DIR / "caller_context_openapi.py"
 PROBLEM_DETAILS_MODULE = API_DIR / "problem_details.py"
 MAIN_MODULE = Path("src/app/main.py")
 ERRORS_MODULE = Path("src/app/errors.py")
+COMPLETE_SCOPE_READ_BOUNDARIES = {
+    API_DIR / "candidate_detail.py": ("_authorize_candidate_detail_read",),
+    API_DIR / "review_queue" / "routes.py": ("_effective_review_queue_access_scope",),
+}
 TRUSTED_HEADER_NAME = "TRUSTED_CALLER_CONTEXT_HEADER"
 TRUSTED_HEADER_VALUE = "X-Lotus-Trusted-Caller-Context"
 CALLER_HEADER_ALIASES = (
@@ -197,6 +201,33 @@ def _validate_api_module(path: Path, root: Path) -> list[str]:
     return errors
 
 
+def _validate_complete_scope_read_boundaries(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative_path, function_names in COMPLETE_SCOPE_READ_BOUNDARIES.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        functions = {
+            node.name: node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        for function_name in function_names:
+            function = functions.get(function_name)
+            if function is None:
+                continue
+            calls = {
+                call_name(node.func) for node in ast.walk(function) if isinstance(node, ast.Call)
+            }
+            if "require_complete_caller_access_scope_filter" not in calls:
+                errors.append(
+                    f"{relative_path.as_posix()}:{function.lineno}: `{function_name}` must "
+                    "require complete caller scope before candidate repository reads"
+                )
+    return errors
+
+
 def validate_caller_context_contract(root: Path = ROOT) -> list[str]:
     errors = _validate_caller_headers_module(root / CALLER_HEADERS_MODULE, root)
     for path in sorted((root / API_DIR).rglob("*.py")):
@@ -205,6 +236,7 @@ def validate_caller_context_contract(root: Path = ROOT) -> list[str]:
         if "__pycache__" in path.parts:
             continue
         errors.extend(_validate_api_module(path, root))
+    errors.extend(_validate_complete_scope_read_boundaries(root))
     shared_contracts = {
         MAIN_MODULE: (
             "isinstance(exc, ProblemDetailsHTTPException)",

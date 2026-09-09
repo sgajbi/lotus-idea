@@ -687,7 +687,10 @@ after each page query. This remains a
 bounded foundation API rather than a production queue-store claim.
 `lotus-gateway` publishes the advisor route as a
 bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards
-the caller entitlement-scope headers, and does not generate or rank ideas.
+the complete caller tenant/book/portfolio/client entitlement scope, and does not
+generate or rank ideas. Idea refuses business queue reads before repository
+access when any scope dimension is missing; query filters may only narrow the
+trusted caller scope.
 The operator-only `GET /api/v1/review-queues/operator/exceptions` route reports
 aggregate support exceptions by audience without candidate identifiers,
 business ranking, or review/compliance authority. Review queue request mapping,
@@ -752,8 +755,9 @@ route disclosure, raw evidence export, downstream authority, Workbench proof,
 data-product certification, or supported-feature promotion. `lotus-gateway`
 publishes this as a bounded read-only route at
 `GET /api/v1/ideas/candidates/{candidate_id}` while preserving `lotus-idea`
-source authority and forwarding caller entitlement-scope headers for
-`lotus-idea` fail-closed access checks. Durable PostgreSQL providers now serve
+source authority and forwarding complete caller tenant/book/portfolio/client
+entitlement scope for `lotus-idea` fail-closed access checks before repository
+access. Durable PostgreSQL providers now serve
 ordinary candidate-detail reads through a repository-side projection over the
 requested candidate and related detail rows instead of hydrating whole
 repository snapshots. After candidate scope approval, one additional bounded

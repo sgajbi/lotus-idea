@@ -347,11 +347,20 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def queue_headers() -> dict[str, str]:
+def queue_headers(
+    *,
+    subject: str = "advisor-001",
+    role: str = "advisor",
+    capability: str = "idea.review.queue.read",
+) -> dict[str, str]:
     return {
-        "X-Caller-Subject": "advisor-001",
-        "X-Caller-Roles": "advisor",
-        "X-Caller-Capabilities": "idea.review.queue.read",
+        "X-Caller-Subject": subject,
+        "X-Caller-Roles": role,
+        "X-Caller-Capabilities": capability,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-queue-api",
         "X-Trace-Id": "trace-operation-queue-api",
     }
@@ -461,13 +470,10 @@ def ai_readiness_headers() -> dict[str, str]:
 
 
 def detail_headers() -> dict[str, str]:
-    return {
-        "X-Caller-Subject": "advisor-001",
-        "X-Caller-Roles": "advisor",
-        "X-Caller-Capabilities": "idea.candidate.detail.read",
-        "X-Correlation-Id": "corr-operation-detail-api",
-        "X-Trace-Id": "trace-operation-detail-api",
-    }
+    headers = queue_headers(capability="idea.candidate.detail.read")
+    headers["X-Correlation-Id"] = "corr-operation-detail-api"
+    headers["X-Trace-Id"] = "trace-operation-detail-api"
+    return headers
 
 
 def evidence_replay_headers() -> dict[str, str]:
@@ -1001,38 +1007,6 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     assert review_events == [
         ("review_action", "accepted", "lotus-idea", False, None),
         ("feedback_record", "accepted", "lotus-idea", False, None),
-    ]
-
-
-def test_role_specific_review_queues_emit_operation_events(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-    events = capture_operation_events(monkeypatch, review_queues_api)
-
-    portfolio_manager_response = client.get(
-        "/api/v1/review-queues/portfolio-manager",
-        headers={
-            "X-Caller-Subject": "portfolio-manager-001",
-            "X-Caller-Roles": "portfolio_manager",
-            "X-Caller-Capabilities": "idea.review.queue.portfolio-manager.read",
-        },
-    )
-    compliance_response = client.get(
-        "/api/v1/review-queues/compliance",
-        headers={
-            "X-Caller-Subject": "compliance-001",
-            "X-Caller-Roles": "compliance",
-            "X-Caller-Capabilities": "idea.review.queue.compliance.read",
-        },
-    )
-
-    assert portfolio_manager_response.status_code == 200
-    assert compliance_response.status_code == 200
-    assert events == [
-        ("review_queue_read", "accepted", "lotus-idea", False, None),
-        ("review_queue_read", "accepted", "lotus-idea", False, None),
     ]
 
 

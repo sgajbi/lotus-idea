@@ -225,3 +225,22 @@ def test_caller_context_contract_gate_accepts_strict_role_and_capability_route_p
     )
 
     assert module.validate_caller_context_contract(tmp_path) == []
+
+
+def test_caller_context_contract_gate_requires_complete_scope_at_candidate_read_boundary(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/candidate_detail.py"),
+        "def _authorize_candidate_detail_read(caller):\n    return caller\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/candidate_detail.py:1: `_authorize_candidate_detail_read` must require "
+        "complete caller scope before candidate repository reads"
+    ]

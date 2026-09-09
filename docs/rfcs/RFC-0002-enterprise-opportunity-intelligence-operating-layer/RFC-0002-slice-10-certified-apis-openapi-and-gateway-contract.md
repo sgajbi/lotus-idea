@@ -82,14 +82,15 @@ follows the active repository provider.
 
 The candidate detail endpoint exposes a source-safe internal read projection
 over persisted candidate snapshots. It requires
-`idea.candidate.detail.read` capability or advisor/operator role, returns
+`idea.candidate.detail.read` capability or advisor/operator role plus complete
+trusted tenant/book/portfolio/client entitlement scope before repository access, returns
 redacted source evidence, lifecycle history, review decisions, feedback,
 conversion intents/outcomes, report evidence-pack summaries, and audit summary
 posture, and does not expose source-system routes, raw source content hashes,
 downstream authority, Workbench proof, data-product certification, or
 supported-feature promotion. The bounded read-only Gateway candidate detail
-publication preserves this source-safe projection and forwards caller
-entitlement-scope headers; `lotus-idea` applies those headers fail-closed before
+publication preserves this source-safe projection and forwards the complete caller
+entitlement scope; `lotus-idea` applies it fail-closed before
 returning detail. `durableStorageBacked` follows the active repository provider.
 When the active durable provider is PostgreSQL, ordinary candidate-detail reads
 use an internal repository-side projection for the requested candidate and its
@@ -624,8 +625,9 @@ client-communication authority, and keep `supportedFeaturePromoted=false`.
 
 The advisor review queue endpoint exposes the Slice 07 deterministic queue
 projection over persisted candidate snapshots. It requires
-advisor role plus `idea.review.queue.read` capability, returns ranked items
-plus exclusions, accepts optional tenant/book/portfolio/client query filters
+advisor role plus `idea.review.queue.read` capability and complete trusted
+tenant/book/portfolio/client entitlement scope, returns ranked items plus exclusions,
+and accepts optional query filters that can only narrow caller authority
 for scope-aware projection, and keeps `supportedFeaturePromoted=false`.
 `durableStorageBacked` follows the active repository provider.
 
@@ -856,7 +858,7 @@ role-specific capabilities and select only their responsible review posture.
 The advisor route requires a
 timezone-aware `evaluatedAtUtc` query parameter, accepts optional
 tenant/book/portfolio/client scope filters, applies platform caller-context
-entitlement scope headers automatically when present, rejects query scopes
+entitlement scope headers as a mandatory complete set before repository access, rejects query scopes
 outside caller entitlements fail-closed, excludes persisted candidates outside
 the effective scope with `access_scope_mismatch`, and uses candidate
 `createdAtUtc` as the inclusive as-of visibility boundary. Page metadata
@@ -868,7 +870,7 @@ their source contracts rather than being reinterpreted as queue creation time.
 
 The candidate detail endpoint is permissioned by
 advisor/operator role plus `idea.candidate.detail.read` capability. It returns
-source-safe details for an existing candidate only when any provided platform
+source-safe details for an existing candidate only when complete platform
 caller-context entitlement scope matches the persisted candidate scope, and
 returns product-safe Problem Details for permission, validation, out-of-scope,
 or missing-candidate failures.
