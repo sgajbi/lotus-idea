@@ -1294,7 +1294,7 @@
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
         "404 returns product-safe Problem Details with downstream_realization_resource_not_found when the conversion intent is not found.",
-        "409 returns product-safe Problem Details with unsupported_downstream_realization_target when the conversion intent target requires the report evidence-pack submission route or idempotency_conflict when the Idempotency-Key is reused for a different request fingerprint.",
+        "409 returns product-safe Problem Details with unsupported_downstream_realization_target for a report target, idempotency_conflict for changed same-key content, conversion_intent_authority_conflict for stale first-attempt authority, or downstream_submission_resource_conflict when another key already claimed the governed resource.",
         "503 returns product-safe Problem Details with downstream_realization_not_configured, durable_repository_not_configured, or durable_repository_unavailable as applicable.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
@@ -1306,6 +1306,8 @@
         "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_replays_same_idempotency_key",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_idempotency_conflict",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_new_key_for_same_intent",
+        "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_resource_identity_fences_concurrent_keys",
         "tests/integration/test_downstream_realization_scope_api.py::test_conversion_downstream_submission_api_scopes_idempotency_by_tenant",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_scope_api.py::test_downstream_submission_api_requires_submission_capability",
@@ -1413,7 +1415,7 @@
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
         "404 returns product-safe Problem Details with downstream_realization_resource_not_found when the report evidence-pack request is not found.",
-        "409 returns product-safe Problem Details when the Idempotency-Key is reused for a different request fingerprint.",
+        "409 returns product-safe Problem Details for changed same-key content or downstream_submission_resource_conflict when another key already claimed the governed evidence pack.",
         "503 returns product-safe Problem Details with downstream_realization_not_configured, durable_repository_not_configured, or durable_repository_unavailable as applicable.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
@@ -1424,6 +1426,8 @@
         "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_replays_same_idempotency_key",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_idempotency_conflict",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_new_key_for_same_pack",
+        "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_resource_identity_fences_concurrent_keys",
         "tests/integration/test_downstream_realization_scope_api.py::test_conversion_downstream_submission_api_scopes_idempotency_by_tenant",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_returns_durable_uncertain_posture",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",

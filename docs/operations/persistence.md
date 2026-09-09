@@ -255,7 +255,7 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `030_idempotency_record_storage_identity`. Migration `016`
+The current schema head is `031_downstream_submission_resource_identity`. Migration `016`
 adds tenant-scoped business identity, material/evidence version, material
 fingerprint, change-reason, and superseded-version columns. Migration `017`
 adds the versioned feedback outcome/reason taxonomy and immutable offline
@@ -283,6 +283,10 @@ internal identity primary key to `idea_idempotency_record` so restore inspection
 and PostgreSQL default replica identity have an unambiguous physical row key.
 The partial tenant/system indexes from migration `028` remain the business
 uniqueness contract; the new key is never accepted from an API caller.
+Migration `031` makes `(tenant_id, resource_type, resource_id, target)` the
+unique local downstream-submission resource identity while preserving
+`(tenant_id, idempotency_key)` as the caller replay identity. It refuses to
+apply over retained duplicates instead of silently discarding evidence.
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and

@@ -20,6 +20,14 @@ the exact human-authority grant tracked by `#1225`.
 
 Implemented in this slice:
 
+The downstream submission boundary separates caller replay identity from
+governed resource identity. Advise or Manage conversion work admits at most one
+local submission aggregate for a tenant, conversion intent, and target. A
+different caller key receives `409 downstream_submission_resource_conflict`
+before owner I/O, while exact admitted replay and read-only uncertain-outcome
+reconciliation remain unchanged. PostgreSQL migration `031` enforces this
+atomically and refuses retained duplicates.
+
 1. `src/app/domain/conversion_governance.py` adds a framework-free conversion
    governance layer for review-gated downstream intents and source-owned
    downstream outcomes.

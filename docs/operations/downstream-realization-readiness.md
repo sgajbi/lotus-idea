@@ -91,7 +91,11 @@ POST or rewrites retained evidence.
 The repository stores source authority, target,
 resource id, bounded posture, bounded failure reason, correlation id, trace id,
 and timestamp by authoritative tenant plus caller idempotency key without
-storing sensitive request payloads. The same tenant, key, and request
+storing sensitive request payloads. A governed resource has exactly one local
+submission identity per tenant, resource type, resource id, and target. A
+second caller key for that resource returns `409
+downstream_submission_resource_conflict` before owner I/O; it cannot create a
+second support reference or submission attempt. The same tenant, key, and request
 fingerprint replays the stored posture without another adapter call; reuse with
 a different resource, target, or source authority in that tenant returns `409
 idempotency_conflict`. A different tenant may use the same ordinary caller key
@@ -114,6 +118,11 @@ the composite `(tenant_id, idempotency_key)` identity for new
 `tenant_scoped_v2` claims. Migration fails closed if an existing claim cannot be
 attributed to authoritative candidate scope. Downgrade is refused once v2
 claims exist because collapsing the composite identity could lose tenant truth.
+
+Migration `031_downstream_submission_resource_identity` fails closed when
+retained duplicate resource submissions exist, then enforces the governed
+resource identity with a PostgreSQL unique index. Rollback restores the prior
+non-unique lookup index; it does not authorize duplicate owner work.
 
 An accepted Report submission must carry a typed owner receipt with a positive
 Report lifecycle version. Idea validates
