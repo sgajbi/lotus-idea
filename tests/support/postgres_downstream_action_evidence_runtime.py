@@ -11,7 +11,9 @@ from app.runtime.repository_state import reset_idea_repository_for_tests
 _EVIDENCE_SIDE_EFFECT_TABLES = frozenset(
     {
         "idea_audit_event",
+        "idea_idempotency_record",
         "idea_outbox_event",
+        "idea_report_evidence_pack_request",
     }
 )
 
@@ -73,7 +75,29 @@ def _assert_report_evidence_pack_persists_replays_and_rejects_escalation(
     headers = _report_evidence_pack_headers()
     payload = _report_evidence_pack_payload()
     before_audit = _table_count(postgres_database_url, "idea_audit_event")
+    before_idempotency = _table_count(postgres_database_url, "idea_idempotency_record")
     before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+    before_packs = _table_count(postgres_database_url, "idea_report_evidence_pack_request")
+    before_candidate = _candidate_payload(postgres_database_url, candidate_id)
+    denied_headers = {
+        **headers,
+        "X-Caller-Portfolio-Ids": "portfolio-outside-candidate-scope",
+        "Idempotency-Key": "postgres-runtime-proof-report-evidence-pack-denied",
+    }
+    denied = client.post(
+        "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
+        json={**payload, "reportEvidencePackId": "report-evidence-pack-denied"},
+        headers=denied_headers,
+    )
+
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "permission_denied"
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == before_idempotency
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox
+    assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == before_packs
+    assert _candidate_payload(postgres_database_url, candidate_id) == before_candidate
+
     accepted = client.post(
         "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
         json=payload,
@@ -135,6 +159,19 @@ def _table_count(database_url: str, table_name: str) -> int:
     return int(row[0])
 
 
+def _candidate_payload(database_url: str, candidate_id: str) -> Any:
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT candidate_json FROM idea_candidate_record WHERE candidate_id = %s",
+                (candidate_id,),
+            )
+            row = cursor.fetchone()
+    if row is None:
+        raise AssertionError(f"Candidate {candidate_id} was not retained")
+    return row[0]
+
+
 def _conversion_outcome_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "lotus-report-worker",
@@ -153,6 +190,10 @@ def _report_evidence_pack_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.report-evidence-pack.request",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-report-pack",
         "X-Trace-Id": "trace-postgres-runtime-proof-report-pack",
         "Idempotency-Key": "postgres-runtime-proof-report-evidence-pack-001",

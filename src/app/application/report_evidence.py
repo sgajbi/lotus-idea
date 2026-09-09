@@ -8,6 +8,7 @@ from app.application.persisted_action_evidence import (
     require_single_persisted_action,
 )
 from app.application.candidate_lookup import candidate_tenant_id
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
@@ -24,6 +25,7 @@ class RequestReportEvidencePackToRepositoryCommand:
     conversion_intent_id: str
     evidence_pack: ReportEvidencePackCommand
     idempotency_key: str
+    access_scope_filter: QueueAccessScopeFilter
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -48,6 +50,10 @@ class ReportEvidencePackWorkflowResult:
         return self.report_evidence_pack
 
 
+class ReportEvidenceAccessScopeDenied(Exception):
+    """Raised when caller entitlements do not cover the target candidate scope."""
+
+
 def request_report_evidence_pack_to_repository(
     command: RequestReportEvidencePackToRepositoryCommand,
     *,
@@ -63,6 +69,9 @@ def request_report_evidence_pack_to_repository(
                 record=None,
             ),
         )
+
+    if not command.access_scope_filter.matches(record.candidate.access_scope):
+        raise ReportEvidenceAccessScopeDenied
 
     payload = _report_evidence_pack_payload(command)
     prechecked = repository.precheck_evidence_pack_mutation(

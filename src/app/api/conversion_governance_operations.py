@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.caller_headers import (
+    caller_access_scope_filter,
+    caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_write_problem,
@@ -106,8 +110,14 @@ def prepare_conversion_mutation(
         trusted_caller_context=headers.trusted_caller_context,
     )
     require_conversion_caller(caller, capability=capability)
-    if require_complete_entitlement_scope:
-        require_complete_conversion_entitlement_scope(caller)
+    access_scope_filter = (
+        require_complete_caller_access_scope_filter(
+            caller,
+            denied_permission="idea.conversion.entitlement_scope",
+        )
+        if require_complete_entitlement_scope
+        else caller_access_scope_filter(caller)
+    )
     validate_idempotency_key(idempotency_key)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
@@ -124,7 +134,7 @@ def prepare_conversion_mutation(
         caller=caller,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        access_scope_filter=caller_access_scope_filter(caller),
+        access_scope_filter=access_scope_filter,
     )
 
 
@@ -134,9 +144,10 @@ def require_conversion_caller(caller: CallerContext, *, capability: str) -> None
 
 
 def require_complete_conversion_entitlement_scope(caller: CallerContext) -> None:
-    scope = caller.entitlement_scope
-    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
-        raise PermissionDeniedError("idea.conversion.entitlement_scope")
+    require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission="idea.conversion.entitlement_scope",
+    )
 
 
 def problem_for_conversion_persistence(
