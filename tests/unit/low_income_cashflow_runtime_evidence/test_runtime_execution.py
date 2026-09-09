@@ -289,6 +289,13 @@ def test_runtime_execution_fails_closed_on_source_trust_drift(
             "core_cashflow_projection_source_digest_mismatch",
         ),
         (
+            lambda evidence: _replace_projection_runtime(
+                evidence,
+                latest_evidence_at_utc=None,
+            ),
+            "core_cashflow_projection_evidence_time_invalid",
+        ),
+        (
             lambda evidence: _replace_projection_runtime(evidence, snapshot_id=None),
             "core_cashflow_projection_governance_identity_missing",
         ),
@@ -464,6 +471,116 @@ def test_runtime_execution_requires_candidate_identity_for_eligible_cashflow() -
 
     assert "low_income_candidate_identity_missing" in payload["execution"]["qualificationBlockers"]
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_valid_empty_movement_and_absent_optional_batch_fingerprints_qualify() -> None:
+    command = _command()
+    evidence = authoritative_low_income_evidence(
+        request=_request(command),
+        minimum_cashflow=Decimal("-12500"),
+    )
+    movement = evidence.cash_movement_product
+    projection = evidence.cashflow_projection_product
+    assert movement is not None
+    assert projection is not None
+    evidence = replace(
+        evidence,
+        cash_movement_count=0,
+        cash_movement_product=replace(
+            movement,
+            buckets=(),
+            cashflow_count=0,
+            runtime=replace(
+                movement.runtime,
+                latest_evidence_at_utc=None,
+                source_batch_fingerprint=None,
+            ),
+        ),
+        cashflow_projection_product=replace(
+            projection,
+            runtime=replace(projection.runtime, source_batch_fingerprint=None),
+        ),
+    )
+
+    result = _evaluate(command, _FixedSource(evidence))
+    payload = _build(result)
+
+    assert payload["execution"]["persistenceReceipt"]["decision"] == "accepted"
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert low_income_cashflow_runtime_execution_is_valid(payload)
+
+
+def test_contract_rejects_empty_movement_claim_with_non_empty_bucket_digest() -> None:
+    command = _command()
+    evidence = authoritative_low_income_evidence(
+        request=_request(command),
+        minimum_cashflow=Decimal("-12500"),
+    )
+    movement = evidence.cash_movement_product
+    assert movement is not None
+    evidence = replace(
+        evidence,
+        cash_movement_count=0,
+        cash_movement_product=replace(
+            movement,
+            buckets=(),
+            cashflow_count=0,
+            runtime=replace(movement.runtime, latest_evidence_at_utc=None),
+        ),
+    )
+    payload = _build(_evaluate(command, _FixedSource(evidence)))
+    receipt = payload["execution"]["cashMovementReceipt"]
+    receipt["bucketDigest"] = sha256_json([{"forged": "movement"}])
+    _mutate_and_redigest(receipt)
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+@pytest.mark.parametrize(
+    ("runtime_changes", "expected_blocker"),
+    [
+        ({"latest_evidence_at_utc": None}, "core_cash_movement_evidence_time_invalid"),
+        ({"content_hash": None}, "core_cash_movement_source_digest_mismatch"),
+        ({"source_digest": "not-a-digest"}, "core_cash_movement_source_digest_mismatch"),
+        (
+            {"source_batch_fingerprint": "sha256:" + "e" * 64},
+            "core_cash_movement_source_digest_mismatch",
+        ),
+    ],
+)
+def test_populated_movement_refuses_incomplete_or_conflicting_runtime_evidence(
+    runtime_changes: dict[str, Any],
+    expected_blocker: str,
+) -> None:
+    command = _command()
+    evidence = authoritative_low_income_evidence(
+        request=_request(command),
+        minimum_cashflow=Decimal("-12500"),
+    )
+    movement = evidence.cash_movement_product
+    assert movement is not None
+    evidence = replace(
+        evidence,
+        cash_movement_product=replace(
+            movement,
+            runtime=replace(movement.runtime, **runtime_changes),
+        ),
+    )
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=_FixedSource(evidence),
+        repository=repository,
+    )
+    payload = _build(result)
+
+    assert expected_blocker in payload["execution"]["qualificationBlockers"]
+    assert payload["execution"]["persistenceReceipt"] is None
+    snapshot = repository.snapshot()
+    assert len(snapshot.candidate_records) == 0
+    assert len(snapshot.idempotency_records) == 0
+    assert len(snapshot.outbox_events) == 0
 
 
 def test_blocked_runtime_execution_never_qualifies() -> None:

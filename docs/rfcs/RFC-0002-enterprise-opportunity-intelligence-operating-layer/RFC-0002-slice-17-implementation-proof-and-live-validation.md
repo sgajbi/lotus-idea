@@ -445,14 +445,19 @@ evidence.
     authoritative application use case binds complete pseudonymous scope, exact
     movement-summary and projection receipts, projection arithmetic, movement
     counts, policy, coherent source revision posture, and accepted or
-    exact-replayed durable candidate state. A no-opportunity result remains
+    exact-replayed durable candidate state. A complete zero-movement receipt
+    may omit latest source-event time only when its zero count and canonical
+    empty-bucket digest agree; optional batch identity must match mandatory
+    content and source digests when present. A no-opportunity result remains
     truthful but cannot clear this persistence proof. Aggregate
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`, while
     preserving Workbench, data-mesh, client-publication, supported-feature,
     suitability, planning, funding-advice, treasury-instruction, deployment,
     and production blockers. Historical v2 source-only artifacts do not qualify;
-    a fresh live v3 capture remains required.
+    a fresh live v3 capture remains required. Idea issue `#1320` owns that
+    acceptance; [Lotus Core issue #1116](https://github.com/sgajbi/lotus-core/issues/1116) owns the stable cross-product source-cut and
+    replay identity that the current live producer does not yet publish.
 33. `src/app/application/manage_mandate_runtime_evidence/`,
     `scripts/manage_mandate_runtime_evidence/`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a

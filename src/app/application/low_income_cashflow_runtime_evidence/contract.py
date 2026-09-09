@@ -243,7 +243,10 @@ def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -
         return False
     if not _request_and_sources_reconcile(request, movement, projection, evaluated):
         return False
-    if not _source_posture_is_valid(movement) or not _source_posture_is_valid(projection):
+    if not _source_posture_is_valid(
+        movement,
+        allow_missing_latest_evidence=_movement_receipt_is_truthfully_empty(movement),
+    ) or not _source_posture_is_valid(projection, allow_missing_latest_evidence=False):
         return False
     if not _evaluation_is_valid(evaluation, projection):
         return False
@@ -348,15 +351,20 @@ def _request_and_sources_reconcile(
     )
 
 
-def _source_posture_is_valid(source: Mapping[str, Any]) -> bool:
+def _source_posture_is_valid(
+    source: Mapping[str, Any],
+    *,
+    allow_missing_latest_evidence: bool,
+) -> bool:
     source_generated = parse_timezone_aware_datetime(source.get("responseGeneratedAtUtc"))
     latest_evidence = parse_timezone_aware_datetime(source.get("latestEvidenceAtUtc"))
-    hashes = (
+    hashes = [
         source.get("contentHash"),
-        source.get("sourceBatchFingerprint"),
         source.get("responseContentHash"),
         source.get("responseSourceDigest"),
-    )
+    ]
+    if source.get("sourceBatchFingerprint") is not None:
+        hashes.append(source.get("sourceBatchFingerprint"))
     return (
         source.get("sourceSystem") == "lotus-core"
         and source.get("productVersion") == "v1"
@@ -370,14 +378,22 @@ def _source_posture_is_valid(source: Mapping[str, Any]) -> bool:
         and source.get("sourceEvidenceCurrent") is True
         and str(source.get("freshnessStatus", "")).upper() == "CURRENT"
         and source_generated is not None
-        and latest_evidence is not None
-        and latest_evidence <= source_generated
+        and (latest_evidence is not None or allow_missing_latest_evidence)
+        and (latest_evidence is None or latest_evidence <= source_generated)
         and all(_is_sha256(value) for value in hashes)
         and len(set(hashes)) == 1
         and all(
             isinstance(source.get(field), str) and str(source[field]).strip()
             for field in ("restatementVersion", "snapshotId", "policyVersion")
         )
+    )
+
+
+def _movement_receipt_is_truthfully_empty(movement: Mapping[str, Any]) -> bool:
+    return (
+        type(movement.get("cashflowCount")) is int
+        and movement.get("cashflowCount") == 0
+        and movement.get("bucketDigest") == sha256_json([])
     )
 
 

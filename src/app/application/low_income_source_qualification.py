@@ -140,14 +140,15 @@ def _movement_blockers(
         ref=ref,
         product_name=_MOVEMENT_PRODUCT_NAME,
         prefix="core_cash_movement",
+        allow_missing_latest_evidence=_is_truthful_empty_movement(product),
     )
     if product.start_date != as_of_date or product.end_date != as_of_date:
         blockers.append("core_cash_movement_window_mismatch")
     counts = [bucket.cashflow_count for bucket in product.buckets]
     if (
-        not isinstance(product.cashflow_count, int)
+        type(product.cashflow_count) is not int
         or product.cashflow_count < 0
-        or any(not isinstance(value, int) or value < 0 for value in counts)
+        or any(type(value) is not int or value < 0 for value in counts)
         or sum(cast(list[int], counts)) != product.cashflow_count
     ):
         blockers.append("core_cash_movement_counts_invalid")
@@ -191,6 +192,7 @@ def _projection_blockers(
         ref=ref,
         product_name=_PROJECTION_PRODUCT_NAME,
         prefix="core_cashflow_projection",
+        allow_missing_latest_evidence=False,
     )
     if (
         product.range_start_date != as_of_date
@@ -217,6 +219,7 @@ def _runtime_metadata_blockers(
     ref: object,
     product_name: str,
     prefix: str,
+    allow_missing_latest_evidence: bool,
 ) -> list[str]:
     blockers: list[str] = []
     if (
@@ -230,16 +233,20 @@ def _runtime_metadata_blockers(
     if (
         runtime.generated_at_utc is None
         or runtime.generated_at_utc > evaluated_at_utc
-        or runtime.latest_evidence_at_utc is None
-        or runtime.latest_evidence_at_utc > runtime.generated_at_utc
+        or (runtime.latest_evidence_at_utc is None and not allow_missing_latest_evidence)
+        or (
+            runtime.latest_evidence_at_utc is not None
+            and runtime.latest_evidence_at_utc > runtime.generated_at_utc
+        )
     ):
         blockers.append(f"{prefix}_evidence_time_invalid")
-    hashes = (
+    hashes = [
         getattr(ref, "content_hash", None),
-        runtime.source_batch_fingerprint,
         runtime.content_hash,
         runtime.source_digest,
-    )
+    ]
+    if runtime.source_batch_fingerprint is not None:
+        hashes.append(runtime.source_batch_fingerprint)
     if not all(is_sha256_digest(value) for value in hashes) or len(set(hashes)) != 1:
         blockers.append(f"{prefix}_source_digest_mismatch")
     if (
@@ -257,6 +264,12 @@ def _runtime_metadata_blockers(
     if correlation_id is None or runtime.correlation_id != correlation_id:
         blockers.append(f"{prefix}_correlation_binding_missing")
     return blockers
+
+
+def _is_truthful_empty_movement(product: CoreCashMovementSummaryEvidence) -> bool:
+    return (
+        type(product.cashflow_count) is int and product.cashflow_count == 0 and not product.buckets
+    )
 
 
 def _projection_series_reconciles(

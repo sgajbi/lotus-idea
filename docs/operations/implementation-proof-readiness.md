@@ -1091,13 +1091,18 @@ pseudonymous tenant/book/portfolio/client request receipt, exact
 movement counts, policy threshold, source-revision posture, and accepted or
 exact-replayed durable candidate persistence. Unknown, stale, degraded,
 scope-inconsistent, arithmetically invalid, non-durable, missing-persistence,
-or tampered evidence fails closed. Zero projected cumulative cashflow remains a
+or tampered evidence fails closed. A complete zero-movement receipt may omit a
+latest source-event time only when its zero count and empty-bucket digest
+reconcile. Source batch identity is optional, but must match the mandatory
+content and source digests when present. Zero projected cumulative cashflow remains a
 truthful no-opportunity evaluation but cannot clear a candidate-persistence proof. The artifact
 stores hashes and bounded aggregates rather than raw tenant, book, portfolio,
 client, idempotency, actor, correlation, trace, request, response, or movement facts. It deliberately retains Workbench,
 data-mesh, client-publication, supported-feature, suitability, planning,
 funding-advice, and treasury-instruction blockers. A fresh qualifying live
 artifact is still required; historical v2 source-only evidence does not qualify.
+[Lotus Core issue #1116](https://github.com/sgajbi/lotus-core/issues/1116) owns the stable cross-product source-cut and replay identity
+needed to replace the current truthful `unknown` posture with qualifying live proof.
 
 Lotus Core bond-maturity runtime evidence is captured by
 `scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py`. A valid
