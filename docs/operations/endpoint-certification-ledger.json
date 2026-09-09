@@ -1344,9 +1344,9 @@
       ],
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
-        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_denies_incomplete_or_mismatched_candidate_scope",
-        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_malformed_scope_without_mutation",
-        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_accepts_matching_multi_value_scope_and_replay",
+        "tests/integration/test_conversion_outcome_scope_api.py::test_conversion_outcome_api_denies_incomplete_or_mismatched_candidate_scope",
+        "tests/integration/test_conversion_outcome_scope_api.py::test_conversion_outcome_api_rejects_malformed_scope_without_mutation",
+        "tests/integration/test_conversion_outcome_scope_api.py::test_conversion_outcome_api_accepts_matching_multi_value_scope_and_replay",
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays",
         "tests/integration/test_postgres_conversion_outcome_scope.py::test_postgres_conversion_outcome_scope_denial_is_mutation_free_and_recoverable",
         "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact",
