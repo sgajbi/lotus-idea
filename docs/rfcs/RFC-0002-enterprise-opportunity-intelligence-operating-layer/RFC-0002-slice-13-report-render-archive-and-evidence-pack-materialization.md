@@ -19,6 +19,12 @@ services where product claims require documentable proof.
 
 Implemented in the first Slice 13 foundation:
 
+Report evidence-pack submission admits at most one local submission aggregate
+for a tenant, evidence pack, and target. Changing the caller idempotency key
+cannot create a second Report call or support reference; the route returns
+`409 downstream_submission_resource_conflict`. Migration `031` provides the
+atomic PostgreSQL constraint and fails closed over retained duplicates.
+
 1. `src/app/domain/report_evidence.py` defines the governed report evidence-pack
    request contract, purpose vocabulary, source-summary projection,
    Report/Render/Archive source-authority refs, retention policy refs, audit

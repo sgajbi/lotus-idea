@@ -70,7 +70,8 @@ Implemented foundations include:
   fail before durable mutation;
 - exact replay, concurrency fencing, PostgreSQL persistence, and transactional outbox behavior;
 - durable intent-before-I/O for downstream submission;
-- tenant-scoped downstream submission identity with opaque recovery references;
+- tenant-scoped caller replay identity plus one governed downstream submission
+  per tenant/resource/target, with opaque recovery references;
 - exact read-only reconciliation after uncertain downstream submission;
 - cross-process PostgreSQL proof for Report retained-receipt advancement,
   version fencing, concurrency convergence, and no duplicate submission;
