@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, cast
+from typing import Any
 
 from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import (
@@ -21,9 +21,12 @@ from app.application.low_income_signal import (
     LowIncomeSignalPersistenceResult,
     evaluate_and_persist_low_income_signal_from_core,
 )
+from app.application.low_income_source_qualification import (
+    low_income_source_qualification_blockers,
+    minimum_projected_cashflow,
+)
 from app.domain import (
     CandidatePersistenceDecision,
-    EvidenceFreshness,
     LowIncomeSignalPolicy,
     ReviewAccessScope,
     SignalEvaluationOutcome,
@@ -34,8 +37,6 @@ from app.domain.evidence_hashing import evidence_hash_for_source_refs
 from app.domain.source_revision import source_cut_posture, source_revision_vector_digest
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
-    CoreCashMovementSummaryEvidence,
-    CoreCashflowProjectionEvidence,
     CoreLowIncomeEvidence,
     CoreLowIncomeSourcePort,
     CoreSourceEntitlementDenied,
@@ -292,219 +293,20 @@ def _payload(
 def _qualification_blockers(result: LowIncomeCashflowReadinessResult) -> tuple[str, ...]:
     command = result.command
     evidence = result.evidence
-    blockers: list[str] = []
-    _validate_source_ref(
-        blockers,
-        evidence.cash_movement_ref,
-        product_id=_MOVEMENT_PRODUCT_ID,
-        as_of_date=command.as_of_date,
-        prefix="core_cash_movement",
+    blockers = list(
+        low_income_source_qualification_blockers(
+            tenant_id=command.tenant_id,
+            portfolio_id=command.portfolio_id,
+            as_of_date=command.as_of_date,
+            evaluated_at_utc=command.evaluated_at_utc,
+            horizon_days=command.horizon_days,
+            correlation_id=command.correlation_id,
+            evidence=evidence,
+        )
     )
-    _validate_source_ref(
-        blockers,
-        evidence.cashflow_projection_ref,
-        product_id=_PROJECTION_PRODUCT_ID,
-        as_of_date=command.as_of_date,
-        prefix="core_cashflow_projection",
-    )
-    movement = evidence.cash_movement_product
-    projection = evidence.cashflow_projection_product
-    if movement is None:
-        blockers.append("core_cash_movement_receipt_missing")
-    else:
-        blockers.extend(_movement_blockers(command, movement, evidence.cash_movement_ref))
-    if projection is None:
-        blockers.append("core_cashflow_projection_receipt_missing")
-    else:
-        blockers.extend(_projection_blockers(command, projection, evidence.cashflow_projection_ref))
-    if not evidence.entitlement_allowed:
-        blockers.append("core_cashflow_entitlement_denied")
-    if evidence.cashflow_diagnostic != "core_cashflow_liquidity_evidence_ready":
-        blockers.append("core_cashflow_diagnostic_not_ready")
-    expected_min = _minimum_cumulative(projection)
-    if evidence.source_reported_min_projected_cumulative_cashflow != expected_min:
-        blockers.append("core_cashflow_minimum_mismatch")
-    if evidence.cash_movement_count != (movement.cashflow_count if movement else None):
-        blockers.append("core_cash_movement_count_mismatch")
+    expected_min = minimum_projected_cashflow(evidence.cashflow_projection_product)
     blockers.extend(_evaluation_blockers(result, expected_min))
     return tuple(dict.fromkeys(blockers))
-
-
-def _validate_source_ref(
-    blockers: list[str],
-    ref: Any,
-    *,
-    product_id: str,
-    as_of_date: date,
-    prefix: str,
-) -> None:
-    if (
-        ref is None
-        or ref.source_system is not SourceSystem.LOTUS_CORE
-        or ref.product_id != product_id
-    ):
-        blockers.append(f"{prefix}_source_ref_missing")
-    elif ref.as_of_date != as_of_date:
-        blockers.append(f"{prefix}_scope_mismatch")
-    elif ref.freshness is not EvidenceFreshness.CURRENT:
-        blockers.append(f"{prefix}_evidence_not_current")
-
-
-def _movement_blockers(
-    command: EvaluateLowIncomeCashflowReadiness,
-    product: CoreCashMovementSummaryEvidence,
-    ref: Any,
-) -> tuple[str, ...]:
-    blockers = _runtime_metadata_blockers(
-        command, product.runtime, ref, _MOVEMENT_PRODUCT_NAME, "core_cash_movement"
-    )
-    if product.start_date != command.as_of_date or product.end_date != command.as_of_date:
-        blockers.append("core_cash_movement_window_mismatch")
-    counts = [bucket.cashflow_count for bucket in product.buckets]
-    valid_counts = [value for value in counts if isinstance(value, int) and value >= 0]
-    if (
-        not isinstance(product.cashflow_count, int)
-        or product.cashflow_count < 0
-        or len(valid_counts) != len(counts)
-        or sum(valid_counts) != product.cashflow_count
-    ):
-        blockers.append("core_cash_movement_counts_invalid")
-    keys: set[tuple[object, ...]] = set()
-    for bucket in product.buckets:
-        key = (
-            bucket.classification,
-            bucket.timing,
-            bucket.currency,
-            bucket.is_position_flow,
-            bucket.is_portfolio_flow,
-        )
-        if key in keys or not all(isinstance(value, str) and value for value in key[:3]):
-            blockers.append("core_cash_movement_buckets_invalid")
-            break
-        keys.add(key)
-        if not _movement_direction_reconciles(bucket.total_amount, bucket.movement_direction):
-            blockers.append("core_cash_movement_direction_mismatch")
-            break
-    return tuple(blockers)
-
-
-def _projection_blockers(
-    command: EvaluateLowIncomeCashflowReadiness,
-    product: CoreCashflowProjectionEvidence,
-    ref: Any,
-) -> tuple[str, ...]:
-    blockers = _runtime_metadata_blockers(
-        command, product.runtime, ref, _PROJECTION_PRODUCT_NAME, "core_cashflow_projection"
-    )
-    expected_end = command.as_of_date + timedelta(days=command.horizon_days)
-    if (
-        product.range_start_date != command.as_of_date
-        or product.range_end_date != expected_end
-        or product.include_projected is not True
-        or product.projection_days != command.horizon_days
-        or not isinstance(product.portfolio_currency, str)
-        or not product.portfolio_currency.strip()
-    ):
-        blockers.append("core_cashflow_projection_scope_mismatch")
-    if not _projection_series_reconciles(command, product):
-        blockers.append("core_cashflow_projection_series_invalid")
-    return tuple(blockers)
-
-
-def _runtime_metadata_blockers(
-    command: EvaluateLowIncomeCashflowReadiness,
-    runtime: CoreSourceProductRuntimeEvidence,
-    ref: Any,
-    product_name: str,
-    prefix: str,
-) -> list[str]:
-    blockers: list[str] = []
-    if (
-        runtime.product_name != product_name
-        or runtime.product_version != _PRODUCT_VERSION
-        or runtime.tenant_id != command.tenant_id
-        or runtime.portfolio_id != command.portfolio_id
-        or runtime.as_of_date != command.as_of_date
-    ):
-        blockers.append(f"{prefix}_response_scope_mismatch")
-    if (
-        runtime.generated_at_utc is None
-        or runtime.generated_at_utc > command.evaluated_at_utc
-        or runtime.latest_evidence_at_utc is None
-        or runtime.latest_evidence_at_utc > runtime.generated_at_utc
-    ):
-        blockers.append(f"{prefix}_evidence_time_invalid")
-    hashes = (
-        getattr(ref, "content_hash", None),
-        runtime.source_batch_fingerprint,
-        runtime.content_hash,
-        runtime.source_digest,
-    )
-    if not all(_is_sha256(value) for value in hashes) or len(set(hashes)) != 1:
-        blockers.append(f"{prefix}_source_digest_mismatch")
-    if (
-        (runtime.reconciliation_status or "").upper() != _COMPLETE
-        or (runtime.data_quality_status or "").upper() != _COMPLETE
-        or runtime.degradation_status != "NONE"
-        or runtime.degradation_reason_codes
-        or runtime.degradation_detail_count != 0
-        or not runtime.source_evidence_current
-        or (runtime.freshness_status or "").upper() != "CURRENT"
-    ):
-        blockers.append(f"{prefix}_supportability_incomplete")
-    if not runtime.restatement_version or not runtime.policy_version or not runtime.snapshot_id:
-        blockers.append(f"{prefix}_governance_identity_missing")
-    if (
-        command.correlation_id is None
-        or runtime.correlation_id is None
-        or command.correlation_id != runtime.correlation_id
-    ):
-        blockers.append(f"{prefix}_correlation_binding_missing")
-    return blockers
-
-
-def _projection_series_reconciles(
-    command: EvaluateLowIncomeCashflowReadiness,
-    product: CoreCashflowProjectionEvidence,
-) -> bool:
-    if len(product.points) != command.horizon_days + 1:
-        return False
-    running = Decimal("0")
-    booked_total = Decimal("0")
-    projected_total = Decimal("0")
-    for index, point in enumerate(product.points):
-        values = (
-            point.booked_net_cashflow,
-            point.projected_settlement_cashflow,
-            point.net_cashflow,
-            point.projected_cumulative_cashflow,
-        )
-        if point.projection_date != command.as_of_date + timedelta(days=index) or any(
-            not isinstance(value, Decimal) for value in values
-        ):
-            return False
-        booked, projected, net, cumulative = cast(tuple[Decimal, Decimal, Decimal, Decimal], values)
-        if booked + projected != net:
-            return False
-        running += net
-        booked_total += booked
-        projected_total += projected
-        if cumulative != running:
-            return False
-    return (
-        product.booked_total_net_cashflow == booked_total
-        and product.projected_settlement_total_cashflow == projected_total
-        and product.total_net_cashflow == running
-    )
-
-
-def _minimum_cumulative(product: CoreCashflowProjectionEvidence | None) -> Decimal | None:
-    if product is None or not product.points:
-        return None
-    values = [point.projected_cumulative_cashflow for point in product.points]
-    if any(not isinstance(value, Decimal) for value in values):
-        return None
-    return min(value for value in values if isinstance(value, Decimal))
 
 
 def _evaluation_blockers(

@@ -25,6 +25,9 @@ from app.application.candidate_expiry import (
     expire_candidate,
 )
 from app.application.candidate_persistence_identity import build_candidate_idempotency_payload
+from app.application.low_income_source_qualification import (
+    low_income_source_qualification_blockers,
+)
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.opportunity_identity import build_opportunity_business_identity
 from app.ports.core_sources import (
@@ -146,6 +149,7 @@ def evaluate_and_persist_low_income_signal_from_core(
         core_source=core_source,
         policy=policy,
         access_scope=command.access_scope,
+        require_runtime_qualification=True,
     )
     evaluation = accept_candidate_evaluation(
         source_evaluation.evaluation,
@@ -196,6 +200,7 @@ def _evaluate_low_income_source(
     core_source: CoreLowIncomeSourcePort,
     policy: LowIncomeSignalPolicy,
     access_scope: ReviewAccessScope | None = None,
+    require_runtime_qualification: bool = False,
 ) -> _LowIncomeSourceEvaluation:
     fallback_scope = access_scope or tenant_portfolio_scope(
         tenant_id=command.tenant_id,
@@ -239,6 +244,31 @@ def _evaluate_low_income_source(
                 unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
             ),
             source_diagnostic_codes=(exc.code,),
+        )
+
+    source_blockers = (
+        low_income_source_qualification_blockers(
+            tenant_id=command.tenant_id,
+            portfolio_id=command.portfolio_id,
+            as_of_date=command.as_of_date,
+            evaluated_at_utc=command.evaluated_at_utc,
+            horizon_days=command.horizon_days,
+            correlation_id=command.correlation_id,
+            evidence=evidence,
+        )
+        if require_runtime_qualification
+        else ()
+    )
+    if source_blockers:
+        return _LowIncomeSourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.LOW_INCOME,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            source_diagnostic_codes=source_blockers,
+            source_evidence=evidence,
         )
 
     return _LowIncomeSourceEvaluation(

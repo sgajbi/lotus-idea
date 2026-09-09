@@ -36,6 +36,9 @@ from app.ports.core_sources import (
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
+from tests.support.low_income_cashflow_runtime_evidence import (
+    authoritative_low_income_evidence,
+)
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -134,7 +137,7 @@ def test_evaluate_low_income_signal_from_core_blocks_source_unavailable() -> Non
 
 
 def test_persist_core_cash_shortfall_candidate_and_exact_replay() -> None:
-    source = StubCoreLowIncomeSource(evidence=_eligible_evidence())
+    source = StubCoreLowIncomeSource(evidence=_runtime_evidence())
     repository = InMemoryIdeaRepository()
     command = _persist_command()
 
@@ -160,6 +163,40 @@ def test_persist_core_cash_shortfall_candidate_and_exact_replay() -> None:
     assert len(repository.snapshot().idempotency_records) == 1
     assert len(repository.snapshot().outbox_events) == 1
     assert len(source.requests) == 2
+
+
+def test_persist_core_cash_shortfall_refuses_degraded_source_before_mutation() -> None:
+    evidence = _runtime_evidence()
+    projection = evidence.cashflow_projection_product
+    assert projection is not None
+    source = StubCoreLowIncomeSource(
+        evidence=replace(
+            evidence,
+            cashflow_projection_product=replace(
+                projection,
+                runtime=replace(
+                    projection.runtime,
+                    reconciliation_status="UNKNOWN",
+                ),
+            ),
+        )
+    )
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_low_income_signal_from_core(
+        _persist_command(),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.persistence is None
+    assert result.expiry is None
+    assert "core_cashflow_projection_supportability_incomplete" in result.source_diagnostic_codes
+    snapshot = repository.snapshot()
+    assert snapshot.candidate_records == {}
+    assert snapshot.idempotency_records == {}
+    assert snapshot.outbox_events == {}
 
 
 def test_persist_core_cash_shortfall_requires_authoritative_scope_before_source_io() -> None:
@@ -229,7 +266,7 @@ def test_persist_core_cash_shortfall_source_refusal_creates_no_durable_state(
 
 
 def test_persist_core_cash_shortfall_expires_authoritatively_resolved_condition() -> None:
-    source = StubCoreLowIncomeSource(evidence=_eligible_evidence())
+    source = StubCoreLowIncomeSource(evidence=_runtime_evidence())
     repository = InMemoryIdeaRepository()
     created = evaluate_and_persist_low_income_signal_from_core(
         _persist_command(),
@@ -238,11 +275,7 @@ def test_persist_core_cash_shortfall_expires_authoritatively_resolved_condition(
     )
     assert created.persistence is not None and created.persistence.record is not None
     candidate_id = created.persistence.record.candidate.candidate_id
-    source.evidence = replace(
-        _eligible_evidence(),
-        source_reported_min_projected_cumulative_cashflow=Decimal("-5000"),
-        cashflow_diagnostic="core_cashflow_above_shortfall_threshold",
-    )
+    source.evidence = _runtime_evidence(minimum_cashflow=Decimal("-5000"))
 
     expired = evaluate_and_persist_low_income_signal_from_core(
         replace(
@@ -315,6 +348,22 @@ def _eligible_evidence() -> CoreLowIncomeEvidence:
         cash_movement_ref=_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
         cashflow_projection_ref=_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
         cashflow_diagnostic="core_cashflow_liquidity_evidence_ready",
+    )
+
+
+def _runtime_evidence(*, minimum_cashflow: Decimal = Decimal("-12500")) -> CoreLowIncomeEvidence:
+    command = _command()
+    return authoritative_low_income_evidence(
+        request=CoreLowIncomeEvidenceRequest(
+            portfolio_id=command.portfolio_id,
+            tenant_id=command.tenant_id,
+            as_of_date=command.as_of_date,
+            evaluated_at_utc=command.evaluated_at_utc,
+            horizon_days=command.horizon_days,
+            correlation_id=command.correlation_id,
+            trace_id=command.trace_id,
+        ),
+        minimum_cashflow=minimum_cashflow,
     )
 
 
