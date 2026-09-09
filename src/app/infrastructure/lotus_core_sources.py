@@ -78,6 +78,7 @@ class LotusCoreHighCashSourceAdapter:
     ) -> CoreHighCashEvidence:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
+        tenant_headers = {"X-Tenant-Id": request.tenant_id}
         try:
             portfolio_state_payload = self._query_control_plane_client.post_json(
                 f"/integration/portfolios/{portfolio_ref}/core-snapshot",
@@ -95,16 +96,19 @@ class LotusCoreHighCashSourceAdapter:
                 f"/portfolios/{portfolio_ref}/cash-balances?as_of_date={as_of}",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
             cash_movement_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cash-movement-summary?start_date={as_of}&end_date={as_of}",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
             cashflow_projection_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cashflow-projection?as_of_date={as_of}&horizon_days=30&include_projected=true",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
         except DownstreamServiceError as exc:
             if exc.status_code in {401, 403}:
@@ -255,17 +259,20 @@ class LotusCoreHighCashSourceAdapter:
     ) -> CoreLowIncomeEvidence:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
+        tenant_headers = {"X-Tenant-Id": request.tenant_id}
         try:
             cash_movement_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cash-movement-summary?start_date={as_of}&end_date={as_of}",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
             cashflow_projection_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cashflow-projection?as_of_date={as_of}"
                 f"&horizon_days={request.horizon_days}&include_projected=true",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
         except DownstreamServiceError as exc:
             if exc.status_code in {401, 403}:
