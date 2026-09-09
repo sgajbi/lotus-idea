@@ -154,6 +154,8 @@ Critical invariants:
     I/O. Retained `legacy:unknown` evidence remains auditable but cannot authorize new owner work.
 15. Exact replay does not create duplicate state, owner work, events, or outbox records.
 16. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+    AI evaluation and generation require complete trusted tenant/book/portfolio/client scope
+    matching the persisted candidate before lineage persistence or Lotus AI execution.
 17. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
