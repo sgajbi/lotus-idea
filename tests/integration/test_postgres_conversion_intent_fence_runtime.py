@@ -222,6 +222,10 @@ def _persist_approved_candidate(
             headers={
                 "X-Caller-Subject": "idea-lifecycle-worker",
                 "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
+                "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+                "X-Caller-Book-Ids": "book-advisor-001",
+                "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+                "X-Caller-Client-Ids": "client-001",
                 "X-Correlation-Id": "corr-postgres-conversion-intent-fence",
                 "X-Trace-Id": f"trace-postgres-conversion-fence-{target_status}",
                 "Idempotency-Key": f"postgres-conversion-fence-{target_status}-001",
