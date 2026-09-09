@@ -762,11 +762,17 @@ Persistence adapter validation:
     binds complete authoritative scope, exact movement-summary and projection
     receipts, projection arithmetic, movement counts, coherent source revision
     posture, and accepted or exact-replayed durable Idea candidate persistence.
+    A complete zero-movement receipt may omit latest source-event time only
+    when its zero count and canonical empty-bucket digest agree. Source batch
+    identity is optional, but must match mandatory content and source digests
+    when present.
     Unknown, stale, degraded, scope-inconsistent, arithmetically invalid,
     non-durable, missing-persistence, or tampered evidence fails closed. A
     no-opportunity result remains truthful but cannot clear this persistence
     proof. It can satisfy only the namespaced low-income Core cashflow source
     blocker; historical v2 artifacts do not qualify.
+    Fresh qualification remains tracked by Idea `#1320`; [Lotus Core #1116](https://github.com/sgajbi/lotus-core/issues/1116) owns the
+    stable cross-product source-cut and replay identity exposed by live capture.
     `tests/unit/advise_missing_suitability_runtime_evidence/test_runtime_execution.py`,
     `tests/unit/advise_missing_suitability_runtime_evidence/test_generator.py`,
     `tests/unit/advise_missing_risk_profile_runtime_evidence/test_runtime_execution.py`,
