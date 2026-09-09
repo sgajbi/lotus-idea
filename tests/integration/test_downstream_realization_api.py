@@ -1072,6 +1072,10 @@ def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "idea-lifecycle-worker",
         "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-lifecycle-downstream-api",
         "Idempotency-Key": idempotency_key,
     }

@@ -79,6 +79,26 @@ def test_candidate_detail_openapi_publishes_required_reader_roles() -> None:
     assert caller_context["requiredRoles"] == ["advisor", "operator"]
 
 
+def test_lifecycle_transition_openapi_publishes_complete_candidate_scope() -> None:
+    operation = _operation(
+        "POST",
+        "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions",
+    )
+
+    caller_context = operation[CALLER_CONTEXT_EXTENSION]
+    assert caller_context["requiredCapabilities"] == ["idea.candidate.lifecycle.transition"]
+    assert "Complete trusted tenant, book, portfolio, and client scope" in caller_context[
+        "entitlementScope"
+    ]
+    headers = _header_descriptions(operation)
+    assert {
+        "X-Caller-Tenant-Ids",
+        "X-Caller-Book-Ids",
+        "X-Caller-Portfolio-Ids",
+        "X-Caller-Client-Ids",
+    }.issubset(headers)
+
+
 def test_every_protected_operation_publishes_caller_boundary_problem_contracts() -> None:
     schema = app.openapi()
 

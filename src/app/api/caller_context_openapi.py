@@ -82,6 +82,10 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         method="POST",
         path="/api/v1/idea-candidates/{candidateId}/lifecycle-transitions",
         required_capabilities=("idea.candidate.lifecycle.transition",),
+        entitlement_scope=(
+            "Complete trusted tenant, book, portfolio, and client scope must match the "
+            "persisted candidate before idempotency inspection or lifecycle mutation."
+        ),
     ),
     CallerContextOpenApiRequirement(
         method="GET",
