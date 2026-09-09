@@ -57,7 +57,6 @@ from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
     SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
-from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
 )
@@ -80,7 +79,7 @@ from tests.support.risk_drawdown_runtime_evidence import (
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
-from tests.support.source_ingestion_runtime_evidence import runtime_execution
+from tests.support.source_ingestion_runtime_evidence import runtime_execution, runtime_manifest
 from tests.support.source_ingestion_scheduler_evidence import (
     deployment_evidence,
     source_contract,
@@ -243,21 +242,7 @@ def test_static_scheduled_worker_source_contract_preserves_deployment_blocker(
     )
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
-        json.dumps(
-            {
-                "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "tenantId": "tenant-a",
-                "workItems": [
-                    {
-                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
-                        "bookId": "book-a",
-                        "clientId": "client-a",
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
-            }
-        ),
+        json.dumps(runtime_manifest()),
         encoding="utf-8",
     )
     source_contract_path = tmp_path / "scheduled-worker-source-contract.json"
@@ -365,21 +350,7 @@ def test_generate_implementation_proof_readiness_uses_runtime_execution_receipts
     )
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
-        json.dumps(
-            {
-                "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "tenantId": "tenant-a",
-                "workItems": [
-                    {
-                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
-                        "bookId": "book-a",
-                        "clientId": "client-a",
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
-            }
-        ),
+        json.dumps(runtime_manifest()),
         encoding="utf-8",
     )
     runtime_execution_path = tmp_path / "source-ingestion-runtime-execution.json"
