@@ -42,6 +42,7 @@ class DownstreamSubmissionClaimDecision(StrEnum):
     ACCEPTED = "accepted"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    RESOURCE_CONFLICT = "resource_conflict"
     RECONCILIATION_REQUIRED = "reconciliation_required"
 
 

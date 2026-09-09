@@ -50,6 +50,7 @@ class DownstreamRealizationStatus(StrEnum):
     NOT_FOUND = "not_found"
     UNSUPPORTED_TARGET = "unsupported_target"
     AUTHORITY_CONFLICT = "authority_conflict"
+    RESOURCE_CONFLICT = "resource_conflict"
 
 
 @dataclass(frozen=True)
@@ -250,6 +251,13 @@ def _execute_claimed_submission(
             source_authority=None,
             target=None,
             downstream_failure_reason="idempotency_conflict",
+        )
+    if claim.decision is DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT:
+        return DownstreamRealizationSubmissionResult(
+            status=DownstreamRealizationStatus.RESOURCE_CONFLICT,
+            source_authority=None,
+            target=None,
+            downstream_failure_reason="downstream_submission_resource_conflict",
         )
     if claim.decision is not DownstreamSubmissionClaimDecision.ACCEPTED:
         assert claim.record is not None

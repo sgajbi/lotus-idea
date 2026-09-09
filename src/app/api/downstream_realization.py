@@ -60,6 +60,7 @@ _SUBMISSION_ERROR_CODES_BY_STATUS = {
     DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT: "idempotency_conflict",
     DownstreamRealizationStatus.NOT_CONFIGURED: "downstream_realization_not_configured",
     DownstreamRealizationStatus.AUTHORITY_CONFLICT: "conversion_intent_authority_conflict",
+    DownstreamRealizationStatus.RESOURCE_CONFLICT: "downstream_submission_resource_conflict",
 }
 _DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA = not_found_metadata(
     code="downstream_realization_resource_not_found",
@@ -103,6 +104,14 @@ _CONVERSION_INTENT_AUTHORITY_CONFLICT_METADATA = conflict_metadata(
     ),
     description="Conversion intent evidence or review authority is no longer current.",
 )
+_DOWNSTREAM_SUBMISSION_RESOURCE_CONFLICT_METADATA = conflict_metadata(
+    code="downstream_submission_resource_conflict",
+    title="Downstream submission resource conflict",
+    detail=(
+        "The governed resource already has a downstream submission under another idempotency key."
+    ),
+    description="A governed resource can have only one downstream submission identity.",
+)
 
 
 def _conversion_submission_conflict_metadata() -> dict[int | str, dict[str, object]]:
@@ -113,6 +122,18 @@ def _conversion_submission_conflict_metadata() -> dict[int | str, dict[str, obje
             _UNSUPPORTED_DOWNSTREAM_REALIZATION_TARGET_METADATA,
             _IDEMPOTENCY_CONFLICT_METADATA,
             _CONVERSION_INTENT_AUTHORITY_CONFLICT_METADATA,
+            _DOWNSTREAM_SUBMISSION_RESOURCE_CONFLICT_METADATA,
+        ),
+    )
+
+
+def _report_submission_conflict_metadata() -> dict[int | str, dict[str, object]]:
+    return merged_problem_response_metadata(
+        status_code=status.HTTP_409_CONFLICT,
+        description="Downstream submission conflict.",
+        responses=(
+            _IDEMPOTENCY_CONFLICT_METADATA,
+            _DOWNSTREAM_SUBMISSION_RESOURCE_CONFLICT_METADATA,
         ),
     )
 
@@ -441,6 +462,16 @@ def _problem_for_submission_result(
                 "downstream submission attempt."
             ),
         )
+    if result.status is DownstreamRealizationStatus.RESOURCE_CONFLICT:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="downstream_submission_resource_conflict",
+            title="Downstream submission resource conflict",
+            detail=(
+                "The governed resource already has a downstream submission under another "
+                "idempotency key."
+            ),
+        )
     if result.status is DownstreamRealizationStatus.NOT_CONFIGURED:
         return _downstream_not_configured()
     return None
@@ -500,6 +531,8 @@ def _operation_outcome_from_submission_status(
     if submission_status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT:
         return OperationOutcome.CONFLICT
     if submission_status is DownstreamRealizationStatus.AUTHORITY_CONFLICT:
+        return OperationOutcome.CONFLICT
+    if submission_status is DownstreamRealizationStatus.RESOURCE_CONFLICT:
         return OperationOutcome.CONFLICT
     if submission_status is DownstreamRealizationStatus.NOT_CONFIGURED:
         return OperationOutcome.BLOCKED
@@ -635,7 +668,7 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
             description="Caller lacks submission permission.",
         ),
         **_DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA,
-        **_IDEMPOTENCY_CONFLICT_METADATA,
+        **_report_submission_conflict_metadata(),
         **_downstream_submission_service_unavailable_metadata(),
     },
 }

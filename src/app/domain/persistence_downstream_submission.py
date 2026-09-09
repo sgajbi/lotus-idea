@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.domain.downstream_submission import (
+    DownstreamSubmissionClaimDecision,
     DownstreamSubmissionClaimResult,
     DownstreamSubmissionMutationDecision,
     DownstreamSubmissionMutationResult,
@@ -63,6 +64,22 @@ class InMemoryDownstreamSubmissionRepositoryMixin:
     ) -> DownstreamSubmissionClaimResult:
         storage_key = downstream_submission_identity(record.tenant_id, record.idempotency_key)
         existing = self._downstream_submission_records.get(storage_key)
+        resource_existing = next(
+            (
+                retained
+                for retained in self._downstream_submission_records.values()
+                if retained.tenant_id == record.tenant_id
+                and retained.resource_type is record.resource_type
+                and retained.resource_id == record.resource_id
+                and retained.target is record.target
+            ),
+            None,
+        )
+        if existing is None and resource_existing is not None:
+            return DownstreamSubmissionClaimResult(
+                decision=DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT,
+                record=resource_existing,
+            )
         decision = evaluate_downstream_submission_claim(
             existing,
             request_fingerprint=record.request_fingerprint,

@@ -378,6 +378,22 @@ REQUIRED_MIGRATIONS = (
             "ADD PRIMARY KEY (idempotency_key)",
         ),
     ),
+    MigrationContract(
+        version="031",
+        forward_path=MIGRATIONS_DIR / "031_downstream_submission_resource_identity.sql",
+        rollback_path=(MIGRATIONS_DIR / "031_downstream_submission_resource_identity.rollback.sql"),
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "GROUP BY tenant_id, resource_type, resource_id, target",
+            "cannot enforce downstream submission resource identity while duplicate resources exist",
+            "CREATE UNIQUE INDEX uq_idea_downstream_submission_resource_identity",
+        ),
+        required_rollback_fragments=(
+            "DROP INDEX IF EXISTS uq_idea_downstream_submission_resource_identity",
+            "CREATE INDEX IF NOT EXISTS idx_idea_downstream_submission_resource",
+        ),
+    ),
 )
 
 

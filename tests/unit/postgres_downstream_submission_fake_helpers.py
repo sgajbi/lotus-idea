@@ -26,6 +26,15 @@ def execute_downstream_submission_query(
             cursor._rows = []
             return True
         row = row_for_insert("idea_downstream_submission", params)
+        if any(
+            retained["tenant_id"] == row["tenant_id"]
+            and retained["resource_type"] == row["resource_type"]
+            and retained["resource_id"] == row["resource_id"]
+            and retained["target"] == row["target"]
+            for retained in rows
+        ):
+            cursor._rows = []
+            return True
         rows.append(row)
         cursor._rows = [dict(row)]
         return True
@@ -43,6 +52,19 @@ def execute_downstream_submission_query(
     if query.startswith("/* lotus-idea downstream-submission-by-support-reference */"):
         assert params is not None
         cursor._rows = [dict(row) for row in rows if row["support_reference"] == params[0]]
+        return True
+
+    if query.startswith("/* lotus-idea downstream-submission-by-resource-identity */"):
+        assert params is not None
+        tenant_id, resource_type, resource_id, target = params
+        cursor._rows = [
+            dict(row)
+            for row in rows
+            if row["tenant_id"] == tenant_id
+            and row["resource_type"] == resource_type
+            and row["resource_id"] == resource_id
+            and row["target"] == target
+        ]
         return True
 
     if query.startswith("/* lotus-idea downstream-submission-reconciliation-list */"):

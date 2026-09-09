@@ -117,9 +117,14 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
         assert replayed.decision is DownstreamSubmissionMutationDecision.REPLAYED
         assert restarted.downstream_submissions_requiring_reconciliation(limit=10) == ()
 
+    interrupted_resource_id = "conversion-postgres-runtime-interrupted"
+    seed_active_conversion_resource(postgres_database_url, interrupted_resource_id)
     connection = psycopg.connect(postgres_database_url, row_factory=dict_row)
     interrupted = PostgresIdeaRepository(cast(PostgresConnection, connection))
-    interrupted_claim = _claim("interrupted-submission-key")
+    interrupted_claim = _claim(
+        "interrupted-submission-key",
+        resource_id=interrupted_resource_id,
+    )
     interrupted.claim_downstream_submission(interrupted_claim)
     connection.close()
     with pytest.raises(psycopg.Error):
@@ -137,7 +142,9 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
         persisted = restarted.downstream_submission_by_idempotency_key(
             "tenant-private-bank-sg", "interrupted-submission-key"
         )
-        retry = restarted.claim_downstream_submission(_claim("interrupted-submission-key"))
+        retry = restarted.claim_downstream_submission(
+            _claim("interrupted-submission-key", resource_id=interrupted_resource_id)
+        )
         assert persisted is not None
         assert persisted.status is DownstreamSubmissionPosture.IN_FLIGHT
         assert retry.decision is DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED
@@ -190,6 +197,56 @@ def test_postgres_downstream_submission_identity_is_tenant_scoped(
     assert persisted_second == second
     assert first.support_reference != second.support_reference
     assert first.lease_attempt_id != second.lease_attempt_id
+
+
+def test_postgres_downstream_submission_resource_identity_fences_concurrent_keys(
+    postgres_database_url: str,
+) -> None:
+    resource_id = "conversion-resource-identity-race"
+    seed_active_conversion_resource(postgres_database_url, resource_id)
+    claims = (
+        build_downstream_submission_claim(
+            idempotency_key="resource-race-key-one",
+            request_fingerprint=(
+                "sha256:6bf687964b7e2443534b8a59eaef2da6b475c82f4daf2f68cccbe6a256240b3e"
+            ),
+            resource_id=resource_id,
+            submitted_at_utc=SUBMITTED_AT,
+        ),
+        build_downstream_submission_claim(
+            idempotency_key="resource-race-key-two",
+            request_fingerprint=(
+                "sha256:bb7c2c7fef8373b36a17a76bf5a7e2a494b9ac47ab47d91286f2a6342ed4931c"
+            ),
+            resource_id=resource_id,
+            submitted_at_utc=SUBMITTED_AT,
+        ),
+    )
+    barrier = Barrier(2)
+
+    def claim_once(record: DownstreamSubmissionRecord) -> DownstreamSubmissionClaimDecision:
+        with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+            barrier.wait(timeout=5)
+            return repository.claim_downstream_submission(record).decision
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        decisions = tuple(executor.map(claim_once, claims))
+
+    assert sorted(decisions) == sorted(
+        (
+            DownstreamSubmissionClaimDecision.ACCEPTED,
+            DownstreamSubmissionClaimDecision.RESOURCE_CONFLICT,
+        )
+    )
+    assert (
+        table_count(
+            postgres_database_url,
+            "idea_downstream_submission",
+            allowed_tables={"idea_downstream_submission"},
+        )
+        == 1
+    )
 
 
 def test_postgres_advise_history_race_reports_one_atomic_append_delta(
@@ -462,10 +519,14 @@ def test_postgres_precommit_timeout_recovery_preserves_one_attempt_and_zero_owne
     } == counts_before
 
 
-def _claim(idempotency_key: str) -> DownstreamSubmissionRecord:
+def _claim(
+    idempotency_key: str,
+    *,
+    resource_id: str = "conversion-postgres-runtime",
+) -> DownstreamSubmissionRecord:
     return build_downstream_submission_claim(
         idempotency_key=idempotency_key,
         request_fingerprint="sha256:acceec62f1f99090209dcc24406fb7eb583d16b82c8ec99aa2c9eb97baf9754c",
-        resource_id="conversion-postgres-runtime",
+        resource_id=resource_id,
         submitted_at_utc=SUBMITTED_AT,
     )

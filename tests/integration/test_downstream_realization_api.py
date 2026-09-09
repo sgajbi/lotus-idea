@@ -10,7 +10,7 @@ from _pytest.logging import LogCaptureFixture
 from tests.support.http import ManagedTestClient, managed_test_client
 
 import app.api.downstream_realization as downstream_realization_api
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.downstream_realization_state import (
     ADVISE_BASE_URL_ENV,
     ADVISE_SUBMIT_PATH_ENV,
@@ -228,6 +228,51 @@ def test_conversion_downstream_submission_api_replays_same_idempotency_key(
     assert manage_client.submitted == ()
 
 
+def test_conversion_downstream_submission_api_rejects_new_key_for_same_intent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: ConversionRealizationClients(advise_client, manage_client),
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-resource-conflict",
+        idempotency_prefix="advise-resource-conflict",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-resource-conflict-001",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-resource-conflict-001",
+    )
+    url = (
+        "/api/v1/conversion-intents/conversion-advise-resource-conflict-001/downstream-submissions"
+    )
+
+    first = client.post(url, headers=downstream_submission_headers("submission-key-one"))
+    conflict = client.post(url, headers=downstream_submission_headers("submission-key-two"))
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "downstream_submission_resource_conflict"
+    assert len(advise_client.submitted) == 1
+    assert manage_client.submitted == ()
+    assert len(get_idea_repository().snapshot().downstream_submission_records) == 1
+    assert (
+        get_idea_repository().downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "submission-key-two"
+        )
+        is None
+    )
+
+
 def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -402,6 +447,53 @@ def test_report_downstream_submission_api_replays_same_idempotency_key(
         == "report-pack-replay-api-001"
     )
     assert len(report_client.submitted) == 1
+
+
+def test_report_downstream_submission_api_rejects_new_key_for_same_pack(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-resource-conflict",
+        idempotency_prefix="report-resource-conflict",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-resource-conflict-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-resource-conflict-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-resource-conflict-001",
+        report_evidence_pack_id="report-pack-resource-conflict-001",
+        idempotency_key="report-pack-resource-conflict-001",
+    )
+    url = "/api/v1/report-evidence-packs/report-pack-resource-conflict-001/downstream-submissions"
+
+    first = client.post(url, headers=downstream_submission_headers("report-key-one"))
+    conflict = client.post(url, headers=downstream_submission_headers("report-key-two"))
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "downstream_submission_resource_conflict"
+    assert len(report_client.submitted) == 1
+    assert len(get_idea_repository().snapshot().downstream_submission_records) == 1
+    assert (
+        get_idea_repository().downstream_submission_by_idempotency_key(
+            "tenant-private-bank-sg", "report-key-two"
+        )
+        is None
+    )
 
 
 def test_report_downstream_submission_api_rejects_idempotency_conflict(
