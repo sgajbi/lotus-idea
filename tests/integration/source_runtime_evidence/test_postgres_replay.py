@@ -176,6 +176,30 @@ def test_source_runtime_evidence_rejects_placeholder_scope_without_postgres_muta
         )
 
 
+def test_low_income_runtime_evidence_rejects_placeholder_scope_without_postgres_mutation(
+    postgres_database_url: str,
+) -> None:
+    repository = get_idea_repository()
+    command = _low_income_cashflow_command()
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_low_income_cashflow_readiness(
+            replace(command, client_id="unknown"),
+            core_source=AuthoritativeCoreLowIncomeSource(),
+            repository=repository,
+        )
+
+    for table_name in _RUNTIME_TABLES:
+        assert (
+            table_count(
+                postgres_database_url,
+                table_name,
+                allowed_tables=_RUNTIME_TABLES,
+            )
+            == 0
+        )
+
+
 def _concentration_execution(
     repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
@@ -282,8 +306,23 @@ def _bond_maturity_execution(
 def _low_income_cashflow_execution(
     repository: CandidateEvaluationRepository,
 ) -> tuple[Mapping[str, Any], bool]:
+    command = _low_income_cashflow_command()
+    result = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=AuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=command.evaluated_at_utc,
+        result=result,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+    return payload, low_income_cashflow_runtime_execution_is_valid(payload)
+
+
+def _low_income_cashflow_command() -> EvaluateLowIncomeCashflowReadiness:
     generated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
-    command = EvaluateLowIncomeCashflowReadiness(
+    return EvaluateLowIncomeCashflowReadiness(
         tenant_id="tenant-a",
         book_id="book-a",
         portfolio_id="portfolio-a",
@@ -297,14 +336,3 @@ def _low_income_cashflow_execution(
         correlation_id="corr-a",
         trace_id="trace-a",
     )
-    result = evaluate_low_income_cashflow_readiness(
-        command,
-        core_source=AuthoritativeCoreLowIncomeSource(),
-        repository=repository,
-    )
-    payload = build_low_income_cashflow_runtime_execution(
-        generated_at_utc=generated_at_utc,
-        result=result,
-        durable_storage_backed=idea_repository_durable_storage_backed(repository),
-    )
-    return payload, low_income_cashflow_runtime_execution_is_valid(payload)

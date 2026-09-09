@@ -263,6 +263,21 @@ def test_runtime_execution_fails_closed_on_source_trust_drift(
             "core_cash_movement_direction_mismatch",
         ),
         (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    buckets=(
+                        replace(
+                            evidence.cash_movement_product.buckets[0],
+                            total_amount=None,
+                        ),
+                    ),
+                ),
+            ),
+            "core_cash_movement_direction_mismatch",
+        ),
+        (
             lambda evidence: _replace_projection_runtime(evidence, portfolio_id="other"),
             "core_cashflow_projection_response_scope_mismatch",
         ),
@@ -308,6 +323,14 @@ def test_runtime_execution_fails_closed_on_source_trust_drift(
                 evidence,
                 0,
                 projected_cumulative_cashflow=Decimal("-1"),
+            ),
+            "core_cashflow_projection_series_invalid",
+        ),
+        (
+            lambda evidence: _replace_projection_point(
+                evidence,
+                0,
+                projected_cumulative_cashflow=None,
             ),
             "core_cashflow_projection_series_invalid",
         ),
