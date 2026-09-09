@@ -87,9 +87,10 @@ def test_lifecycle_transition_openapi_publishes_complete_candidate_scope() -> No
 
     caller_context = operation[CALLER_CONTEXT_EXTENSION]
     assert caller_context["requiredCapabilities"] == ["idea.candidate.lifecycle.transition"]
-    assert "Complete trusted tenant, book, portfolio, and client scope" in caller_context[
-        "entitlementScope"
-    ]
+    assert (
+        "Complete trusted tenant, book, portfolio, and client scope"
+        in caller_context["entitlementScope"]
+    )
     headers = _header_descriptions(operation)
     assert {
         "X-Caller-Tenant-Ids",

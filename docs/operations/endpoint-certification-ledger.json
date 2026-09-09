@@ -859,7 +859,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Record an internal governed lifecycle transition for a persisted idea candidate through the lifecycle history, idempotency, and audit foundation without accepting downstream-authority lifecycle targets as caller input.",
-      "when_to_use": "Use as the RFC-0002 Slice 06 and Slice 10 API foundation when an internal caller has a persisted candidate, the idea.candidate.lifecycle.transition capability, an Idempotency-Key, and needs to move the candidate through the canonical caller-settable lifecycle graph before review or conversion workflows.",
+      "when_to_use": "Use as the RFC-0002 Slice 06 and Slice 10 API foundation when an internal caller has a persisted candidate, the idea.candidate.lifecycle.transition capability, complete trusted tenant/book/portfolio/client scope matching that candidate, an Idempotency-Key, and needs to move the candidate through the canonical caller-settable lifecycle graph before review or conversion workflows.",
       "when_not_to_use": "Do not use for adviser review, approval, rejection, expiry, conversion, downstream outcome, suitability, execution, or client-communication authority. Those business states require their owned commands and evidence. The generic route is limited to pre-review Idea processing stages and does not prove a Gateway contract, Workbench product behavior, or supported-feature promotion.",
       "request_examples": [
         "{\"transitionId\":\"lifecycle-ready-for-review-001\",\"targetLifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"reasonCodes\":[\"review_required\"]}"
@@ -869,7 +869,7 @@
         "{\"transition\":{\"transitionId\":\"lifecycle-ready-for-review-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"acceptedAtUtc\":\"2026-06-21T10:05:00Z\",\"reasonCodes\":[\"review_required\"],\"grantsDownstreamAuthority\":false},\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.candidate.lifecycle.transition capability.",
+        "403 returns product-safe Problem Details when the caller lacks idea.candidate.lifecycle.transition capability, complete trusted scope, or exact persisted-candidate scope.",
         "404 returns product-safe Problem Details when the candidate is not found.",
         "409 returns product-safe Problem Details for idempotency conflict or invalid lifecycle transition.",
         "400 returns product-safe Problem Details when targetLifecycleStatus is accepted, executed, or otherwise outside the caller-settable lifecycle vocabulary.",
@@ -877,6 +877,10 @@
       ],
       "test_evidence": [
         "tests/integration/test_candidate_lifecycle_authority_api.py::test_lifecycle_transition_api_records_idempotent_transition",
+        "tests/integration/test_candidate_lifecycle_authority_api.py::test_lifecycle_transition_api_denies_incomplete_or_foreign_scope_without_mutation",
+        "tests/integration/test_candidate_lifecycle_authority_api.py::test_lifecycle_transition_api_rejects_malformed_scope_without_mutation",
+        "tests/integration/test_postgres_candidate_lifecycle_scope.py::test_postgres_lifecycle_scope_denial_is_mutation_free_and_recoverable",
+        "tests/integration/test_postgres_candidate_lifecycle_scope.py::test_postgres_lifecycle_scope_authorization_preserves_concurrent_exact_replay",
         "tests/integration/test_candidate_lifecycle_authority_api.py::test_lifecycle_transition_api_rejects_observed_time_outside_control_window",
         "tests/integration/test_candidate_lifecycle_authority_api.py::test_generic_lifecycle_api_rejects_owned_workflow_statuses_without_evidence",
         "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_returns_safe_conflicts_and_not_found",

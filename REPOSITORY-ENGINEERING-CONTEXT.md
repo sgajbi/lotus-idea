@@ -135,23 +135,26 @@ Critical invariants:
 4. Known source-revision or restatement contradictions fail authority advancement. Shared cut IDs
    and time tolerance cannot override a known contradiction.
 5. Unknown comparison remains uncertain; never invent source-owner identities or coherence.
-6. Generic lifecycle mutation cannot create review, approval, or conversion authority; malformed
-   review/conversion evidence digests fail request validation before authority or persistence work.
-7. Review and conversion use their owned commands and exact presentation/review grants.
-8. Conversion outcomes require complete trusted tenant/book/portfolio/client entitlements matching
+6. Generic lifecycle mutation cannot create review, approval, or conversion authority. Its
+   pre-review worker route requires complete trusted tenant/book/portfolio/client entitlements
+   matching the persisted candidate before idempotency or mutation.
+7. Malformed review/conversion evidence digests fail request validation before authority or
+   persistence work.
+8. Review and conversion use their owned commands and exact presentation/review grants.
+9. Conversion outcomes require complete trusted tenant/book/portfolio/client entitlements matching
    the persisted candidate before idempotency precheck or mutation.
-9. Report evidence-pack requests require the same complete trusted scope and
+10. Report evidence-pack requests require the same complete trusted scope and
    candidate authorization before idempotency or mutation; they grant no Report,
    Render, Archive, or publication authority.
-10. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
-11. Outbound work records durable intent before I/O.
-12. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
-13. A first downstream conversion attempt revalidates current candidate evidence, exact active
+11. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
+12. Outbound work records durable intent before I/O.
+13. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
+14. A first downstream conversion attempt revalidates current candidate evidence, exact active
     review authority, source-cut authority, target lifecycle, and owner authority before claim or
     I/O. Retained `legacy:unknown` evidence remains auditable but cannot authorize new owner work.
-14. Exact replay does not create duplicate state, owner work, events, or outbox records.
-15. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
-16. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
+15. Exact replay does not create duplicate state, owner work, events, or outbox records.
+16. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+17. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.
