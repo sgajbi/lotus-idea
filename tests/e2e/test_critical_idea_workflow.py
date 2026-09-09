@@ -272,11 +272,14 @@ def _transition_candidate_to_review_ready(client: Any, candidate_id: str) -> Non
         lifecycle_response = client.post(
             f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
             json=_lifecycle_payload(target_status, minute=minute),
-            headers=_headers(
-                subject="idea-lifecycle-worker",
-                capabilities="idea.candidate.lifecycle.transition",
-                idempotency_key=f"critical-e2e-lifecycle-{target_status}-001",
-            ),
+            headers={
+                **_headers(
+                    subject="idea-lifecycle-worker",
+                    capabilities="idea.candidate.lifecycle.transition",
+                    idempotency_key=f"critical-e2e-lifecycle-{target_status}-001",
+                ),
+                **_scope_headers(),
+            },
         )
         assert lifecycle_response.status_code == 200
         assert lifecycle_response.json()["persistence"]["lifecycleStatus"] == target_status
