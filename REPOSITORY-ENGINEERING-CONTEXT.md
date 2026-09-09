@@ -140,15 +140,18 @@ Critical invariants:
 7. Review and conversion use their owned commands and exact presentation/review grants.
 8. Conversion outcomes require complete trusted tenant/book/portfolio/client entitlements matching
    the persisted candidate before idempotency precheck or mutation.
-9. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
-10. Outbound work records durable intent before I/O.
-11. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
-12. A first downstream conversion attempt revalidates current candidate evidence, exact active
+9. Report evidence-pack requests require the same complete trusted scope and
+   candidate authorization before idempotency or mutation; they grant no Report,
+   Render, Archive, or publication authority.
+10. Trusted acceptance time governs local chronology; source-observed time remains separate evidence.
+11. Outbound work records durable intent before I/O.
+12. An uncertain submission is not automatically resubmitted. Reconciliation is exact and read-only.
+13. A first downstream conversion attempt revalidates current candidate evidence, exact active
     review authority, source-cut authority, target lifecycle, and owner authority before claim or
     I/O. Retained `legacy:unknown` evidence remains auditable but cannot authorize new owner work.
-13. Exact replay does not create duplicate state, owner work, events, or outbox records.
-14. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
-15. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
+14. Exact replay does not create duplicate state, owner work, events, or outbox records.
+15. AI output is advisory evidence. It cannot bypass deterministic eligibility or human authority.
+16. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.

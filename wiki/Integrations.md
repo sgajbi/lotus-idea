@@ -434,7 +434,9 @@ That route records source-provenanced request truth for reviewed report
 conversion intents and preserves Report/Render/Archive authority refs. It does
 return the exact persisted request for accepted and replayed success, requiring
 one complete identity-bound match and failing closed when persistence evidence
-is missing or ambiguous. It does
+is missing or ambiguous. It also requires complete trusted tenant, book,
+portfolio, and client entitlements matching the persisted candidate; denial
+precedes idempotency precheck and every durable mutation. It does
 not call downstream services, create proposals, create manage actions, create
 downstream report packages, render documents, archive material, authorize
 any client-ready publication without downstream approval, or grant suitability, execution, compliance, mandate,

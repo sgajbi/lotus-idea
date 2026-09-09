@@ -34,22 +34,26 @@ Certified internal API foundation:
 The endpoint:
 
 1. requires `idea.report-evidence-pack.request`,
-2. requires `Idempotency-Key`,
-3. requires a prior `report_evidence` conversion intent,
-4. requires reviewed, approved, ready evidence,
-5. records source summaries, evidence hash, retention policy ref, and safe audit
+2. requires complete trusted tenant, book, portfolio, and client entitlements
+   matching the persisted candidate behind the conversion intent,
+3. performs that object-authorization check before idempotency precheck or any
+   durable mutation,
+4. requires `Idempotency-Key`,
+5. requires a prior `report_evidence` conversion intent,
+6. requires reviewed, approved, ready evidence,
+7. records source summaries, evidence hash, retention policy ref, and safe audit
    event,
-6. returns the exact persisted request for accepted and idempotent replay
+8. returns the exact persisted request for accepted and idempotent replay
    success after requiring exactly one match across report-pack identity,
    conversion intent, actor, idempotency key, purpose, reason codes, request
    time, and retention reference,
-7. binds the forbidden client-publication request flag into the idempotency
+9. binds the forbidden client-publication request flag into the idempotency
    fingerprint, so a same-key retry cannot escalate an evidence-only request
    into apparent publication authority,
-8. fails closed as `503 service_recovery_degraded` when otherwise-successful
+10. fails closed as `503 service_recovery_degraded` when otherwise-successful
    persistence contains zero or multiple matching requests,
-9. reports `durableStorageBacked` from the active repository provider,
-10. returns `supportedFeaturePromoted=false`.
+11. reports `durableStorageBacked` from the active repository provider,
+12. returns `supportedFeaturePromoted=false`.
 
 ## Boundaries
 
@@ -87,11 +91,12 @@ Current proof lives in:
 1. `tests/unit/test_report_evidence.py`,
 2. `tests/unit/test_idea_persistence.py`,
 3. `tests/integration/test_review_workflow_api.py`,
-4. `tests/integration/test_postgres_runtime_integration.py`,
-5. `tests/unit/test_service_contract.py`,
-6. `tests/unit/test_report_evidence_workflow_application.py`,
-7. `tests/integration/test_persisted_action_evidence_api.py`,
-8. `docs/operations/endpoint-certification-ledger.json`.
+4. `tests/integration/test_report_evidence_pack_scope_api.py`,
+5. `tests/integration/test_postgres_runtime_integration.py`,
+6. `tests/unit/test_service_contract.py`,
+7. `tests/unit/test_report_evidence_workflow_application.py`,
+8. `tests/integration/test_persisted_action_evidence_api.py`,
+9. `docs/operations/endpoint-certification-ledger.json`.
 
 Promotion requires deploy evidence, certified long-running scheduled source-worker
 proof, live source-adapter proof, downstream acceptance tests, render/archive proof,

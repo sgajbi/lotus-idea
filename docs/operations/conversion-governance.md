@@ -66,8 +66,10 @@ The report conversion path now has one additional internal request foundation:
 - `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`
 
 This records source-provenanced report evidence-pack request truth for reviewed
-report conversion intents. It does not create `lotus-report`, `lotus-render`, or
-`lotus-archive` records.
+report conversion intents. It requires complete trusted tenant/book/portfolio/client
+entitlements matching the persisted candidate and authorizes that candidate before
+idempotency precheck or mutation. It does not create `lotus-report`, `lotus-render`,
+or `lotus-archive` records.
 
 Current non-supported scope:
 
