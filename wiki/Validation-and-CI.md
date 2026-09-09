@@ -742,13 +742,17 @@ Persistence adapter validation:
     closed; lotus-core issue `#790` tracks the current producer gap.
     `tests/unit/bond_maturity_runtime_evidence/` and
     `make bond-maturity-live-proof-contract-gate` prove the optional Lotus Core
-    maturity-summary artifact is closed v2 `runtime_execution` evidence. It
-    binds pseudonymous request scope to one exact current
+    maturity-summary artifact is closed v3 `runtime_execution` evidence. It
+    invokes the governed evaluate-and-persist path, requires authoritative
+    tenant/book/portfolio/client scope, and binds pseudonymous request scope to one exact current
     `PortfolioMaturitySummary:v1` receipt and upstream `HoldingsAsOf:v1`
-    content identity. Partial/stale evidence, scope or digest mismatch,
+    content identity plus accepted or exact-replayed durable Idea persistence.
+    Partial/stale evidence, scope or digest mismatch, non-durable execution,
+    missing persistence,
     projected holdings, unsupported lifecycle features, unknown reconciliation,
     inconsistent dates/counts, and tampering fail closed. A supported empty
-    window completes without creating an opportunity. The artifact can satisfy
+    window remains a truthful no-opportunity result but cannot clear a candidate-persistence
+    proof. The artifact can satisfy
     only the namespaced bond-maturity live Core source blocker; lotus-core issue
     `#792` tracks missing producer reconciliation, tenant, and correlation
     metadata.
