@@ -190,6 +190,7 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
                 ),
             )
         url = str(request.url)
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
         if "cash-balances" in url:
             return httpx.Response(
                 200,
@@ -218,11 +219,12 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
 
 
 def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
-    seen_tenants: list[str] = []
+    seen_body_tenants: list[str] = []
+    seen_header_tenants: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "POST":
-            seen_tenants.append(json.loads(request.content)["tenant_id"])
+            seen_body_tenants.append(json.loads(request.content)["tenant_id"])
             return httpx.Response(
                 200,
                 json=_payload(
@@ -230,6 +232,7 @@ def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
                     extra={"request_fingerprint": "core-snapshot-fingerprint"},
                 ),
             )
+        seen_header_tenants.append(request.headers["X-Tenant-Id"])
         url = str(request.url)
         if "cash-balances" in url:
             return httpx.Response(
@@ -246,7 +249,15 @@ def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
     adapter.fetch_high_cash_evidence(replace(_request(), tenant_id="tenant-a"))
     adapter.fetch_high_cash_evidence(replace(_request(), tenant_id="tenant-b"))
 
-    assert seen_tenants == ["tenant-a", "tenant-b"]
+    assert seen_body_tenants == ["tenant-a", "tenant-b"]
+    assert seen_header_tenants == [
+        "tenant-a",
+        "tenant-a",
+        "tenant-a",
+        "tenant-b",
+        "tenant-b",
+        "tenant-b",
+    ]
 
 
 def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> None:
@@ -543,6 +554,7 @@ def test_lotus_core_adapter_maps_malformed_maturity_window_date_to_source_unavai
 
 def test_lotus_core_adapter_uses_cashflow_projection_total_when_points_are_absent() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
         if "cash-movement-summary" in str(request.url):
             return httpx.Response(
                 200,
