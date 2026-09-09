@@ -18,7 +18,11 @@ from app.api.ai_governance_models import (
     RedactedSourceRefResponse,
     build_ai_explanation_readiness_response,
 )
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_HEADER,
+    caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
@@ -66,6 +70,7 @@ from app.domain.ai_execution_provenance import (
     UntrustedAIWorkflowOutput,
 )
 from app.domain.ai_metadata_policy import InvalidAIMetadataEnvelope
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -129,22 +134,33 @@ async def evaluate_ai_explanation(
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
     x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> AIExplanationEvaluationResponse | JSONResponse:
     try:
+        caller = _ai_explanation_caller_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
+        )
         command = _ai_explanation_command_from_request(
             request,
             candidate_id=candidate_id,
             idempotency_key=idempotency_key,
-            caller=_ai_explanation_caller_from_headers(
-                subject=x_caller_subject,
-                roles=x_caller_roles,
-                capabilities=x_caller_capabilities,
-                tenant_ids=x_caller_tenant_ids,
-                trusted_caller_context=x_lotus_trusted_caller_context,
+            caller=caller,
+            caller_access_scope_filter=require_complete_caller_access_scope_filter(
+                caller,
+                denied_permission="idea.ai-explanation.entitlement-scope",
             ),
         )
         repository = get_idea_repository()
@@ -183,6 +199,9 @@ def _ai_explanation_caller_from_headers(
     roles: str | None,
     capabilities: str | None,
     tenant_ids: str | None,
+    book_ids: str | None,
+    portfolio_ids: str | None,
+    client_ids: str | None,
     trusted_caller_context: str | None,
 ) -> CallerContext:
     caller = caller_context_from_headers(
@@ -190,6 +209,9 @@ def _ai_explanation_caller_from_headers(
         roles=roles,
         capabilities=capabilities,
         tenant_ids=tenant_ids,
+        book_ids=book_ids,
+        portfolio_ids=portfolio_ids,
+        client_ids=client_ids,
         trusted_caller_context=trusted_caller_context,
     )
     _require_ai_explanation_caller(caller)
@@ -202,11 +224,13 @@ def _ai_explanation_command_from_request(
     candidate_id: str,
     idempotency_key: str,
     caller: CallerContext,
+    caller_access_scope_filter: QueueAccessScopeFilter,
 ) -> EvaluateAIExplanationToRepositoryCommand:
     validate_idempotency_key(idempotency_key)
     return request.to_command(
         candidate_id=candidate_id,
         caller=caller,
+        caller_access_scope_filter=caller_access_scope_filter,
         idempotency_key=idempotency_key,
         allow_unattested_workflow_fixture=(
             load_runtime_settings().runtime_profile.allows_unattested_ai_workflow_fixture

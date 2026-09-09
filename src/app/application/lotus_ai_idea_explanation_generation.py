@@ -32,6 +32,7 @@ from app.domain.ai_governance import (
     build_ai_explanation_request,
 )
 from app.domain.ideas import IdeaCandidate
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.lotus_ai_execution_digest import LotusAIExecutionOutputContent
 from app.domain.persistence_models import CandidatePersistenceRecord
 from app.ports.lotus_ai_runtime import (
@@ -84,7 +85,7 @@ class GenerateAIExplanationCommand:
     purpose: AIWorkflowPurpose
     requested_at_utc: datetime
     idempotency_key: str
-    caller_tenant_ids: tuple[str, ...]
+    caller_access_scope_filter: QueueAccessScopeFilter
 
     def __post_init__(self) -> None:
         if self.purpose not in GENERATION_SUPPORTED_PURPOSES:
@@ -132,7 +133,10 @@ async def generate_ai_explanation_to_repository(
     )
 
     record = candidate_record_by_id(repository, command.candidate_id)
-    if record is not None and not _caller_may_read_candidate(record, command):
+    if record is not None and not (
+        command.caller_access_scope_filter.is_complete
+        and command.caller_access_scope_filter.matches(record.candidate.access_scope)
+    ):
         raise AIExplanationEntitlementDenied(command.candidate_id)
 
     disposition = AIExplanationGenerationDisposition.ATTESTED_EXECUTION_REQUIRED
@@ -188,7 +192,7 @@ async def generate_ai_explanation_to_repository(
             },
         },
         workflow_output=workflow_output,
-        caller_tenant_ids=command.caller_tenant_ids,
+        caller_access_scope_filter=command.caller_access_scope_filter,
         workflow_output_trust_policy=(
             AIWorkflowOutputTrustPolicy.UNATTESTED_LOCAL_TEST_FIXTURE_ALLOWED
             if unattested_workflow_fixture_allowed
@@ -218,14 +222,6 @@ def _governed_workflow_pack_ref(purpose: AIWorkflowPurpose) -> AIWorkflowPackRef
         purpose=purpose,
         evaluation_ref=contract.evaluation_ref,
     )
-
-
-def _caller_may_read_candidate(
-    record: CandidatePersistenceRecord,
-    command: GenerateAIExplanationCommand,
-) -> bool:
-    candidate_scope = record.candidate.access_scope
-    return candidate_scope is None or candidate_scope.tenant_id in command.caller_tenant_ids
 
 
 def _same_candidate_evidence_revision(

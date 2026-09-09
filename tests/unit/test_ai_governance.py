@@ -45,6 +45,7 @@ from app.domain import (
     RedactedIdeaEvidence,
     RedactedSourceRef,
     ReviewAccessScope,
+    QueueAccessScopeFilter,
     ReviewPosture,
     SourceRef,
     SourceCutPosture,
@@ -64,6 +65,12 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
 VERIFIED_AT = datetime(2026, 6, 21, 10, 16, tzinfo=UTC)
 AI_EVIDENCE_HASH = f"sha256:{'c' * 64}"
+AI_ACCESS_SCOPE_FILTER = QueueAccessScopeFilter(
+    tenant_id="tenant-ai-test",
+    book_id="book-ai-test",
+    portfolio_id="portfolio-ai-test",
+    client_id="client-ai-test",
+)
 
 
 def source_ref(
@@ -283,7 +290,7 @@ def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:projection:001",
             idempotency_payload={"candidateId": "idea-ai-001", "requestId": "ai-explanation-001"},
-            caller_tenant_ids=("tenant-ai-test",),
+            caller_access_scope_filter=AI_ACCESS_SCOPE_FILTER,
         ),
         repository=repository,
     )
@@ -303,6 +310,7 @@ def test_ai_explanation_returns_not_found_without_lineage_write() -> None:
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:missing-candidate:001",
             idempotency_payload={"candidateId": "missing-ai-candidate"},
+            caller_access_scope_filter=AI_ACCESS_SCOPE_FILTER,
         ),
         repository=repository,
     )
@@ -311,6 +319,60 @@ def test_ai_explanation_returns_not_found_without_lineage_write() -> None:
     assert result.explanation_result is None
     assert result.lineage_persistence_result is None
     assert repository.snapshot().candidate_records == {}
+
+
+@pytest.mark.parametrize(
+    "access_scope_filter",
+    (
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-other",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-ai-test",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-other",
+            client_id="client-ai-test",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-other",
+        ),
+        QueueAccessScopeFilter(tenant_id="tenant-ai-test"),
+    ),
+)
+def test_ai_explanation_refuses_incomplete_or_mismatched_scope_before_lineage_write(
+    access_scope_filter: QueueAccessScopeFilter,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate(),
+        idempotency_key="signal-ingestion:ai-scope-refusal:001",
+        payload={"candidate_id": "idea-ai-001"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+
+    with pytest.raises(PermissionError, match="entitlement scope"):
+        evaluate_ai_explanation_to_repository(
+            EvaluateAIExplanationToRepositoryCommand(
+                candidate_id="idea-ai-001",
+                explanation=command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+                fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+                idempotency_key="ai-explanation:scope-refusal:001",
+                idempotency_payload={"candidateId": "idea-ai-001"},
+                caller_access_scope_filter=access_scope_filter,
+            ),
+            repository=repository,
+        )
+
+    record = repository.snapshot().candidate_records["idea-ai-001"]
+    assert record.ai_explanation_lineage_records == ()
 
 
 def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> None:
@@ -332,7 +394,7 @@ def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> No
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:conflict:001",
             idempotency_payload={"requestId": base_command.request_id},
-            caller_tenant_ids=("tenant-ai-test",),
+            caller_access_scope_filter=AI_ACCESS_SCOPE_FILTER,
         ),
         repository=source_repository,
     )
@@ -343,7 +405,7 @@ def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> No
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="ai-explanation:conflict:001",
             idempotency_payload={"requestId": "ai-request-conflicting"},
-            caller_tenant_ids=("tenant-ai-test",),
+            caller_access_scope_filter=AI_ACCESS_SCOPE_FILTER,
         ),
         repository=source_repository,
     )

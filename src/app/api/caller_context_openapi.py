@@ -114,12 +114,20 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         path="/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
         required_capabilities=("idea.ai-explanation.evaluate",),
         required_roles=("advisor",),
+        entitlement_scope=(
+            "Complete trusted tenant, book, portfolio, and client scope must match the "
+            "persisted candidate before evaluation or lineage persistence."
+        ),
     ),
     CallerContextOpenApiRequirement(
         method="POST",
         path="/api/v1/idea-candidates/{candidateId}/ai-explanations",
         required_capabilities=("idea.ai-explanation.generate",),
         required_roles=("advisor",),
+        entitlement_scope=(
+            "Complete trusted tenant, book, portfolio, and client scope must match the "
+            "persisted candidate before Lotus AI execution or lineage persistence."
+        ),
     ),
     _operator_requirement(
         "GET", "/api/v1/ai-explanations/readiness", "idea.ai-explanation.readiness.read"

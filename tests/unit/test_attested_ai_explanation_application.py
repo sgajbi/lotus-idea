@@ -34,12 +34,18 @@ from app.domain.lotus_ai_run_attestation import (
     LotusAIRunAttestationSignature,
 )
 from app.domain.persistence import InMemoryIdeaRepository
+from app.domain.access_scope import QueueAccessScopeFilter
 from tests.unit.test_ai_governance import command
 from tests.unit.test_idea_persistence import EVALUATED_AT, high_cash_candidate
 
 
 VERIFIED_AT = datetime(2026, 7, 11, 10, 5, tzinfo=UTC)
-CALLER_TENANT_IDS = ("tenant-sg-001",)
+CALLER_ACCESS_SCOPE_FILTER = QueueAccessScopeFilter(
+    tenant_id="tenant-sg-001",
+    book_id="book-private-bank-sg",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-001",
+)
 
 
 def test_attested_application_path_verifies_maps_and_persists_receipt() -> None:
@@ -63,7 +69,7 @@ def test_attested_application_path_verifies_maps_and_persists_receipt() -> None:
             producer_run_id=envelope.claims.run_id,
             producer_execution_output=execution_output,
             run_attestation=envelope,
-            caller_tenant_ids=CALLER_TENANT_IDS,
+            caller_access_scope_filter=CALLER_ACCESS_SCOPE_FILTER,
         ),
         repository=repository,
         attestation_key_source=StaticKeySource(),
@@ -106,7 +112,7 @@ def test_attested_application_path_fails_before_write_when_keys_are_unavailable(
                 producer_run_id=envelope.claims.run_id,
                 producer_execution_output=execution_output,
                 run_attestation=envelope,
-                caller_tenant_ids=CALLER_TENANT_IDS,
+                caller_access_scope_filter=CALLER_ACCESS_SCOPE_FILTER,
             ),
             repository=repository,
             attestation_key_source=UnavailableKeySource(),
@@ -131,6 +137,7 @@ def test_attested_command_classifies_incomplete_bundle_before_repository_access(
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key="attested-explanation-incomplete-001",
             idempotency_payload={"request_id": explanation_command.request_id},
+            caller_access_scope_filter=CALLER_ACCESS_SCOPE_FILTER,
             producer_run_id="packrun_idea_explanation_request-001",
         )
 

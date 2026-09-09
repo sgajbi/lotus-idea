@@ -181,11 +181,12 @@ def require_complete_caller_access_scope_filter(
     """Return a complete trusted caller scope or fail closed."""
 
     scope = caller.entitlement_scope
-    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
-        raise PermissionDeniedError(denied_permission)
-    return QueueAccessScopeFilter(
+    scope_filter = QueueAccessScopeFilter(
         tenant_id=scope.tenant_ids,
         book_id=scope.book_ids,
         portfolio_id=scope.portfolio_ids,
         client_id=scope.client_ids,
     )
+    if not scope_filter.is_complete:
+        raise PermissionDeniedError(denied_permission)
+    return scope_filter

@@ -100,6 +100,26 @@ def test_lifecycle_transition_openapi_publishes_complete_candidate_scope() -> No
     }.issubset(headers)
 
 
+def test_ai_mutation_openapi_publishes_complete_candidate_scope() -> None:
+    for path in (
+        "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
+        "/api/v1/idea-candidates/{candidateId}/ai-explanations",
+    ):
+        operation = _operation("POST", path)
+        caller_context = operation[CALLER_CONTEXT_EXTENSION]
+        assert (
+            "Complete trusted tenant, book, portfolio, and client scope"
+            in caller_context["entitlementScope"]
+        )
+        headers = _header_descriptions(operation)
+        assert {
+            "X-Caller-Tenant-Ids",
+            "X-Caller-Book-Ids",
+            "X-Caller-Portfolio-Ids",
+            "X-Caller-Client-Ids",
+        }.issubset(headers)
+
+
 def test_every_protected_operation_publishes_caller_boundary_problem_contracts() -> None:
     schema = app.openapi()
 

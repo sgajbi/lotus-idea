@@ -22,11 +22,18 @@ from app.domain import (
     AIProposedActionType,
     AIWorkflowPackRef,
     AIWorkflowPurpose,
+    QueueAccessScopeFilter,
 )
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome
 
 _CORE_PORTFOLIO_SNAPSHOT_SOURCE = "lotus-core:PortfolioStateSnapshot:v1"
 _VERIFIER_RAN_AT_UTC = datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC)
+_CALLER_ACCESS_SCOPE_FILTER = QueueAccessScopeFilter(
+    tenant_id="tenant-ai-test",
+    book_id="book-ai-test",
+    portfolio_id="portfolio-ai-test",
+    client_id="client-ai-test",
+)
 
 
 def workflow_pack() -> AIWorkflowPackRequest:
@@ -258,6 +265,7 @@ def test_ai_explanation_application_command_rejects_blank_candidate() -> None:
                 "candidateId": " ",
                 "requestId": "ai-explanation-001",
             },
+            caller_access_scope_filter=_CALLER_ACCESS_SCOPE_FILTER,
         )
 
 
@@ -280,6 +288,7 @@ def test_ai_explanation_application_command_rejects_blank_idempotency_key() -> N
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
             idempotency_key=" ",
             idempotency_payload={},
+            caller_access_scope_filter=_CALLER_ACCESS_SCOPE_FILTER,
         )
 
 

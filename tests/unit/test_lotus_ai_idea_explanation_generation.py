@@ -14,7 +14,7 @@ from app.application.lotus_ai_idea_explanation_generation import (
     UnsupportedAIGenerationPurpose,
     generate_ai_explanation_to_repository,
 )
-from app.domain import AIExplanationPosture, InMemoryIdeaRepository
+from app.domain import AIExplanationPosture, InMemoryIdeaRepository, QueueAccessScopeFilter
 from app.domain.ai_governance import AIFallbackReason, AIWorkflowPurpose
 from app.domain.persistence_models import CandidatePersistenceRecord
 from app.ports.lotus_ai_runtime import (
@@ -168,7 +168,7 @@ def _command(
     *,
     candidate_id: str = "idea-ai-001",
     purpose: AIWorkflowPurpose = AIWorkflowPurpose.ADVISOR_RATIONALE_DRAFT,
-    tenant_ids: tuple[str, ...] = ("tenant-ai-test",),
+    access_scope_filter: QueueAccessScopeFilter | None = None,
 ) -> GenerateAIExplanationCommand:
     return GenerateAIExplanationCommand(
         candidate_id=candidate_id,
@@ -177,7 +177,13 @@ def _command(
         purpose=purpose,
         requested_at_utc=REQUESTED_AT,
         idempotency_key="ai-explanation:generation:001",
-        caller_tenant_ids=tenant_ids,
+        caller_access_scope_filter=access_scope_filter
+        or QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-ai-test",
+        ),
     )
 
 
@@ -480,15 +486,47 @@ async def test_generation_skips_execution_for_unknown_candidate() -> None:
     assert runtime.requests == []
 
 
+@pytest.mark.parametrize(
+    "access_scope_filter",
+    (
+        QueueAccessScopeFilter(
+            tenant_id="tenant-other",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-ai-test",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-other",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-ai-test",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-other",
+            client_id="client-ai-test",
+        ),
+        QueueAccessScopeFilter(
+            tenant_id="tenant-ai-test",
+            book_id="book-ai-test",
+            portfolio_id="portfolio-ai-test",
+            client_id="client-other",
+        ),
+        QueueAccessScopeFilter(tenant_id="tenant-ai-test"),
+    ),
+)
 @pytest.mark.asyncio
-async def test_generation_skips_execution_outside_caller_tenant_scope() -> None:
+async def test_generation_skips_execution_outside_caller_scope(
+    access_scope_filter: QueueAccessScopeFilter,
+) -> None:
     from app.application.ai_governance import AIExplanationEntitlementDenied
 
     runtime = FakeRuntime(error=AssertionError("must not execute"))
 
     with pytest.raises(AIExplanationEntitlementDenied):
         await generate_ai_explanation_to_repository(
-            _command(tenant_ids=("tenant-other",)),
+            _command(access_scope_filter=access_scope_filter),
             repository=_repository_with_candidate(),
             runtime=runtime,
             unattested_workflow_fixture_allowed=True,
