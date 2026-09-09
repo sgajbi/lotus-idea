@@ -18,7 +18,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_concentration_risk_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import portfolio_only_scope, require_authoritative_scope
 from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
@@ -64,6 +64,7 @@ class EvaluateAndPersistConcentrationRiskSignalCommand:
 @dataclass(frozen=True)
 class EvaluateAndPersistConcentrationRiskFromRiskCommand:
     evaluation: EvaluateConcentrationRiskFromRiskCommand
+    access_scope: ReviewAccessScope
     idempotency_key: str
     actor_subject: str
     accepted_at_utc: datetime
@@ -150,6 +151,7 @@ def evaluate_and_persist_concentration_risk_signal(
 ) -> ConcentrationRiskSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.evaluation.access_scope)
     evaluation = accept_candidate_evaluation(
         evaluate_concentration_risk_signal_command(command.evaluation, policy=policy),
         accepted_at_utc=command.accepted_at_utc,
@@ -179,6 +181,7 @@ def evaluate_and_persist_concentration_risk_signal_from_risk(
 ) -> ConcentrationRiskSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.access_scope)
     try:
         evidence = risk_source.fetch_concentration_evidence(
             RiskConcentrationEvidenceRequest(
@@ -222,7 +225,12 @@ def evaluate_and_persist_concentration_risk_signal_from_risk(
         )
 
     evaluation = accept_candidate_evaluation(
-        _evaluate_concentration_risk_evidence(command.evaluation, evidence, policy=policy),
+        _evaluate_concentration_risk_evidence(
+            command.evaluation,
+            evidence,
+            policy=policy,
+            access_scope=command.access_scope,
+        ),
         accepted_at_utc=command.accepted_at_utc,
     )
     source_diagnostic_codes = _risk_source_diagnostic_codes(evidence)
@@ -252,6 +260,7 @@ def _evaluate_concentration_risk_evidence(
     evidence: RiskConcentrationEvidence,
     *,
     policy: ConcentrationRiskSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> SignalEvaluationResult:
     return evaluate_concentration_risk_signal_command(
         EvaluateConcentrationRiskSignalCommand(
@@ -262,7 +271,7 @@ def _evaluate_concentration_risk_evidence(
             concentration_ref=evidence.concentration_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=access_scope or portfolio_only_scope(command.portfolio_id),
         ),
         policy=policy,
     )

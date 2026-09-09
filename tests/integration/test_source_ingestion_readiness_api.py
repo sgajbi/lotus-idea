@@ -113,6 +113,15 @@ def source_ingestion_run_headers(
     }
 
 
+def source_ingestion_work_item() -> dict[str, str]:
+    return {
+        "portfolioId": PORTFOLIO_ID,
+        "bookId": "book-advisor-001",
+        "clientId": "client-001",
+        "asOfDate": "2026-06-21",
+    }
+
+
 def _single_item_runtime(source: RecordingCoreSource) -> SourceIngestionRuntime:
     return SourceIngestionRuntime(
         plan=source_ingestion_worker_plan_from_manifest(
@@ -120,7 +129,7 @@ def _single_item_runtime(source: RecordingCoreSource) -> SourceIngestionRuntime:
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
                 "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         core_source=source,
@@ -502,12 +511,7 @@ def test_source_ingestion_run_once_api_blocks_manifest_over_batch_ceiling(
                 "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
-                "workItems": [
-                    {
-                        "portfolioId": PORTFOLIO_ID,
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         encoding="utf-8",
@@ -555,12 +559,7 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
-                "workItems": [
-                    {
-                        "portfolioId": PORTFOLIO_ID,
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         core_source=source,
@@ -631,12 +630,7 @@ def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
-                "workItems": [
-                    {
-                        "portfolioId": PORTFOLIO_ID,
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         core_source=source,
@@ -694,12 +688,7 @@ def test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_clo
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
-                "workItems": [
-                    {
-                        "portfolioId": PORTFOLIO_ID,
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         core_source=source,
@@ -797,12 +786,7 @@ def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
                 "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-                "workItems": [
-                    {
-                        "portfolioId": PORTFOLIO_ID,
-                        "asOfDate": "2026-06-21",
-                    }
-                ],
+                "workItems": [source_ingestion_work_item()],
             }
         ),
         core_source=RecordingCoreSource(),

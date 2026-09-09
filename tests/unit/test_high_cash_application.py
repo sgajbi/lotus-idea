@@ -31,6 +31,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     UnsupportedEvidenceReason,
+    UnscopedCandidatePersistenceError,
 )
 from app.ports.core_sources import (
     CoreHighCashEvidence,
@@ -516,6 +517,7 @@ def test_application_persists_core_backed_high_cash_candidate() -> None:
     result = evaluate_and_persist_high_cash_signal_from_core(
         EvaluateAndPersistHighCashFromCoreCommand(
             evaluation=from_core_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="signal-ingestion:high-cash:core:pb-001:2026-06-21",
             actor_subject="signal-ingestion-worker",
             accepted_at_utc=EVALUATED_AT,
@@ -531,11 +533,35 @@ def test_application_persists_core_backed_high_cash_candidate() -> None:
     assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
 
 
+def test_core_persistence_refuses_placeholder_scope_before_source_io_or_mutation() -> None:
+    source = RecordingCoreSource(evidence=current_core_evidence())
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_and_persist_high_cash_signal_from_core(
+            EvaluateAndPersistHighCashFromCoreCommand(
+                evaluation=from_core_command(),
+                access_scope=replace(ACCESS_SCOPE, client_id="unknown"),
+                idempotency_key="signal-ingestion:high-cash:core:unscoped",
+                actor_subject="signal-ingestion-worker",
+                accepted_at_utc=EVALUATED_AT,
+            ),
+            core_source=source,
+            repository=repository,
+        )
+
+    assert source.seen_request is None
+    assert repository.snapshot().candidate_records == {}
+    assert repository.snapshot().idempotency_records == {}
+    assert repository.snapshot().outbox_events == {}
+
+
 def test_core_ingestion_retires_candidate_when_source_condition_is_no_longer_eligible() -> None:
     repository = InMemoryIdeaRepository()
     source = RecordingCoreSource(evidence=current_core_evidence())
     initial_command = EvaluateAndPersistHighCashFromCoreCommand(
         evaluation=from_core_command(),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
         actor_subject="signal-ingestion-worker",
         accepted_at_utc=EVALUATED_AT,
@@ -577,6 +603,7 @@ def test_core_source_failure_does_not_retire_existing_candidate() -> None:
     source = RecordingCoreSource(evidence=current_core_evidence())
     initial_command = EvaluateAndPersistHighCashFromCoreCommand(
         evaluation=from_core_command(),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="signal-ingestion:high-cash:core:pb-001:initial",
         actor_subject="signal-ingestion-worker",
         accepted_at_utc=EVALUATED_AT,

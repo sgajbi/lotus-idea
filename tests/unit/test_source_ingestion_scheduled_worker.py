@@ -338,6 +338,8 @@ def _manifest() -> dict[str, Any]:
         "workItems": [
             {
                 "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                "bookId": "book-runtime-proof",
+                "clientId": "client-runtime-proof",
                 "asOfDate": "2026-06-21",
                 "idempotencyKey": "signal-ingestion:high-cash:lotus-core:explicit",
             }

@@ -17,7 +17,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_underperformance_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import portfolio_only_scope, require_authoritative_scope
 from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.application.candidate_persistence_identity import build_candidate_idempotency_payload
 from app.domain.access_scope import ReviewAccessScope
@@ -56,6 +56,7 @@ class EvaluateUnderperformanceFromPerformanceCommand:
 @dataclass(frozen=True)
 class EvaluateAndPersistUnderperformanceFromPerformanceCommand:
     evaluation: EvaluateUnderperformanceFromPerformanceCommand
+    access_scope: ReviewAccessScope
     idempotency_key: str
     actor_subject: str
     accepted_at_utc: datetime
@@ -119,10 +120,12 @@ def evaluate_and_persist_underperformance_signal_from_performance(
 ) -> UnderperformanceSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.access_scope)
     source_evaluation = _evaluate_underperformance_source(
         command.evaluation,
         performance_source=performance_source,
         policy=policy,
+        access_scope=command.access_scope,
     )
     evaluation = accept_candidate_evaluation(
         source_evaluation.evaluation,
@@ -162,6 +165,7 @@ def _evaluate_underperformance_source(
     *,
     performance_source: PerformanceUnderperformanceSourcePort,
     policy: UnderperformanceSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> _UnderperformanceSourceEvaluation:
     try:
         evidence = performance_source.fetch_underperformance_evidence(
@@ -204,7 +208,12 @@ def _evaluate_underperformance_source(
         )
 
     return _UnderperformanceSourceEvaluation(
-        evaluation=_evaluate_underperformance_evidence(command, evidence, policy=policy),
+        evaluation=_evaluate_underperformance_evidence(
+            command,
+            evidence,
+            policy=policy,
+            access_scope=access_scope,
+        ),
         source_diagnostic_codes=_performance_source_diagnostic_codes(evidence),
     )
 
@@ -214,6 +223,7 @@ def _evaluate_underperformance_evidence(
     evidence: PerformanceUnderperformanceEvidence,
     *,
     policy: UnderperformanceSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> SignalEvaluationResult:
     return evaluate_underperformance_signal_command(
         EvaluateUnderperformanceSignalCommand(
@@ -223,7 +233,7 @@ def _evaluate_underperformance_evidence(
             performance_ref=evidence.performance_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=access_scope or portfolio_only_scope(command.portfolio_id),
         ),
         policy=policy,
     )

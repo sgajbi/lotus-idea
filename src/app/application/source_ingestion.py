@@ -16,6 +16,7 @@ from app.application.high_cash_signal import (
 from app.domain import (
     CandidatePersistenceDecision,
     HighCashSignalPolicy,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     UnsupportedEvidenceReason,
 )
@@ -49,6 +50,8 @@ class HighCashSourceIngestionDecision(StrEnum):
 class IngestHighCashSourceSignalCommand:
     portfolio_id: str
     tenant_id: str
+    book_id: str
+    client_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     actor_subject: str = SOURCE_INGESTION_ACTOR
@@ -68,11 +71,15 @@ class HighCashSourceIngestionResult:
 @dataclass(frozen=True)
 class HighCashSourceIngestionWorkItem:
     portfolio_id: str
+    book_id: str
+    client_id: str
     as_of_date: date
     idempotency_key: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.portfolio_id, "portfolio_id")
+        _require_text(self.book_id, "book_id")
+        _require_text(self.client_id, "client_id")
         if self.idempotency_key is not None:
             _require_text(self.idempotency_key, "idempotency_key")
 
@@ -156,6 +163,8 @@ def ingest_high_cash_signal_from_core(
 ) -> HighCashSourceIngestionResult:
     _require_text(command.portfolio_id, "portfolio_id")
     _require_text(command.tenant_id, "tenant_id")
+    _require_text(command.book_id, "book_id")
+    _require_text(command.client_id, "client_id")
     _require_text(command.actor_subject, "actor_subject")
     if command.idempotency_key is not None:
         _require_text(command.idempotency_key, "idempotency_key")
@@ -174,6 +183,12 @@ def ingest_high_cash_signal_from_core(
                 evaluated_at_utc=command.evaluated_at_utc,
                 correlation_id=command.correlation_id,
                 trace_id=command.trace_id,
+            ),
+            access_scope=ReviewAccessScope(
+                tenant_id=command.tenant_id,
+                book_id=command.book_id,
+                portfolio_id=command.portfolio_id,
+                client_id=command.client_id,
             ),
             idempotency_key=idempotency_key,
             actor_subject=command.actor_subject,
@@ -203,6 +218,8 @@ def run_high_cash_source_ingestion_batch(
             IngestHighCashSourceSignalCommand(
                 portfolio_id=item.portfolio_id,
                 tenant_id=command.tenant_id,
+                book_id=item.book_id,
+                client_id=item.client_id,
                 as_of_date=item.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 actor_subject=command.actor_subject,

@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 ScopeFilterValue = str | Iterable[str] | None
+UNKNOWN_SCOPE_VALUE = "unknown"
 
 
 def _clean_optional_values(value: ScopeFilterValue) -> tuple[str, ...]:
@@ -33,6 +34,14 @@ class ReviewAccessScope:
         _require_text(self.book_id, "book_id")
         _require_text(self.portfolio_id, "portfolio_id")
         _require_text(self.client_id, "client_id")
+
+    @property
+    def is_authoritative(self) -> bool:
+        """Return whether every scope dimension carries source-backed authority."""
+        return all(
+            value.strip().casefold() != UNKNOWN_SCOPE_VALUE
+            for value in (self.tenant_id, self.book_id, self.portfolio_id, self.client_id)
+        )
 
 
 @dataclass(frozen=True, init=False)

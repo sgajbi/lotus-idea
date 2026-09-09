@@ -168,6 +168,10 @@ class InMemoryIdeaRepository(
             raise UnscopedCandidatePersistenceError(
                 "candidate access scope is required for persistence"
             )
+        if not candidate.access_scope.is_authoritative:
+            raise UnscopedCandidatePersistenceError(
+                "candidate access scope must be authoritative for persistence"
+            )
         event_time = occurred_at_utc or datetime.now(UTC)
         _require_aware_utc(event_time, "occurred_at_utc")
 

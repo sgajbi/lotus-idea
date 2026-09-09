@@ -420,7 +420,7 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                         "sourceAuthority": "lotus-core",
                         "opportunityFamily": "high_cash",
                         "manifestSchemaVersion": (
-                            "lotus-idea.source-ingestion.high-cash.run-once.v1"
+                            "lotus-idea.source-ingestion.high-cash.run-once.v2"
                         ),
                         "exampleManifestPath": (
                             "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"

@@ -23,6 +23,7 @@ from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -121,6 +122,8 @@ def command(
     return IngestHighCashSourceSignalCommand(
         portfolio_id=PORTFOLIO_ID,
         tenant_id="tenant-a",
+        book_id="book-a",
+        client_id="client-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         idempotency_key=idempotency_key,
@@ -160,7 +163,12 @@ def test_ingests_core_high_cash_candidate_with_generated_source_key() -> None:
     assert source.seen_request.correlation_id == "corr-source-ingestion"
     assert source.seen_request.trace_id == "trace-source-ingestion"
     assert result.signal_result.persistence.record.candidate.access_scope is not None
-    assert result.signal_result.persistence.record.candidate.access_scope.tenant_id == "tenant-a"
+    assert result.signal_result.persistence.record.candidate.access_scope == ReviewAccessScope(
+        tenant_id="tenant-a",
+        book_id="book-a",
+        portfolio_id=PORTFOLIO_ID,
+        client_id="client-a",
+    )
 
 
 def test_generated_source_ingestion_identity_is_isolated_by_tenant() -> None:
@@ -255,10 +263,14 @@ def test_run_once_batch_ingests_and_replays_duplicate_work_items() -> None:
             work_items=(
                 HighCashSourceIngestionWorkItem(
                     portfolio_id=PORTFOLIO_ID,
+                    book_id="book-a",
+                    client_id="client-a",
                     as_of_date=AS_OF_DATE,
                 ),
                 HighCashSourceIngestionWorkItem(
                     portfolio_id=PORTFOLIO_ID,
+                    book_id="book-a",
+                    client_id="client-a",
                     as_of_date=AS_OF_DATE,
                 ),
             ),
@@ -289,6 +301,8 @@ def test_run_once_batch_reports_conflicts_without_duplicate_candidates() -> None
     explicit_key = "signal-ingestion:high-cash:lotus-core:batch-conflict"
     work_item = HighCashSourceIngestionWorkItem(
         portfolio_id=PORTFOLIO_ID,
+        book_id="book-a",
+        client_id="client-a",
         as_of_date=AS_OF_DATE,
         idempotency_key=explicit_key,
     )
@@ -489,6 +503,8 @@ def test_economic_duplicate_source_candidate_resolves_through_repository_identit
 def test_validates_run_once_batch_boundaries() -> None:
     valid_item = HighCashSourceIngestionWorkItem(
         portfolio_id=PORTFOLIO_ID,
+        book_id="book-a",
+        client_id="client-a",
         as_of_date=AS_OF_DATE,
     )
     mutable_work_items = [valid_item]
@@ -585,15 +601,27 @@ def test_validates_source_ingestion_identity_fields() -> None:
             IngestHighCashSourceSignalCommand(
                 portfolio_id=" ",
                 tenant_id="tenant-a",
+                book_id="book-a",
+                client_id="client-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
             ),
             "portfolio_id is required",
         ),
         (
+            replace(command(), book_id=" "),
+            "book_id is required",
+        ),
+        (
+            replace(command(), client_id=" "),
+            "client_id is required",
+        ),
+        (
             IngestHighCashSourceSignalCommand(
                 portfolio_id=PORTFOLIO_ID,
                 tenant_id="tenant-a",
+                book_id="book-a",
+                client_id="client-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
                 actor_subject=" ",
@@ -604,6 +632,8 @@ def test_validates_source_ingestion_identity_fields() -> None:
             IngestHighCashSourceSignalCommand(
                 portfolio_id=PORTFOLIO_ID,
                 tenant_id="tenant-a",
+                book_id="book-a",
+                client_id="client-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
                 idempotency_key=" ",

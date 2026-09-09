@@ -244,6 +244,12 @@ def test_runtime_execution_cli_writes_source_safe_artifact(
             "http://performance.test",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
+            "--tenant-id",
+            "tenant-a",
+            "--book-id",
+            "book-a",
+            "--client-id",
+            "client-a",
             "--as-of-date",
             "2026-06-21",
             "--generated-at-utc",
@@ -264,6 +270,9 @@ def test_runtime_execution_cli_writes_source_safe_artifact(
     assert result == 0
     assert performance_underperformance_runtime_execution_is_valid(payload) is True
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
+    assert "tenant-a" not in serialized
+    assert "book-a" not in serialized
+    assert "client-a" not in serialized
     assert "sensitive-correlation" not in serialized
     assert "sensitive-trace" not in serialized
 
@@ -286,6 +295,12 @@ def test_runtime_execution_cli_fails_closed_without_durable_repository(
             "http://performance.test",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
+            "--tenant-id",
+            "tenant-a",
+            "--book-id",
+            "book-a",
+            "--client-id",
+            "client-a",
             "--as-of-date",
             "2026-06-21",
             "--generated-at-utc",

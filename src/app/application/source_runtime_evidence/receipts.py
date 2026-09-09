@@ -81,7 +81,7 @@ def build_runtime_receipts(
     if record.evidence_hash != evidence_hash_for_source_refs(source_refs):
         return None, None
     scope = candidate.access_scope
-    if scope is None or scope.portfolio_id != expected_portfolio_id:
+    if scope is None or not scope.is_authoritative or scope.portfolio_id != expected_portfolio_id:
         return None, None
 
     source_receipt = _source_receipt(source_refs[0])

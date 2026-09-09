@@ -16,6 +16,7 @@ from app.application.risk_concentration_runtime_evidence import (
 from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    ReviewAccessScope,
     SourceReconciliationPosture,
     SourceRef,
     SourceRevisionClaims,
@@ -26,6 +27,12 @@ from app.ports.risk_sources import RiskConcentrationEvidence, RiskConcentrationE
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 GENERATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+ACCESS_SCOPE = ReviewAccessScope(
+    tenant_id="tenant-private-bank-sg",
+    book_id="book-advisor-001",
+    portfolio_id="PB_SG_GLOBAL_BAL_001",
+    client_id="client-001",
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +52,7 @@ def runtime_command() -> EvaluateAndPersistConcentrationRiskFromRiskCommand:
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=EVALUATED_AT,
         ),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="risk-concentration-runtime-evidence",
         actor_subject="runtime-evidence-test",
         accepted_at_utc=GENERATED_AT,

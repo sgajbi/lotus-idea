@@ -19,7 +19,7 @@ from app.application.source_ingestion import (
 )
 
 
-MANIFEST_SCHEMA_VERSION = "lotus-idea.source-ingestion.high-cash.run-once.v1"
+MANIFEST_SCHEMA_VERSION = "lotus-idea.source-ingestion.high-cash.run-once.v2"
 
 _MANIFEST_KEYS = {
     "schemaVersion",
@@ -33,6 +33,8 @@ _MANIFEST_KEYS = {
 }
 _WORK_ITEM_KEYS = {
     "portfolioId",
+    "bookId",
+    "clientId",
     "asOfDate",
     "idempotencyKey",
 }
@@ -157,6 +159,8 @@ def _work_items_from_manifest(
                 portfolio_id=_require_text(
                     raw_item.get("portfolioId"), f"workItems[{index}].portfolioId"
                 ),
+                book_id=_require_text(raw_item.get("bookId"), f"workItems[{index}].bookId"),
+                client_id=_require_text(raw_item.get("clientId"), f"workItems[{index}].clientId"),
                 as_of_date=_date(raw_item.get("asOfDate"), f"workItems[{index}].asOfDate"),
                 idempotency_key=_optional_text(raw_item.get("idempotencyKey")),
             )

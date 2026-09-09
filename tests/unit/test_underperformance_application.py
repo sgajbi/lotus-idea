@@ -17,9 +17,11 @@ from app.domain import (
     EvidenceFreshness,
     InMemoryIdeaRepository,
     ReasonCode,
+    ReviewAccessScope,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
+    UnscopedCandidatePersistenceError,
 )
 from app.ports.performance_sources import (
     PerformanceSourceEntitlementDenied,
@@ -31,6 +33,7 @@ from app.ports.performance_sources import (
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+ACCESS_SCOPE = ReviewAccessScope("tenant-a", "book-a", "portfolio-001", "client-a")
 
 
 class StubPerformanceSource:
@@ -114,6 +117,7 @@ def test_underperformance_application_persists_candidate_and_replays_idempotentl
     )
     command = EvaluateAndPersistUnderperformanceFromPerformanceCommand(
         evaluation=_command(),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="performance-underperformance-runtime-proof",
         actor_subject="lotus-idea-runtime-proof",
         accepted_at_utc=EVALUATED_AT,
@@ -139,10 +143,40 @@ def test_underperformance_application_persists_candidate_and_replays_idempotentl
     assert len(repository.snapshot().idempotency_records) == 1
 
 
+def test_underperformance_persistence_refuses_placeholder_scope_without_mutation() -> None:
+    repository = InMemoryIdeaRepository()
+    source = StubPerformanceSource(
+        PerformanceUnderperformanceEvidence(
+            source_reported_active_return=Decimal("-0.0125"),
+            benchmark_context_available=True,
+            performance_ref=_source_ref(),
+        )
+    )
+
+    with pytest.raises(UnscopedCandidatePersistenceError, match="must be authoritative"):
+        evaluate_and_persist_underperformance_signal_from_performance(
+            EvaluateAndPersistUnderperformanceFromPerformanceCommand(
+                evaluation=_command(),
+                access_scope=replace(ACCESS_SCOPE, portfolio_id="unknown"),
+                idempotency_key="performance-underperformance-unscoped",
+                actor_subject="runtime-evidence",
+                accepted_at_utc=EVALUATED_AT,
+            ),
+            performance_source=source,
+            repository=repository,
+        )
+
+    assert repository.snapshot().candidate_records == {}
+    assert repository.snapshot().idempotency_records == {}
+    assert repository.snapshot().outbox_events == {}
+    assert source.requests == []
+
+
 def test_underperformance_application_does_not_persist_non_candidate() -> None:
     result = evaluate_and_persist_underperformance_signal_from_performance(
         EvaluateAndPersistUnderperformanceFromPerformanceCommand(
             evaluation=_command(),
+            access_scope=ACCESS_SCOPE,
             idempotency_key="performance-underperformance-non-candidate",
             actor_subject="lotus-idea-runtime-proof",
             accepted_at_utc=EVALUATED_AT,
@@ -168,6 +202,7 @@ def test_underperformance_persistence_requires_operational_identity(
 ) -> None:
     command = EvaluateAndPersistUnderperformanceFromPerformanceCommand(
         evaluation=_command(),
+        access_scope=ACCESS_SCOPE,
         idempotency_key="performance-underperformance-runtime-proof",
         actor_subject="lotus-idea-runtime-proof",
         accepted_at_utc=EVALUATED_AT,

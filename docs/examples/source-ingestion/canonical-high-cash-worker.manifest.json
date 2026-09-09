@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+  "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v2",
   "evaluatedAtUtc": "2026-07-10T00:00:00Z",
   "tenantId": "default",
   "actorSubject": "canonical-front-office-source-worker",
@@ -9,6 +9,8 @@
   "workItems": [
     {
       "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "bookId": "BOOK_SG_BALANCED_DPM",
+      "clientId": "CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001",
       "asOfDate": "2026-04-10",
       "idempotencyKey": "canonical-source-worker:high-cash:PB_SG_GLOBAL_BAL_001:2026-04-10"
     }

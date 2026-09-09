@@ -347,7 +347,7 @@ def _runtime_receipt(
     scope = candidate.access_scope
     work_item = plan.command.work_items[index]
     source_refs = tuple(candidate.evidence_packet.source_refs)
-    if scope is None:
+    if scope is None or not scope.is_authoritative:
         return None
     if scope.tenant_id != plan.command.tenant_id or scope.portfolio_id != work_item.portfolio_id:
         return None

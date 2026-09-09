@@ -17,7 +17,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_high_volatility_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import portfolio_only_scope, require_authoritative_scope
 from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.domain.access_scope import ReviewAccessScope
 from app.application.risk_runtime_evidence import build_risk_candidate_idempotency_payload
@@ -55,6 +55,7 @@ class EvaluateHighVolatilityFromRiskCommand:
 @dataclass(frozen=True)
 class EvaluateAndPersistHighVolatilityFromRiskCommand:
     evaluation: EvaluateHighVolatilityFromRiskCommand
+    access_scope: ReviewAccessScope
     idempotency_key: str
     actor_subject: str
     accepted_at_utc: datetime
@@ -118,10 +119,12 @@ def evaluate_and_persist_high_volatility_signal_from_risk(
 ) -> HighVolatilitySignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.access_scope)
     source_evaluation = _evaluate_high_volatility_source(
         command.evaluation,
         risk_source=risk_source,
         policy=policy,
+        access_scope=command.access_scope,
     )
     evaluation = accept_candidate_evaluation(
         source_evaluation.evaluation,
@@ -161,6 +164,7 @@ def _evaluate_high_volatility_source(
     *,
     risk_source: RiskVolatilitySourcePort,
     policy: HighVolatilitySignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> _HighVolatilitySourceEvaluation:
     try:
         evidence = risk_source.fetch_volatility_evidence(
@@ -202,7 +206,12 @@ def _evaluate_high_volatility_source(
         )
 
     return _HighVolatilitySourceEvaluation(
-        evaluation=_evaluate_high_volatility_evidence(command, evidence, policy=policy),
+        evaluation=_evaluate_high_volatility_evidence(
+            command,
+            evidence,
+            policy=policy,
+            access_scope=access_scope,
+        ),
         source_diagnostic_codes=_risk_source_diagnostic_codes(evidence),
     )
 
@@ -212,6 +221,7 @@ def _evaluate_high_volatility_evidence(
     evidence: RiskVolatilityEvidence,
     *,
     policy: HighVolatilitySignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> SignalEvaluationResult:
     return evaluate_high_volatility_signal_command(
         EvaluateHighVolatilitySignalCommand(
@@ -221,7 +231,7 @@ def _evaluate_high_volatility_evidence(
             risk_ref=evidence.risk_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=access_scope or portfolio_only_scope(command.portfolio_id),
         ),
         policy=policy,
     )

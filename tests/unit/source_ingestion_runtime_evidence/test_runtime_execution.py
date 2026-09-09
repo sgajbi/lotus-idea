@@ -356,12 +356,14 @@ def test_generator_executes_application_use_case_and_writes_receipts(
     manifest.write_text(
         json.dumps(
             {
-                "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+                "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v2",
                 "evaluatedAtUtc": EVALUATED_AT.isoformat(),
                 "tenantId": "tenant-runtime-proof",
                 "workItems": [
                     {
                         "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "bookId": "book-runtime-proof",
+                        "clientId": "client-runtime-proof",
                         "asOfDate": "2026-06-21",
                     }
                 ],

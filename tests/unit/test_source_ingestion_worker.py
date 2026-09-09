@@ -38,6 +38,20 @@ ROOT = Path(__file__).resolve().parents[2]
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+BOOK_ID = "book-advisor-001"
+CLIENT_ID = "client-001"
+
+
+def _work_item(*, portfolio_id: str = PORTFOLIO_ID, **updates: object) -> dict[str, object]:
+    item: dict[str, object] = {
+        "portfolioId": portfolio_id,
+        "bookId": BOOK_ID,
+        "clientId": CLIENT_ID,
+        "asOfDate": "2026-06-21",
+    }
+    item.update(updates)
+    return item
+
 
 run_high_cash_source_ingestion_batch = partial(
     _run_high_cash_source_ingestion_batch,
@@ -72,6 +86,8 @@ def test_loads_worker_manifest_as_bounded_batch_command() -> None:
             "workItems": [
                 {
                     "portfolioId": PORTFOLIO_ID,
+                    "bookId": BOOK_ID,
+                    "clientId": CLIENT_ID,
                     "asOfDate": "2026-06-21",
                     "idempotencyKey": "signal-ingestion:high-cash:lotus-core:explicit",
                 }
@@ -98,7 +114,7 @@ def test_rejects_unknown_manifest_keys_before_worker_execution() -> None:
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "tenantId": "default",
-        "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+        "workItems": [_work_item()],
         "unexpected": "value",
     }
 
@@ -115,7 +131,7 @@ def test_rejects_unsupported_schema_version() -> None:
         "schemaVersion": "lotus-idea.source-ingestion.high-cash.v0",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "tenantId": "default",
-        "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+        "workItems": [_work_item()],
     }
 
     try:
@@ -132,8 +148,16 @@ def test_rejects_unsupported_schema_version() -> None:
         ({"workItems": "not-a-list"}, "workItems must be a non-empty list"),
         ({"workItems": ["not-an-object"]}, "workItems[0] must be an object"),
         (
-            {"workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21", "extra": "x"}]},
+            {"workItems": [_work_item(extra="x")]},
             "workItems[0] contains unsupported keys: extra",
+        ),
+        (
+            {"workItems": [_work_item(bookId=" ")]},
+            "workItems[0].bookId is required",
+        ),
+        (
+            {"workItems": [_work_item(clientId=" ")]},
+            "workItems[0].clientId is required",
         ),
         ({"actorSubject": " "}, "optional text fields must be non-empty strings when supplied"),
         ({"evaluatedAtUtc": "2026-06-21T10:00:00"}, "evaluatedAtUtc must be timezone-aware"),
@@ -152,7 +176,7 @@ def test_rejects_malformed_worker_manifest_fields(
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "tenantId": "default",
-        "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+        "workItems": [_work_item()],
     }
     manifest.update(manifest_update)
 
@@ -166,7 +190,7 @@ def test_rejects_worker_manifest_over_service_batch_ceiling() -> None:
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "tenantId": "default",
         "workItems": [
-            {"portfolioId": f"portfolio-{index}", "asOfDate": "2026-06-21"}
+            _work_item(portfolio_id=f"portfolio-{index}")
             for index in range(SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1)
         ],
     }
@@ -188,7 +212,7 @@ def test_summarizes_worker_run_without_source_payloads_or_supported_claims() -> 
             "tenantId": "default",
             "correlationId": "corr-worker",
             "traceId": "trace-worker",
-            "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+            "workItems": [_work_item()],
         }
     )
 
@@ -231,6 +255,8 @@ def test_summarizes_worker_source_failure_without_source_payloads() -> None:
             "workItems": [
                 {
                     "portfolioId": PORTFOLIO_ID,
+                    "bookId": BOOK_ID,
+                    "clientId": CLIENT_ID,
                     "asOfDate": "2026-06-21",
                     "idempotencyKey": "signal-ingestion:high-cash:lotus-core:explicit",
                 }
@@ -263,7 +289,7 @@ def test_summarizes_worker_failure_with_default_safe_error_code() -> None:
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
             "tenantId": "default",
-            "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+            "workItems": [_work_item()],
         }
     )
 
@@ -286,7 +312,7 @@ def test_summarizes_worker_block_reasons_without_source_identifiers() -> None:
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
             "tenantId": "default",
-            "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+            "workItems": [_work_item()],
         }
     )
 

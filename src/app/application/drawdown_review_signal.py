@@ -17,7 +17,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_drawdown_review_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import portfolio_only_scope, require_authoritative_scope
 from app.application.candidate_evaluation_acceptance import accept_candidate_evaluation
 from app.domain.access_scope import ReviewAccessScope
 from app.application.risk_runtime_evidence import build_risk_candidate_idempotency_payload
@@ -55,6 +55,7 @@ class EvaluateDrawdownReviewFromRiskCommand:
 @dataclass(frozen=True)
 class EvaluateAndPersistDrawdownReviewFromRiskCommand:
     evaluation: EvaluateDrawdownReviewFromRiskCommand
+    access_scope: ReviewAccessScope
     idempotency_key: str
     actor_subject: str
     accepted_at_utc: datetime
@@ -118,10 +119,12 @@ def evaluate_and_persist_drawdown_review_signal_from_risk(
 ) -> DrawdownReviewSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
+    require_authoritative_scope(command.access_scope)
     source_evaluation = _evaluate_drawdown_review_source(
         command.evaluation,
         risk_source=risk_source,
         policy=policy,
+        access_scope=command.access_scope,
     )
     evaluation = accept_candidate_evaluation(
         source_evaluation.evaluation,
@@ -161,6 +164,7 @@ def _evaluate_drawdown_review_source(
     *,
     risk_source: RiskDrawdownSourcePort,
     policy: DrawdownReviewSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> _DrawdownReviewSourceEvaluation:
     try:
         evidence = risk_source.fetch_drawdown_evidence(
@@ -202,7 +206,12 @@ def _evaluate_drawdown_review_source(
         )
 
     return _DrawdownReviewSourceEvaluation(
-        evaluation=_evaluate_drawdown_evidence(command, evidence, policy=policy),
+        evaluation=_evaluate_drawdown_evidence(
+            command,
+            evidence,
+            policy=policy,
+            access_scope=access_scope,
+        ),
         source_diagnostic_codes=_risk_source_diagnostic_codes(evidence),
     )
 
@@ -212,6 +221,7 @@ def _evaluate_drawdown_evidence(
     evidence: RiskDrawdownEvidence,
     *,
     policy: DrawdownReviewSignalPolicy,
+    access_scope: ReviewAccessScope | None = None,
 ) -> SignalEvaluationResult:
     return evaluate_drawdown_review_signal_command(
         EvaluateDrawdownReviewSignalCommand(
@@ -221,7 +231,7 @@ def _evaluate_drawdown_evidence(
             risk_ref=evidence.risk_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=access_scope or portfolio_only_scope(command.portfolio_id),
         ),
         policy=policy,
     )
