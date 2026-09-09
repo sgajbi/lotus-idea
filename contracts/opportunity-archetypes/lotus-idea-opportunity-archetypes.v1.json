@@ -401,11 +401,10 @@
       "first_supported_journey": false,
       "advisor_audience": "advisor",
       "source_products": [
-        "lotus-core:PortfolioStateSnapshot:v1",
         "lotus-core:HoldingsAsOf:v1",
         "lotus-core:PortfolioMaturitySummary:v1"
       ],
-      "lotus_idea_responsibility": "Evaluate source-owned contractual maturity facts only from caller-supplied evidence or an exact receipt-bound Core PortfolioMaturitySummary:v1 execution with governed request scope, supportability, reconciliation, freshness, quality, snapshot identity, and upstream HoldingsAsOf lineage; treat an empty supported window as no opportunity; never derive optionality schedules from raw positions; keep promotion blocked until every independent certification gate is satisfied.",
+      "lotus_idea_responsibility": "Evaluate source-owned contractual maturity facts only from caller-supplied evidence or an exact receipt-bound Core PortfolioMaturitySummary:v1 execution with governed request scope, supportability, reconciliation, freshness, quality, snapshot identity, and upstream HoldingsAsOf lineage. The internal run-once proof path requires authoritative tenant, book, portfolio, and client scope and binds an eligible result to accepted or replayed durable Idea persistence. Treat an empty supported window as no opportunity and never fabricate a persistence receipt; never derive optionality schedules from raw positions; keep promotion blocked until every independent certification gate is satisfied.",
       "evidence_refs": [
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/bond_maturity_signal.py",
@@ -422,7 +421,8 @@
         "tests/unit/test_bond_maturity_application.py",
         "tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py",
         "tests/unit/bond_maturity_runtime_evidence/test_generator.py",
-        "tests/integration/test_bond_maturity_signal_api.py"
+        "tests/integration/test_bond_maturity_signal_api.py",
+        "tests/integration/source_runtime_evidence/test_postgres_replay.py"
       ],
       "canonical_scenarios": [
         {
@@ -437,6 +437,7 @@
             "source-reported next maturity date",
             "source-reported maturing holding count",
             "holding source refs",
+            "accepted or replayed durable candidate receipt",
             "advisor review posture"
           ],
           "remaining_blockers": [

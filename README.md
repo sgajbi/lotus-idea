@@ -25,7 +25,8 @@ current internal foundation include:
   recalculating or claiming ownership of the risk result.
 - **Approaching bond maturity:** carries the Core-owned contractual maturity date into the
   candidate's applicability window so stale reinvestment prompts expire rather than remain in the
-  adviser queue indefinitely.
+  adviser queue indefinitely. The internal source-backed run-once path persists eligible
+  candidates only under complete tenant, book, portfolio, and client scope.
 
 These are implemented and tested product foundations, not externally supported features or advice.
 The [Lotus Idea Blueprint](docs/LOTUS_IDEA_BLUEPRINT.md) is the product-definition anchor; its target

@@ -482,14 +482,17 @@ evidence.
 35. `src/app/application/bond_maturity_runtime_evidence/`,
     `scripts/bond_maturity_runtime_evidence/`, and
     `make bond-maturity-live-proof-contract-gate` replace the caller-summary v1
-    artifact with closed v2 `runtime_execution` evidence. A named read-only use
-    case binds pseudonymous request scope to the exact current
+    artifact with closed v3 `runtime_execution` evidence. A named
+    evaluate-and-persist use case requires authoritative
+    tenant/book/portfolio/client scope and binds pseudonymous request scope to the exact current
     `PortfolioMaturitySummary:v1` receipt and upstream `HoldingsAsOf:v1`
-    content identity. Exact horizon, non-projected mode, contractual maturity
+    content identity plus accepted or exact-replayed durable Idea persistence.
+    Exact horizon, non-projected mode, contractual maturity
     basis, response scope, counts, supportability, snapshot, hashes,
     restatement, reconciliation, evidence time, policy, and correlation must
-    reconcile. A supported empty window completes with no opportunity; partial,
-    stale, unsupported-product, inconsistent, or tampered evidence clears no
+    reconcile. A supported empty window remains a truthful no-opportunity result
+    but cannot clear the candidate-persistence proof; partial, stale,
+    unsupported-product, non-durable, missing-persistence, inconsistent, or tampered evidence clears no
     blocker. A valid current artifact can satisfy only
     `opportunity_archetype_maturity_live_core_source_proof_missing`.
 33. A family-valid and aggregate-current source-ingestion live Core proof

@@ -178,14 +178,15 @@ Additional implemented bond-maturity / reinvestment foundation:
    positions.
 4. `src/app/application/bond_maturity_runtime_evidence/`,
    `scripts/bond_maturity_runtime_evidence/`, and
-   `make bond-maturity-live-proof-contract-gate` define closed v2
-   `runtime_execution` evidence. A named read-only use case binds exact request
+   `make bond-maturity-live-proof-contract-gate` define closed v3
+   `runtime_execution` evidence. A named evaluate-and-persist use case requires
+   authoritative tenant/book/portfolio/client scope before Core I/O and binds exact request
    scope, `PortfolioMaturitySummary:v1`, and upstream `HoldingsAsOf:v1`
-   receipts; a supported empty window completes without creating an
-   opportunity. Partial, stale, unsupported-feature, scope-inconsistent, or
-   tampered evidence cannot clear the live Core maturity source blocker. Core
-   issue `#792` tracks missing producer reconciliation, tenant, and correlation
-   metadata, so live qualification remains fail closed. The artifact does not
+   receipts to accepted or exact-replayed durable Idea persistence. A supported
+   empty window remains a truthful no-opportunity result and cannot clear a
+   candidate-persistence proof. Partial, stale, unsupported-feature,
+   scope-inconsistent, non-durable, missing-persistence, or tampered evidence
+   cannot clear the live Core maturity source blocker. The artifact does not
    certify data mesh, Workbench behavior, client publication, product
    recommendations, reinvestment advice, deployment, production, or
    supported-feature status.

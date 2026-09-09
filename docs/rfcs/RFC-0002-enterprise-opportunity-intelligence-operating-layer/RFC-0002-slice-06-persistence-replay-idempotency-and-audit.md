@@ -1161,3 +1161,23 @@ backfill, primary-key/default-replica-identity posture, preservation of business
 indexes, and non-destructive rollback. This remains repository-owned recovery
 hardening; it does not certify protected-environment PITR or promote a supported
 feature.
+
+## Core Bond-Maturity Candidate Persistence
+
+Issue `#1317` closes the gap between deterministic bond-maturity detection and
+the governed adviser lifecycle. The Core-backed persistence command requires
+complete tenant/book/portfolio/client scope before source I/O, reconciles the
+tenant and portfolio with the source request, preserves Core ownership of
+`HoldingsAsOf:v1` and `PortfolioMaturitySummary:v1`, and accepts only a
+candidate-bearing evaluation into the repository. Entitlement denial,
+unavailable evidence, incomplete scope, and no-opportunity results create no
+candidate or idempotency record. A later authoritative no-opportunity result
+expires an existing generated condition without inferring advice or execution.
+
+The v3 runtime artifact binds source receipts and their revision posture to an
+accepted or exact-replayed durable persistence receipt. PostgreSQL proof reloads
+the repository between executions and observes one candidate and one
+idempotency record. Historical source-only v2 artifacts do not qualify against
+this contract. The public bond-maturity evaluation APIs remain read-only, and
+Workbench realization, data-mesh certification, client publication,
+deployment, production, and supported-feature promotion remain separate.
