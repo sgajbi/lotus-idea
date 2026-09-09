@@ -126,6 +126,14 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-api-001")
     headers = lifecycle_headers("lifecycle-api-replay-001")
+    headers.update(
+        {
+            "X-Caller-Tenant-Ids": "tenant-other,tenant-private-bank-sg",
+            "X-Caller-Book-Ids": "book-other,book-advisor-001",
+            "X-Caller-Portfolio-Ids": "portfolio-other,PB_SG_GLOBAL_BAL_001",
+            "X-Caller-Client-Ids": "client-other,client-001",
+        }
+    )
     request = lifecycle_payload()
 
     first = client.post(
@@ -170,6 +178,69 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     )
     assert lifecycle_outbox.occurred_at_utc.isoformat() == "2026-06-21T10:15:00+00:00"
     assert lifecycle_outbox.payload["observed_at_utc"] == "2026-06-21T10:01:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("header_name", "header_value"),
+    (
+        ("X-Caller-Tenant-Ids", None),
+        ("X-Caller-Book-Ids", None),
+        ("X-Caller-Portfolio-Ids", None),
+        ("X-Caller-Client-Ids", None),
+        ("X-Caller-Tenant-Ids", "tenant-other"),
+        ("X-Caller-Book-Ids", "book-other"),
+        ("X-Caller-Portfolio-Ids", "portfolio-other"),
+        ("X-Caller-Client-Ids", "client-other"),
+    ),
+)
+def test_lifecycle_transition_api_denies_incomplete_or_foreign_scope_without_mutation(
+    header_name: str,
+    header_value: str | None,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key=f"seed-lifecycle-scope-{header_name}-{header_value}",
+    )
+    before = get_idea_repository().snapshot()
+    headers = lifecycle_headers(f"lifecycle-scope-{header_name}-{header_value}")
+    if header_value is None:
+        headers.pop(header_name)
+    else:
+        headers[header_name] = header_value
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert get_idea_repository().snapshot() == before
+
+
+def test_lifecycle_transition_api_rejects_malformed_scope_without_mutation() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="seed-lifecycle-malformed-scope-001",
+    )
+    before = get_idea_repository().snapshot()
+    headers = lifecycle_headers("lifecycle-malformed-scope-001")
+    headers["X-Caller-Portfolio-Ids"] = "PB_SG_GLOBAL_BAL_001,,portfolio-other"
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert get_idea_repository().snapshot() == before
 
 
 @pytest.mark.parametrize(
