@@ -118,7 +118,10 @@ accepted, evidence-refreshed, material-version-created,
 recurrent-condition-reopened, replayed, conflict, identity-conflict,
 duplicate-candidate, blocked, and not-eligible outcomes,
 and it now includes a bounded run-once batch worker foundation with per-item
-idempotency, batch decision counts, and maximum item validation.
+authoritative book/portfolio/client scope, idempotency, batch decision counts,
+and maximum item validation. The v2 manifest keeps tenant authority at the
+batch boundary and requires the other scope dimensions on every work item;
+missing or placeholder authority cannot cross the durable repository boundary.
 An authoritative high-cash `not_eligible` result expires the matching active
 candidate and removes it from review queues; blocked source evidence remains
 non-mutating. Candidate plus material version form the expiry idempotency
@@ -140,9 +143,9 @@ data-product certification, Gateway route, Workbench proof, or supported
 business feature.
 Blocked run-mode evidence retains aggregate reason counts without receipts or
 blocker clearance. Qualifying v2 `runtime_execution` evidence instead binds
-exact current Core refs to accepted/replayed durable persistence receipts while
-excluding raw tenant, portfolio, route, payload, idempotency, and candidate
-values.
+exact current Core refs and complete access-scope fingerprints to
+accepted/replayed durable persistence receipts while excluding raw tenant,
+book, portfolio, client, route, payload, idempotency, and candidate values.
 `scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
 worker entrypoint over the same run-once worker path, and `docker-compose.yml`
 declares the opt-in `lotus-idea-source-ingestion-worker` service. The app-owned

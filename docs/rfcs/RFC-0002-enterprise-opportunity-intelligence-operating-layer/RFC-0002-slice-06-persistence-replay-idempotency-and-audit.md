@@ -1101,6 +1101,18 @@ are closed with `status/merged-main`; the implementation branch is absent
 locally and remotely. Slice 06 remains partially implemented only because the
 external certification blockers listed in this RFC are still unresolved.
 
+## Authoritative Candidate Scope
+
+Issue `#1315` makes complete tenant/book/portfolio/client scope a repository
+invariant rather than a caller convention. Both in-memory and PostgreSQL
+repositories reject missing or placeholder authority before candidate,
+idempotency, audit, or outbox mutation. Scheduled Core high-cash ingestion and
+the four durable Risk/Performance runtime writers carry accepted scope through
+candidate construction;
+PostgreSQL proof covers acceptance, repository reconstruction, exact replay,
+and zero-row refusal for placeholder scope. Read-only portfolio diagnostics
+remain intentionally non-authoritative.
+
 ## Tenant-Scoped General Mutation Idempotency
 
 Issue `#1277` corrects the general mutation ledger so a raw client-generated

@@ -36,7 +36,10 @@ supported-feature promotion remain separately blocked.
    date.
 3. Confirm `risk.dev.lotus` and `performance.dev.lotus` are reachable.
 4. Configure `LOTUS_IDEA_DATABASE_URL` for the Idea-owned PostgreSQL instance;
-   the Performance runtime proof rejects in-memory storage.
+   every durable runtime proof rejects in-memory storage and binds the complete
+   tenant/book/portfolio/client scope into a source-safe fingerprint. The
+   high-cash ingestion worker uses the v2 manifest with book and client scope
+   on each work item.
 5. Use unique correlation and trace IDs for every run.
 
 ## Run
@@ -114,8 +117,8 @@ The 2026-07-10 clean-tree aggregate is historical v1 evidence and no longer
 qualifies either Performance underperformance or Performance
 benchmark-readiness after their closed v2 contracts replaced the flat
 artifacts. A current canonical run must use the capability-owned generators,
-an Idea-owned durable repository for underperformance persistence, and explicit
-pseudonymous scope for benchmark readiness. Until a fresh run and mainline
+an Idea-owned durable repository for candidate persistence, and explicit
+pseudonymous scope for every durable child proof. Until a fresh run and mainline
 validation exist, do not describe the aggregate as currently
 certification-ready. Never substitute caller-supplied summary booleans or a
 relaxed validator.

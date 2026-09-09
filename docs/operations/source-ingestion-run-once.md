@@ -16,14 +16,14 @@ provider, and Core source adapter. It is the service API counterpart to the
 manifest-backed worker foundation and is intended for controlled operator proof,
 not business-user execution.
 
-The run-once manifest must include one explicit `tenantId`. The worker carries
-that value through the application command and Core source port, tenant-aware
-Core snapshot payload, persisted candidate access scope, candidate identity,
-and generated ingestion idempotency key. This allows the same portfolio/date
-work to remain isolated across tenants. Missing or ambiguous tenant context is
-rejected before runtime construction, and the adapter has no production
-fallback tenant. Worker summaries and operation metrics do not expose raw
-tenant identifiers.
+The v2 run-once manifest must include one explicit `tenantId` and a `bookId`,
+`portfolioId`, and `clientId` on every work item. The worker carries tenant
+authority through the Core source request and the complete scope through
+candidate evaluation, identity, persistence, and runtime evidence. Missing or
+placeholder authority is rejected before durable mutation, and the adapter has
+no production fallback tenant. Worker summaries, evidence, and operation
+metrics expose only source-safe fingerprints and bounded posture—not raw scope
+identifiers.
 
 ## What It Proves
 
@@ -58,7 +58,7 @@ accepted from caller-supplied success booleans or summary counts.
 
 | Required receipt binding | Validation rule |
 | --- | --- |
-| Worker scope | The tenant and portfolio are hashed into a source-safe scope fingerprint. Raw identifiers are excluded. |
+| Worker scope | Tenant, book, portfolio, and client are hashed into a source-safe scope fingerprint. Raw identifiers are excluded. |
 | Core authority | Exactly the four governed high-cash Core products must be current, same-date `lotus-core` references. |
 | Domain outcome | Every work item must finish as `accepted`, `evidence_refreshed`, `material_version_created`, `recurrent_condition_reopened`, or `replayed`; blocked, conflict, identity-conflict, duplicate-candidate, or ineligible runs do not qualify. |
 | Persistence | Every qualifying item must carry the actual persisted record timestamp, source-evidence hash, and a digest over the receipt. |

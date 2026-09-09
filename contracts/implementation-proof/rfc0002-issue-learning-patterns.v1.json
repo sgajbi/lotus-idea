@@ -131,7 +131,7 @@
       "patternId": "economic_candidate_identity_and_evidence_versioning",
       "title": "Business candidate identity must remain stable while evidence, material condition, and transport identity evolve independently.",
       "currentLedgerIssueNumbers": [],
-      "relatedIssueNumbers": [326, 330, 333, 382, 1154, 1181],
+      "relatedIssueNumbers": [326, 330, 333, 382, 1154, 1181, 1315],
       "rfcSlices": ["slice-03", "slice-05", "slice-06", "slice-07"],
       "durableControls": [
         {
@@ -161,6 +161,14 @@
         {
           "type": "test",
           "ref": "tests/integration/test_high_cash_signal_api.py"
+        },
+        {
+          "type": "test",
+          "ref": "tests/integration/source_runtime_evidence/test_postgres_replay.py"
+        },
+        {
+          "type": "test",
+          "ref": "tests/unit/test_source_ingestion_worker.py"
         },
         {
           "type": "test-fixture-boundary",

@@ -62,6 +62,8 @@ promotion rules are in `docs/operations/supported-feature-promotion.md`.
 Implemented foundations include:
 
 - deterministic candidate identity and evidence hashing;
+- authoritative tenant/book/portfolio/client scope at every durable candidate writer; portfolio-only
+  source evaluations are diagnostic and cannot cross the persistence boundary;
 - source-revision and source-time coherence classification;
 - qualification, scoring, ranking, suppression, snooze, expiry, recurrence, and reopen policy;
 - persisted presentation receipts, review decisions, feedback, and conversion intents;

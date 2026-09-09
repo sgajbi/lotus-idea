@@ -13,8 +13,10 @@ not promote a product feature.
    `lotus-workbench` `npm run live:stack:up`.
 2. Confirm the canonical seed uses portfolio `PB_SG_GLOBAL_BAL_001` and the
    governed as-of date.
-3. Provide explicit tenant, book, client-scope, and evaluation identities. The
-   benchmark-readiness artifact hashes them and never emits raw values.
+3. Provide explicit tenant, book, client-scope, and evaluation identities. Every
+   durable child proof binds the access scope into a source-safe fingerprint;
+   benchmark readiness binds its evaluation identity the same way. Raw values
+   are never emitted.
 4. Confirm `risk.dev.lotus` and `performance.dev.lotus` resolve and are
    reachable from the host.
 5. Use a unique correlation ID and trace ID for each proof run.
@@ -112,9 +114,10 @@ checks both route opt-in and proof-script propagation so certification tooling
 cannot bypass the runtime tenant boundary; `trusted-tenant-context-gate` checks
 application scope, adapter payload, ingestion identity, API rejection, OpenAPI,
 and source-safe operation-event posture across layers.
-The `unknown` value used by portfolio-only scope checks is an unconstrained
-scope dimension for non-Core caller-supplied paths, not a tenant value that may
-be used for a Core-backed candidate or sent to Core.
+The internal `unknown` value is permitted only in portfolio-only, read-only
+diagnostics. It is not authority: no source-backed or caller-supplied candidate
+carrying that sentinel in tenant, book, portfolio, or client scope may be
+persisted or represented as qualifying runtime evidence.
 
 The domain layer rejects source evidence whose business date differs from the
 requested `asOfDate`. For pre-existing source facts, `generatedAtUtc` must not
