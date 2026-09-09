@@ -174,6 +174,12 @@ Implemented in this slice:
     recovery. PostgreSQL reload proof preserves the same response without a
     second lifecycle-history, audit, outbox, or idempotency mutation. No schema
     migration is required because the exact evidence was already durable.
+31. GitHub issue `#1297` validates the expected evidence content hash and
+    revision-vector digest at the review request boundary. Malformed values
+    produce `400 invalid_request` before authority, repository, audit, or
+    outbox work; well-formed stale identity remains an authority conflict. The
+    explicit historical `legacy:unknown` revision-vector sentinel remains
+    admissible without conferring current source authority.
 
 Validation evidence from the implementation slice:
 
