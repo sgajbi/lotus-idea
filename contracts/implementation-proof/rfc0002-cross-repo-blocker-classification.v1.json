@@ -172,6 +172,13 @@
       "remainingAuthority": "exact-main PB_SG_GLOBAL_BAL_001 Workbench-to-BFF-to-Gateway-to-Idea presentation-receipt certification including replay, conflict, retry, and source-safe error evidence"
     },
     {
+      "repository": "sgajbi/lotus-workbench",
+      "issueNumber": 436,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "production_identity_contract",
+      "remainingAuthority": "security/identity-owned tenant-membership grant service, production IdP credential issuance, managed key custody, Gateway delegated-credential enforcement, and protected browser and deployment certification"
+    },
+    {
       "repository": "sgajbi/lotus-platform",
       "issueNumber": 495,
       "actionability": "external_or_protected_evidence",
