@@ -645,6 +645,36 @@ def test_default_blocker_classification_tracks_core_cashflow_replay_dependency()
     ]
 
 
+def test_default_blocker_classification_tracks_workbench_production_identity_dependency() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-workbench" and row["issueNumber"] == 436
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-workbench",
+            "issueNumber": 436,
+            "actionability": "external_or_protected_evidence",
+            "blockerClass": "production_identity_contract",
+            "remainingAuthority": (
+                "security/identity-owned tenant-membership grant service, production IdP "
+                "credential issuance, managed key custody, Gateway delegated-credential "
+                "enforcement, and protected browser and deployment certification"
+            ),
+        }
+    ]
+
+
 def test_default_blocker_classification_excludes_closed_core_dpm_source_batch_fingerprint() -> None:
     contract_path = (
         ROOT
