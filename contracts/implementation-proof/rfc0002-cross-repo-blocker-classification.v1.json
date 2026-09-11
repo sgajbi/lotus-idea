@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-09-08",
+  "asOfDate": "2026-09-11",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -128,6 +128,13 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "archive_key_vocabulary_compatibility_retirement",
       "remainingAuthority": "Archive deployed-producer evidence that no active deployment emits retired, plus retained-bundle inventory proving Idea will not need to verify historical retired wire values"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 1320,
+      "actionability": "core_dependency",
+      "blockerClass": "core_cashflow_source_cut_and_replay_identity",
+      "remainingAuthority": "Core #1116 merged producer evidence for a stable shared source-cut identity and replay-safe evidence-materialization chronology across PortfolioCashMovementSummary:v1 and PortfolioCashflowProjection:v1"
     },
     {
       "repository": "sgajbi/lotus-manage",

@@ -615,6 +615,36 @@ def test_default_blocker_classification_tracks_canonical_consumer_dependencies()
     }
 
 
+def test_default_blocker_classification_tracks_core_cashflow_replay_dependency() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-idea" and row["issueNumber"] == 1320
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-idea",
+            "issueNumber": 1320,
+            "actionability": "core_dependency",
+            "blockerClass": "core_cashflow_source_cut_and_replay_identity",
+            "remainingAuthority": (
+                "Core #1116 merged producer evidence for a stable shared source-cut identity "
+                "and replay-safe evidence-materialization chronology across "
+                "PortfolioCashMovementSummary:v1 and PortfolioCashflowProjection:v1"
+            ),
+        }
+    ]
+
+
 def test_default_blocker_classification_excludes_closed_core_dpm_source_batch_fingerprint() -> None:
     contract_path = (
         ROOT
