@@ -337,6 +337,9 @@ def test_advisor_queue_versions_bind_visible_render_receipt_to_current_evidence(
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.presentation-receipt.record",
         "X-Caller-Tenant-Ids": scope["tenantId"],
+        "X-Caller-Book-Ids": scope["bookId"],
+        "X-Caller-Portfolio-Ids": scope["portfolioId"],
+        "X-Caller-Client-Ids": scope["clientId"],
         "Idempotency-Key": "receipt-review-queue-source-version-001",
     }
     presentation_payload = {

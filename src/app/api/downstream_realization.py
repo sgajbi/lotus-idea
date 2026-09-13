@@ -8,7 +8,10 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import CallerContextHeaders, caller_access_scope_filter
+from app.api.caller_headers import (
+    CallerContextHeaders,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_write_unavailable_metadata,
@@ -319,7 +322,7 @@ def _prepare_downstream_submission_request(
     correlation_id = _request_correlation_id(request)
     trace_id = _request_trace_id(request)
     try:
-        _require_submission_caller(caller)
+        access_scope_filter = _require_submission_caller(caller)
         validate_idempotency_key(idempotency_key)
     except PermissionDeniedError:
         _emit_downstream_submission_event(
@@ -350,8 +353,6 @@ def _prepare_downstream_submission_request(
             trace_id=trace_id,
         )
         return configuration_problem
-    access_scope_filter = caller_access_scope_filter(caller)
-    assert access_scope_filter is not None
     return _DownstreamSubmissionRequestContext(
         caller=caller,
         access_scope_filter=access_scope_filter,
@@ -391,12 +392,13 @@ def _submission_api_response(
     return _submission_response(result, response)
 
 
-def _require_submission_caller(caller: CallerContext) -> None:
+def _require_submission_caller(caller: CallerContext) -> QueueAccessScopeFilter:
     if not caller.has_capability(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY):
         raise PermissionDeniedError(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY)
-    scope = caller.entitlement_scope
-    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
-        raise PermissionDeniedError("idea.downstream-realization.entitlement_scope")
+    return require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission="idea.downstream-realization.entitlement_scope",
+    )
 
 
 def _scope_permission_denied(

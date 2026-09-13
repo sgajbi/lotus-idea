@@ -106,7 +106,6 @@ def test_prepare_conversion_mutation_requires_complete_entitlement_scope() -> No
             capability="idea.conversion.intent.record",
             idempotency_key="conversion-api-ops-scope-001",
             operation=IdeaOperation.CONVERSION_INTENT,
-            require_complete_entitlement_scope=True,
         )
 
 

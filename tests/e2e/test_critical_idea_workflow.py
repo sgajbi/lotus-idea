@@ -250,7 +250,7 @@ def _assert_advisor_queue_contains_candidate(
                 capabilities="idea.presentation-receipt.record",
                 idempotency_key=receipt_id,
             ),
-            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+            **_scope_headers(),
         },
     )
     assert receipt.status_code == 201

@@ -44,7 +44,9 @@ Domain language must preserve these distinctions:
 - An **opportunity candidate** is a deterministic, scoped interpretation of that evidence.
 - A **presentation receipt** proves what an adviser was shown; it is not a decision. Its request
   names the tenant and trusted caller entitlements authorize membership, so plural entitlement
-  order never selects the tenant or durable receipt identity.
+  order never selects the tenant or durable receipt identity. Complete trusted
+  tenant/book/portfolio/client entitlements must authorize the persisted candidate before any
+  receipt lookup, idempotency, or write.
 - A **review decision** is adviser-owned evidence accepted through the review command.
 - A **conversion intent** records a governed request for downstream work.
 - A **downstream outcome** is authoritative only when reconciled from the owning service.
@@ -168,6 +170,11 @@ Critical invariants:
 18. Candidate-detail and business review-queue reads require complete trusted
     tenant/book/portfolio/client scope before repository access. Query filters may narrow that
     caller scope; they never create or widen read authority.
+19. Every candidate-bound boundary that requires complete trusted scope does so through the one
+    shared guard, `require_complete_caller_access_scope_filter`, and
+    `scripts/caller_context_contract_gate.py` enumerates those boundaries. A partial caller
+    filter narrows queries; it is never an authorization envelope, because a missing dimension
+    matches every candidate.
 
 Configuration is defined in `src/app/runtime/settings.py` and `.env.example`. Keep environment
 examples non-secret and fail closed when protected controls are required but unavailable.

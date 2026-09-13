@@ -201,6 +201,12 @@ Rollback fails closed if stored receipts rely on an Idea global rank greater tha
 visible-set size; operators must reconcile those governed records before reinstating the legacy
 schema.
 
+Recording requires complete trusted tenant/book/portfolio/client entitlements that authorize the
+persisted candidate before candidate lookup, idempotency resolution, or persistence. A missing or
+mismatching scope dimension returns `403 permission_denied` with no receipt or effectiveness
+mutation; plural and reordered entitlement grants that contain the candidate scope remain valid,
+and header order never selects the tenant or the durable receipt key.
+
 Exact retries return `replayed`. Reusing the key with changed evidence returns
 `presentation_receipt_identity_conflict`. Candidate, tenant, version, or
 chronology mismatch returns `presentation_receipt_candidate_state_conflict`.

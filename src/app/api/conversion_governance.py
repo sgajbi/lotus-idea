@@ -178,7 +178,6 @@ def _prepare_conversion_intent_mutation(
         capability=_CONVERSION_INTENT_CAPABILITY,
         idempotency_key=idempotency_key,
         operation=IdeaOperation.CONVERSION_INTENT,
-        require_complete_entitlement_scope=True,
     )
 
 
@@ -297,7 +296,6 @@ async def record_conversion_outcome(
             capability=_CONVERSION_OUTCOME_CAPABILITY,
             idempotency_key=idempotency_key,
             operation=IdeaOperation.CONVERSION_OUTCOME,
-            require_complete_entitlement_scope=True,
         )
         if isinstance(context, JSONResponse):
             return context
