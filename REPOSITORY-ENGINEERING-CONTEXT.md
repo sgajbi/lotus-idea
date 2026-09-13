@@ -167,9 +167,10 @@ Critical invariants:
     AI evaluation and generation require complete trusted tenant/book/portfolio/client scope
     matching the persisted candidate before lineage persistence or Lotus AI execution.
 17. Sensitive source payloads and adviser content must not be emitted in logs or metrics.
-18. Candidate-detail and business review-queue reads require complete trusted
-    tenant/book/portfolio/client scope before repository access. Query filters may narrow that
-    caller scope; they never create or widen read authority.
+18. Candidate-detail, business review-queue, operator exception-queue, and candidate
+    evidence-replay reads require complete trusted tenant/book/portfolio/client scope before
+    repository access. Query filters may narrow that caller scope; they never create or widen
+    read authority, and a generic operator role grants no estate-wide view.
 19. Every candidate-bound boundary that requires complete trusted scope does so through the one
     shared guard, `require_complete_caller_access_scope_filter`, and
     `scripts/caller_context_contract_gate.py` enumerates those boundaries. A partial caller

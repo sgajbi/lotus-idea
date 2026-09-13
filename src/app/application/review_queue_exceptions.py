@@ -63,10 +63,18 @@ def build_review_queue_exception_snapshot(
         )
         for audience in ReviewQueueAudience
     )
+    # A candidate outside the caller's scope is recorded by both the domain policy and the
+    # PostgreSQL projection as an access-scope-mismatch exclusion before any other reason
+    # is considered, so the in-scope population is the snapshot minus those exclusions.
+    # Reporting the raw snapshot would disclose the estate-wide candidate count to a
+    # caller entitled to one scope.
     audience_summaries = tuple(
         ReviewQueueAudienceExceptionSummary(
             audience=audience,
-            candidate_snapshot_count=summary.candidate_snapshot_count,
+            candidate_snapshot_count=(
+                summary.candidate_snapshot_count
+                - summary.exclusion_counts[QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value]
+            ),
             exception_count=sum(
                 summary.exclusion_counts[reason.value] for reason in OPERATOR_EXCEPTION_REASONS
             ),

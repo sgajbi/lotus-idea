@@ -477,10 +477,15 @@ def detail_headers() -> dict[str, str]:
 
 
 def evidence_replay_headers() -> dict[str, str]:
+    scope = access_scope()
     return {
         "X-Caller-Subject": "ops-001",
         "X-Caller-Roles": "operator",
         "X-Caller-Capabilities": "idea.candidate.evidence.replay",
+        "X-Caller-Tenant-Ids": scope["tenantId"],
+        "X-Caller-Book-Ids": scope["bookId"],
+        "X-Caller-Portfolio-Ids": scope["portfolioId"],
+        "X-Caller-Client-Ids": scope["clientId"],
         "X-Correlation-Id": "corr-operation-evidence-replay-api",
     }
 
@@ -1022,6 +1027,10 @@ def test_operator_review_queue_exceptions_emit_bounded_operation_event(
             "X-Caller-Subject": "platform-operator",
             "X-Caller-Roles": "operator",
             "X-Caller-Capabilities": "idea.review.queue.exceptions.read",
+            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+            "X-Caller-Book-Ids": "book-advisor-001",
+            "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+            "X-Caller-Client-Ids": "client-001",
         },
     )
 

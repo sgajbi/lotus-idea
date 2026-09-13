@@ -78,11 +78,19 @@ def replay_headers(
     *,
     roles: str = "operator",
     capabilities: str = "idea.candidate.evidence.replay",
+    tenant_ids: str = "tenant-a",
+    book_ids: str = "book-advisor-001",
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
+    client_ids: str = "client-001",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "ops-001",
         "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": tenant_ids,
+        "X-Caller-Book-Ids": book_ids,
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": client_ids,
         "X-Correlation-Id": "corr-candidate-evidence-replay-api",
     }
 

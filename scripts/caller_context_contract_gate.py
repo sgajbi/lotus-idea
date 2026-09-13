@@ -23,9 +23,11 @@ MAIN_MODULE = Path("src/app/main.py")
 ERRORS_MODULE = Path("src/app/errors.py")
 COMPLETE_SCOPE_BOUNDARIES = {
     API_DIR / "candidate_detail.py": ("_authorize_candidate_detail_read",),
+    API_DIR / "candidate_evidence_replay.py": ("_authorize_candidate_evidence_replay",),
     API_DIR / "downstream_realization.py": ("_require_submission_caller",),
     API_DIR / "presentation_receipts.py": ("_require_complete_presentation_scope",),
     API_DIR / "realization_reconciliation_common.py": ("require_reconciliation_caller",),
+    API_DIR / "review_queue" / "operator_exceptions.py": ("_authorize_operator_exception_read",),
     API_DIR / "review_queue" / "routes.py": ("_effective_review_queue_access_scope",),
 }
 TRUSTED_HEADER_NAME = "TRUSTED_CALLER_CONTEXT_HEADER"
