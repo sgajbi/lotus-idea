@@ -38,6 +38,9 @@ failed rendering, filtering, and abandonment must not inflate `shown` counts.
   immutable visible-render receipt using `Idempotency-Key` as receipt identity.
   Its body names the tenant; the trusted entitlement set authorizes membership,
   while entitlement cardinality and order never choose the tenant or storage key.
+  Complete trusted tenant/book/portfolio/client scope must authorize the
+  persisted candidate before lookup, idempotency, or the write; a missing or
+  mismatching dimension is refused with no receipt or effectiveness mutation.
 - Without qualifying receipt evidence, presentation counts remain `null` under
   `unavailable_consumer_certification_pending`; this means unavailable, not zero.
 - With qualifying stored evidence, the read model returns distinct presented

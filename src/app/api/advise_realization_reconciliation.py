@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import CallerContextHeaders, caller_access_scope_filter
+from app.api.caller_headers import CallerContextHeaders
 from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
@@ -137,7 +137,7 @@ async def post_advise_realization_reconciliation(
     ),
 ) -> AdviseRealizationReconciliationResponse | JSONResponse:
     try:
-        require_reconciliation_caller(caller)
+        access_scope_filter = require_reconciliation_caller(caller)
     except PermissionDeniedError:
         emit_reconciliation_event(OperationOutcome.PERMISSION_DENIED, "permission_denied")
         return problem_details_response(
@@ -150,8 +150,6 @@ async def post_advise_realization_reconciliation(
     configuration_problem = durable_write_problem(repository)
     if configuration_problem is not None:
         return configuration_problem
-    access_scope_filter = caller_access_scope_filter(caller)
-    assert access_scope_filter is not None
     try:
         clients = get_conversion_realization_clients()
         advise_reader = cast(AdviseProposalRealizationReader, clients.advise_client)

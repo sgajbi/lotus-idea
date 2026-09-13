@@ -69,12 +69,18 @@ def _headers(
     roles: str = "advisor",
     capabilities: str = "idea.presentation-receipt.record",
     tenant_ids: str = "tenant-a",
+    book_ids: str = "book-001",
+    portfolio_ids: str = "portfolio-001",
+    client_ids: str = "client-001",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "workbench-visible-render-producer",
         "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Caller-Tenant-Ids": tenant_ids,
+        "X-Caller-Book-Ids": book_ids,
+        "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Client-Ids": client_ids,
         "Idempotency-Key": "receipt-presentation-001",
     }
 
@@ -178,7 +184,7 @@ def test_presentation_receipt_api_refuses_plural_scope_without_named_tenant(
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
-    assert "tenant entitlement scope" in response.json()["detail"]
+    assert "entitlement scope" in response.json()["detail"]
 
 
 @pytest.mark.parametrize("tenant_ids", (None, "", "   "))
@@ -195,7 +201,7 @@ def test_presentation_receipt_api_refuses_missing_or_blank_tenant_scope(
 
     assert response.status_code == (403 if tenant_ids is None else 400)
     if tenant_ids is None:
-        assert "tenant entitlement scope" in response.json()["detail"]
+        assert "entitlement scope" in response.json()["detail"]
     else:
         assert response.json()["detail"] == (
             "Caller entitlement scope headers cannot contain blank values."

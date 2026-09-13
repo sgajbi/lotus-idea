@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import CallerContextHeaders, caller_access_scope_filter
+from app.api.caller_headers import CallerContextHeaders
 from app.api.downstream_owner_receipt_models import DownstreamOwnerReceiptResponse
 from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
@@ -66,7 +66,7 @@ async def post_report_materialization_reconciliation(
     ),
 ) -> ReportMaterializationReconciliationResponse | JSONResponse:
     try:
-        require_reconciliation_caller(caller)
+        access_scope_filter = require_reconciliation_caller(caller)
     except PermissionDeniedError:
         emit_reconciliation_event(OperationOutcome.PERMISSION_DENIED, "permission_denied")
         return problem_details_response(
@@ -79,8 +79,6 @@ async def post_report_materialization_reconciliation(
     configuration_problem = durable_write_problem(repository)
     if configuration_problem is not None:
         return configuration_problem
-    access_scope_filter = caller_access_scope_filter(caller)
-    assert access_scope_filter is not None
     try:
         report_reader = cast(
             ReportEvidencePackMaterializationReader,

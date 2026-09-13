@@ -6,7 +6,6 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import (
-    caller_access_scope_filter,
     caller_context_from_headers,
     require_complete_caller_access_scope_filter,
 )
@@ -44,7 +43,6 @@ __all__ = [
     "permission_denied",
     "prepare_conversion_mutation",
     "problem_for_conversion_persistence",
-    "require_complete_conversion_entitlement_scope",
 ]
 
 
@@ -97,7 +95,6 @@ def prepare_conversion_mutation(
     capability: str,
     idempotency_key: str,
     operation: IdeaOperation,
-    require_complete_entitlement_scope: bool = False,
 ) -> ConversionMutationContext | JSONResponse:
     caller = caller_context_from_headers(
         subject=headers.subject,
@@ -110,13 +107,9 @@ def prepare_conversion_mutation(
         trusted_caller_context=headers.trusted_caller_context,
     )
     require_conversion_caller(caller, capability=capability)
-    access_scope_filter = (
-        require_complete_caller_access_scope_filter(
-            caller,
-            denied_permission="idea.conversion.entitlement_scope",
-        )
-        if require_complete_entitlement_scope
-        else caller_access_scope_filter(caller)
+    access_scope_filter = require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission="idea.conversion.entitlement_scope",
     )
     validate_idempotency_key(idempotency_key)
     repository = get_idea_repository()
@@ -141,13 +134,6 @@ def prepare_conversion_mutation(
 def require_conversion_caller(caller: CallerContext, *, capability: str) -> None:
     if not caller.has_capability(capability):
         raise PermissionDeniedError(capability)
-
-
-def require_complete_conversion_entitlement_scope(caller: CallerContext) -> None:
-    require_complete_caller_access_scope_filter(
-        caller,
-        denied_permission="idea.conversion.entitlement_scope",
-    )
 
 
 def problem_for_conversion_persistence(

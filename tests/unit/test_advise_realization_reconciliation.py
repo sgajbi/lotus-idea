@@ -776,7 +776,9 @@ def test_advise_reconciliation_api_requires_capability_and_complete_scope() -> N
         _require_reconciliation_caller(without_capability)
     with pytest.raises(PermissionDeniedError):
         _require_reconciliation_caller(incomplete_scope)
-    _require_reconciliation_caller(authorized)
+    authorized_filter = _require_reconciliation_caller(authorized)
+    assert authorized_filter.is_complete
+    assert authorized_filter.tenant_id == ("tenant-sg",)
 
 
 def test_advise_reconciliation_request_context_ignores_absent_values() -> None:

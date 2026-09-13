@@ -3,7 +3,10 @@ from __future__ import annotations
 from fastapi import FastAPI, Header, Path, Response, status
 from fastapi.responses import JSONResponse
 
-from app.api.caller_headers import CallerContextHeaders, caller_access_scope_filter
+from app.api.caller_headers import (
+    CallerContextHeaders,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
@@ -37,6 +40,7 @@ from app.domain import (
     PresentationReceiptCandidateStateError,
     PresentationReceiptDecision,
 )
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -46,6 +50,7 @@ from app.observability import (
 )
 from app.ports.idea_repository import PresentationReceiptRepository
 from app.security.caller_context import (
+    CallerContext,
     CapabilityPolicy,
     PermissionDeniedError,
     require_role_and_capability,
@@ -71,6 +76,7 @@ async def record_candidate_presentation_receipt(
 ) -> PresentationReceiptResponse | JSONResponse:
     try:
         require_role_and_capability(caller, _RECORD_PRESENTATION_POLICY)
+        scope_filter = _require_complete_presentation_scope(caller)
         validate_idempotency_key(idempotency_key)
         if request.tenant_id not in caller.entitlement_scope.tenant_ids:
             raise _PresentationReceiptScopeDeniedError
@@ -84,7 +90,6 @@ async def record_candidate_presentation_receipt(
             _emit_presentation_receipt_event(OperationOutcome.BLOCKED)
             return _unavailable_response()
 
-        scope_filter = caller_access_scope_filter(caller)
         candidate_result = get_candidate_detail(
             GetCandidateDetailCommand(
                 candidate_id=candidate_id,
@@ -144,6 +149,16 @@ async def record_candidate_presentation_receipt(
     )
 
 
+def _require_complete_presentation_scope(caller: CallerContext) -> QueueAccessScopeFilter:
+    try:
+        return require_complete_caller_access_scope_filter(
+            caller,
+            denied_permission=_RECORD_PRESENTATION_POLICY.required_capability,
+        )
+    except PermissionDeniedError as exc:
+        raise _PresentationReceiptScopeDeniedError from exc
+
+
 def _permission_denied_response() -> JSONResponse:
     return problem_details_response(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -158,7 +173,10 @@ def _scope_denied_response() -> JSONResponse:
         status_code=status.HTTP_403_FORBIDDEN,
         code="permission_denied",
         title="Permission denied",
-        detail="The caller tenant entitlement scope does not permit this presentation receipt.",
+        detail=(
+            "The caller entitlement scope does not permit this presentation receipt. Complete "
+            "tenant, book, portfolio, and client entitlements must authorize the candidate."
+        ),
     )
 
 
@@ -239,7 +257,10 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
         "Records immutable, bounded evidence that a specific candidate version was visibly "
         "rendered in the governed advisor review queue. Idempotency-Key is the stable receipt "
         "identity. The request names the tenant and the trusted entitlement set authorizes "
-        "membership; entitlement cardinality and order never select the tenant or key. The write "
+        "membership; entitlement cardinality and order never select the tenant or key. The "
+        "caller must present complete trusted tenant, book, portfolio, and client entitlement "
+        "scope, and that scope must authorize the persisted candidate before any receipt or "
+        "effectiveness evidence is written. The write "
         "is fenced by candidate, exact tenant, material version, evidence version, source revision "
         "vector, source-cut posture, and UTC chronology. Idea global "
         "rank and Workbench visible-set size remain "
@@ -294,10 +315,13 @@ PRESENTATION_RECEIPT_ROUTE: RouteMetadata = {
             detail="Correct the bounded receipt fields, UTC timestamp, or Idempotency-Key."
         ),
         **permission_denied_metadata(
-            detail="The caller lacks the required role, capability, or tenant entitlement.",
+            detail=(
+                "The caller lacks the required role, capability, or complete "
+                "tenant/book/portfolio/client entitlement scope."
+            ),
             description=(
-                "Caller lacks the required role, capability, or tenant entitlement for this "
-                "candidate."
+                "Caller lacks the required role, capability, or complete "
+                "tenant/book/portfolio/client entitlement scope for this candidate."
             ),
         ),
         **not_found_metadata(

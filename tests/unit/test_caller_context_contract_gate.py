@@ -140,6 +140,10 @@ def test_caller_context_contract_gate_scans_nested_api_route_modules(
         "        subject=None,\n"
         "        roles=None,\n"
         "        capabilities=x_caller_capabilities,\n"
+        "    )\n\n\n"
+        "def _effective_review_queue_access_scope(caller):\n"
+        "    return require_complete_caller_access_scope_filter(\n"
+        "        caller, denied_permission='idea.review.queue.read'\n"
         "    )\n",
     )
 
@@ -242,5 +246,72 @@ def test_caller_context_contract_gate_requires_complete_scope_at_candidate_read_
 
     assert errors == [
         "src/app/api/candidate_detail.py:1: `_authorize_candidate_detail_read` must require "
-        "complete caller scope before candidate repository reads"
+        "complete caller scope before candidate repository access"
     ]
+
+
+def test_caller_context_contract_gate_requires_complete_scope_at_presentation_receipt_writer(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/presentation_receipts.py"),
+        "from app.api.caller_headers import caller_access_scope_filter\n\n"
+        "def _require_complete_presentation_scope(caller):\n"
+        "    return caller_access_scope_filter(caller)\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/presentation_receipts.py:3: `_require_complete_presentation_scope` must "
+        "require complete caller scope before candidate repository access"
+    ]
+
+
+def test_caller_context_contract_gate_rejects_removed_complete_scope_boundary_function(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/realization_reconciliation_common.py"),
+        "def emit_reconciliation_event(outcome, error_code):\n    return None\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/realization_reconciliation_common.py: complete-scope boundary "
+        "`require_reconciliation_caller` is missing"
+    ]
+
+
+def test_caller_context_contract_gate_accepts_guarded_complete_scope_boundaries(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/presentation_receipts.py"),
+        "from app.api.caller_headers import require_complete_caller_access_scope_filter\n\n"
+        "def _require_complete_presentation_scope(caller):\n"
+        "    return require_complete_caller_access_scope_filter(\n"
+        "        caller, denied_permission='idea.presentation-receipt.record'\n"
+        "    )\n",
+    )
+    _write_module(
+        tmp_path,
+        Path("src/app/api/downstream_realization.py"),
+        "from app.api.caller_headers import require_complete_caller_access_scope_filter\n\n"
+        "def _require_submission_caller(caller):\n"
+        "    return require_complete_caller_access_scope_filter(\n"
+        "        caller, denied_permission='idea.downstream-realization.entitlement_scope'\n"
+        "    )\n",
+    )
+
+    assert module.validate_caller_context_contract(tmp_path) == []
