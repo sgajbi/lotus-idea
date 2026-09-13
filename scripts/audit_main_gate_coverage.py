@@ -15,9 +15,9 @@ audit reports coverage separately from outcome:
   pass.
 
 CI history is read as attempts, not runs: every run carries its attempt number into the
-ledger, a verdict decided by a rerun (attempt > 1) is flagged so an earlier failed attempt
-is never hidden behind a later green, and a timed-out attempt is a failing verdict, not a
-coverage gap. Cancelled, skipped, in-progress and unreadable evidence is not a verdict and
+ledger, a verdict decided by a rerun (attempt > 1) is flagged because run listings expose
+only the latest attempt and a rerun-to-green must stay visible as such, and a timed-out
+attempt is a failing verdict, not a coverage gap. Cancelled, skipped, in-progress and unreadable evidence is not a verdict and
 fails closed under ``--fail-on-gap``. A failing verdict is evaluated coverage; it is
 reported, preserved in the ledger and never counted as a gap. The audited scope is the
 fixed ``baseline..end`` range, so historical verdicts and gaps do not age out of view.
@@ -51,7 +51,10 @@ _GAP_COVERAGE = {COVERAGE_UNVERIFIABLE, COVERAGE_UNGATED, COVERAGE_UNKNOWN}
 NOTE_HISTORY_UNREADABLE = "run history could not be read"
 NOTE_HISTORY_EXHAUSTED = "run history exhausted before a terminal verdict"
 NOTE_AMBIGUOUS_ORDER = "equal-order terminal verdicts disagree; resolved to failure"
-NOTE_RERUN_VERDICT = "verdict decided by a rerun; an earlier attempt of that run did not pass"
+NOTE_RERUN_VERDICT = (
+    "verdict decided by a rerun (attempt > 1); earlier attempts of that run are not visible "
+    "in run listings"
+)
 
 
 @dataclass(frozen=True)
