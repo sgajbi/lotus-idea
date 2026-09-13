@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import (
     INVALID_CALLER_SCOPE_DETAIL,
-    caller_access_scope_filter,
     caller_context_from_headers,
+    require_complete_caller_access_scope_filter,
 )
 from app.api.problem_details import (
     invalid_request_metadata,
@@ -38,6 +38,7 @@ from app.observability import (
     emit_operation_event,
 )
 from app.security.caller_context import (
+    CallerContext,
     CapabilityPolicy,
     PermissionDeniedError,
     require_role_and_capability,
@@ -48,6 +49,14 @@ _READ_OPERATOR_EXCEPTIONS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.review.queue.exceptions.read",
     allowed_roles=("operator",),
 )
+
+
+def _authorize_operator_exception_read(caller: CallerContext) -> QueueAccessScopeFilter:
+    require_role_and_capability(caller, _READ_OPERATOR_EXCEPTIONS_POLICY)
+    return require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission=_READ_OPERATOR_EXCEPTIONS_POLICY.required_capability,
+    )
 
 
 async def get_review_queue_exceptions(
@@ -73,7 +82,7 @@ async def get_review_queue_exceptions(
             detail=INVALID_CALLER_SCOPE_DETAIL,
         )
     try:
-        require_role_and_capability(caller, _READ_OPERATOR_EXCEPTIONS_POLICY)
+        caller_scope_filter = _authorize_operator_exception_read(caller)
     except PermissionDeniedError:
         return _problem(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -109,7 +118,7 @@ async def get_review_queue_exceptions(
         )
     effective_scope_filter = effective_queue_scope_filter(
         requested_scope_filter=requested_scope_filter,
-        caller_scope_filter=caller_access_scope_filter(caller),
+        caller_scope_filter=caller_scope_filter,
     )
     if effective_scope_filter is None:
         return _problem(
@@ -126,7 +135,7 @@ async def get_review_queue_exceptions(
         evaluated_at_utc=evaluated_at_utc,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        access_scope_filter=(None if effective_scope_filter.is_empty else effective_scope_filter),
+        access_scope_filter=effective_scope_filter,
     )
     _emit_event(OperationOutcome.ACCEPTED, durable_storage_backed=durable_storage_backed)
     return ReviewQueueExceptionResponse.from_domain(snapshot)
@@ -178,8 +187,11 @@ OPERATOR_REVIEW_QUEUE_EXCEPTIONS_ROUTE: RouteMetadata = {
         "invalid lifecycle/posture state, unsupported evidence, missing score, unrankable score "
         "policy, and non-reviewable state. The projection does not expose candidate identifiers, "
         "rank business work, or grant review, compliance, suitability, mandate, or execution "
-        "authority. Tenant, book, portfolio, and client scope is intersected with trusted caller "
-        "entitlements. This internal operational foundation is not a supported product feature."
+        "authority. The caller must present complete trusted tenant, book, portfolio, and "
+        "client entitlement scope; query scope can only narrow within it, a generic "
+        "operator role grants no estate-wide view, and every count covers only candidates "
+        "inside the caller's effective scope. This internal operational foundation is not a "
+        "supported product feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ReviewQueueExceptionResponse,

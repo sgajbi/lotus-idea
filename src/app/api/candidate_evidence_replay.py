@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Path, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
+from app.api.caller_headers import (
+    CallerContextHeaders,
+    require_complete_caller_access_scope_filter,
+)
 from app.api.signal_models import SourceRefRequest
 from app.api.problem_details import (
     invalid_request_metadata,
@@ -20,14 +23,20 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.application.candidate_detail import (
+    GetCandidateDetailCommand,
+    get_candidate_detail,
+)
 from app.application.candidate_evidence_replay import (
     ReplayCandidateEvidenceCommand,
     replay_candidate_evidence,
 )
 from app.domain import CandidatePersistenceRecord, EvidenceReplayResult, EvidenceReplayStatus
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
+    CallerContext,
     CapabilityPolicy,
     PermissionDeniedError,
     require_role_and_capability,
@@ -98,23 +107,21 @@ class CandidateEvidenceReplayResponse(CamelModel):
 
 async def replay_idea_candidate_evidence(
     request: ReplayCandidateEvidenceRequest,
+    caller: CallerContextHeaders,
     candidate_id: str = Path(..., alias="candidateId"),
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
-    x_lotus_trusted_caller_context: str | None = Header(
-        default=None,
-        alias=TRUSTED_CALLER_CONTEXT_HEADER,
-    ),
 ) -> CandidateEvidenceReplayResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
-        require_role_and_capability(caller, _REPLAY_CANDIDATE_EVIDENCE_POLICY)
+        scope_filter = _authorize_candidate_evidence_replay(caller)
+        repository = get_idea_repository()
+        candidate_result = get_candidate_detail(
+            GetCandidateDetailCommand(
+                candidate_id=candidate_id,
+                access_scope_filter=scope_filter,
+            ),
+            repository=repository,
+        )
+        if candidate_result.access_scope_denied:
+            raise PermissionDeniedError(_REPLAY_CANDIDATE_EVIDENCE_POLICY.required_capability)
         command = ReplayCandidateEvidenceCommand(
             candidate_id=candidate_id,
             current_source_refs=tuple(
@@ -122,10 +129,7 @@ async def replay_idea_candidate_evidence(
             ),
             evaluated_at_utc=request.evaluated_at_utc,
         )
-        result = replay_candidate_evidence(
-            command,
-            repository=get_idea_repository(),
-        )
+        result = replay_candidate_evidence(command, repository=repository)
     except PermissionDeniedError:
         _emit_candidate_evidence_replay_operation_event(
             OperationOutcome.PERMISSION_DENIED,
@@ -170,6 +174,14 @@ async def replay_idea_candidate_evidence(
     )
 
 
+def _authorize_candidate_evidence_replay(caller: CallerContext) -> QueueAccessScopeFilter:
+    require_role_and_capability(caller, _REPLAY_CANDIDATE_EVIDENCE_POLICY)
+    return require_complete_caller_access_scope_filter(
+        caller,
+        denied_permission=_REPLAY_CANDIDATE_EVIDENCE_POLICY.required_capability,
+    )
+
+
 def _candidate_id(record: CandidatePersistenceRecord | None) -> str:
     return record.candidate.candidate_id if record is not None else ""
 
@@ -207,10 +219,13 @@ CANDIDATE_EVIDENCE_REPLAY_ROUTE: RouteMetadata = {
     "description": (
         "Compares operator-supplied current source-owned evidence references with the "
         "persisted evidence hash for an idea candidate and returns matched, stale-source, "
-        "hash-mismatch, expired, or not-found posture. This is an RFC-0002 Slice 06, "
-        "Slice 10, and Slice 15 internal supportability foundation; it is not live Core "
-        "source certification, Gateway proof, Workbench proof, data-product certification, "
-        "downstream authority, or supported-feature promotion."
+        "hash-mismatch, expired, or not-found posture. The caller must hold the operator "
+        "role and capability and complete trusted tenant, book, portfolio, and client "
+        "entitlement scope that authorizes the persisted candidate before any evidence is "
+        "read; a generic operator role grants no estate-wide access. This is an RFC-0002 "
+        "Slice 06, Slice 10, and Slice 15 internal supportability foundation; it is not live "
+        "Core source certification, Gateway proof, Workbench proof, data-product "
+        "certification, downstream authority, or supported-feature promotion."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": CandidateEvidenceReplayResponse,
@@ -239,7 +254,10 @@ CANDIDATE_EVIDENCE_REPLAY_ROUTE: RouteMetadata = {
         ),
         **permission_denied_metadata(
             detail="The caller is not permitted to replay idea candidate evidence.",
-            description="Caller lacks evidence replay permission.",
+            description=(
+                "Caller lacks the operator evidence replay permission or complete "
+                "tenant/book/portfolio/client entitlement scope for this candidate."
+            ),
         ),
         **not_found_metadata(
             code="candidate_not_found",

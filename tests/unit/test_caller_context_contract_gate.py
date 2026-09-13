@@ -271,6 +271,35 @@ def test_caller_context_contract_gate_requires_complete_scope_at_presentation_re
     ]
 
 
+def test_caller_context_contract_gate_requires_complete_scope_at_operator_read_boundaries(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/candidate_evidence_replay.py"),
+        "def _authorize_candidate_evidence_replay(caller):\n    return caller\n",
+    )
+    _write_module(
+        tmp_path,
+        Path("src/app/api/review_queue/operator_exceptions.py"),
+        "from app.api.caller_headers import caller_access_scope_filter\n\n"
+        "def _authorize_operator_exception_read(caller):\n"
+        "    return caller_access_scope_filter(caller)\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/candidate_evidence_replay.py:1: `_authorize_candidate_evidence_replay` "
+        "must require complete caller scope before candidate repository access",
+        "src/app/api/review_queue/operator_exceptions.py:3: "
+        "`_authorize_operator_exception_read` must require complete caller scope before "
+        "candidate repository access",
+    ]
+
+
 def test_caller_context_contract_gate_rejects_removed_complete_scope_boundary_function(
     tmp_path: Path,
 ) -> None:
