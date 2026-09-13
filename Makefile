@@ -317,7 +317,7 @@ ci-contract-gate:
 	$(VENV_PYTHON) scripts/ci_contract_gate.py
 
 main-gate-coverage-audit:
-	$(VENV_PYTHON) scripts/audit_main_gate_coverage.py --baseline-sha abcc119ea48d286cf7336fb687a51e0b40d38404 --limit 60 --fail-on-gap
+	$(VENV_PYTHON) scripts/audit_main_gate_coverage.py --baseline-sha abcc119ea48d286cf7336fb687a51e0b40d38404 --end-ref origin/main --fail-on-gap --ledger-output output/ci/main-gate-coverage-ledger.json
 
 repository-hygiene-gate:
 	$(VENV_PYTHON) scripts/repository_hygiene_gate.py

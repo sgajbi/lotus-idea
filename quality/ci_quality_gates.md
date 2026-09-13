@@ -158,6 +158,29 @@ that implementation verifies every enumerated revision is an ancestor of the
 commit resolved from a fresh fetch of `main`; event/history contradictions fail
 closed without GitHub mutation.
 
+`make main-gate-coverage-audit` (scheduled daily by `main-gate-coverage-audit.yml`)
+audits every revision in the fixed range
+`abcc119ea48d286cf7336fb687a51e0b40d38404..origin/main` against the
+`main-releasability.yml` run history; there is no rolling window, so gaps and
+verdicts never age out. It reports coverage (`verdict`, `unverifiable`,
+`ungated`, `unknown`) separately from outcome, where outcome is the conclusion
+of the latest terminal run for that exact revision ordered by creation time and
+then run id: an earlier success never outranks a later failure, a cancellation
+never erases an earlier verdict, and unorderable disagreeing verdicts resolve to
+failure rather than manufacturing a pass. Any coverage gap fails the audit under
+`--fail-on-gap`; a failing verdict is evaluated coverage and is preserved, not
+counted as a gap. One newest-first bulk run listing is used; a revision whose
+listed runs hold a verdict is settled, and a revision listed only through
+non-terminal runs or absent from a truncated listing has its own history
+fetched (with its own limit) before any gap is declared. A history that is
+unreadable or exhausted at its limit without a verdict is `unknown`, never
+`ungated` or a verdict. The per-revision JSON ledger is uploaded as
+the `main-gate-coverage-ledger` artifact even when the audit fails. Because
+rebase merge makes every retained commit its own audited main revision, a fix
+committed after the commit it repairs leaves a permanent honest red on the
+intermediate revision: squash the fix into the breaching commit so each
+retained commit is self-consistent.
+
 GitHub Security posture is also under the CI contract gate. The repository has
 Dependabot alerts/security updates enabled, secret scanning with push
 protection enabled, private vulnerability reporting enabled, and CodeQL default

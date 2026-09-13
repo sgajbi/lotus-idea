@@ -258,15 +258,38 @@ does not change the release verdict. Cleanup deliberately runs in the same
 workflow because GitHub suppresses non-exempt follow-on events from workflows
 dispatched with the repository `GITHUB_TOKEN`.
 
-Run `make main-gate-coverage-audit` to verify the latest 60 post-rollout main
-revisions against GitHub's `main-releasability.yml` run history. Missing,
-cancelled, in-progress, malformed, and unreadable evidence fails closed; a
-completed failing run remains a real verdict and is reported separately from a
-coverage gap. Commit `abcc119ea48d286cf7336fb687a51e0b40d38404` is the
-exclusive rollout boundary, so older commits are explicitly classified as
-pre-gate rather than generating synthetic release runs. The same audit runs
-daily through `main-gate-coverage-audit.yml`. Run ids and current counts stay in
-GitHub/generated evidence and are not transcribed into routine source updates.
+Run `make main-gate-coverage-audit` to verify every post-rollout main revision
+in the fixed range `abcc119ea48d286cf7336fb687a51e0b40d38404..origin/main`
+against GitHub's `main-releasability.yml` run history. There is no rolling
+window: historical verdicts and gaps stay in the audited set as main advances.
+The audit reports coverage separately from outcome. Coverage is `verdict`,
+`unverifiable` (complete history holds runs but none reached a verdict),
+`ungated` (complete history holds no run) or `unknown` (history unreadable, or
+exhausted at its fetch limit before a verdict was found); outcome is the
+conclusion of the latest terminal run for that exact revision, ordered by
+creation time and then run id, so an earlier success never outranks a later
+failure and a later cancellation never erases an earlier verdict. Two terminal
+runs that cannot be ordered and disagree resolve to `failure`; ambiguity never
+manufactures a pass. The bulk run listing is newest-first, so a revision whose
+listed runs include a verdict already has its latest verdict; a revision listed
+only through non-terminal runs, or absent from a truncated listing, has its own
+history fetched before any gap is declared.
+Missing, cancelled, skipped, timed-out, in-progress, malformed, and unreadable
+evidence fails closed; a completed failing run remains a real verdict and is
+preserved, never counted as a gap. The baseline commit is the exclusive rollout
+boundary, so older commits are explicitly classified as pre-gate rather than
+generating synthetic release runs. The same audit runs daily through
+`main-gate-coverage-audit.yml`, which uploads the per-revision JSON ledger as
+the `main-gate-coverage-ledger` artifact even when the audit fails. Run ids and
+current counts stay in GitHub/generated evidence and are not transcribed into
+routine source updates.
+
+Because pull requests land by rebase merge, every retained commit becomes its
+own releasable main revision and receives its own verdict. A fix committed
+after the commit it repairs leaves an honest red on the intermediate revision
+forever; squash the fix into the breaching commit before merge so that each
+retained commit is self-consistent: code, tests, required context, and quality
+evidence together.
 
 The GitHub Security tab posture is governed in both repository settings and
 source-controlled files. Dependabot alerts/security updates are enabled, secret
