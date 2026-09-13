@@ -14,7 +14,10 @@ audit reports coverage separately from outcome:
   ordered and disagree, the ambiguity resolves to ``failure`` rather than manufacturing a
   pass.
 
-Cancelled, skipped, timed-out, in-progress and unreadable evidence is not a verdict and
+CI history is read as attempts, not runs: every run carries its attempt number into the
+ledger, a verdict decided by a rerun (attempt > 1) is flagged so an earlier failed attempt
+is never hidden behind a later green, and a timed-out attempt is a failing verdict, not a
+coverage gap. Cancelled, skipped, in-progress and unreadable evidence is not a verdict and
 fails closed under ``--fail-on-gap``. A failing verdict is evaluated coverage; it is
 reported, preserved in the ledger and never counted as a gap. The audited scope is the
 fixed ``baseline..end`` range, so historical verdicts and gaps do not age out of view.
@@ -36,7 +39,7 @@ WORKFLOW = "main-releasability.yml"
 DEFAULT_END_REF = "origin/main"
 DEFAULT_LISTING_LIMIT = 5000
 DEFAULT_REVISION_LIMIT = 200
-_VERDICT_CONCLUSIONS = {"success", "failure"}
+_VERDICT_CONCLUSIONS = {"success", "failure", "timed_out"}
 _FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 COVERAGE_VERDICT = "verdict"
@@ -48,19 +51,35 @@ _GAP_COVERAGE = {COVERAGE_UNVERIFIABLE, COVERAGE_UNGATED, COVERAGE_UNKNOWN}
 NOTE_HISTORY_UNREADABLE = "run history could not be read"
 NOTE_HISTORY_EXHAUSTED = "run history exhausted before a terminal verdict"
 NOTE_AMBIGUOUS_ORDER = "equal-order terminal verdicts disagree; resolved to failure"
+NOTE_RERUN_VERDICT = "verdict decided by a rerun; an earlier attempt of that run did not pass"
 
 
 @dataclass(frozen=True)
 class RunEvidence:
-    """One workflow run for a revision: when it started, its identity, and how it ended."""
+    """One workflow run attempt for a revision: when it started, its identity, how it ended."""
 
     created_at: str
     state: str
     run_id: int = 0
+    attempt: int = 1
 
     @property
     def order_key(self) -> tuple[str, int]:
         return (self.created_at, self.run_id)
+
+    @property
+    def is_verdict(self) -> bool:
+        return self.state in _VERDICT_CONCLUSIONS
+
+    @property
+    def outcome(self) -> str:
+        """Collapse the terminal conclusion to the audited outcome; timed_out is a failure."""
+
+        return "success" if self.state == "success" else "failure"
+
+    @property
+    def label(self) -> str:
+        return f"{self.state}@{self.attempt}"
 
 
 @dataclass(frozen=True)
@@ -102,12 +121,18 @@ def _parse_runs(stdout: str) -> list[dict[str, object]] | None:
     return [run for run in runs if isinstance(run, dict)]
 
 
+def _positive_int(value: object, default: int) -> int:
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    return default
+
+
 def _evidence(run: dict[str, object]) -> RunEvidence:
-    raw_id = run.get("databaseId")
     return RunEvidence(
         created_at=str(run.get("createdAt") or ""),
         state=str(run.get("conclusion") or run.get("status") or ""),
-        run_id=int(raw_id) if isinstance(raw_id, int) and not isinstance(raw_id, bool) else 0,
+        run_id=_positive_int(run.get("databaseId"), 0),
+        attempt=_positive_int(run.get("attempt"), 1),
     )
 
 
@@ -136,7 +161,7 @@ def _list_workflow_runs(limit: int) -> tuple[dict[str, list[RunEvidence]], bool]
         "--limit",
         str(limit),
         "--json",
-        "databaseId,headSha,conclusion,status,createdAt",
+        "databaseId,attempt,headSha,conclusion,status,createdAt",
     )
     if runs is None:
         return None
@@ -157,7 +182,7 @@ def _runs_for_revision(sha: str, limit: int) -> RunHistory | None:
         "--limit",
         str(limit),
         "--json",
-        "databaseId,conclusion,status,createdAt",
+        "databaseId,attempt,conclusion,status,createdAt",
     )
     if runs is None:
         return None
@@ -171,13 +196,18 @@ def classify_revision(history: RunHistory | None) -> tuple[str, str | None, str 
     if history is None:
         return COVERAGE_UNKNOWN, None, NOTE_HISTORY_UNREADABLE
     ordered = sorted(history.runs, key=lambda run: run.order_key)
-    terminal = [run for run in ordered if run.state in _VERDICT_CONCLUSIONS]
+    terminal = [run for run in ordered if run.is_verdict]
     if terminal:
         latest_key = terminal[-1].order_key
-        latest = {run.state for run in terminal if run.order_key == latest_key}
-        if len(latest) > 1:
-            return COVERAGE_VERDICT, "failure", NOTE_AMBIGUOUS_ORDER
-        return COVERAGE_VERDICT, latest.pop(), None
+        latest = [run for run in terminal if run.order_key == latest_key]
+        outcomes = {run.outcome for run in latest}
+        notes: list[str] = []
+        if len(outcomes) > 1:
+            notes.append(NOTE_AMBIGUOUS_ORDER)
+        if any(run.attempt > 1 for run in latest):
+            notes.append(NOTE_RERUN_VERDICT)
+        outcome = "failure" if len(outcomes) > 1 else outcomes.pop()
+        return COVERAGE_VERDICT, outcome, "; ".join(notes) or None
     if not history.complete:
         return COVERAGE_UNKNOWN, None, NOTE_HISTORY_EXHAUSTED
     if ordered:
@@ -248,7 +278,7 @@ def _history_for_revision(
     revision_limit: int,
 ) -> RunHistory | None:
     listed = listing.get(sha, []) if listing is not None else []
-    if any(run.state in _VERDICT_CONCLUSIONS for run in listed):
+    if any(run.is_verdict for run in listed):
         return RunHistory(runs=tuple(listed), complete=True)
     return _runs_for_revision(sha, revision_limit)
 
@@ -272,7 +302,7 @@ def _audit_revisions(
                 subject=subject,
                 coverage=coverage,
                 outcome=outcome,
-                run_states=tuple(run.state for run in ordered),
+                run_states=tuple(run.label for run in ordered),
                 note=note,
             )
         )
