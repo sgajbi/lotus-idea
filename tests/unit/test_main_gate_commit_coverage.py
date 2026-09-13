@@ -115,8 +115,8 @@ def test_the_scheduled_audit_does_not_depend_on_a_virtualenv_the_job_never_creat
     assert "actions/setup-python" in executed
 
 
-def _run(created_at: str, state: str, run_id: int = 0) -> audit.RunEvidence:
-    return audit.RunEvidence(created_at=created_at, state=state, run_id=run_id)
+def _run(created_at: str, state: str, run_id: int = 0, attempt: int = 1) -> audit.RunEvidence:
+    return audit.RunEvidence(created_at=created_at, state=state, run_id=run_id, attempt=attempt)
 
 
 def _history(*runs: audit.RunEvidence, complete: bool = True) -> audit.RunHistory:
@@ -132,7 +132,10 @@ def _history(*runs: audit.RunEvidence, complete: bool = True) -> audit.RunHistor
         (_history(_run("T1", "success", 1), _run("T2", "cancelled", 2)), ("verdict", "success")),
         (_history(_run("T1", "failure", 1), _run("T2", "in_progress", 2)), ("verdict", "failure")),
         (_history(_run("T1", "cancelled", 1)), ("unverifiable", None)),
-        (_history(_run("T1", "timed_out", 1), _run("T2", "skipped", 2)), ("unverifiable", None)),
+        (_history(_run("T1", "timed_out", 1), _run("T2", "skipped", 2)), ("verdict", "failure")),
+        (_history(_run("T1", "timed_out", 1)), ("verdict", "failure")),
+        (_history(_run("T1", "timed_out", 1), _run("T2", "success", 2)), ("verdict", "success")),
+        (_history(_run("T1", "skipped", 1), _run("T2", "cancelled", 2)), ("unverifiable", None)),
         (_history(), ("ungated", None)),
         (_history(_run("T1", "cancelled", 1), complete=False), ("unknown", None)),
         (None, ("unknown", None)),
@@ -198,6 +201,52 @@ def test_unorderable_agreeing_verdicts_keep_their_shared_conclusion() -> None:
     )
 
 
+def test_rerun_to_green_is_a_success_verdict_that_names_the_rerun() -> None:
+    assert audit.classify_revision(_history(_run("T1", "success", 7, attempt=2))) == (
+        "verdict",
+        "success",
+        audit.NOTE_RERUN_VERDICT,
+    )
+
+
+def test_rerun_that_still_fails_is_a_failure_verdict_that_names_the_rerun() -> None:
+    assert audit.classify_revision(_history(_run("T1", "failure", 7, attempt=3))) == (
+        "verdict",
+        "failure",
+        audit.NOTE_RERUN_VERDICT,
+    )
+
+
+def test_first_attempt_verdicts_carry_no_rerun_note() -> None:
+    assert audit.classify_revision(_history(_run("T1", "success", 7, attempt=1))) == (
+        "verdict",
+        "success",
+        None,
+    )
+
+
+def test_timed_out_attempt_is_a_failing_verdict_not_a_coverage_gap(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    commits: dict[str, audit.RunHistory | None] = {
+        "a" * 40: _history(_run("T1", "timed_out", 1)),
+        "b" * 40: _history(_run("T1", "failure", 2), _run("T2", "success", 3, attempt=2)),
+    }
+    listing = ({sha: list(history.runs) for sha, history in commits.items() if history}, False)
+    monkeypatch.setattr(audit, "_arguments", _namespace)
+    _install_history(monkeypatch, commits, listing=listing)
+
+    assert audit.main() == 0
+    output = capsys.readouterr().out
+    assert "VERDICT      failure    aaaaaaaaa" in output
+    assert (
+        f"VERDICT      success    bbbbbbbbb  subject line  [{audit.NOTE_RERUN_VERDICT}]" in output
+    )
+    assert "coverage: 2 with a terminal main-releasability.yml verdict, 0 unverifiable, " in output
+    assert "outcome: 1 passing, 1 with a failing verdict" in output
+
+
 def test_exhausted_and_unreadable_histories_are_unknown_not_ungated() -> None:
     assert audit.classify_revision(_history(complete=False)) == (
         "unknown",
@@ -260,7 +309,7 @@ def test_audit_fails_for_missing_cancelled_and_unverifiable_evidence(
     output = capsys.readouterr().out
     assert "UNGATED" in output and "ddddddddd" in output
     assert "UNKNOWN" in output and "ccccccccc" in output
-    assert "UNVERIFIABLE cancelled  bbbbbbbbb" in output
+    assert "UNVERIFIABLE cancelled@1 bbbbbbbbb" in output
     assert "coverage: 1 with a terminal main-releasability.yml verdict, 1 unverifiable, " in output
     assert "1 ungated, 1 unknown" in output
     assert "outcome: 1 passing, 0 with a failing verdict" in output
@@ -397,7 +446,7 @@ def test_ledger_records_every_revision_with_coverage_and_outcome(
         ("aaaaaaaaa", "verdict", "success"),
         ("bbbbbbbbb", "unverifiable", None),
     ]
-    assert ledger["revisions"][0]["run_states"] == ["success", "cancelled"]
+    assert ledger["revisions"][0]["run_states"] == ["success@1", "cancelled@1"]
     assert ledger["revisions"][0]["note"] is None
 
 
@@ -473,6 +522,7 @@ def test_bulk_listing_groups_runs_by_exact_head_sha_and_reports_truncation(
     payload = [
         {
             "databaseId": 11,
+            "attempt": 2,
             "headSha": "a" * 40,
             "conclusion": "success",
             "status": "completed",
@@ -502,14 +552,14 @@ def test_bulk_listing_groups_runs_by_exact_head_sha_and_reports_truncation(
 
     assert audit._list_workflow_runs(10) == (
         {
-            "a" * 40: [_run("T1", "success", 11), _run("T2", "in_progress", 12)],
+            "a" * 40: [_run("T1", "success", 11, attempt=2), _run("T2", "in_progress", 12)],
             "b" * 40: [_run("T1", "failure", 13)],
         },
         False,
     )
     assert audit._list_workflow_runs(4) == (
         {
-            "a" * 40: [_run("T1", "success", 11), _run("T2", "in_progress", 12)],
+            "a" * 40: [_run("T1", "success", 11, attempt=2), _run("T2", "in_progress", 12)],
             "b" * 40: [_run("T1", "failure", 13)],
         },
         True,
@@ -518,7 +568,13 @@ def test_bulk_listing_groups_runs_by_exact_head_sha_and_reports_truncation(
 
 def test_revision_history_reports_exhaustion_at_its_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     payload = [
-        {"databaseId": 22, "conclusion": None, "status": "cancelled", "createdAt": "T2"},
+        {
+            "databaseId": 22,
+            "attempt": 3,
+            "conclusion": None,
+            "status": "cancelled",
+            "createdAt": "T2",
+        },
         {"databaseId": 21, "conclusion": "cancelled", "status": "completed", "createdAt": "T1"},
     ]
     monkeypatch.setattr(
@@ -528,10 +584,10 @@ def test_revision_history_reports_exhaustion_at_its_limit(monkeypatch: pytest.Mo
     )
 
     assert audit._runs_for_revision("a" * 40, 2) == audit.RunHistory(
-        runs=(_run("T2", "cancelled", 22), _run("T1", "cancelled", 21)),
+        runs=(_run("T2", "cancelled", 22, attempt=3), _run("T1", "cancelled", 21)),
         complete=False,
     )
     assert audit._runs_for_revision("a" * 40, 3) == audit.RunHistory(
-        runs=(_run("T2", "cancelled", 22), _run("T1", "cancelled", 21)),
+        runs=(_run("T2", "cancelled", 22, attempt=3), _run("T1", "cancelled", 21)),
         complete=True,
     )
