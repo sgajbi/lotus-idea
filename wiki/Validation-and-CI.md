@@ -275,9 +275,10 @@ listed runs include a verdict already has its latest verdict; a revision listed
 only through non-terminal runs, or absent from a truncated listing, has its own
 history fetched before any gap is declared.
 History is read as attempts, not runs: each ledger run state carries its attempt
-number, a verdict decided by a rerun is flagged so an earlier failed attempt is
-never hidden behind a later green, and a timed-out attempt is a failing
-verdict rather than a gap. Missing, cancelled, skipped, in-progress, malformed,
+number, a verdict decided by a rerun is flagged because run listings expose only
+the latest attempt (earlier attempts are not visible there, so a rerun-to-green
+stays identifiable), and a timed-out attempt is a failing verdict rather than a
+gap. Missing, cancelled, skipped, in-progress, malformed,
 and unreadable evidence fails closed; a completed failing run remains a real
 verdict and is preserved, never counted as a gap. The baseline commit is the exclusive rollout
 boundary, so older commits are explicitly classified as pre-gate rather than

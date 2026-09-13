@@ -176,8 +176,9 @@ fetched (with its own limit) before any gap is declared. A history that is
 unreadable or exhausted at its limit without a verdict is `unknown`, never
 `ungated` or a verdict. History is read as attempts, not runs: every ledger
 run state carries its attempt number (`success@2`), a verdict decided by a
-rerun is flagged so the earlier failed attempt is never hidden behind a later
-green, and a timed-out attempt is a failing verdict, not a gap. The per-revision JSON ledger is uploaded as
+rerun is flagged because run listings expose only the latest attempt (earlier
+attempts are not visible there, so a rerun-to-green stays identifiable), and a
+timed-out attempt is a failing verdict, not a gap. The per-revision JSON ledger is uploaded as
 the `main-gate-coverage-ledger` artifact even when the audit fails. Because
 rebase merge makes every retained commit its own audited main revision, a fix
 committed after the commit it repairs leaves a permanent honest red on the
