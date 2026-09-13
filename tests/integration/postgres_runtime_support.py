@@ -14,7 +14,7 @@ from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
-from app.domain import ConversionTarget
+from app.domain import CandidateEvidenceIdentity, ConversionTarget
 from app.domain.evidence_hashing import evidence_hash_for_candidate
 from app.infrastructure.migrations import (
     MigrationConnection,
@@ -193,10 +193,19 @@ def seed_governed_advise_conversion_resource(
     conversion_intent_id: str,
 ) -> tuple[str, str]:
     candidate_id = seed_active_conversion_resource(database_url, conversion_intent_id)
-    candidate_value = candidate(candidate_id)
     fixture_repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
     fixture_record = fixture_repository.snapshot().candidate_records["idea-downstream-001"]
     fixture_intent = fixture_record.conversion_intents[0]
+    fixture_grant = fixture_intent.review_authority_grant
+    assert fixture_grant is not None
+    # A first downstream attempt revalidates the persisted candidate against the
+    # intent's review authority before any owner I/O, so the seeded candidate must
+    # carry the post-intent lifecycle and the grant must name its exact evidence.
+    candidate_value = replace(
+        candidate(candidate_id),
+        lifecycle_status=fixture_record.candidate.lifecycle_status,
+        review_posture=fixture_record.candidate.review_posture,
+    )
     conversion_intent = replace(
         fixture_intent,
         intent=replace(
@@ -209,7 +218,10 @@ def seed_governed_advise_conversion_resource(
         source_revision_vector_digest=candidate_value.evidence_packet.source_revision_vector_digest,
         source_cut_posture=candidate_value.evidence_packet.source_cut_posture,
         source_signal_ids=candidate_value.source_signal_ids,
-        review_authority_grant=None,
+        review_authority_grant=replace(
+            fixture_grant,
+            candidate_evidence=CandidateEvidenceIdentity.from_candidate(candidate_value),
+        ),
     )
     with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
         cursor.execute(
@@ -218,6 +230,7 @@ def seed_governed_advise_conversion_resource(
             SET evidence_packet_id = %s,
                 evidence_hash = %s,
                 candidate_json = %s,
+                lifecycle_status = %s,
                 business_identity_id = %s,
                 identity_policy_version = %s,
                 material_fingerprint = %s,
@@ -231,6 +244,7 @@ def seed_governed_advise_conversion_resource(
                 candidate_value.evidence_packet.evidence_packet_id,
                 evidence_hash_for_candidate(candidate_value),
                 Jsonb(idea_candidate_to_json(candidate_value)),
+                candidate_value.lifecycle_status.value,
                 candidate_value.identity.business_identity_id,
                 candidate_value.identity.policy_version,
                 candidate_value.identity.material_fingerprint,

@@ -13,7 +13,7 @@ jobs:
   audit:
     name: Audit / Every Main Commit Has A Gate Verdict
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -36,4 +36,14 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin main --quiet
-          python scripts/audit_main_gate_coverage.py --baseline-sha abcc119ea48d286cf7336fb687a51e0b40d38404 --limit 60 --fail-on-gap
+          python scripts/audit_main_gate_coverage.py --baseline-sha abcc119ea48d286cf7336fb687a51e0b40d38404 --end-ref origin/main --fail-on-gap --ledger-output output/ci/main-gate-coverage-ledger.json
+      - name: Preserve the fixed-range coverage ledger
+        # The ledger is the durable record of every revision's coverage and
+        # outcome in the fixed baseline..end range; it must survive a failing
+        # audit, which is exactly when it is needed.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: main-gate-coverage-ledger
+          path: output/ci/main-gate-coverage-ledger.json
+          if-no-files-found: error

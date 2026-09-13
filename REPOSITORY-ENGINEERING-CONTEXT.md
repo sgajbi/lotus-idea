@@ -233,7 +233,11 @@ For all changes:
 - validate PostgreSQL state, evidence, and outbox consistency for persistence changes;
 - run `make documentation-contract-gate` when governed prose changes;
 - record either the wiki update or an explicit no-wiki-change decision in the PR;
-- use `make check` as the normal local pre-PR baseline.
+- use `make check` as the normal local pre-PR baseline;
+- keep every retained commit self-consistent (code, tests, required context, and quality
+  evidence together): pull requests land by rebase merge, so each commit becomes its own
+  main revision with its own releasability verdict, and a fix committed after the commit it
+  repairs leaves a permanent honest red on the intermediate revision.
 
 Before claiming completion, verify the PR head and the resulting `main` revision. Required checks,
 release identity, wiki publication when applicable, and branch cleanup are completion evidence—not
