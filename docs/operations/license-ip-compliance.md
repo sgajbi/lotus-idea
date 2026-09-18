@@ -43,8 +43,16 @@ distributed by this repository.
    `.venv/Scripts/python.exe scripts/license_compliance_gate.py --write-notice` on Windows or the
    equivalent repository Python on other platforms.
 5. Run `make license-compliance-gate`, focused mutation tests, and the repository-native lane.
-6. Obtain application-owner, security, and legal review. `CODEOWNERS` routes repository review;
-   it is not proof of the separate legal and security decisions.
+6. For a version-only patch of an already approved-license component, obtain one application-owner
+   review with the exact lock, SPDX, source, scope, obligations, notice, and scan diff. This is an
+   inventory update only when the component set and all those classifications stay unchanged.
+   In single-developer mode, a PR, passing protected CI, and the owner's durable review evidence
+   provide that narrow approval control; they are not independent security or legal decisions.
+   The owner-directed adoption of this routine-patch route in policy v1.1.0 is recorded in its PR.
+   Any further widening of this route, or changes to license classification, obligations,
+   exception policy, external images, or asset rights, still require separately governed specialist
+   decisions before merge.
+   `CODEOWNERS` routes repository review; it is not legal or security approval.
 
 Never edit `THIRD_PARTY_NOTICES.md` independently. Never suppress an unknown or denied result by
 changing an SPDX expression to a more convenient value.

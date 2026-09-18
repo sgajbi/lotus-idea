@@ -1,10 +1,10 @@
 {
   "contract_id": "lotus-idea-license-policy",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "service_license": "LicenseRef-Lotus-Proprietary",
   "runtime_lock": {
     "path": "requirements/runtime-resolved.lock.txt",
-    "sha256": "7c0dc494308fb5f206ef2e6ed5981b79ff2d95b84a894da12be49c0707152d69"
+    "sha256": "fd940eb46289edf0c89523fdf7a3d52c5d10dad63ae9b74cb23b8f7e1508fd28"
   },
   "ci_lock": {
     "path": "requirements/ci-tooling.lock.txt",
@@ -23,7 +23,7 @@
   "components": [
     {"name":"annotated-doc","version":"0.0.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/fastapi/annotated-doc","attribution_status":"included","obligations":[]},
     {"name":"annotated-types","version":"0.7.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/annotated-types/annotated-types","attribution_status":"included","obligations":[]},
-    {"name":"anyio","version":"4.14.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/agronholm/anyio","attribution_status":"included","obligations":[]},
+    {"name":"anyio","version":"4.14.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/agronholm/anyio","attribution_status":"included","obligations":[]},
     {"name":"certifi","version":"2026.6.17","scopes":["runtime"],"spdx":"MPL-2.0","source_url":"https://github.com/certifi/python-certifi","attribution_status":"included","obligations":["preserve_notices","make_modified_mpl_files_available_under_mpl"]},
     {"name":"cffi","version":"2.1.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-cffi/cffi","attribution_status":"included","obligations":[]},
     {"name":"click","version":"8.4.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pallets/click","attribution_status":"included","obligations":[]},
@@ -71,6 +71,7 @@
   "notice_path": "THIRD_PARTY_NOTICES.md",
   "approval": {
     "owners": ["lotus-idea-owners", "security", "legal"],
+    "routine_approved_patch_owners": ["lotus-idea-owners"],
     "policy_change_review_required": true,
     "exception_expiry_required": true,
     "required_exception_approvals": ["lotus-idea-owners", "security", "legal"],

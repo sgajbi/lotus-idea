@@ -23,6 +23,11 @@ promotion remain blocked.
 | AI assistance | Deterministic evidence, workflow-pack allowlist, type-and-content action policy, canonical server-owned labels, verifier, lineage, and model-risk controls. | AI governance docs and gates |
 | License and IP | Exact runtime/CI inventory, SPDX policy, conditional obligations, deterministic notices, expiring exceptions, and digest-bound release evidence. | `make license-compliance-gate` and the operator runbook |
 
+For a version-only patch of an existing approved-license component with unchanged classification,
+source, scope, and obligations, one application-owner review plus protected CI is the single-developer
+control. Unknown or denied licensing, changed obligations, exceptions, external images, and asset
+rights remain fail-closed and require specialist decisions; this is not legal certification.
+
 ## Signed Lotus AI Output
 
 Idea accepts production-like AI explanation output only as a complete producer

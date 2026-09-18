@@ -125,7 +125,7 @@ def validate_release_license_evidence(
 def _validate_header(payload: dict[str, Any]) -> list[str]:
     expected = {
         "contract_id": "lotus-idea-license-policy",
-        "contract_version": "1.0.0",
+        "contract_version": "1.1.0",
         "service_license": "LicenseRef-Lotus-Proprietary",
     }
     errors = [
@@ -140,6 +140,8 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         required_owners = {"lotus-idea-owners", "security", "legal"}
         if set(approval.get("owners", [])) != required_owners:
             errors.append("license policy approval owners must include app, security, and legal")
+        if approval.get("routine_approved_patch_owners") != ["lotus-idea-owners"]:
+            errors.append("routine approved-license patches require one application owner")
         if set(approval.get("required_exception_approvals", [])) != required_owners:
             errors.append("license exceptions must require app, security, and legal approval")
         if approval.get("exception_expiry_required") is not True:

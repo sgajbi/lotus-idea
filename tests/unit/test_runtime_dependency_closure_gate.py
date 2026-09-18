@@ -46,8 +46,10 @@ def test_runtime_dependency_closure_gate_blocks_dependency_graph_mirror_drift(
 ) -> None:
     lock_path = ROOT / "requirements" / "runtime-resolved.lock.txt"
     dependency_graph_path = tmp_path / "requirements.txt"
+    lock_text = lock_path.read_text(encoding="utf-8")
+    anyio_pin = next(line for line in lock_text.splitlines() if line.startswith("anyio=="))
     dependency_graph_path.write_text(
-        lock_path.read_text(encoding="utf-8").replace("anyio==4.14.0", "anyio==4.14.1"),
+        lock_text.replace(anyio_pin, "anyio==0"),
         encoding="utf-8",
     )
 
