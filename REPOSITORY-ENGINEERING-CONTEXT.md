@@ -235,6 +235,10 @@ For all changes:
 - run `make documentation-contract-gate` when governed prose changes;
 - record either the wiki update or an explicit no-wiki-change decision in the PR;
 - use `make check` as the normal local pre-PR baseline;
+- route version-only patches of already approved-license components through the single
+  application-owner review plus protected PR gates described in
+  `docs/operations/license-ip-compliance.md`; this does not authorize exceptions or new
+  legal/security classifications;
 - keep every retained commit self-consistent (code, tests, required context, and quality
   evidence together): pull requests land by rebase merge, so each commit becomes its own
   main revision with its own releasability verdict, and a fix committed after the commit it

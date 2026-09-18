@@ -114,6 +114,7 @@ def test_license_policy_accepts_active_exception_and_rejects_expired_exception(
 
 def test_license_policy_rejects_incomplete_approval_governance(tmp_path: Path) -> None:
     payload = current_policy()
+    payload["approval"]["routine_approved_patch_owners"] = ["security"]
     payload["approval"]["required_exception_approvals"] = ["lotus-idea-owners"]
     payload["approval"]["approval_evidence_required"] = False
     payload["approval"]["exception_expiry_required"] = False
@@ -121,6 +122,7 @@ def test_license_policy_rejects_incomplete_approval_governance(tmp_path: Path) -
 
     errors = validate_license_policy(payload, repository_root=tmp_path)
 
+    assert "routine approved-license patches require one application owner" in errors
     assert "license exceptions must require app, security, and legal approval" in errors
     assert "license exceptions must require expiry" in errors
     assert "license approvals must require durable evidence" in errors
@@ -235,7 +237,7 @@ def test_release_license_evidence_binds_policy_notice_sbom_and_image() -> None:
         "container_image_digest_reference": image,
         "license_compliance": {
             "policy_contract": "contracts/compliance/lotus-idea-license-policy.v1.json",
-            "policy_version": "1.0.0",
+            "policy_version": "1.1.0",
             "runtime_lock_sha256": payload["runtime_lock"]["sha256"],
             "ci_lock_sha256": payload["ci_lock"]["sha256"],
             "notice_path": "THIRD_PARTY_NOTICES.md",
