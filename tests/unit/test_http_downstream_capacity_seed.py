@@ -74,8 +74,10 @@ def test_adapter_calls_governed_api_sequence_with_synthetic_scope() -> None:
         "x-caller-client-ids": "capacity-synthetic-client",
     }
     for header_name, expected_value in expected_scope_headers.items():
+        assert requests[1].headers[header_name] == expected_value
         assert requests[2].headers[header_name] == expected_value
         assert requests[3].headers[header_name] == expected_value
+    assert requests[1].headers["x-caller-capabilities"] == "idea.candidate.lifecycle.transition"
     assert requests[3].headers["x-caller-capabilities"] == "idea.conversion.intent.record"
 
 

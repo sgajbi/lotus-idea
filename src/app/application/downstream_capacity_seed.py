@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 import hashlib
 
 from app.ports.downstream_capacity_seed import DownstreamCapacitySeedPort
@@ -41,24 +41,24 @@ def seed_downstream_capacity_resource(
         as_of_date=command.as_of_date,
         seeded_at_utc=command.seeded_at_utc,
     )
-    for index, target_status in enumerate(LIFECYCLE_SEQUENCE, start=1):
+    for target_status in LIFECYCLE_SEQUENCE:
         port.transition_candidate(
             candidate_id=candidate_id,
             seed_key=seed_key,
             target_status=target_status,
-            changed_at_utc=command.seeded_at_utc + timedelta(minutes=index),
+            changed_at_utc=command.seeded_at_utc,
         )
     port.approve_candidate(
         candidate_id=candidate_id,
         seed_key=seed_key,
-        decided_at_utc=command.seeded_at_utc + timedelta(minutes=5),
+        decided_at_utc=command.seeded_at_utc,
     )
     conversion_intent_id = f"capacity-conversion-{seed_key}"
     port.record_conversion_intent(
         candidate_id=candidate_id,
         conversion_intent_id=conversion_intent_id,
         seed_key=seed_key,
-        requested_at_utc=command.seeded_at_utc + timedelta(minutes=6),
+        requested_at_utc=command.seeded_at_utc,
     )
     return DownstreamCapacitySeedResult(
         conversion_intent_id=conversion_intent_id,
