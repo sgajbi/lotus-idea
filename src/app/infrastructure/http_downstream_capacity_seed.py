@@ -57,6 +57,12 @@ class HttpDownstreamCapacitySeed:
         target_status: str,
         changed_at_utc: datetime,
     ) -> None:
+        headers = _headers(
+            subject="capacity-seed-automation",
+            capability="idea.candidate.lifecycle.transition",
+            idempotency_key=f"capacity-{seed_key}-{target_status}",
+        )
+        headers.update(_scope_headers())
         self._post_json(
             f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
             payload={
@@ -65,11 +71,7 @@ class HttpDownstreamCapacitySeed:
                 "changedAtUtc": _utc_text(changed_at_utc),
                 "reasonCodes": ["review_required"],
             },
-            headers=_headers(
-                subject="capacity-seed-automation",
-                capability="idea.candidate.lifecycle.transition",
-                idempotency_key=f"capacity-{seed_key}-{target_status}",
-            ),
+            headers=headers,
         )
 
     def approve_candidate(

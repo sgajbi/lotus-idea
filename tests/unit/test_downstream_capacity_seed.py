@@ -69,6 +69,11 @@ def test_seed_orchestrates_deterministic_lifecycle_and_conversion() -> None:
         "governance_checked",
         "ready_for_review",
     ]
+    assert [call["changed_at_utc"] for name, call in port.calls if name == "transition"] == [
+        SEEDED_AT
+    ] * 4
+    assert port.calls[-2][1]["decided_at_utc"] == SEEDED_AT
+    assert port.calls[-1][1]["requested_at_utc"] == SEEDED_AT
 
 
 def test_seed_artifact_is_explicitly_synthetic_and_non_certifying() -> None:
