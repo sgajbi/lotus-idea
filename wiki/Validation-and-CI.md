@@ -788,7 +788,14 @@ Persistence adapter validation:
     Lotus Core cashflow artifact is closed v3 `runtime_execution` evidence. It
     binds complete authoritative scope, exact movement-summary and projection
     receipts, projection arithmetic, movement counts, coherent source revision
-    posture, and accepted or exact-replayed durable Idea candidate persistence.
+    posture, and governed successful durable Idea candidate persistence: accepted,
+    exact-replayed, evidence-refreshed, material-version-created, or
+    recurrent-condition-reopened. A release handoff that explicitly requires
+    accepted-then-replayed proof must still record those exact decisions.
+    Accepted, material-version-created, and recurrent-condition-reopened
+    receipts must be `generated`; evidence-refreshed and exact-replayed
+    receipts preserve the candidate's governed persisted lifecycle from
+    `generated` onward and reject `detected` or unknown states.
     A complete zero-movement receipt may omit latest source-event time only
     when its zero count and canonical empty-bucket digest agree. Source batch
     identity is optional, but must match mandatory content and source digests

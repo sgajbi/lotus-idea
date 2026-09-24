@@ -69,6 +69,24 @@ LOW_INCOME_CASHFLOW_RUNTIME_EVIDENCE_REFS = (
     "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json",
     "make low-income-core-cashflow-live-proof-contract-gate",
 )
+LOW_INCOME_CASHFLOW_QUALIFYING_PERSISTENCE_DECISIONS = frozenset(
+    {
+        CandidatePersistenceDecision.ACCEPTED,
+        CandidatePersistenceDecision.EVIDENCE_REFRESHED,
+        CandidatePersistenceDecision.MATERIAL_VERSION_CREATED,
+        CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED,
+        CandidatePersistenceDecision.REPLAYED,
+    }
+)
+_LOW_INCOME_VERSIONED_PERSISTENCE_EVENT_TYPES = {
+    CandidatePersistenceDecision.EVIDENCE_REFRESHED: "idea.candidate.evidence_refreshed",
+    CandidatePersistenceDecision.MATERIAL_VERSION_CREATED: (
+        "idea.candidate.material_version_created"
+    ),
+    CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED: (
+        "idea.candidate.recurrent_condition_reopened"
+    ),
+}
 
 _MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
 _MOVEMENT_PRODUCT_NAME = "PortfolioCashMovementSummary"
@@ -456,14 +474,19 @@ def _evaluation_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, A
 def _persistence_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, Any] | None:
     evaluation = result.signal_result.evaluation
     persistence = result.signal_result.persistence
-    candidate = evaluation.candidate
+    evaluated_candidate = evaluation.candidate
     if (
-        candidate is None
+        evaluated_candidate is None
         or persistence is None
         or persistence.record is None
-        or persistence.decision
-        not in {CandidatePersistenceDecision.ACCEPTED, CandidatePersistenceDecision.REPLAYED}
-        or persistence.record.candidate != candidate
+        or persistence.decision not in LOW_INCOME_CASHFLOW_QUALIFYING_PERSISTENCE_DECISIONS
+    ):
+        return None
+    candidate = persistence.record.candidate
+    if (
+        candidate.candidate_id != evaluated_candidate.candidate_id
+        or candidate.family is not evaluated_candidate.family
+        or candidate.access_scope != evaluated_candidate.access_scope
     ):
         return None
     source_refs = candidate.evidence_packet.source_refs
@@ -478,6 +501,17 @@ def _persistence_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, 
     projection = _projection_receipt(result.evidence)
     if movement is None or projection is None:
         return None
+    persisted_at_utc = persistence.record.persisted_at_utc
+    expected_event_type = _LOW_INCOME_VERSIONED_PERSISTENCE_EVENT_TYPES.get(persistence.decision)
+    if expected_event_type is not None:
+        audit_event = persistence.audit_event
+        if (
+            audit_event is None
+            or audit_event.event_type != expected_event_type
+            or audit_event.outcome != "accepted"
+        ):
+            return None
+        persisted_at_utc = audit_event.occurred_at_utc
     source_receipts_digest = sha256_json(
         {
             "cashMovementReceiptDigest": movement["receiptDigest"],
@@ -502,7 +536,7 @@ def _persistence_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, 
                 "requestDigest": _request_receipt(result.command)["requestDigest"],
             }
         ),
-        "persistedAtUtc": format_utc(persistence.record.persisted_at_utc),
+        "persistedAtUtc": format_utc(persisted_at_utc),
     }
     return {**material, "receiptDigest": sha256_json(material)}
 

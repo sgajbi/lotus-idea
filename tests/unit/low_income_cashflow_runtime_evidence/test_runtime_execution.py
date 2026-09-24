@@ -17,7 +17,13 @@ from app.application.low_income_cashflow_runtime_evidence import (
     low_income_cashflow_runtime_execution_is_valid,
 )
 from app.application.runtime_evidence import sha256_json
-from app.domain import EvidenceFreshness, LowIncomeSignalPolicy, SignalEvaluationOutcome
+from app.domain import (
+    CandidatePersistenceDecision,
+    EvidenceFreshness,
+    IdeaLifecycleStatus,
+    LowIncomeSignalPolicy,
+    SignalEvaluationOutcome,
+)
 from app.domain.persistence import InMemoryIdeaRepository
 from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from tests.support.low_income_cashflow_runtime_evidence import (
@@ -628,6 +634,179 @@ def test_runtime_execution_proves_one_candidate_and_exact_replay() -> None:
     assert len(snapshot.outbox_events) == 1
 
 
+@pytest.mark.parametrize(
+    ("decision", "event_type"),
+    [
+        (
+            CandidatePersistenceDecision.MATERIAL_VERSION_CREATED,
+            "idea.candidate.material_version_created",
+        ),
+        (
+            CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED,
+            "idea.candidate.recurrent_condition_reopened",
+        ),
+    ],
+)
+def test_runtime_execution_qualifies_governed_versioned_persistence(
+    decision: CandidatePersistenceDecision,
+    event_type: str,
+) -> None:
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
+    persistence = result.signal_result.persistence
+    assert persistence is not None
+    assert persistence.audit_event is not None
+    result = replace(
+        result,
+        signal_result=replace(
+            result.signal_result,
+            persistence=replace(
+                persistence,
+                decision=decision,
+                audit_event=replace(persistence.audit_event, event_type=event_type),
+            ),
+        ),
+    )
+
+    payload = _build(result)
+
+    assert payload["execution"]["persistenceReceipt"]["decision"] == decision.value
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert low_income_cashflow_runtime_execution_is_valid(payload)
+
+
+def test_runtime_execution_refuses_versioned_persistence_without_matching_audit() -> None:
+    result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
+    persistence = result.signal_result.persistence
+    assert persistence is not None
+    result = replace(
+        result,
+        signal_result=replace(
+            result.signal_result,
+            persistence=replace(
+                persistence,
+                decision=CandidatePersistenceDecision.EVIDENCE_REFRESHED,
+            ),
+        ),
+    )
+
+    payload = _build(result)
+
+    assert payload["execution"]["persistenceReceipt"] is None
+    assert "persistence_receipt_missing" in payload["execution"]["qualificationBlockers"]
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_runtime_execution_qualifies_authoritative_evidence_refresh() -> None:
+    command = _command()
+    repository = InMemoryIdeaRepository()
+    accepted = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=AuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+    refreshed_command = replace(
+        command,
+        evaluated_at_utc=command.evaluated_at_utc + timedelta(minutes=1),
+        accepted_at_utc=command.accepted_at_utc + timedelta(minutes=1),
+        idempotency_key="low-income-runtime-refreshed",
+    )
+    refreshed = evaluate_low_income_cashflow_readiness(
+        refreshed_command,
+        core_source=_RestatedAuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=refreshed_command.accepted_at_utc,
+        result=refreshed,
+        durable_storage_backed=True,
+    )
+
+    assert accepted.signal_result.persistence is not None
+    assert accepted.signal_result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
+    assert refreshed.signal_result.persistence is not None
+    assert (
+        refreshed.signal_result.persistence.decision
+        is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    )
+    assert payload["execution"]["persistenceReceipt"]["decision"] == "evidence_refreshed"
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert low_income_cashflow_runtime_execution_is_valid(payload)
+
+
+def test_runtime_execution_qualifies_evidence_refresh_after_review_ready_progression() -> None:
+    command = _command()
+    repository = InMemoryIdeaRepository()
+    accepted = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=AuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+    candidate = accepted.signal_result.evaluation.candidate
+    assert candidate is not None
+    for offset, lifecycle in enumerate(
+        (
+            IdeaLifecycleStatus.ENRICHED,
+            IdeaLifecycleStatus.SCORED,
+            IdeaLifecycleStatus.GOVERNANCE_CHECKED,
+            IdeaLifecycleStatus.READY_FOR_REVIEW,
+        ),
+        start=1,
+    ):
+        repository.transition_candidate(
+            candidate.candidate_id,
+            lifecycle,
+            actor_subject="canonical-runtime",
+            occurred_at_utc=command.accepted_at_utc + timedelta(seconds=offset),
+        )
+    refreshed_command = replace(
+        command,
+        evaluated_at_utc=command.evaluated_at_utc + timedelta(minutes=1),
+        accepted_at_utc=command.accepted_at_utc + timedelta(minutes=1),
+        idempotency_key="low-income-runtime-review-ready-refresh",
+    )
+
+    refreshed = evaluate_low_income_cashflow_readiness(
+        refreshed_command,
+        core_source=_RestatedAuthoritativeCoreLowIncomeSource(),
+        repository=repository,
+    )
+    payload = build_low_income_cashflow_runtime_execution(
+        generated_at_utc=refreshed_command.accepted_at_utc,
+        result=refreshed,
+        durable_storage_backed=True,
+    )
+
+    persistence = payload["execution"]["persistenceReceipt"]
+    assert persistence["decision"] == "evidence_refreshed"
+    assert persistence["candidateLifecycleStatus"] == "ready_for_review"
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert low_income_cashflow_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("decision", "lifecycle"),
+    [
+        ("accepted", "ready_for_review"),
+        ("evidence_refreshed", "detected"),
+        ("evidence_refreshed", "not_a_lifecycle"),
+    ],
+)
+def test_contract_rejects_decision_inconsistent_persistence_lifecycle(
+    decision: str,
+    lifecycle: str,
+) -> None:
+    payload = _valid_payload()
+    persistence = payload["execution"]["persistenceReceipt"]
+    persistence["decision"] = decision
+    persistence["candidateLifecycleStatus"] = lifecycle
+    persistence["receiptDigest"] = sha256_json(
+        {key: value for key, value in persistence.items() if key != "receiptDigest"}
+    )
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
 def test_runtime_execution_refuses_non_durable_repository_claim() -> None:
     result = _evaluate(_command(), AuthoritativeCoreLowIncomeSource())
 
@@ -724,6 +903,19 @@ class _FixedSource:
         self, request: CoreLowIncomeEvidenceRequest
     ) -> CoreLowIncomeEvidence:
         return self.evidence
+
+
+class _RestatedAuthoritativeCoreLowIncomeSource:
+    def fetch_low_income_evidence(
+        self, request: CoreLowIncomeEvidenceRequest
+    ) -> CoreLowIncomeEvidence:
+        return authoritative_low_income_evidence(
+            request=request,
+            movement_hash="sha256:" + "e" * 64,
+            projection_hash="sha256:" + "f" * 64,
+            source_revision="2",
+            source_cut_id="cashflow-cut-2",
+        )
 
 
 def _replace_projection_runtime(

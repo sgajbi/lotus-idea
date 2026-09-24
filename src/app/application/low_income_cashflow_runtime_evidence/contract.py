@@ -5,10 +5,12 @@ from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from app.domain import CandidatePersistenceDecision, IdeaLifecycleStatus
 from app.domain.evidence_digest import is_sha256_digest
 from app.application.runtime_evidence import identity_hash, score_receipt_is_valid, sha256_json
 from app.application.low_income_cashflow_runtime_evidence.runtime_execution import (
     LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS,
+    LOW_INCOME_CASHFLOW_QUALIFYING_PERSISTENCE_DECISIONS,
     LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
     LOW_INCOME_CASHFLOW_RUNTIME_EVIDENCE_REFS,
     LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -82,6 +84,11 @@ _PERSISTENCE_KEYS = frozenset(
     }
 )
 _PERSISTENCE_KEYS_WITH_CANDIDATE_ID = _PERSISTENCE_KEYS | {"candidateId"}
+_PERSISTED_CANDIDATE_LIFECYCLES = frozenset(
+    lifecycle.value
+    for lifecycle in IdeaLifecycleStatus
+    if lifecycle is not IdeaLifecycleStatus.DETECTED
+)
 _SOURCE_BASE_KEYS = frozenset(
     {
         "productId",
@@ -438,10 +445,15 @@ def _persistence_is_valid(
         and bool(candidate_id.strip())
         and identity_hash(candidate_id) == evaluation.get("candidateIdHash")
     )
+    decision_value = persistence.get("decision")
     return (
-        persistence.get("decision") in {"accepted", "replayed"}
+        decision_value
+        in {decision.value for decision in LOW_INCOME_CASHFLOW_QUALIFYING_PERSISTENCE_DECISIONS}
         and persistence.get("candidateFamily") == "low_income"
-        and persistence.get("candidateLifecycleStatus") == "generated"
+        and _persistence_lifecycle_is_valid(
+            decision_value,
+            persistence.get("candidateLifecycleStatus"),
+        )
         and persistence.get("sourceReceiptsDigest") == expected_source_receipts_digest
         and persistence.get("sourceCutPosture") in {"coherent", "coherent_with_declared_tolerance"}
         and persisted_at is not None
@@ -450,6 +462,23 @@ def _persistence_is_valid(
         and _is_sha256(evaluation.get("candidateIdHash"))
         and candidate_identity_valid
     )
+
+
+def _persistence_lifecycle_is_valid(decision_value: object, lifecycle_value: object) -> bool:
+    if not isinstance(decision_value, str) or not isinstance(lifecycle_value, str):
+        return False
+    if decision_value in {
+        CandidatePersistenceDecision.ACCEPTED.value,
+        CandidatePersistenceDecision.MATERIAL_VERSION_CREATED.value,
+        CandidatePersistenceDecision.RECURRENT_CONDITION_REOPENED.value,
+    }:
+        return lifecycle_value == IdeaLifecycleStatus.GENERATED.value
+    if decision_value in {
+        CandidatePersistenceDecision.EVIDENCE_REFRESHED.value,
+        CandidatePersistenceDecision.REPLAYED.value,
+    }:
+        return lifecycle_value in _PERSISTED_CANDIDATE_LIFECYCLES
+    return False
 
 
 def _is_sha256(value: object) -> bool:

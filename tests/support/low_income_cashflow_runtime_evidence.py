@@ -51,21 +51,29 @@ def authoritative_low_income_evidence(
     *,
     request: CoreLowIncomeEvidenceRequest,
     minimum_cashflow: Decimal = Decimal("-12500"),
+    movement_hash: str = MOVEMENT_HASH,
+    projection_hash: str = PROJECTION_HASH,
+    source_revision: str = "1",
+    source_cut_id: str = "cashflow-cut-1",
 ) -> CoreLowIncomeEvidence:
     generated_at = request.evaluated_at_utc - timedelta(minutes=1)
     movement_ref = _source_ref(
         product_id="lotus-core:PortfolioCashMovementSummary:v1",
         route="/portfolios/{portfolio_id}/cash-movement-summary",
-        content_hash=MOVEMENT_HASH,
+        content_hash=movement_hash,
         request=request,
         generated_at=generated_at,
+        source_revision=source_revision,
+        source_cut_id=source_cut_id,
     )
     projection_ref = _source_ref(
         product_id="lotus-core:PortfolioCashflowProjection:v1",
         route="/portfolios/{portfolio_id}/cashflow-projection",
-        content_hash=PROJECTION_HASH,
+        content_hash=projection_hash,
         request=request,
         generated_at=generated_at,
+        source_revision=source_revision,
+        source_cut_id=source_cut_id,
     )
     movement_count = 0 if minimum_cashflow == 0 else 1
     movement = CoreCashMovementSummaryEvidence(
@@ -73,7 +81,8 @@ def authoritative_low_income_evidence(
             request=request,
             generated_at=generated_at,
             product_name="PortfolioCashMovementSummary",
-            content_hash=MOVEMENT_HASH,
+            content_hash=movement_hash,
+            source_revision=source_revision,
         ),
         start_date=request.as_of_date,
         end_date=request.as_of_date,
@@ -114,7 +123,8 @@ def authoritative_low_income_evidence(
             request=request,
             generated_at=generated_at,
             product_name="PortfolioCashflowProjection",
-            content_hash=PROJECTION_HASH,
+            content_hash=projection_hash,
+            source_revision=source_revision,
         ),
         range_start_date=request.as_of_date,
         range_end_date=request.as_of_date + timedelta(days=request.horizon_days),
@@ -175,6 +185,7 @@ def _runtime(
     generated_at: datetime,
     product_name: str,
     content_hash: str,
+    source_revision: str,
 ) -> CoreSourceProductRuntimeEvidence:
     return CoreSourceProductRuntimeEvidence(
         product_name=product_name,
@@ -188,10 +199,10 @@ def _runtime(
         data_quality_status="COMPLETE",
         latest_evidence_at_utc=generated_at - timedelta(minutes=1),
         source_batch_fingerprint=content_hash,
-        snapshot_id=f"{product_name.lower()}-snapshot-1",
+        snapshot_id=f"{product_name.lower()}-snapshot-{source_revision}",
         content_hash=content_hash,
         source_digest=content_hash,
-        source_refs=(f"lotus-core://source/{product_name}/1",),
+        source_refs=(f"lotus-core://source/{product_name}/{source_revision}",),
         source_lineage=(("source_owner", "lotus-core"),),
         degradation_status="NONE",
         degradation_reason_codes=(),
@@ -210,6 +221,8 @@ def _source_ref(
     content_hash: str,
     request: CoreLowIncomeEvidenceRequest,
     generated_at: datetime,
+    source_revision: str,
+    source_cut_id: str,
 ) -> SourceRef:
     return SourceRef(
         product_id=product_id,
@@ -222,10 +235,10 @@ def _source_ref(
         data_quality_status="COMPLETE",
         freshness=EvidenceFreshness.CURRENT,
         revision_claims=SourceRevisionClaims(
-            snapshot_id=f"{product_id}:snapshot-1",
-            source_revision="1",
+            snapshot_id=f"{product_id}:snapshot-{source_revision}",
+            source_revision=source_revision,
             restatement_version="restatement-v1",
-            source_cut_id="cashflow-cut-1",
+            source_cut_id=source_cut_id,
             reconciliation_posture=SourceReconciliationPosture.COMPLETE,
         ),
     )

@@ -384,6 +384,13 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
     assert payload["reviewDecisions"][0]["grantsDownstreamAuthority"] is False
     assert payload["reviewDecisions"][0]["authorityStatus"] == "active"
     assert payload["reviewDecisions"][0]["reviewChannel"] == "workbench"
+    assert payload["reviewDecisions"][0]["candidateId"] == candidate_id
+    assert (
+        payload["reviewDecisions"][0]["sourceRevisionVectorDigest"]
+        == (payload["evidence"]["sourceRevisionVectorDigest"])
+    )
+    assert payload["reviewDecisions"][0]["sourceCutPosture"] == "coherent"
+    assert payload["reviewDecisions"][0]["acceptanceTimeSource"] == "server_accepted"
     assert payload["reviewDecisions"][0]["candidateMaterialVersion"] == 1
     assert payload["reviewDecisions"][0]["candidateEvidenceVersion"] == 1
     assert payload["reviewDecisions"][0]["authorityPolicyVersion"] == "idea-review-authority-v1"
