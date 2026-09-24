@@ -31,6 +31,7 @@ from app.infrastructure.downstream_client import (
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
+from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -59,7 +60,6 @@ def main(argv: list[str] | None = None) -> int:
     command: EvaluateLowIncomeCashflowReadiness | None = None
     try:
         generated_at = _parse_instant(args.generated_at_utc, "generated-at-utc")
-        command = _command(args)
         repository = get_idea_repository()
         with closing(
             LotusCoreHighCashSourceAdapter(
@@ -75,9 +75,30 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
         ) as source:
+            if args.evaluate_after_source_reads:
+                # The adapter does not send evaluated_at_utc to Core. Use the
+                # requested generation instant only to form the read request,
+                # then bind the persisted evaluation to a clock observation
+                # made after both authoritative Core responses are received.
+                command = _command(
+                    args,
+                    evaluated_at_utc=generated_at,
+                    accepted_at_utc=generated_at,
+                )
+                evidence = source.fetch_low_income_evidence(_source_request(command))
+                evaluated_at = _runtime_now()
+                command = _command(
+                    args,
+                    evaluated_at_utc=evaluated_at,
+                    accepted_at_utc=evaluated_at,
+                )
+                source_for_evaluation = _PreloadedLowIncomeSource(evidence)
+            else:
+                command = _command(args)
+                source_for_evaluation = source
             result = evaluate_low_income_cashflow_readiness(
                 command,
-                core_source=source,
+                core_source=source_for_evaluation,
                 repository=repository,
             )
         payload = build_low_income_cashflow_runtime_execution(
@@ -119,15 +140,22 @@ def _write_blocked(
     return 3
 
 
-def _command(args: argparse.Namespace) -> EvaluateLowIncomeCashflowReadiness:
+def _command(
+    args: argparse.Namespace,
+    *,
+    evaluated_at_utc: datetime | None = None,
+    accepted_at_utc: datetime | None = None,
+) -> EvaluateLowIncomeCashflowReadiness:
+    evaluated_at = evaluated_at_utc or _parse_instant(args.evaluated_at_utc, "evaluated-at-utc")
     return EvaluateLowIncomeCashflowReadiness(
         tenant_id=args.tenant_id,
         book_id=args.book_id,
         portfolio_id=args.portfolio_id,
         client_id=args.client_id,
         as_of_date=_parse_date(args.as_of_date, "as-of-date"),
-        evaluated_at_utc=_parse_instant(args.evaluated_at_utc, "evaluated-at-utc"),
-        accepted_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
+        evaluated_at_utc=evaluated_at,
+        accepted_at_utc=accepted_at_utc
+        or _parse_instant(args.generated_at_utc, "generated-at-utc"),
         idempotency_key=(
             str(args.idempotency_key or "").strip()
             or "runtime-evidence:low-income:"
@@ -154,7 +182,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--horizon-days", type=int, default=30)
     parser.add_argument("--generated-at-utc", required=True)
-    parser.add_argument("--evaluated-at-utc", required=True)
+    evaluation_time = parser.add_mutually_exclusive_group(required=True)
+    evaluation_time.add_argument("--evaluated-at-utc")
+    evaluation_time.add_argument("--evaluate-after-source-reads", action="store_true")
     parser.add_argument("--idempotency-key")
     parser.add_argument("--correlation-id")
     parser.add_argument("--trace-id")
@@ -179,6 +209,34 @@ def _parse_instant(value: str, field_name: str) -> datetime:
 def _artifact_generated_at(requested_generated_at: datetime) -> datetime:
     """Return a truthful post-fetch artifact finalization time."""
     return max(requested_generated_at, datetime.now(UTC))
+
+
+def _runtime_now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _source_request(
+    command: EvaluateLowIncomeCashflowReadiness,
+) -> CoreLowIncomeEvidenceRequest:
+    return CoreLowIncomeEvidenceRequest(
+        portfolio_id=command.portfolio_id,
+        tenant_id=command.tenant_id,
+        as_of_date=command.as_of_date,
+        evaluated_at_utc=command.evaluated_at_utc,
+        horizon_days=command.horizon_days,
+        correlation_id=command.correlation_id,
+        trace_id=command.trace_id,
+    )
+
+
+class _PreloadedLowIncomeSource:
+    def __init__(self, evidence: CoreLowIncomeEvidence) -> None:
+        self._evidence = evidence
+
+    def fetch_low_income_evidence(
+        self, request: CoreLowIncomeEvidenceRequest
+    ) -> CoreLowIncomeEvidence:
+        return self._evidence
 
 
 def _source_error_code(exc: Exception) -> str:

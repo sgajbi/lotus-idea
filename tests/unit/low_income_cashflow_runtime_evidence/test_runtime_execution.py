@@ -612,8 +612,13 @@ def test_runtime_execution_proves_one_candidate_and_exact_replay() -> None:
     )
     accepted_payload = _build(accepted)
     replayed_payload = _build(replayed)
+    accepted_candidate = accepted.signal_result.evaluation.candidate
 
+    assert accepted_candidate is not None
     assert accepted_payload["execution"]["persistenceReceipt"]["decision"] == "accepted"
+    assert accepted_payload["execution"]["persistenceReceipt"]["candidateId"] == (
+        accepted_candidate.candidate_id
+    )
     assert replayed_payload["execution"]["persistenceReceipt"]["decision"] == "replayed"
     assert low_income_cashflow_runtime_execution_is_valid(accepted_payload)
     assert low_income_cashflow_runtime_execution_is_valid(replayed_payload)
@@ -640,6 +645,17 @@ def test_contract_rejects_forged_persistence_receipt_with_recomputed_digest() ->
     payload = _valid_payload()
     persistence = payload["execution"]["persistenceReceipt"]
     persistence["sourceCutPosture"] = "unknown"
+    persistence["receiptDigest"] = sha256_json(
+        {key: value for key, value in persistence.items() if key != "receiptDigest"}
+    )
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_contract_rejects_mismatched_operational_candidate_identity() -> None:
+    payload = _valid_payload()
+    persistence = payload["execution"]["persistenceReceipt"]
+    persistence["candidateId"] = "idea_low_income_ffffffffffffffff"
     persistence["receiptDigest"] = sha256_json(
         {key: value for key, value in persistence.items() if key != "receiptDigest"}
     )

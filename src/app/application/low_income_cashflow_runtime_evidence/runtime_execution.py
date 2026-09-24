@@ -486,6 +486,7 @@ def _persistence_receipt(result: LowIncomeCashflowReadinessResult) -> dict[str, 
     )
     material = {
         "decision": persistence.decision.value,
+        "candidateId": candidate.candidate_id,
         "candidateFamily": candidate.family.value,
         "candidateLifecycleStatus": candidate.lifecycle_status.value,
         "sourceReceiptsDigest": source_receipts_digest,

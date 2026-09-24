@@ -60,6 +60,7 @@ COPY docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json ./d
 COPY scripts/__init__.py ./scripts/__init__.py
 COPY scripts/proof_worktree_import_guard.py ./scripts/proof_worktree_import_guard.py
 COPY scripts/proof_generator_io.py ./scripts/proof_generator_io.py
+COPY scripts/low_income_cashflow_runtime_evidence ./scripts/low_income_cashflow_runtime_evidence
 COPY scripts/run_source_ingestion_worker.py ./scripts/run_source_ingestion_worker.py
 COPY scripts/run_scheduled_source_ingestion_worker.py ./scripts/run_scheduled_source_ingestion_worker.py
 COPY scripts/run_migrations.py ./scripts/run_migrations.py
