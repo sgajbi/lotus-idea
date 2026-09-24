@@ -233,8 +233,11 @@ class LifecycleHistoryResponse(CamelModel):
 
 class ReviewDecisionSummaryResponse(CamelModel):
     review_id: str = Field(..., alias="reviewId")
+    candidate_id: str = Field(..., alias="candidateId")
     evidence_packet_id: str = Field(..., alias="evidencePacketId")
     evidence_content_hash: str = Field(..., alias="evidenceContentHash")
+    source_revision_vector_digest: str = Field(..., alias="sourceRevisionVectorDigest")
+    source_cut_posture: str = Field(..., alias="sourceCutPosture")
     candidate_material_version: int = Field(..., alias="candidateMaterialVersion")
     candidate_evidence_version: int = Field(..., alias="candidateEvidenceVersion")
     review_channel: str = Field(..., alias="reviewChannel")
@@ -248,6 +251,7 @@ class ReviewDecisionSummaryResponse(CamelModel):
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
     accepted_at_utc: datetime = Field(..., alias="acceptedAtUtc")
+    acceptance_time_source: str = Field(..., alias="acceptanceTimeSource")
     applicability_expires_at_utc: datetime | None = Field(
         default=None,
         alias="applicabilityExpiresAtUtc",
@@ -268,8 +272,11 @@ class ReviewDecisionSummaryResponse(CamelModel):
         grant = decision.authority_grant
         return cls(
             reviewId=decision.review_id,
+            candidateId=decision.candidate_id,
             evidencePacketId=decision.evidence_packet_id,
             evidenceContentHash=decision.evidence_content_hash,
+            sourceRevisionVectorDigest=decision.source_revision_vector_digest,
+            sourceCutPosture=decision.source_cut_posture.value,
             candidateMaterialVersion=decision.candidate_material_version,
             candidateEvidenceVersion=decision.candidate_evidence_version,
             reviewChannel=decision.review_channel.value,
@@ -283,6 +290,7 @@ class ReviewDecisionSummaryResponse(CamelModel):
             reasonCodes=tuple(reason.value for reason in decision.reason_codes),
             decidedAtUtc=decision.decided_at_utc,
             acceptedAtUtc=decision.accepted_at_utc,
+            acceptanceTimeSource=decision.acceptance_time_source.value,
             applicabilityExpiresAtUtc=decision.applicability_expires_at_utc,
             authorityStatus=(
                 grant.effective_status(candidate, evaluated_at_utc=evaluated_at_utc).value
