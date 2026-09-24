@@ -352,6 +352,24 @@ def test_cli_check_only_validates_example_manifest(capsys: Any) -> None:
     assert "portfolioId" not in captured.out
 
 
+def test_canonical_high_cash_manifest_uses_governed_front_office_scope() -> None:
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "canonical-high-cash-worker.manifest.json"
+    )
+
+    plan = source_ingestion_worker_plan_from_manifest(
+        json.loads(manifest_path.read_text(encoding="utf-8"))
+    )
+
+    assert plan.command.tenant_id == "tenant-sg"
+    assert len(plan.command.work_items) == 1
+    work_item = plan.command.work_items[0]
+    assert work_item.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert work_item.book_id == "BOOK_SG_BALANCED_DPM"
+    assert work_item.client_id == "CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001"
+    assert work_item.as_of_date == date(2026, 4, 10)
+
+
 def test_cli_run_mode_returns_source_safe_item_block_for_core_entitlement_denial(
     capsys: Any,
     monkeypatch: Any,
