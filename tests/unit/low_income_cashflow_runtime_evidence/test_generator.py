@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from types import ModuleType
 
@@ -65,6 +66,30 @@ def test_generator_writes_blocked_artifact_for_source_failure(
     assert payload["aggregateBlockersSatisfied"] == []
     assert "core_cashflow_source_unavailable" in payload["execution"]["qualificationBlockers"]
     assert "PB_SG_GLOBAL_BAL_001" not in json.dumps(payload)
+
+
+def test_generator_can_bind_evaluation_after_authoritative_source_reads(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_generator()
+    output = tmp_path / "runtime-execution.json"
+    observed_after_reads = datetime(2026, 6, 21, 10, 10, 1, tzinfo=UTC)
+    source = AuthoritativeCoreLowIncomeSource()
+    monkeypatch.setattr(module, "LotusCoreHighCashSourceAdapter", lambda _client: source)
+    monkeypatch.setattr(module, "get_idea_repository", InMemoryIdeaRepository)
+    monkeypatch.setattr(module, "idea_repository_durable_storage_backed", lambda _repo: True)
+    monkeypatch.setattr(module, "_runtime_now", lambda: observed_after_reads)
+    arguments = _arguments(output)
+    evaluated_index = arguments.index("--evaluated-at-utc")
+    arguments[evaluated_index : evaluated_index + 2] = ["--evaluate-after-source-reads"]
+
+    result = module.main(arguments)
+
+    assert result == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["execution"]["evaluatedAtUtc"] == "2026-06-21T10:10:01Z"
+    assert payload["execution"]["persistenceReceipt"]["persistedAtUtc"] == ("2026-06-21T10:10:01Z")
 
 
 def _arguments(output: Path) -> list[str]:

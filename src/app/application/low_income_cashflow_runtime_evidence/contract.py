@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from app.domain.evidence_digest import is_sha256_digest
-from app.application.runtime_evidence import score_receipt_is_valid, sha256_json
+from app.application.runtime_evidence import identity_hash, score_receipt_is_valid, sha256_json
 from app.application.low_income_cashflow_runtime_evidence.runtime_execution import (
     LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS,
     LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
@@ -81,6 +81,7 @@ _PERSISTENCE_KEYS = frozenset(
         "receiptDigest",
     }
 )
+_PERSISTENCE_KEYS_WITH_CANDIDATE_ID = _PERSISTENCE_KEYS | {"candidateId"}
 _SOURCE_BASE_KEYS = frozenset(
     {
         "productId",
@@ -234,7 +235,7 @@ def low_income_cashflow_runtime_execution_is_valid(payload: Mapping[str, Any]) -
         or not isinstance(evaluation, Mapping)
         or set(evaluation) != _EVALUATION_KEYS
         or not isinstance(persistence, Mapping)
-        or set(persistence) != _PERSISTENCE_KEYS
+        or set(persistence) not in {_PERSISTENCE_KEYS, _PERSISTENCE_KEYS_WITH_CANDIDATE_ID}
         or evaluated is None
         or generated < evaluated
     ):
@@ -431,6 +432,12 @@ def _persistence_is_valid(
     )
     persisted_at = parse_timezone_aware_datetime(persistence.get("persistedAtUtc"))
     accepted_at = parse_timezone_aware_datetime(request.get("acceptedAtUtc"))
+    candidate_id = persistence.get("candidateId")
+    candidate_identity_valid = candidate_id is None or (
+        isinstance(candidate_id, str)
+        and bool(candidate_id.strip())
+        and identity_hash(candidate_id) == evaluation.get("candidateIdHash")
+    )
     return (
         persistence.get("decision") in {"accepted", "replayed"}
         and persistence.get("candidateFamily") == "low_income"
@@ -441,6 +448,7 @@ def _persistence_is_valid(
         and accepted_at is not None
         and persisted_at == accepted_at
         and _is_sha256(evaluation.get("candidateIdHash"))
+        and candidate_identity_valid
     )
 
 

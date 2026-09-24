@@ -102,6 +102,10 @@ GOVERNED_DOCKERFILE_RUNTIME_FRAGMENTS = {
     (
         "COPY scripts/proof_worktree_import_guard.py ./scripts/proof_worktree_import_guard.py"
     ): "Dockerfile must include the runtime proof import guard",
+    (
+        "COPY scripts/low_income_cashflow_runtime_evidence "
+        "./scripts/low_income_cashflow_runtime_evidence"
+    ): "Dockerfile must package the low-income cashflow runtime evidence entrypoint",
 }
 
 GOVERNED_DOCKERFILE_INSTALL_ORDER_FRAGMENTS = (

@@ -618,6 +618,20 @@ def test_ci_contract_gate_blocks_missing_runtime_proof_import_guard() -> None:
     )
 
 
+def test_ci_contract_gate_blocks_missing_low_income_runtime_evidence_entrypoint() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "COPY scripts/low_income_cashflow_runtime_evidence "
+        "./scripts/low_income_cashflow_runtime_evidence\n",
+        "",
+    )
+
+    assert (
+        "Dockerfile must package the low-income cashflow runtime evidence entrypoint"
+        in validate_dockerfile_runtime(degraded)
+    )
+
+
 def test_ci_contract_gate_blocks_missing_runtime_scripts_package_marker() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace("COPY scripts/__init__.py ./scripts/__init__.py\n", "")
