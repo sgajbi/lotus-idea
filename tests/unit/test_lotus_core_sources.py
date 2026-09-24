@@ -180,6 +180,7 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
         seen.append((request.method, str(request.url)))
         assert request.headers["X-Correlation-Id"] == "corr-core"
         assert request.headers["X-Trace-Id"] == "trace-core"
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
         if request.method == "POST":
             assert json.loads(request.content)["consumer_system"] == "lotus-idea"
             return httpx.Response(
@@ -223,6 +224,7 @@ def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
     seen_header_tenants: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
+        seen_header_tenants.append(request.headers["X-Tenant-Id"])
         if request.method == "POST":
             seen_body_tenants.append(json.loads(request.content)["tenant_id"])
             return httpx.Response(
@@ -232,7 +234,6 @@ def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
                     extra={"request_fingerprint": "core-snapshot-fingerprint"},
                 ),
             )
-        seen_header_tenants.append(request.headers["X-Tenant-Id"])
         url = str(request.url)
         if "cash-balances" in url:
             return httpx.Response(
@@ -254,6 +255,8 @@ def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
         "tenant-a",
         "tenant-a",
         "tenant-a",
+        "tenant-a",
+        "tenant-b",
         "tenant-b",
         "tenant-b",
         "tenant-b",
@@ -267,6 +270,7 @@ def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> Non
         seen.append((request.method, str(request.url)))
         assert request.headers["X-Correlation-Id"] == "corr-core"
         assert request.headers["X-Trace-Id"] == "trace-core"
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
         payload = json.loads(request.content)
         assert payload == {"as_of_date": "2026-06-21", "reporting_currency": "USD"}
         return httpx.Response(
@@ -310,6 +314,7 @@ def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
         seen.append((request.method, str(request.url)))
         assert request.headers["X-Correlation-Id"] == "corr-core"
         assert request.headers["X-Trace-Id"] == "trace-core"
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
         assert json.loads(request.content) == {
             "as_of_date": "2026-06-21",
             "snapshot_mode": "BASELINE",

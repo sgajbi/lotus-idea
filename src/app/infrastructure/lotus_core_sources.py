@@ -91,6 +91,7 @@ class LotusCoreHighCashSourceAdapter:
                 },
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
             holdings_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cash-balances?as_of_date={as_of}",
@@ -146,6 +147,7 @@ class LotusCoreHighCashSourceAdapter:
     ) -> CoreBenchmarkAssignmentEvidence:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
+        tenant_headers = {"X-Tenant-Id": request.tenant_id}
         payload: dict[str, object] = {"as_of_date": as_of}
         if request.reporting_currency:
             payload["reporting_currency"] = request.reporting_currency
@@ -155,6 +157,7 @@ class LotusCoreHighCashSourceAdapter:
                 json_payload=payload,
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
         except DownstreamServiceError as exc:
             if exc.status_code in {401, 403}:
@@ -200,6 +203,7 @@ class LotusCoreHighCashSourceAdapter:
     ) -> CorePortfolioStateEvidence:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
+        tenant_headers = {"X-Tenant-Id": request.tenant_id}
         try:
             portfolio_state_payload = self._query_control_plane_client.post_json(
                 f"/integration/portfolios/{portfolio_ref}/core-snapshot",
@@ -212,6 +216,7 @@ class LotusCoreHighCashSourceAdapter:
                 },
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers=tenant_headers,
             )
         except DownstreamServiceError as exc:
             if exc.status_code in {401, 403}:

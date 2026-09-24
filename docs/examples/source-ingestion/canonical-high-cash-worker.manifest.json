@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v2",
   "evaluatedAtUtc": "2026-07-10T00:00:00Z",
-  "tenantId": "default",
+  "tenantId": "tenant-sg",
   "actorSubject": "canonical-front-office-source-worker",
   "maxItems": 100,
   "correlationId": "corr-canonical-source-worker",
