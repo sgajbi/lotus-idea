@@ -138,6 +138,7 @@ def test_discover_migrations_requires_rollbacks() -> None:
         "029",
         "030",
         "031",
+        "032",
     ]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
@@ -294,6 +295,7 @@ def test_execute_migration_plan_commits_after_all_statements() -> None:
         "029",
         "030",
         "031",
+        "032",
     ]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements

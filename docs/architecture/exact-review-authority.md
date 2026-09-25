@@ -91,6 +91,10 @@ authority; it is never interpreted as the current policy.
 - every material-version change supersedes the approval;
 - every evidence-version, packet-ID, or evidence-hash change supersedes the
   approval, even when candidate material is unchanged;
+- an evidence refresh on an approved, not-yet-converted candidate returns it to
+  `ready_for_review`, because retaining `approved` after superseding its grant
+  would leave the candidate unable to obtain the fresh presentation and review
+  required by this policy;
 - expiry at or before server acceptance makes the approval inactive;
 - history is retained, but a fresh presentation and review are required;
 - exact replay of an intent accepted before expiry remains replayable after
@@ -128,6 +132,15 @@ ORDER BY finding;
 An empty result proves only that the database contains no classified legacy
 authority gaps. It does not certify Gateway/Workbench presentation, production
 identity, downstream acceptance, or supported-feature promotion.
+
+Migration `032_reopen_superseded_approved_candidates.sql` repairs the narrower
+state-machine gap created when an exact approval was valid at decision time but
+later evidence refresh superseded it. It changes only `approved`,
+not-yet-converted candidates with an exact historical approval and no approval
+matching the current evidence identity. The migration records an audit event
+and `approved` to `ready_for_review` lifecycle transition before reopening the
+candidate. Its rollback fails closed after any repair because restoring the old
+state would make superseded authority appear current again.
 
 ## Consumer contract
 

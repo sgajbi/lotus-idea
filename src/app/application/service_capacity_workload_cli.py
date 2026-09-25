@@ -92,28 +92,30 @@ def validate_paced_load_soak_request(
 
 def downstream_submission_path(
     *,
-    seed: dict[str, object] | None,
+    resource: dict[str, object] | None,
     commit_sha: str,
     branch: str,
+    run_id: str,
     environment_path: str | None,
 ) -> str | None:
-    if seed is None:
+    if resource is None:
         return environment_path
     required = {
-        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
-        "proofScope": "synthetic_downstream_capacity_resource_seed",
-        "claimPosture": "seed_only_not_capacity_evidence",
-        "syntheticResource": True,
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
+        "proofScope": "current_authoritative_downstream_resource",
+        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "syntheticResource": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": commit_sha,
         "branch": branch,
+        "runId": run_id,
     }
-    if any(seed.get(key) != expected for key, expected in required.items()):
-        raise ValueError("downstream capacity seed provenance is invalid")
-    path = seed.get("downstreamSubmissionPath")
+    if any(resource.get(key) != expected for key, expected in required.items()):
+        raise ValueError("downstream capacity resource provenance is invalid")
+    path = resource.get("downstreamSubmissionPath")
     if not isinstance(path, str) or not DOWNSTREAM_PATH_PATTERN.fullmatch(path):
-        raise ValueError("downstream capacity seed path is invalid")
+        raise ValueError("downstream capacity resource path is invalid")
     return path
 
 
@@ -159,7 +161,7 @@ def _plan(
             downstream_submission_path
         ):
             raise ValueError(
-                "downstream_submission requires a governed pre-seeded synthetic resource path"
+                "downstream_submission requires a governed current authoritative resource path"
             )
         workflow_headers = _workflow_headers(headers, "idea.downstream-realization.submit")
         requests = tuple(

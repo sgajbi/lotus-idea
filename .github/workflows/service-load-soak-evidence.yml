@@ -7,6 +7,14 @@ on:
         description: Confirm the controlled production-like one-hour load and soak exercise
         required: true
         type: string
+      candidate_id:
+        description: Existing presentation-backed Idea candidate prepared for this run
+        required: true
+        type: string
+      accepted_not_before_utc:
+        description: Earliest acceptedAtUtc permitted for the current conversion intent
+        required: true
+        type: string
 
 concurrency:
   group: service-load-soak-evidence-main
@@ -31,7 +39,10 @@ jobs:
       LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT: ${{ secrets.LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT }}
       LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}
       SERVICE_CAPACITY_BASE_URL: ${{ vars.LOTUS_IDEA_CAPACITY_BASE_URL }}
-      SERVICE_CAPACITY_AS_OF_DATE: ${{ vars.LOTUS_IDEA_CAPACITY_AS_OF_DATE }}
+      DOWNSTREAM_CAPACITY_TENANT_ID: ${{ vars.LOTUS_IDEA_CAPACITY_TENANT_ID }}
+      DOWNSTREAM_CAPACITY_BOOK_ID: ${{ vars.LOTUS_IDEA_CAPACITY_BOOK_ID }}
+      DOWNSTREAM_CAPACITY_PORTFOLIO_ID: ${{ vars.LOTUS_IDEA_CAPACITY_PORTFOLIO_ID }}
+      DOWNSTREAM_CAPACITY_CLIENT_ID: ${{ vars.LOTUS_IDEA_CAPACITY_CLIENT_ID }}
       SERVICE_RESOURCE_METRICS_URL: ${{ vars.LOTUS_IDEA_RESOURCE_METRICS_URL }}
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PYTHONUNBUFFERED: "1"
@@ -47,20 +58,26 @@ jobs:
       - name: Validate protected environment inputs
         run: >-
           test -n "${SERVICE_CAPACITY_BASE_URL}" &&
-          test -n "${SERVICE_CAPACITY_AS_OF_DATE}" &&
           test -n "${SERVICE_RESOURCE_METRICS_URL}" &&
-          test -n "${LOTUS_IDEA_DATABASE_URL}"
-      - name: Seed isolated synthetic downstream capacity resource
+          test -n "${LOTUS_IDEA_DATABASE_URL}" &&
+          test -n "${DOWNSTREAM_CAPACITY_TENANT_ID}" &&
+          test -n "${DOWNSTREAM_CAPACITY_BOOK_ID}" &&
+          test -n "${DOWNSTREAM_CAPACITY_PORTFOLIO_ID}" &&
+          test -n "${DOWNSTREAM_CAPACITY_CLIENT_ID}"
+      - name: Select the current presentation-backed downstream capacity resource
         run: >-
-          .venv/bin/python scripts/seed_downstream_capacity_resource.py
+          .venv/bin/python scripts/select_downstream_capacity_resource.py
           --base-url "${SERVICE_CAPACITY_BASE_URL}"
-          --as-of-date "${SERVICE_CAPACITY_AS_OF_DATE}"
-          --seeded-at-utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          --candidate-id "${{ inputs.candidate_id }}"
+          --tenant-id "${DOWNSTREAM_CAPACITY_TENANT_ID}"
+          --book-id "${DOWNSTREAM_CAPACITY_BOOK_ID}"
+          --portfolio-id "${DOWNSTREAM_CAPACITY_PORTFOLIO_ID}"
+          --client-id "${DOWNSTREAM_CAPACITY_CLIENT_ID}"
+          --accepted-not-before-utc "${{ inputs.accepted_not_before_utc }}"
           --commit-sha "${GITHUB_SHA}"
           --branch "${GITHUB_REF_NAME}"
           --run-id "${GITHUB_RUN_ID}"
-          --confirmation SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE
-          --output output/observability/downstream-capacity-seed.json
+          --output output/observability/downstream-capacity-resource.json
       - name: Run paced load soak and concurrent resource observation
         shell: bash
         run: |
@@ -88,7 +105,7 @@ jobs:
             --paced-load-soak \
             --minimum-observation-seconds 3600 \
             --allow-mutating-workflows \
-            --downstream-capacity-seed output/observability/downstream-capacity-seed.json \
+            --downstream-capacity-resource output/observability/downstream-capacity-resource.json \
             --commit-sha "${GITHUB_SHA}" \
             --branch "${GITHUB_REF_NAME}" \
             --run-id "${GITHUB_RUN_ID}" \

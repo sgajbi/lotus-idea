@@ -142,7 +142,7 @@ scenario families:
 | `api` | `GET /health/ready` | Latency and accepted/error counts | Read-only; readiness is not business-feature proof. |
 | `source_ingestion` | Bounded run-once endpoint | Duration and aggregate item count | Mutating; maximum 100 manifest items. |
 | `outbox_delivery` | Bounded run-once endpoint | Duration, aggregate attempts, and retry posture | Mutating; unique transient idempotency keys and maximum 100 events. |
-| `downstream_submission` | Pre-seeded synthetic conversion-intent or report evidence-pack handoff | End-to-end Idea submission latency and accepted/error counts | Mutating; unique transient idempotency keys. The resource path is allowlisted, transient, and never stored. |
+| `downstream_submission` | Existing authoritative conversion-intent or report evidence-pack handoff | End-to-end Idea submission latency and accepted/error counts | Mutating; unique transient idempotency keys. The resource path is allowlisted, transient, and never stored. |
 | `dependency_failure` | Faulted source-ingestion call followed by recovery | Exact source-unavailable classification and explicit clean recovery | Only `source_unavailable` qualifies. Entitlement denial, configuration/capacity blocks, mixed failures, and generic blocked responses fail closed. |
 | `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove a threshold stress/recovery exercise. |
 
@@ -181,34 +181,42 @@ Provide transient authorization or trusted-caller assertions only through
 `LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
 `LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
 
-The downstream scenario requires either a validated seed manifest through
-`--downstream-capacity-seed` or the diagnostic
+The downstream scenario requires either a validated current authoritative resource manifest through
+`--downstream-capacity-resource` or the diagnostic
 `LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH` fallback. Only governed conversion-intent
 and report evidence-pack submission route shapes are accepted. The referenced
-resource must be synthetic, pre-seeded through governed Idea lifecycle APIs,
-and isolated from client activity.
+resource must already exist through supported Idea and Workbench APIs and carry
+the exact current candidate evidence, authoritative source cut, Workbench
+presentation receipt, review authority, and conversion intent. Capacity tooling
+selects that resource; it never creates review or conversion authority.
 
-Create the deterministic synthetic conversion intent through the layered seed
-automation:
+Select the one eligible current authoritative conversion intent through the layered
+read-only resource automation:
 
 ```powershell
-make downstream-capacity-seed `
+make downstream-capacity-resource `
   SERVICE_CAPACITY_BASE_URL=http://localhost:8330 `
-  DOWNSTREAM_CAPACITY_SEED_CONFIRMATION=SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE
+  DOWNSTREAM_CAPACITY_CANDIDATE_ID=<candidate-id> `
+  DOWNSTREAM_CAPACITY_TENANT_ID=<tenant-id> `
+  DOWNSTREAM_CAPACITY_BOOK_ID=<book-id> `
+  DOWNSTREAM_CAPACITY_PORTFOLIO_ID=<portfolio-id> `
+  DOWNSTREAM_CAPACITY_CLIENT_ID=<client-id> `
+  DOWNSTREAM_CAPACITY_ACCEPTED_NOT_BEFORE_UTC=<current-run-utc>
 ```
 
-The command calls candidate persistence, ordered lifecycle transitions, human
-review approval, and conversion-intent recording through the public API. It
-uses only the `capacity-synthetic-*` scope, deterministic replay identities,
-environment-only credentials, bounded responses, and atomic output. The seed
-manifest is explicitly `seed_only_not_capacity_evidence`, non-certifying, and
+The command performs one scope-authorized candidate-detail read and fails closed
+unless exactly one current evidence version has a presentation-backed Advise conversion intent.
+The Make target and protected workflow require an accepted-at lower bound for fresh load/soak
+dispatch. The canonical demo selector deliberately omits that optional bound so a still-current,
+unchanged approved intent can be replayed without fabricating a new review. Its manifest is explicitly
+`selected_conversion_intent_not_capacity_evidence`, non-certifying, and
 non-promoting. Bind it to a workload with
-`SERVICE_CAPACITY_DOWNSTREAM_SEED_ARG="--downstream-capacity-seed <path>"`;
-the runner requires exact commit/branch and synthetic provenance.
+`SERVICE_CAPACITY_DOWNSTREAM_RESOURCE_ARG="--downstream-capacity-resource <path>"`;
+the runner requires exact commit, branch, and run provenance.
 
-The protected load/soak producer invokes this seed command directly. Canonical
-front-office automation does not yet invoke it; that cross-repository live-stack
-proof remains tracked separately and must not be inferred from Idea-local CI.
+The protected load/soak producer requires a candidate prepared through the same
+supported presentation, review, and conversion flow before dispatch. It never
+manufactures a synthetic Core source, adviser presentation, or IAM grant.
 
 ### Protected Load And Soak Evidence
 
@@ -216,10 +224,10 @@ Dispatch `.github/workflows/service-load-soak-evidence.yml` from `main` with
 the exact confirmation `RUN_CONTROLLED_LOTUS_IDEA_LOAD_SOAK`. The job runs only
 in the protected `capacity-production-like` environment on the governed
 `lotus-capacity-evidence` runner. It requires the Idea base URL, transient
-authorization/trusted-caller context, a dedicated database URL, and governed
-synthetic as-of date from protected environment configuration.
+authorization/trusted-caller context, a dedicated database URL, and exact
+tenant, book, portfolio, and client scope from protected environment configuration.
 
-The workflow seeds an isolated synthetic downstream resource, then cycles API,
+The workflow selects a current presentation-backed downstream resource, then cycles API,
 source ingestion, outbox delivery, downstream submission, and PostgreSQL
 samples through shared paced rounds. Every scenario receives 1,000 samples
 spanning at least 3,600 seconds. `observationSpanSeconds` is derived from

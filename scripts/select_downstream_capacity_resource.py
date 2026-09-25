@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
@@ -14,12 +14,12 @@ from scripts.proof_worktree_import_guard import ensure_worktree_imports
 
 ensure_worktree_imports(__file__)
 
-from app.application.downstream_capacity_seed import (
-    SeedDownstreamCapacityResourceCommand,
-    build_downstream_capacity_seed_artifact,
-    seed_downstream_capacity_resource,
+from app.application.downstream_capacity_resource import (
+    SelectDownstreamCapacityResourceCommand,
+    build_downstream_capacity_resource_artifact,
+    select_downstream_capacity_resource,
 )
-from app.infrastructure.http_downstream_capacity_seed import HttpDownstreamCapacitySeed
+from app.infrastructure.http_downstream_capacity_resource import HttpDownstreamCapacityResource
 
 
 AUTHORIZATION_ENV = "LOTUS_IDEA_CAPACITY_AUTHORIZATION"
@@ -28,42 +28,49 @@ TRUSTED_CONTEXT_ENV = "LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT"
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Seed one isolated synthetic Idea resource for downstream capacity runs."
+        description=(
+            "Select one current, presentation-backed Idea conversion intent for a bounded "
+            "downstream capacity probe."
+        )
     )
     parser.add_argument("--base-url", required=True)
-    parser.add_argument("--as-of-date", type=date.fromisoformat, required=True)
-    parser.add_argument("--seeded-at-utc", type=_parse_datetime, required=True)
+    parser.add_argument("--candidate-id", required=True)
+    parser.add_argument("--tenant-id", required=True)
+    parser.add_argument("--book-id", required=True)
+    parser.add_argument("--portfolio-id", required=True)
+    parser.add_argument("--client-id", required=True)
+    parser.add_argument("--accepted-not-before-utc", type=_parse_datetime)
     parser.add_argument("--timeout-seconds", type=float, default=10.0)
     parser.add_argument("--commit-sha", required=True)
     parser.add_argument("--branch", required=True)
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--confirmation", required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    adapter: HttpDownstreamCapacitySeed | None = None
+    adapter: HttpDownstreamCapacityResource | None = None
     try:
-        if args.confirmation != "SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE":
-            raise ValueError("synthetic capacity seed confirmation is required")
         if args.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
-        adapter = HttpDownstreamCapacitySeed(
+        adapter = HttpDownstreamCapacityResource(
             base_url=args.base_url,
             timeout_seconds=args.timeout_seconds,
             base_headers=_base_headers(),
         )
-        result = seed_downstream_capacity_resource(
-            SeedDownstreamCapacityResourceCommand(
-                run_id=args.run_id,
-                as_of_date=args.as_of_date,
-                seeded_at_utc=args.seeded_at_utc,
+        result = select_downstream_capacity_resource(
+            SelectDownstreamCapacityResourceCommand(
+                candidate_id=args.candidate_id,
+                tenant_id=args.tenant_id,
+                book_id=args.book_id,
+                portfolio_id=args.portfolio_id,
+                client_id=args.client_id,
+                accepted_not_before_utc=args.accepted_not_before_utc,
             ),
             port=adapter,
         )
-        artifact = build_downstream_capacity_seed_artifact(
+        artifact = build_downstream_capacity_resource_artifact(
             result,
             generated_at_utc=datetime.now(UTC),
             commit_sha=args.commit_sha,
@@ -73,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         _write_json_atomic(args.output, artifact)
         return 0
     except (OSError, ValueError) as exc:
-        print(f"downstream capacity seed failed: {exc}", file=sys.stderr)
+        print(f"downstream capacity resource selection failed: {exc}", file=sys.stderr)
         return 2
     finally:
         if adapter is not None:

@@ -26,15 +26,16 @@ reconciliation, quality, and lineage policy.
 No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
 
-Downstream capacity requires an allowlisted path to a pre-seeded synthetic
-conversion intent or report evidence pack. `make downstream-capacity-seed`
-creates the conversion intent through existing candidate, lifecycle, review,
-and conversion APIs and emits an atomic non-certifying seed manifest. The
-workload runner validates exact commit/branch and synthetic posture before
-using the manifest. Resource identity and unique transient workload
-idempotency keys are never written to capacity evidence. The protected
-load/soak workflow invokes the seed directly. Canonical front-office automation
-does not yet invoke it, so cross-repository live-stack proof remains separate.
+Downstream capacity requires an allowlisted path to an existing conversion
+intent or report evidence pack. `make downstream-capacity-resource` performs a
+scope-authorized read and selects exactly one current authoritative conversion intent
+whose current candidate evidence has an authoritative source cut, a Workbench
+presentation receipt, and exact review authority. It cannot create or invent
+those grants. Protected load/soak dispatch also supplies an accepted-at lower bound; bounded
+canonical replay may reuse the same exact current authority after an unchanged restart. The
+workload runner validates exact commit, branch, and run
+provenance before using the manifest. Resource identity and unique transient
+workload idempotency keys are never written to capacity evidence.
 
 ## First Response
 
@@ -74,7 +75,7 @@ or recovery certification.
 
 `.github/workflows/service-load-soak-evidence.yml` is manual, main-only, and
 protected by the capacity environment plus exact operator confirmation. It
-seeds a synthetic downstream resource and paces API, source-ingestion, outbox,
+selects an existing authoritative downstream resource and paces API, source-ingestion, outbox,
 downstream-submission, and PostgreSQL sampling through one shared window. Each
 scenario must contribute at least 1,000 samples spanning 3,600 seconds. A burst
 followed by idle waiting cannot qualify because the artifact records the
