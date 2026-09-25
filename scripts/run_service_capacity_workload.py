@@ -34,6 +34,7 @@ from app.application.service_capacity_workload import (
     execute_postgres_capacity_workload,
 )
 from app.application.service_capacity_workload_cli import (
+    CapacityCallerScope,
     DOWNSTREAM_PATH_ENV,
     SCENARIO_CHOICES,
     build_workload_plans,
@@ -88,6 +89,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--dependency-recovery-proof", type=Path)
     parser.add_argument("--load-soak-proof", type=Path)
     parser.add_argument("--downstream-capacity-resource", type=Path)
+    parser.add_argument("--caller-tenant-id")
+    parser.add_argument("--caller-book-id")
+    parser.add_argument("--caller-portfolio-id")
+    parser.add_argument("--caller-client-id")
     parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--cost-attribution-artifact", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
@@ -158,6 +163,26 @@ def _build_workload_plans_from_args(args: argparse.Namespace) -> list[CapacityWo
             run_id=args.run_id,
             environment_path=os.getenv(DOWNSTREAM_PATH_ENV, "").strip() or None,
         ),
+        caller_scope=_capacity_caller_scope(args),
+    )
+
+
+def _capacity_caller_scope(args: argparse.Namespace) -> CapacityCallerScope | None:
+    values = (
+        args.caller_tenant_id,
+        args.caller_book_id,
+        args.caller_portfolio_id,
+        args.caller_client_id,
+    )
+    if not any(value is not None for value in values):
+        return None
+    if not all(value is not None for value in values):
+        raise ValueError("capacity caller scope requires tenant, book, portfolio, and client")
+    return CapacityCallerScope(
+        tenant_id=args.caller_tenant_id,
+        book_id=args.caller_book_id,
+        portfolio_id=args.caller_portfolio_id,
+        client_id=args.caller_client_id,
     )
 
 

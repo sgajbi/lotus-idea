@@ -212,7 +212,10 @@ unchanged approved intent can be replayed without fabricating a new review. Its 
 `selected_conversion_intent_not_capacity_evidence`, non-certifying, and
 non-promoting. Bind it to a workload with
 `SERVICE_CAPACITY_DOWNSTREAM_RESOURCE_ARG="--downstream-capacity-resource <path>"`;
-the runner requires exact commit, branch, and run provenance.
+the runner requires exact commit, branch, and run provenance. The downstream workload also requires
+the admitted tenant, book, portfolio, and client through `--caller-tenant-id`, `--caller-book-id`,
+`--caller-portfolio-id`, and `--caller-client-id`. Missing or partial scope fails before transport;
+the runner does not invent a default tenant or entitlement.
 
 The protected load/soak producer requires a candidate prepared through the same
 supported presentation, review, and conversion flow before dispatch. It never
