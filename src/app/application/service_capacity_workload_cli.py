@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import secrets
+from dataclasses import dataclass
 from typing import Mapping
 
 from app.application.capacity_evidence_qualification import (
@@ -32,6 +33,30 @@ HEADER_ENV = {
 }
 
 
+@dataclass(frozen=True)
+class CapacityCallerScope:
+    tenant_id: str
+    book_id: str
+    portfolio_id: str
+    client_id: str
+
+    def __post_init__(self) -> None:
+        values = (self.tenant_id, self.book_id, self.portfolio_id, self.client_id)
+        if any(
+            not value.strip() or any(marker in value for marker in (",", "\r", "\n"))
+            for value in values
+        ):
+            raise ValueError("capacity caller scope values must be non-blank single header values")
+
+    def as_headers(self) -> dict[str, str]:
+        return {
+            "X-Caller-Tenant-Ids": self.tenant_id,
+            "X-Caller-Book-Ids": self.book_id,
+            "X-Caller-Portfolio-Ids": self.portfolio_id,
+            "X-Caller-Client-Ids": self.client_id,
+        }
+
+
 def build_workload_plans(
     *,
     scenarios: tuple[str, ...],
@@ -41,6 +66,7 @@ def build_workload_plans(
     allow_mutating_workflows: bool,
     allow_production_mutations: bool,
     downstream_submission_path: str | None = None,
+    caller_scope: CapacityCallerScope | None = None,
 ) -> list[CapacityWorkloadPlan]:
     if not scenarios:
         raise ValueError("at least one scenario is required")
@@ -66,6 +92,7 @@ def build_workload_plans(
             concurrency=concurrency,
             headers=headers,
             downstream_submission_path=downstream_submission_path,
+            caller_scope=caller_scope,
         )
         for scenario in scenarios
         if scenario != "postgresql"
@@ -126,6 +153,7 @@ def _plan(
     concurrency: int,
     headers: Mapping[str, str],
     downstream_submission_path: str | None,
+    caller_scope: CapacityCallerScope | None,
 ) -> CapacityWorkloadPlan:
     if scenario == "api":
         request = _request("GET", "/health/ready", headers, {200})
@@ -163,7 +191,13 @@ def _plan(
             raise ValueError(
                 "downstream_submission requires a governed current authoritative resource path"
             )
-        workflow_headers = _workflow_headers(headers, "idea.downstream-realization.submit")
+        if caller_scope is None:
+            raise ValueError("downstream_submission requires complete admitted caller scope")
+        workflow_headers = _workflow_headers(
+            headers,
+            "idea.downstream-realization.submit",
+            caller_scope=caller_scope,
+        )
         requests = tuple(
             _request(
                 "POST",
@@ -206,9 +240,15 @@ def _base_headers() -> dict[str, str]:
     }
 
 
-def _workflow_headers(headers: Mapping[str, str], capability: str) -> dict[str, str]:
+def _workflow_headers(
+    headers: Mapping[str, str],
+    capability: str,
+    *,
+    caller_scope: CapacityCallerScope | None = None,
+) -> dict[str, str]:
     return {
         **headers,
+        **(caller_scope.as_headers() if caller_scope is not None else {}),
         "X-Caller-Subject": "capacity-operator",
         "X-Caller-Roles": "operator",
         "X-Caller-Capabilities": capability,

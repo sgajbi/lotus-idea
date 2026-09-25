@@ -4,7 +4,7 @@ import importlib.util
 import hashlib
 import json
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -76,6 +76,12 @@ def test_dependency_plan_has_explicit_fault_and_recovery_probes() -> None:
 def test_downstream_plan_uses_preseeded_route_and_unique_idempotency_keys() -> None:
     module = _load_script()
     path = "/api/v1/conversion-intents/capacity-synthetic-001/downstream-submissions"
+    caller_scope = module.CapacityCallerScope(
+        tenant_id="tenant-sg",
+        book_id="book-sg",
+        portfolio_id="portfolio-sg",
+        client_id="client-sg",
+    )
 
     plan = module.build_workload_plans(
         scenarios=("downstream_submission",),
@@ -85,6 +91,7 @@ def test_downstream_plan_uses_preseeded_route_and_unique_idempotency_keys() -> N
         allow_mutating_workflows=True,
         allow_production_mutations=False,
         downstream_submission_path=path,
+        caller_scope=caller_scope,
     )[0]
 
     assert plan.scenario == "downstream_submission"
@@ -94,7 +101,52 @@ def test_downstream_plan_uses_preseeded_route_and_unique_idempotency_keys() -> N
         request.headers["X-Caller-Capabilities"] == "idea.downstream-realization.submit"
         for request in plan.requests
     )
+    assert all(request.headers["X-Caller-Tenant-Ids"] == "tenant-sg" for request in plan.requests)
+    assert all(request.headers["X-Caller-Book-Ids"] == "book-sg" for request in plan.requests)
+    assert all(
+        request.headers["X-Caller-Portfolio-Ids"] == "portfolio-sg" for request in plan.requests
+    )
+    assert all(request.headers["X-Caller-Client-Ids"] == "client-sg" for request in plan.requests)
     assert len({request.headers["Idempotency-Key"] for request in plan.requests}) == 3
+
+
+def test_downstream_plan_fails_before_transport_without_complete_admitted_scope() -> None:
+    module = _load_script()
+
+    with pytest.raises(ValueError, match="requires complete admitted caller scope"):
+        module.build_workload_plans(
+            scenarios=("downstream_submission",),
+            request_count=1,
+            concurrency=1,
+            environment_profile="test",
+            allow_mutating_workflows=True,
+            allow_production_mutations=False,
+            downstream_submission_path=(
+                "/api/v1/conversion-intents/capacity-synthetic-001/downstream-submissions"
+            ),
+        )
+
+
+def test_capacity_caller_scope_rejects_partial_or_multi_value_authority() -> None:
+    module = _load_script()
+
+    with pytest.raises(ValueError, match="requires tenant, book, portfolio, and client"):
+        module._capacity_caller_scope(
+            SimpleNamespace(
+                caller_tenant_id="tenant-sg",
+                caller_book_id=None,
+                caller_portfolio_id="portfolio-sg",
+                caller_client_id="client-sg",
+            )
+        )
+
+    with pytest.raises(ValueError, match="single header values"):
+        module.CapacityCallerScope(
+            tenant_id="tenant-sg,tenant-hk",
+            book_id="book-sg",
+            portfolio_id="portfolio-sg",
+            client_id="client-sg",
+        )
 
 
 @pytest.mark.parametrize(
@@ -300,6 +352,14 @@ def test_cli_binds_downstream_workload_evidence_to_exact_resource(
             "run-123",
             "--downstream-capacity-resource",
             str(resource),
+            "--caller-tenant-id",
+            "tenant-sg",
+            "--caller-book-id",
+            "book-sg",
+            "--caller-portfolio-id",
+            "portfolio-sg",
+            "--caller-client-id",
+            "client-sg",
             "--output",
             str(output),
         ]

@@ -34,7 +34,9 @@ presentation receipt, and exact review authority. It cannot create or invent
 those grants. Protected load/soak dispatch also supplies an accepted-at lower bound; bounded
 canonical replay may reuse the same exact current authority after an unchanged restart. The
 workload runner validates exact commit, branch, and run
-provenance before using the manifest. Resource identity and unique transient
+provenance before using the manifest and requires the admitted tenant, book, portfolio, and client
+as explicit caller-scope inputs. Missing or partial scope fails before transport; no default tenant
+or entitlement is invented. Resource identity and unique transient
 workload idempotency keys are never written to capacity evidence.
 
 ## First Response
