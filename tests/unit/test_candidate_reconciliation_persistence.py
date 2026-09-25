@@ -184,6 +184,40 @@ def test_evidence_correction_preserves_review_state_and_versions_evidence() -> N
     )
 
 
+def test_evidence_correction_reopens_approved_candidate_for_fresh_review_authority() -> None:
+    candidate, refs = _candidate()
+    approved_candidate = replace(
+        candidate,
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    corrected_candidate, corrected_refs = _candidate(
+        cashflow_hash="sha256:a78e1e0fffc1502d275fc19d778fd2aed3b2affc3519dd434b7acca188c41d01"
+    )
+    repository = InMemoryIdeaRepository()
+    _persist(repository, approved_candidate, refs, sequence=1)
+
+    corrected = _persist(
+        repository,
+        corrected_candidate,
+        corrected_refs,
+        sequence=2,
+        occurred_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+    )
+
+    assert corrected.decision is CandidatePersistenceDecision.EVIDENCE_REFRESHED
+    assert corrected.record is not None
+    assert corrected.record.candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW
+    assert corrected.record.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
+    assert corrected.record.candidate.identity.evidence_version == 2
+    assert corrected.record.version_history[-1].source_lifecycle_status is (
+        IdeaLifecycleStatus.APPROVED
+    )
+    assert corrected.record.version_history[-1].resulting_lifecycle_status is (
+        IdeaLifecycleStatus.READY_FOR_REVIEW
+    )
+
+
 def test_evidence_refresh_cannot_change_material_applicability_expiry() -> None:
     candidate, refs = _candidate()
     original = replace(

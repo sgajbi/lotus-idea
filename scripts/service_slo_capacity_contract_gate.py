@@ -131,7 +131,7 @@ def validate_payload(
     errors.extend(_validate_rule_file(payload, repository_root))
     errors.extend(_validate_dashboard(payload, repository_root))
     errors.extend(_validate_capacity_attestation_workflow(repository_root))
-    errors.extend(_validate_downstream_capacity_seed(repository_root))
+    errors.extend(_validate_downstream_capacity_resource(repository_root))
     errors.extend(_validate_certification(payload))
     return sorted(errors)
 
@@ -267,10 +267,10 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "baseline_contract_gate",
         "baseline_workload_runner",
         "baseline_workload_planning_policy",
-        "downstream_capacity_seed_model",
-        "downstream_capacity_seed_port",
-        "downstream_capacity_seed_adapter",
-        "downstream_capacity_seed_runner",
+        "downstream_capacity_resource_model",
+        "downstream_capacity_resource_port",
+        "downstream_capacity_resource_adapter",
+        "downstream_capacity_resource_selector",
         "resource_evidence_model",
         "resource_probe_port",
         "resource_probe_adapter",
@@ -331,46 +331,48 @@ def _validate_certification(payload: dict[str, Any]) -> list[str]:
     return errors
 
 
-def _validate_downstream_capacity_seed(repository_root: Path) -> list[str]:
+def _validate_downstream_capacity_resource(repository_root: Path) -> list[str]:
     required_tokens = {
-        "src/app/application/downstream_capacity_seed.py": (
-            "seed_only_not_capacity_evidence",
+        "src/app/application/downstream_capacity_resource.py": (
+            "selected_conversion_intent_not_capacity_evidence",
+            "presentationReceiptId",
+            "accepted_not_before_utc",
             'productionCapacityCertified": False',
             'supportedFeaturePromoted": False',
         ),
-        "src/app/infrastructure/http_downstream_capacity_seed.py": (
-            "CAPACITY_SYNTHETIC_PORTFOLIO_001",
+        "src/app/infrastructure/http_downstream_capacity_resource.py": (
             "MAX_RESPONSE_BYTES",
-            "idea.conversion.intent.record",
+            "idea.candidate.detail.read",
+            "X-Caller-Tenant-Ids",
         ),
-        "scripts/seed_downstream_capacity_resource.py": (
-            "SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE",
+        "scripts/select_downstream_capacity_resource.py": (
+            "--accepted-not-before-utc",
             "_write_json_atomic",
         ),
         "scripts/run_service_capacity_workload.py": (
-            "--downstream-capacity-seed",
+            "--downstream-capacity-resource",
             "service_capacity_workload_cli",
         ),
         "src/app/application/service_capacity_workload_cli.py": (
-            "downstream capacity seed provenance is invalid",
-            "seed_only_not_capacity_evidence",
+            "downstream capacity resource provenance is invalid",
+            "selected_conversion_intent_not_capacity_evidence",
             "productionCapacityCertified",
             "supportedFeaturePromoted",
         ),
         "Makefile": (
-            "downstream-capacity-seed:",
-            "SERVICE_CAPACITY_DOWNSTREAM_SEED_ARG",
+            "downstream-capacity-resource:",
+            "SERVICE_CAPACITY_DOWNSTREAM_RESOURCE_ARG",
         ),
     }
     errors: list[str] = []
     for relative_path, tokens in required_tokens.items():
         path = repository_root / relative_path
         if not path.is_file():
-            errors.append(f"downstream capacity seed source missing {relative_path}")
+            errors.append(f"downstream capacity resource source missing {relative_path}")
             continue
         content = path.read_text(encoding="utf-8")
         errors.extend(
-            f"downstream capacity seed source {relative_path} missing {token!r}"
+            f"downstream capacity resource source {relative_path} missing {token!r}"
             for token in tokens
             if token not in content
         )

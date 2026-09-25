@@ -255,7 +255,7 @@ flowchart LR
     Runner -->|"governed reconciliation decisions"| Repo
 ```
 
-The current schema head is `031_downstream_submission_resource_identity`. Migration `016`
+The current schema head is `032_reopen_superseded_approved_candidates`. Migration `016`
 adds tenant-scoped business identity, material/evidence version, material
 fingerprint, change-reason, and superseded-version columns. Migration `017`
 adds the versioned feedback outcome/reason taxonomy and immutable offline
@@ -283,6 +283,12 @@ internal identity primary key to `idea_idempotency_record` so restore inspection
 and PostgreSQL default replica identity have an unambiguous physical row key.
 The partial tenant/system indexes from migration `028` remain the business
 uniqueness contract; the new key is never accepted from an API caller.
+Migration `031` enforces one downstream submission per tenant, resource, and
+target. Migration `032` reopens only approved, not-yet-converted candidates
+whose current evidence no longer matches any exact approving review. It writes
+audit and lifecycle history before changing the candidate to
+`ready_for_review`; rollback refuses to resurrect a superseded approval after a
+durable repair.
 Migration `031` makes `(tenant_id, resource_type, resource_id, target)` the
 unique local downstream-submission resource identity while preserving
 `(tenant_id, idempotency_key)` as the caller replay identity. It refuses to

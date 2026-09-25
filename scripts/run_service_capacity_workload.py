@@ -86,7 +86,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--postgres-threshold-proof", type=Path)
     parser.add_argument("--dependency-recovery-proof", type=Path)
     parser.add_argument("--load-soak-proof", type=Path)
-    parser.add_argument("--downstream-capacity-seed", type=Path)
+    parser.add_argument("--downstream-capacity-resource", type=Path)
     parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--cost-attribution-artifact", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
@@ -136,8 +136,8 @@ def _validate_cli_timing(args: argparse.Namespace) -> None:
 
 
 def _build_workload_plans_from_args(args: argparse.Namespace) -> list[CapacityWorkloadPlan]:
-    downstream_capacity_seed = _read_optional_json_object(
-        args.downstream_capacity_seed, name="downstream capacity seed"
+    downstream_capacity_resource = _read_optional_json_object(
+        args.downstream_capacity_resource, name="downstream capacity resource"
     )
     return build_workload_plans(
         scenarios=tuple(args.scenario),
@@ -147,9 +147,10 @@ def _build_workload_plans_from_args(args: argparse.Namespace) -> list[CapacityWo
         allow_mutating_workflows=args.allow_mutating_workflows,
         allow_production_mutations=args.allow_production_mutations,
         downstream_submission_path=_downstream_submission_path(
-            seed=downstream_capacity_seed,
+            resource=downstream_capacity_resource,
             commit_sha=args.commit_sha,
             branch=args.branch,
+            run_id=args.run_id,
             environment_path=os.getenv(DOWNSTREAM_PATH_ENV, "").strip() or None,
         ),
     )

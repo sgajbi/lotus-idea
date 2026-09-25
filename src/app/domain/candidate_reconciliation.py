@@ -8,6 +8,8 @@ from app.domain.ideas import (
     CandidateIdentity,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    ReviewPosture,
+    SuppressionReason,
 )
 from app.domain.persistence_models import CandidatePersistenceDecision
 from app.domain.opportunity_identity import (
@@ -109,14 +111,15 @@ def reconcile_candidate(
         change_reason=CandidateChangeReason.EVIDENCE_CORRECTION,
         supersedes_material_version=None,
     )
+    lifecycle_status, review_posture, suppression_reason = _evidence_refresh_review_state(existing)
     return CandidateReconciliation(
         decision=CandidatePersistenceDecision.EVIDENCE_REFRESHED,
         candidate=replace(
             incoming,
             identity=identity,
-            lifecycle_status=existing.lifecycle_status,
-            review_posture=existing.review_posture,
-            suppression_reason=existing.suppression_reason,
+            lifecycle_status=lifecycle_status,
+            review_posture=review_posture,
+            suppression_reason=suppression_reason,
             created_at_utc=existing.created_at_utc,
             updated_at_utc=max(existing.updated_at_utc, occurred_at_utc),
         ),
@@ -152,15 +155,28 @@ def _backfill_identity_policy(
         change_reason=CandidateChangeReason.MIGRATION_BACKFILL,
         supersedes_material_version=existing.identity.supersedes_material_version,
     )
+    lifecycle_status, review_posture, suppression_reason = _evidence_refresh_review_state(existing)
     return replace(
         incoming,
         identity=identity,
-        lifecycle_status=existing.lifecycle_status,
-        review_posture=existing.review_posture,
-        suppression_reason=existing.suppression_reason,
+        lifecycle_status=lifecycle_status,
+        review_posture=review_posture,
+        suppression_reason=suppression_reason,
         created_at_utc=existing.created_at_utc,
         updated_at_utc=max(existing.updated_at_utc, occurred_at_utc),
     )
+
+
+def _evidence_refresh_review_state(
+    existing: IdeaCandidate,
+) -> tuple[IdeaLifecycleStatus, ReviewPosture, SuppressionReason | None]:
+    if existing.lifecycle_status is IdeaLifecycleStatus.APPROVED:
+        return (
+            IdeaLifecycleStatus.READY_FOR_REVIEW,
+            ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            None,
+        )
+    return existing.lifecycle_status, existing.review_posture, existing.suppression_reason
 
 
 def _new_material_version(

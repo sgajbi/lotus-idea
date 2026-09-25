@@ -4,88 +4,27 @@ import sys
 from pathlib import Path
 from typing import NamedTuple
 
-from migration_sql_validation import (
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from migration_sql_validation import (  # noqa: E402
     contains_sql_statement as _contains_sql_statement,
     validate_table_safe_rollback_alter_statements as _validate_table_safe_rollback_alter_statements,
 )
+from migration_contract_foundation import (  # noqa: E402
+    AI_LINEAGE_REQUIRED_FORWARD_FRAGMENTS,
+    AI_LINEAGE_REQUIRED_INDEXES,
+    AI_LINEAGE_REQUIRED_TABLES,
+    PROHIBITED_SQL_FRAGMENTS,
+    REQUIRED_FORWARD_FRAGMENTS,
+    REQUIRED_INDEXES,
+    REQUIRED_TABLES,
+)
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = SCRIPTS_DIR.parent
 MIGRATIONS_DIR = ROOT / "migrations"
-REQUIRED_TABLES = (
-    "idea_candidate_record",
-    "idea_idempotency_record",
-    "idea_lifecycle_history",
-    "idea_audit_event",
-    "idea_outbox_event",
-    "idea_review_decision",
-    "idea_feedback_event",
-    "idea_conversion_intent",
-    "idea_conversion_outcome",
-    "idea_report_evidence_pack_request",
-    "idea_downstream_submission",
-)
-REQUIRED_INDEXES = (
-    "idx_idea_candidate_record_family_status",
-    "idx_idea_candidate_record_review_queue_order",
-    "idx_idea_candidate_record_scope_tenant",
-    "idx_idea_candidate_record_scope_book",
-    "idx_idea_candidate_record_scope_portfolio",
-    "idx_idea_candidate_record_scope_client",
-    "idx_idea_candidate_record_evidence_hash",
-    "idx_idea_candidate_record_persisted_at",
-    "idx_idea_idempotency_record_candidate",
-    "idx_idea_lifecycle_history_candidate_time",
-    "idx_idea_audit_event_candidate_time",
-    "idx_idea_outbox_event_status_time",
-    "idx_idea_outbox_event_retry_due",
-    "idx_idea_outbox_event_lease_expiry",
-    "idx_idea_outbox_event_aggregate_time",
-    "idx_idea_review_decision_candidate_time",
-    "idx_idea_feedback_event_candidate_time",
-    "idx_idea_conversion_intent_candidate_target",
-    "idx_idea_conversion_outcome_intent_time",
-    "idx_idea_report_evidence_pack_candidate_time",
-    "idx_idea_downstream_submission_resource",
-)
-REQUIRED_FORWARD_FRAGMENTS = (
-    "JSONB NOT NULL",
-    "TIMESTAMPTZ NOT NULL",
-    "PRIMARY KEY",
-    "REFERENCES idea_candidate_record(candidate_id)",
-    "REFERENCES idea_conversion_intent(conversion_intent_id)",
-    "ck_idea_outbox_event_event_type",
-    "ck_idea_outbox_event_aggregate_type",
-    "ck_idea_outbox_event_schema_version",
-    "request_fingerprint TEXT NOT NULL",
-    "resource_type TEXT NOT NULL",
-    "resource_id TEXT NOT NULL",
-    "source_authority TEXT NOT NULL",
-    "submitted_at_utc TIMESTAMPTZ NOT NULL",
-)
-
-AI_LINEAGE_REQUIRED_TABLES = ("idea_ai_explanation_lineage",)
-
-AI_LINEAGE_REQUIRED_INDEXES = (
-    "idx_idea_ai_explanation_lineage_candidate_time",
-    "idx_idea_ai_explanation_lineage_workflow_time",
-    "idx_idea_ai_explanation_lineage_posture_time",
-)
-
-AI_LINEAGE_REQUIRED_FORWARD_FRAGMENTS = (
-    "JSONB NOT NULL",
-    "TIMESTAMPTZ NOT NULL",
-    "PRIMARY KEY",
-    "BOOLEAN NOT NULL",
-    "REFERENCES idea_candidate_record(candidate_id)",
-)
-
-PROHIBITED_SQL_FRAGMENTS = (
-    "TODO",
-    "TBD",
-    "PLACEHOLDER",
-    "DROP TABLE IF EXISTS idea_candidate_record;",
-)
 
 
 class MigrationContract(NamedTuple):
@@ -397,6 +336,27 @@ REQUIRED_MIGRATIONS = (
         required_rollback_fragments=(
             "DROP INDEX IF EXISTS uq_idea_downstream_submission_resource_identity",
             "CREATE INDEX IF NOT EXISTS idx_idea_downstream_submission_resource",
+        ),
+    ),
+    MigrationContract(
+        version="032",
+        forward_path=MIGRATIONS_DIR / "032_reopen_superseded_approved_candidates.sql",
+        rollback_path=(MIGRATIONS_DIR / "032_reopen_superseded_approved_candidates.rollback.sql"),
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "LOCK TABLE idea_candidate_record IN SHARE ROW EXCLUSIVE MODE",
+            "idea.migration.superseded_approval_reopened.v1",
+            "review.decision_json ->> 'candidate_evidence_version'",
+            "candidate.lifecycle_status = 'approved'",
+            "candidate.review_posture = 'approved_for_conversion'",
+            "SET lifecycle_status = 'ready_for_review'",
+            "review_posture = 'advisor_review_required'",
+            "INSERT INTO idea_lifecycle_history",
+        ),
+        required_rollback_fragments=(
+            "unsafe downgrade: migration 032 reopened candidates",
+            "idea.migration.superseded_approval_reopened.v1",
         ),
     ),
 )

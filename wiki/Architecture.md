@@ -1038,6 +1038,12 @@ disposable-fixture tools and cannot establish deployment authority. Static
 governance rejects future workflow bypass except the scheduled lifecycle-review
 and DR-seed fixtures.
 
+Evidence refresh also has a durable fail-closed repair. Migration `032` changes
+only approved, not-yet-converted candidates whose exact approving review no
+longer matches current evidence to `ready_for_review`, with audit and lifecycle
+history written in the same transaction. Its rollback refuses to restore a
+superseded approval after any row was repaired.
+
 This adds no service or database. API and optional worker roles continue to use
 one Idea-owned PostgreSQL boundary. Protected execution, approved change, and
 same-digest rollout-health evidence are still required before production

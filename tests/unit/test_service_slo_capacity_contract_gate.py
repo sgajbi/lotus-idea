@@ -288,16 +288,16 @@ def test_load_soak_workflow_requires_concurrent_resource_proof_and_separate_atte
     assert any("run_service_resource_baseline.py" in error for error in errors)
 
 
-def test_downstream_capacity_seed_gate_rejects_missing_layered_sources(
+def test_downstream_capacity_resource_gate_rejects_missing_layered_sources(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
 
-    errors = module._validate_downstream_capacity_seed(tmp_path)
+    errors = module._validate_downstream_capacity_resource(tmp_path)
 
-    assert any("src/app/application/downstream_capacity_seed.py" in error for error in errors)
+    assert any("src/app/application/downstream_capacity_resource.py" in error for error in errors)
     assert any(
-        "src/app/infrastructure/http_downstream_capacity_seed.py" in error for error in errors
+        "src/app/infrastructure/http_downstream_capacity_resource.py" in error for error in errors
     )
-    assert any("scripts/seed_downstream_capacity_resource.py" in error for error in errors)
+    assert any("scripts/select_downstream_capacity_resource.py" in error for error in errors)
     assert any("Makefile" in error for error in errors)

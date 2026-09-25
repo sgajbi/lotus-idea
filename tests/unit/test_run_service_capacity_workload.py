@@ -111,7 +111,7 @@ def test_downstream_plan_rejects_missing_or_ungoverned_resource_path(
 ) -> None:
     module = _load_script()
 
-    with pytest.raises(ValueError, match="governed pre-seeded synthetic resource path"):
+    with pytest.raises(ValueError, match="governed current authoritative resource path"):
         module.build_workload_plans(
             scenarios=("downstream_submission",),
             request_count=1,
@@ -123,65 +123,71 @@ def test_downstream_plan_rejects_missing_or_ungoverned_resource_path(
         )
 
 
-def test_downstream_seed_manifest_requires_exact_synthetic_provenance() -> None:
+def test_downstream_resource_manifest_requires_exact_current_run_provenance() -> None:
     module = _load_script()
-    path = "/api/v1/conversion-intents/capacity-conversion-abc/downstream-submissions"
-    seed = {
-        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
-        "proofScope": "synthetic_downstream_capacity_resource_seed",
-        "claimPosture": "seed_only_not_capacity_evidence",
-        "syntheticResource": True,
+    path = "/api/v1/conversion-intents/conversion-current-abc/downstream-submissions"
+    resource = {
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
+        "proofScope": "current_authoritative_downstream_resource",
+        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "syntheticResource": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": "abc123",
         "branch": "main",
+        "runId": "run-123",
         "downstreamSubmissionPath": path,
     }
 
     assert (
         module._downstream_submission_path(
-            seed=seed,
+            resource=resource,
             commit_sha="abc123",
             branch="main",
+            run_id="run-123",
             environment_path=None,
         )
         == path
     )
     for key, invalid in (
-        ("syntheticResource", False),
+        ("syntheticResource", True),
         ("productionCapacityCertified", True),
         ("supportedFeaturePromoted", True),
         ("commitSha", "different"),
         ("branch", "feature/capacity"),
+        ("runId", "different"),
     ):
         with pytest.raises(ValueError, match="provenance is invalid"):
             module._downstream_submission_path(
-                seed={**seed, key: invalid},
+                resource={**resource, key: invalid},
                 commit_sha="abc123",
                 branch="main",
+                run_id="run-123",
                 environment_path=None,
             )
 
 
-def test_downstream_seed_manifest_rejects_ungoverned_path() -> None:
+def test_downstream_resource_manifest_rejects_ungoverned_path() -> None:
     module = _load_script()
-    seed = {
-        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
-        "proofScope": "synthetic_downstream_capacity_resource_seed",
-        "claimPosture": "seed_only_not_capacity_evidence",
-        "syntheticResource": True,
+    resource = {
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
+        "proofScope": "current_authoritative_downstream_resource",
+        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "syntheticResource": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": "abc123",
         "branch": "main",
+        "runId": "run-123",
         "downstreamSubmissionPath": "/api/v1/idea-candidates/client/downstream-submissions",
     }
 
-    with pytest.raises(ValueError, match="seed path is invalid"):
+    with pytest.raises(ValueError, match="resource path is invalid"):
         module._downstream_submission_path(
-            seed=seed,
+            resource=resource,
             commit_sha="abc123",
             branch="main",
+            run_id="run-123",
             environment_path=None,
         )
 
