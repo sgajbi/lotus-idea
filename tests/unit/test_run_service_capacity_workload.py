@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 from types import ModuleType
@@ -240,6 +241,75 @@ def test_cli_writes_source_safe_report_only_evidence(
     assert artifact["scenarios"][0]["sampleCount"] == 2
     assert artifact["certificationReady"] is False
     assert "load_soak_attestation_missing" in artifact["certificationBlockers"]
+
+
+def test_cli_binds_downstream_workload_evidence_to_exact_resource(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+    output = tmp_path / "capacity.json"
+    resource = tmp_path / "downstream-resource.json"
+    resource_bytes = json.dumps(
+        {
+            "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
+            "proofScope": "current_authoritative_downstream_resource",
+            "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+            "syntheticResource": False,
+            "productionCapacityCertified": False,
+            "supportedFeaturePromoted": False,
+            "commitSha": "abc123",
+            "branch": "main",
+            "runId": "run-123",
+            "downstreamSubmissionPath": (
+                "/api/v1/conversion-intents/conversion-current-abc/downstream-submissions"
+            ),
+        },
+        sort_keys=True,
+    ).encode()
+    resource.write_bytes(resource_bytes)
+
+    class FakeProbe:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult:
+            return CapacityProbeResult(0.01, 200, "accepted", {})
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", FakeProbe)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "test",
+            "--scenario",
+            "downstream_submission",
+            "--request-count",
+            "1",
+            "--allow-mutating-workflows",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "main",
+            "--run-id",
+            "run-123",
+            "--downstream-capacity-resource",
+            str(resource),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    assert (
+        artifact["downstreamCapacityResourceSha256"] == hashlib.sha256(resource_bytes).hexdigest()
+    )
 
 
 def test_cli_rejects_invalid_timeout_before_probe_construction(

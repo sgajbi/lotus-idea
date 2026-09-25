@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import UTC, datetime
+import hashlib
 import os
 from pathlib import Path
 import sys
@@ -118,6 +119,10 @@ def main(argv: list[str] | None = None) -> int:
             observed_window_seconds=observed_window_seconds,
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
+        if args.downstream_capacity_resource is not None:
+            artifact["downstreamCapacityResourceSha256"] = hashlib.sha256(
+                args.downstream_capacity_resource.read_bytes()
+            ).hexdigest()
         _write_json_atomic(args.output, artifact)
         return 0
     except (OSError, ValueError) as exc:
