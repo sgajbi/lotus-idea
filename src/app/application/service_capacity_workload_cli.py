@@ -128,10 +128,12 @@ def downstream_submission_path(
     if resource is None:
         return environment_path
     required = {
-        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
-        "proofScope": "current_authoritative_downstream_resource",
-        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v2",
+        "proofScope": "governed_downstream_resource_state",
+        "claimPosture": "selected_resource_state_not_capacity_evidence",
+        "resourcePosture": "fresh_authorized_submission",
         "syntheticResource": False,
+        "retainedAcceptedSubmissionVerified": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": commit_sha,
@@ -189,7 +191,7 @@ def _plan(
             downstream_submission_path
         ):
             raise ValueError(
-                "downstream_submission requires a governed current authoritative resource path"
+                "downstream_submission requires a governed fresh authorized resource path"
             )
         if caller_scope is None:
             raise ValueError("downstream_submission requires complete admitted caller scope")

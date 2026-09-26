@@ -164,7 +164,7 @@ def test_downstream_plan_rejects_missing_or_ungoverned_resource_path(
 ) -> None:
     module = _load_script()
 
-    with pytest.raises(ValueError, match="governed current authoritative resource path"):
+    with pytest.raises(ValueError, match="governed fresh authorized resource path"):
         module.build_workload_plans(
             scenarios=("downstream_submission",),
             request_count=1,
@@ -180,10 +180,12 @@ def test_downstream_resource_manifest_requires_exact_current_run_provenance() ->
     module = _load_script()
     path = "/api/v1/conversion-intents/conversion-current-abc/downstream-submissions"
     resource = {
-        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
-        "proofScope": "current_authoritative_downstream_resource",
-        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v2",
+        "proofScope": "governed_downstream_resource_state",
+        "claimPosture": "selected_resource_state_not_capacity_evidence",
+        "resourcePosture": "fresh_authorized_submission",
         "syntheticResource": False,
+        "retainedAcceptedSubmissionVerified": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": "abc123",
@@ -204,6 +206,8 @@ def test_downstream_resource_manifest_requires_exact_current_run_provenance() ->
     )
     for key, invalid in (
         ("syntheticResource", True),
+        ("resourcePosture", "retained_accepted_submission"),
+        ("retainedAcceptedSubmissionVerified", True),
         ("productionCapacityCertified", True),
         ("supportedFeaturePromoted", True),
         ("commitSha", "different"),
@@ -223,10 +227,12 @@ def test_downstream_resource_manifest_requires_exact_current_run_provenance() ->
 def test_downstream_resource_manifest_rejects_ungoverned_path() -> None:
     module = _load_script()
     resource = {
-        "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
-        "proofScope": "current_authoritative_downstream_resource",
-        "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+        "schemaVersion": "lotus-idea.downstream-capacity-resource.v2",
+        "proofScope": "governed_downstream_resource_state",
+        "claimPosture": "selected_resource_state_not_capacity_evidence",
+        "resourcePosture": "fresh_authorized_submission",
         "syntheticResource": False,
+        "retainedAcceptedSubmissionVerified": False,
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
         "commitSha": "abc123",
@@ -304,10 +310,12 @@ def test_cli_binds_downstream_workload_evidence_to_exact_resource(
     resource = tmp_path / "downstream-resource.json"
     resource_bytes = json.dumps(
         {
-            "schemaVersion": "lotus-idea.downstream-capacity-resource.v1",
-            "proofScope": "current_authoritative_downstream_resource",
-            "claimPosture": "selected_conversion_intent_not_capacity_evidence",
+            "schemaVersion": "lotus-idea.downstream-capacity-resource.v2",
+            "proofScope": "governed_downstream_resource_state",
+            "claimPosture": "selected_resource_state_not_capacity_evidence",
+            "resourcePosture": "fresh_authorized_submission",
             "syntheticResource": False,
+            "retainedAcceptedSubmissionVerified": False,
             "productionCapacityCertified": False,
             "supportedFeaturePromoted": False,
             "commitSha": "abc123",

@@ -334,7 +334,8 @@ def _validate_certification(payload: dict[str, Any]) -> list[str]:
 def _validate_downstream_capacity_resource(repository_root: Path) -> list[str]:
     required_tokens = {
         "src/app/application/downstream_capacity_resource.py": (
-            "selected_conversion_intent_not_capacity_evidence",
+            "selected_resource_state_not_capacity_evidence",
+            "retained_accepted_submission",
             "presentationReceiptId",
             "accepted_not_before_utc",
             'productionCapacityCertified": False',
@@ -355,7 +356,8 @@ def _validate_downstream_capacity_resource(repository_root: Path) -> list[str]:
         ),
         "src/app/application/service_capacity_workload_cli.py": (
             "downstream capacity resource provenance is invalid",
-            "selected_conversion_intent_not_capacity_evidence",
+            "selected_resource_state_not_capacity_evidence",
+            "fresh_authorized_submission",
             "productionCapacityCertified",
             "supportedFeaturePromoted",
         ),

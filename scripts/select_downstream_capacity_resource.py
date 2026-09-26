@@ -29,8 +29,8 @@ TRUSTED_CONTEXT_ENV = "LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT"
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Select one current, presentation-backed Idea conversion intent for a bounded "
-            "downstream capacity probe."
+            "Select either one fresh authorized Idea conversion intent or one retained accepted "
+            "submission for bounded, non-certifying downstream proof."
         )
     )
     parser.add_argument("--base-url", required=True)

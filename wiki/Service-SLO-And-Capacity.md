@@ -26,17 +26,18 @@ reconciliation, quality, and lineage policy.
 No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
 
-Downstream capacity requires an allowlisted path to an existing conversion
-intent or report evidence pack. `make downstream-capacity-resource` performs a
-scope-authorized read and selects exactly one current authoritative conversion intent
-whose current candidate evidence has an authoritative source cut, a Workbench
-presentation receipt, and exact review authority. It cannot create or invent
-those grants. Protected load/soak dispatch also supplies an accepted-at lower bound; bounded
-canonical replay may reuse the same exact current authority after an unchanged restart. The
-workload runner validates exact commit, branch, and run
+Downstream capacity requires an allowlisted path to a fresh conversion intent or report evidence
+pack. `make downstream-capacity-resource` performs a scope-authorized read and selects either one
+fresh current conversion intent with an authoritative source cut, Workbench presentation receipt,
+and exact review authority, or one exactly linked retained `accepted_by_downstream` record with a
+complete owner receipt. It cannot create or invent those grants. A retained record has no mutation
+path and cannot enter the workload runner. Protected load/soak dispatch supplies an accepted-at
+lower bound and requires fresh authority; canonical retained-state validation may verify the
+accepted owner receipt read-only after restart or evidence correction. The workload runner validates
+exact commit, branch, and run
 provenance before using the manifest and requires the admitted tenant, book, portfolio, and client
 as explicit caller-scope inputs. Missing or partial scope fails before transport; no default tenant
-or entitlement is invented. Resource identity and unique transient
+or entitlement is invented. Resource identity and transient
 workload idempotency keys are never written to capacity evidence.
 
 ## First Response
