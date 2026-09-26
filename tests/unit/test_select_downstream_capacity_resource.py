@@ -76,7 +76,9 @@ def test_cli_writes_current_authoritative_resource_manifest(
 
     assert result == 0
     payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["schemaVersion"] == "lotus-idea.downstream-capacity-resource.v2"
     assert payload["conversionIntentId"] == "conversion-current-001"
+    assert payload["resourcePosture"] == "fresh_authorized_submission"
     assert payload["syntheticResource"] is False
 
 

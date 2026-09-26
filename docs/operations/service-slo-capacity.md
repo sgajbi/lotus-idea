@@ -181,7 +181,7 @@ Provide transient authorization or trusted-caller assertions only through
 `LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
 `LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
 
-The downstream scenario requires either a validated current authoritative resource manifest through
+The downstream scenario requires a validated fresh authorized resource manifest through
 `--downstream-capacity-resource` or the diagnostic
 `LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH` fallback. Only governed conversion-intent
 and report evidence-pack submission route shapes are accepted. The referenced
@@ -190,8 +190,8 @@ the exact current candidate evidence, authoritative source cut, Workbench
 presentation receipt, review authority, and conversion intent. Capacity tooling
 selects that resource; it never creates review or conversion authority.
 
-Select the one eligible current authoritative conversion intent through the layered
-read-only resource automation:
+Select either the one eligible fresh conversion intent or its one retained accepted submission
+through the layered read-only resource automation:
 
 ```powershell
 make downstream-capacity-resource `
@@ -204,20 +204,23 @@ make downstream-capacity-resource `
   DOWNSTREAM_CAPACITY_ACCEPTED_NOT_BEFORE_UTC=<current-run-utc>
 ```
 
-The command performs one scope-authorized candidate-detail read and fails closed
-unless exactly one current evidence version has a presentation-backed Advise conversion intent.
+The command performs one scope-authorized candidate-detail read. It selects a fresh intent only
+when the exact current evidence version has a presentation-backed Advise conversion intent and no
+accepted submission already exists. After restart or evidence correction, it may instead select
+the exactly linked `accepted_by_downstream` record only when its Advise owner receipt is complete.
+Retained evidence never receives a submission path and cannot enter the mutating workload.
 The Make target and protected workflow require an accepted-at lower bound for fresh load/soak
-dispatch. The canonical demo selector deliberately omits that optional bound so a still-current,
-unchanged approved intent can be replayed without fabricating a new review. Its manifest is explicitly
-`selected_conversion_intent_not_capacity_evidence`, non-certifying, and
-non-promoting. Bind it to a workload with
+dispatch. The canonical demo selector deliberately omits that optional bound so it can verify
+retained accepted state without fabricating a new review or a second downstream request. Its v2
+manifest is explicitly `selected_resource_state_not_capacity_evidence`, non-certifying, and
+non-promoting. Bind only `fresh_authorized_submission` manifests to a workload with
 `SERVICE_CAPACITY_DOWNSTREAM_RESOURCE_ARG="--downstream-capacity-resource <path>"`;
 the runner requires exact commit, branch, and run provenance. The downstream workload also requires
 the admitted tenant, book, portfolio, and client through `--caller-tenant-id`, `--caller-book-id`,
 `--caller-portfolio-id`, and `--caller-client-id`. Missing or partial scope fails before transport;
 the runner does not invent a default tenant or entitlement.
 
-The protected load/soak producer requires a candidate prepared through the same
+The protected load/soak producer requires a fresh candidate prepared through the same
 supported presentation, review, and conversion flow before dispatch. It never
 manufactures a synthetic Core source, adviser presentation, or IAM grant.
 
