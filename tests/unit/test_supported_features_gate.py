@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+import pytest
 
 from scripts.supported_features_gate import validate_supported_features
 
@@ -10,6 +13,7 @@ RFC_0002_ROOT = "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operatin
 REVIEW_QUEUE_RFC = (
     f"{RFC_0002_ROOT}/RFC-0002-slice-07-scoring-ranking-suppression-and-queue-policy.md"
 )
+SYNTHETIC_EVALUATED_AT_UTC = datetime(2026, 7, 4, tzinfo=UTC)
 
 
 def _base_registry() -> dict[str, object]:
@@ -168,7 +172,7 @@ def test_supported_features_gate_rejects_string_only_promotion_evidence() -> Non
         }
     ]
 
-    errors = validate_supported_features(payload)
+    errors = validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC)
 
     assert any("implemented feature missing fields" in error for error in errors)
 
@@ -183,7 +187,7 @@ def test_supported_features_gate_rejects_implemented_entry_without_proof_artifac
     feature["promotion_evidence"] = promotion_evidence
     payload["features"] = [feature]
 
-    errors = validate_supported_features(payload)
+    errors = validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC)
 
     assert any("promotion_evidence missing fields: proof_artifacts" in error for error in errors)
 
@@ -194,7 +198,7 @@ def test_supported_features_gate_rejects_planned_entries_under_features() -> Non
     assert isinstance(planned_capabilities, list)
     payload["features"] = [planned_capabilities[0]]
 
-    errors = validate_supported_features(payload)
+    errors = validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC)
 
     assert any(
         "features[0].status 'planned' is not allowed under features[]" in error for error in errors
@@ -214,7 +218,7 @@ def test_supported_features_gate_rejects_not_applicable_entries_under_features()
         }
     ]
 
-    errors = validate_supported_features(payload)
+    errors = validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC)
 
     assert any(
         "features[0].status 'not_applicable' is not allowed under features[]" in error
@@ -234,7 +238,7 @@ def test_supported_features_gate_rejects_unknown_endpoint_promotion() -> None:
     ]
     payload["features"] = [feature]
 
-    errors = validate_supported_features(payload)
+    errors = validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC)
 
     assert any("endpoint certification ledger operation" in error for error in errors)
 
@@ -243,4 +247,30 @@ def test_supported_features_gate_accepts_structured_implemented_entry() -> None:
     payload = _base_registry()
     payload["features"] = [_valid_implemented_feature()]
 
-    assert validate_supported_features(payload) == []
+    assert validate_supported_features(payload, evaluated_at_utc=SYNTHETIC_EVALUATED_AT_UTC) == []
+
+
+@pytest.mark.parametrize(
+    ("age_days", "expected_errors"),
+    [
+        pytest.param(90, [], id="exactly-90-days-accepted"),
+        pytest.param(
+            91,
+            ["features[0].last_reviewed_utc is older than 90 days"],
+            id="91-days-refused",
+        ),
+        pytest.param(
+            -1,
+            ["features[0].last_reviewed_utc cannot be after the evaluation time"],
+            id="future-review-refused",
+        ),
+    ],
+)
+def test_supported_features_gate_enforces_review_age(
+    age_days: int, expected_errors: list[str]
+) -> None:
+    payload = _base_registry()
+    payload["features"] = [_valid_implemented_feature()]
+    evaluated_at = datetime(2026, 6, 30, tzinfo=UTC) + timedelta(days=age_days)
+
+    assert validate_supported_features(payload, evaluated_at_utc=evaluated_at) == expected_errors
